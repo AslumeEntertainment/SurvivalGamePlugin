@@ -20,31 +20,5 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
-	],
-	"Plugins": [
-		{
-			"Name": "OnlineSubsystemEOS",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineSubsystem",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineSubsystemUtils",
-			"Enabled": true
-		},
-		{
-			"Name": "EOSOverlayInputProvider",
-			"Enabled": true
-		},
-		{
-			"Name": "EOSShared",
-			"Enabled": true
-		},
-		{
-			"Name": "EOSVoiceChat",
-			"Enabled": true
-		}
 	]
 }

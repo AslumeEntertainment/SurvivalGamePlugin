@@ -3,12 +3,9 @@
 
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 
-#include "OnlineSubsystemUtils.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineIdentityInterface.h"
-#include "GameFramework/PlayerController.h"
-#include "OnlineSessionSettings.h"
-#include "Kismet/GameplayStatics.h"
 
 bool USG_GameInstance::Login(FString ID, FString Token, FString AuthType)
 {
@@ -22,6 +19,12 @@ bool USG_GameInstance::Login(FString ID, FString Token, FString AuthType)
 	}
 
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
+	if (Subsystem == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::Login IsValid(Subsystem) == false"));
+		return false;
+	}
+
 	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
 
 	if (Identity == nullptr)
@@ -30,40 +33,59 @@ bool USG_GameInstance::Login(FString ID, FString Token, FString AuthType)
 		return false;
 	}
 
-	FUniqueNetIdPtr NetId = Identity->GetUniquePlayerId(0);
-
-	/*Identity->Logout(0);
-
-	if (NetId != nullptr && Identity->GetLoginStatus(0) == ELoginStatus::LoggedIn)
+	if (Identity->GetLoginStatus(0) == ELoginStatus::LoggedIn)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Alredy logged in: %s"), *NetId->ToString());
 		return true;
-	}*/
-
-	bool LoginSuccess = false;
-
-	FOnlineAccountCredentials Credentials;
-	Credentials.Id = ID;
-	Credentials.Token = Token;
-	Credentials.Type = AuthType;
-
-	Identity->OnLoginCompleteDelegates->AddUObject(this, &USG_GameInstance::HandleLoginCompleted);
-
-	LoginSuccess = Identity->Login(0, Credentials);
-
-
-	UE_LOG(LogTemp, Log, TEXT("Logging into EOS..."));
-
-	if (!LoginSuccess)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to initiate login... "));
 	}
-	return LoginSuccess;
 
+	LoginDelegateHandle = Identity->AddOnLoginCompleteDelegate_Handle(0,FOnLoginComplete::FDelegate::CreateUObject(this,&USG_GameInstance::HandleLoginComplete));
+
+	if (!Identity->AutoLogin(0 /* LocalUserNum */))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not start auto log in for local user..."));
+
+		FOnlineAccountCredentials Credentials;
+		Credentials.Id = ID;
+		Credentials.Token = Token;
+		Credentials.Type = AuthType;
+
+		if (!Identity->Login(0, Credentials))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Could not start auto log in for local user..."));
+			return false;
+		}
+	}
+	return true;
 }
 
-void USG_GameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
+void USG_GameInstance::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
 {
+	UWorld* World = GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(World) == false"));
+		return;
+	}
+
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
+	if (Subsystem == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(Subsystem) == false"));
+		return;
+	}
+
+	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+
+	if (Identity == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(Identity) == false"));
+		return;
+	}
+	Identity->ClearOnLoginCompleteDelegate_Handle(LocalUserNum, this->LoginDelegateHandle);
+
+	LoginDelegateHandle.Reset();
+
 	if (bWasSuccessful)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Login callback completed!"));;
@@ -74,8 +96,70 @@ void USG_GameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccess
 	}
 
 }
+/*
+bool USG_GameInstance::CreateParty()
+{
+	UWorld* World = GetWorld();
 
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::CreateParty IsValid(World) == false"));
+		return false;
+	}
 
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
+	if (Subsystem == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::CreateParty IsValid(Subsystem) == false"));
+		return false;
+	}
+
+	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+
+	if (Identity == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::CreateParty IsValid(Identity) == false"));
+		return false;
+	}
+	if (Identity->GetLoginStatus(0) != ELoginStatus::LoggedIn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("USG_GameInstance::CreateParty Player is Not logged in"));
+		return false;
+	}
+
+	IOnlinePartyPtr Party = Subsystem->GetPartyInterface();
+	if (Party == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::CreateParty IsValid(Party) == false"));
+		return false;
+	}
+
+	const FUniqueNetId& LocalUserId = *Identity->GetUniquePlayerId(0).Get();
+	const FOnlinePartyTypeId PartyTypeId = IOnlinePartySystem::GetPrimaryPartyTypeId();
+	FPartyConfiguration Config;
+	Config.bIsAcceptingMembers = true;
+	Config.MaxMembers = 4;
+
+	bool bSuccess = Party->CreateParty(LocalUserId, PartyTypeId, Config, FOnCreatePartyComplete::CreateUObject(this, &USG_GameInstance::HandleLobbyCreated));
+
+	if (!bSuccess)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to initiate party... "));
+		return false;
+	}
+	
+	return true;
+}
+
+void USG_GameInstance::HandleLobbyCreated(const FUniqueNetId& LocalUserId, const TSharedPtr<const FOnlinePartyId>& PartyId, const ECreatePartyCompletionResult Result)
+{
+	if (Result == ECreatePartyCompletionResult::Succeeded)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Party Created"));
+		return;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Party NOT Created"));
+}
 
 bool USG_GameInstance::IsPlayerLoggedIn()
 {
@@ -100,14 +184,14 @@ bool USG_GameInstance::IsPlayerLoggedIn()
 	{
 		return false;
 	}
-
+	
 	return true;
 }
 
 FString USG_GameInstance::GetLocalPlayerUsername()
 {
 	FString PlayerName = "ErrorName";
-
+	
 	UWorld* World = GetWorld();
 
 	if (IsValid(World) == false)
@@ -132,7 +216,7 @@ FString USG_GameInstance::GetLocalPlayerUsername()
 	}
 
 	PlayerName = Identity->GetPlayerNickname(0);
-
+	
 	return PlayerName;
 }
-
+*/

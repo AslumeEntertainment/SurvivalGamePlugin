@@ -26,10 +26,10 @@ public class SurvivalGamePlugin : ModuleRules
 			new string[]
 			{
 				"Core",
-                "OnlineSubsystemEOS", 
-				"OnlineSubsystem", 
-				"OnlineSubsystemUtils", 
-				"VoiceChat",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils",
+                /*"OnlineSubsystemEOS", 
+				"VoiceChat",*/
             }
 			);
 			
