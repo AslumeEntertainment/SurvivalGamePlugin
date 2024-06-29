@@ -5,8 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 
-#include "Interfaces/OnlineSessionInterface.h"
-#include "VoiceChat.h"
+//#include "Interfaces/OnlinePartyInterface.h"
 
 #include "SG_GameInstance.generated.h"
 
@@ -20,19 +19,25 @@ class SURVIVALGAMEPLUGIN_API USG_GameInstance : public UGameInstance
 
 private:
 
+	//void HandleLobbyCreated(const FUniqueNetId& LocalUserId, const TSharedPtr<const FOnlinePartyId>& PartyId, const ECreatePartyCompletionResult Result);
+	
 	//Callback function. This function is ran when signing into EOS Game Services completes. 
-	void HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
+
+	FDelegateHandle LoginDelegateHandle;
+
+	void HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
 
 public:
-
+/*
 	UFUNCTION(BlueprintCallable)
 	bool IsPlayerLoggedIn();
 
 	UFUNCTION(BlueprintCallable)
 	FString GetLocalPlayerUsername();
 
-
+	UFUNCTION(BlueprintCallable)
+	bool CreateParty();
+*/
 	UFUNCTION(BlueprintCallable)
 	bool Login(FString ID, FString Token, FString AuthType);
-
 };
