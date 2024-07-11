@@ -29,7 +29,7 @@ protected:
 	float DayLength = 30;
 
 	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
-	float InitialSkyRotation = -90;
+	float InitialSkyRotation = 90;
 
 	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
 	int DaysForPreparation = 1;
@@ -42,6 +42,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
 	FVector UpperRightArenaCornerCoordinate;
+
+	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
+	float MinimalSpawnDistanceFromPlayer;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class UStaticMeshComponent* SkySphere;
@@ -75,6 +78,8 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void SpawnPredator();
+
+	FVector GetValidPredatorLocation();
 	
 public:	
 
