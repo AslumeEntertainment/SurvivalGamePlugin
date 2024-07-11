@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Logging/LogMacros.h"
 #include "Modules/ModuleManager.h"
 
 class FSurvivalGamePluginModule : public IModuleInterface
