@@ -12,6 +12,8 @@
 #include "Components/VolumetricCloudComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
+#include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 // Sets default values
@@ -41,9 +43,6 @@ ATimeEventManager::ATimeEventManager()
 
 	SkyAtmosphere = CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("SkyAtmosphere"));
 	SkyAtmosphere->SetupAttachment(GetRootComponent());
-
-	SetActorRotation(FRotator(InitialSkyRotation, 0, 0));
-	SkyRotationComponent->RotationRate = FRotator(-360/DayLength, 0, 0);
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +50,8 @@ void ATimeEventManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetActorRotation(FRotator(InitialSkyRotation, 270, 0));
+	SkyRotationComponent->RotationRate = FRotator(-360 / DayLength, 0, 0);
 	StartPreparationPeriod();
 }
 
@@ -67,17 +68,47 @@ void ATimeEventManager::PreparationPeriodOver_Implementation()
 
 void ATimeEventManager::SpawnPredator_Implementation()
 {
-	if (IsValid(TestActorClass))
+	if (!IsValid(TestActorClass))
 	{
-		FVector Location;
-		Location.X = FMath::RandRange(BottomLeftArenaCornerCoordinate.X, UpperRightArenaCornerCoordinate.X);
-		Location.Y = FMath::RandRange(BottomLeftArenaCornerCoordinate.Y, UpperRightArenaCornerCoordinate.Y);
-		Location.Z = FMath::RandRange(BottomLeftArenaCornerCoordinate.Z, UpperRightArenaCornerCoordinate.Z);
-		FRotator Rotation(0.0f, 0.0f, 0.0f);
-		FActorSpawnParameters SpawnInfo;
-
-		GetWorld()->SpawnActor<AActor>(TestActorClass, Location, Rotation, SpawnInfo);
+		UE_LOG(LogTemp, Error, TEXT("ATimeEventManager::SpawnPredator_Implementation IsValid(TestActorClass) == false"));
+		return;
 	}
+	GetWorld()->SpawnActor<AActor>(TestActorClass, GetValidPredatorLocation(), FRotator(0, 0, 0));
+}
+
+FVector ATimeEventManager::GetValidPredatorLocation()
+{
+	FVector PredatorLocation;
+	bool bIsValidLocation = true;
+
+	TArray<AActor*> Players;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), Players);
+
+	TArray<FVector> PlayerLocations;
+	for (AActor* Player : Players)
+	{
+		PlayerLocations.Add(Player->GetActorLocation());
+	}
+
+	do
+	{
+		PredatorLocation.X = FMath::RandRange(BottomLeftArenaCornerCoordinate.X, UpperRightArenaCornerCoordinate.X);
+		PredatorLocation.Y = FMath::RandRange(BottomLeftArenaCornerCoordinate.Y, UpperRightArenaCornerCoordinate.Y);
+		PredatorLocation.Z = FMath::RandRange(BottomLeftArenaCornerCoordinate.Z, UpperRightArenaCornerCoordinate.Z);
+
+		/*
+		for (FVector PlayerLocation : PlayerLocations)
+		{
+			if (UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation) <= MinimalSpawnDistanceFromPlayer)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("Invalid location (Distance = %.2f), searching for a new one..."), UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation)));
+				bIsValidLocation = false;
+			}
+		}
+		*/
+	} while (!bIsValidLocation);
+	
+	return PredatorLocation;
 }
 
 // Called every frame
