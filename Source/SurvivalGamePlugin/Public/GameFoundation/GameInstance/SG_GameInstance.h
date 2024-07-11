@@ -74,4 +74,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RegisterNewPlayer(APlayerController* InPlayerController);
 
+	UFUNCTION(BlueprintCallable)
+	void UnRegisterPlayer(APlayerController* InPlayerController);
+
 };
