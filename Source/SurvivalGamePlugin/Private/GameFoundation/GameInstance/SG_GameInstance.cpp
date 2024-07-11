@@ -292,6 +292,68 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 
 }
 
+void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
+{
+	UE_LOG(Networking, Display, TEXT("UnRegistering player..."));
+
+	UWorld* World = InPlayerController->GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(World) == false"));
+		return;
+	}
+
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
+	if (Subsystem == nullptr)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(Subsystem) == false"));
+		return;
+	}
+
+	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+
+	if (SessionInterface == nullptr)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(Session) == false"));
+		return;
+	}
+
+	FUniqueNetIdRepl UniqueNetIdRepl;
+	if (InPlayerController->IsLocalPlayerController())
+	{
+		ULocalPlayer* LocalPlayer = InPlayerController->GetLocalPlayer();
+		if (IsValid(LocalPlayer))
+		{
+			UniqueNetIdRepl = LocalPlayer->GetPreferredUniqueNetId();
+		}
+		else
+		{
+			UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
+			check(IsValid(RemoteNetConnection));
+			UniqueNetIdRepl = RemoteNetConnection->PlayerId;
+		}
+	}
+	else
+	{
+		UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
+		check(IsValid(RemoteNetConnection));
+		UniqueNetIdRepl = RemoteNetConnection->PlayerId;
+	}
+
+	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
+	check(UniqueNetId != nullptr);
+
+	if (!SessionInterface->UnregisterPlayer(GameSessionLocalName, *UniqueNetId))
+	{
+		// The player could not be registered; typically you will want to kick the player from the server in this situation.
+		UE_LOG(Networking, Error, TEXT("Player could NOT be unreghistered"));
+		return;
+	}
+
+	UE_LOG(Networking, Display, TEXT("Player Unegistered Successfully"));
+}
+
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
 {
 
