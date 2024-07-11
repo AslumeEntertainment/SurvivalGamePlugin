@@ -49,7 +49,7 @@ private:
 public:
 
 	UPROPERTY(EditAnywhere)
-	FName LobbyMapName = "ThirdPersonMap";
+	FString LobbyMapName = "ThirdPersonMap";
 
 	UPROPERTY(EditAnywhere)
 	FName GameSessionLocalName = "GameSessionLocalName";

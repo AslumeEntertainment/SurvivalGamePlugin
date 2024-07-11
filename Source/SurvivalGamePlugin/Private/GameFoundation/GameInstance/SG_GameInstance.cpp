@@ -3,6 +3,7 @@
 
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 
+#include "Kismet/GameplayStatics.h" 
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "Interfaces/OnlineIdentityInterface.h"
@@ -203,6 +204,8 @@ void USG_GameInstance::HandleCreateSessionComplete(FName SessionName, bool bWasS
 	}
 
 	UE_LOG(Networking, Display, TEXT("Session Created"));
+
+	World->ServerTravel(LobbyMapName+ "?listen");
 }
 
 void USG_GameInstance::RegisterExistingPlayers()
@@ -227,7 +230,10 @@ void USG_GameInstance::RegisterExistingPlayers()
 
 void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 {
-	UWorld* World = GetWorld();
+
+	UE_LOG(Networking, Display, TEXT("Registering new player..."));
+
+	UWorld* World = InPlayerController->GetWorld();
 
 	if (IsValid(World) == false)
 	{
@@ -275,10 +281,15 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
 	check(UniqueNetId != nullptr);
 
-	if (!SessionInterface->RegisterPlayer(GameSessionLocalName, *UniqueNetId, false))
+	if (!SessionInterface->RegisterPlayer(GameSessionLocalName, *UniqueNetId, true))
 	{
 		// The player could not be registered; typically you will want to kick the player from the server in this situation.
+		UE_LOG(Networking, Error, TEXT("New player could NOT be reghistered"));
+		return;
 	}
+
+	UE_LOG(Networking, Display, TEXT("New Player Registered Successfully"));
+
 }
 
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
@@ -450,21 +461,25 @@ void USG_GameInstance::HandleJoinSessionComplete(FName SessionName, EOnJoinSessi
 
 	//establish network error and travel error delegate handle 
 
-	if (JoinResult != EOnJoinSessionCompleteResult::Success && JoinResult != EOnJoinSessionCompleteResult::AlreadyInSession)
+	bool bIsIn = (JoinResult == EOnJoinSessionCompleteResult::Success || JoinResult == EOnJoinSessionCompleteResult::AlreadyInSession);
+
+	if (!bIsIn)
 	{
 		UE_LOG(Networking, Error, TEXT("Could NOT join session"));
 		return;
 	}
 
-	UE_LOG(Networking, Display, TEXT("Session joined  -  browsing level"));
+	UE_LOG(Networking, Display, TEXT("Session joined  -  traveling to server"));
 
 
-	FURL NewURL(nullptr, *ConnectInfo, ETravelType::TRAVEL_Absolute);
-	FString BrowseError;
-	if (GEngine->Browse(GEngine->GetWorldContextFromWorldChecked(this->GetWorld()), NewURL, BrowseError) == EBrowseReturnVal::Failure)
+	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+	if (IsValid(PC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to start browse: %s"), *BrowseError);
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleJoinSessionComplete IsValid(PC) == false"));
 		return;
 	}
+
+	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);//add ,true for seamless travel
+
 }
 
