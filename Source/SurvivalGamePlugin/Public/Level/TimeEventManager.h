@@ -15,27 +15,21 @@ public:
 	ATimeEventManager();
 
 private:
-	
-	float BaseSkyRotationRate;
 
-	UPROPERTY(Replicated)
-	float SkyRotation;
+	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
+	TSubclassOf<AActor> TestActorClass;
 
 protected:
 
 	virtual void BeginPlay() override;
 
-	FTimerHandle DayNightCycleTimer;
 	FTimerHandle PreparationPeriodTimer;
 
 	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
-	float DayLength = 600;
+	float DayLength = 30;
 
 	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
-	float InitialSkyRotation = -60;
-
-	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
-	bool bIsTimeFlowing = true;
+	float InitialSkyRotation = -90;
 
 	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
 	int DaysForPreparation = 1;
@@ -43,8 +37,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
 	USoundBase* NotificationSound;
 
+	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
+	FVector BottomLeftArenaCornerCoordinate;
+
+	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
+	FVector UpperRightArenaCornerCoordinate;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class UStaticMeshComponent* SkySphere;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
+	class URotatingMovementComponent* SkyRotationComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class UDirectionalLightComponent* SunLightSource;
@@ -64,11 +67,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class USkyAtmosphereComponent* SkyAtmosphere;;
 
+	UFUNCTION(Server, Reliable)
+	void StartPreparationPeriod();
+
 	UFUNCTION(NetMulticast, Reliable)
-	void AdvanceTime();
+	void PreparationPeriodOver();
 
 	UFUNCTION(Server, Reliable)
-	void PreparationPeriodOver();
+	void SpawnPredator();
 	
 public:	
 
