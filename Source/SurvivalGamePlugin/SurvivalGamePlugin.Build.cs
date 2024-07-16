@@ -28,6 +28,7 @@ public class SurvivalGamePlugin : ModuleRules
 				"Core",
                 "OnlineSubsystem",
                 "OnlineSubsystemUtils",
+                "EnhancedInput",
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }
@@ -41,6 +42,9 @@ public class SurvivalGamePlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"GameplayAbilities",
+				"GameplayTags",
+				"GameplayTasks"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
