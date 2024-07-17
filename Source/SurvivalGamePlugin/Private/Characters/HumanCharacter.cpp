@@ -51,7 +51,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
 		{
 			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent))
+			if (Cast<UMeshComponent>(InteractableMeshComponent) && GetController()->IsLocalPlayerController())
 			{
 				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 			}
@@ -70,7 +70,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
 		{
 			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent))
+			if (Cast<UMeshComponent>(InteractableMeshComponent) && GetController()->IsLocalPlayerController())
 			{
 				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 			}
@@ -81,7 +81,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 	}
 
 	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitComponent);
-	if (HitMeshComponent != nullptr)
+	if (HitMeshComponent != nullptr && GetController()->IsLocalPlayerController())
 	{
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
@@ -118,6 +118,7 @@ void AHumanCharacter::AttemptEquipWithMainHand()
 	if (IsValid(FocusedInteractableObject))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with main hand"));
+		Cast<AActor>(FocusedInteractableObject)->Destroy();
 	}
 }
 
@@ -126,5 +127,6 @@ void AHumanCharacter::AttemptEquipWithSecondaryHand()
 	if (IsValid(FocusedInteractableObject))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with secondary hand"));
+		Cast<AActor>(FocusedInteractableObject)->Destroy();
 	}
 }
