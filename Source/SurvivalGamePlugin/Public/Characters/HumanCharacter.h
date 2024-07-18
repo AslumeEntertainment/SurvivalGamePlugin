@@ -49,7 +49,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipSecondaryHandAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* UseMainHandItemAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* UseSecondaryHandItemAction;
+
 	void AttemptEquipWithMainHand();
 	void AttemptEquipWithSecondaryHand();
-	
+
+	void AttemptUseMainHandItem();
+	void AttemptUseSecondaryHandItem();
 };

@@ -125,6 +125,8 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithMainHand);
 		EnhancedInputComponent->BindAction(EquipSecondaryHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithSecondaryHand);
+		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseMainHandItem);
+		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseSecondaryHandItem);
 	}
 
 	else
@@ -162,5 +164,31 @@ void AHumanCharacter::AttemptEquipWithSecondaryHand()
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with secondary hand"));
 		SecondaryHandItem = Cast<AItemBase>(FocusedInteractableObject);
 		SecondaryHandItem->OnItemEquiped(this, SecondaryHandSocket);
+	}
+}
+
+void AHumanCharacter::AttemptUseMainHandItem()
+{
+	if (IsValid(MainHandItem))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Using item from the main hand"));
+		MainHandItem->Use();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Main hand is empty, performing another action"));
+	}
+}
+
+void AHumanCharacter::AttemptUseSecondaryHandItem()
+{
+	if (IsValid(SecondaryHandItem))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Using item from the secondary hand"));
+		SecondaryHandItem->Use();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Secondary hand is empty, performing another action"));
 	}
 }
