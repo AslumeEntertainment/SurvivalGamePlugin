@@ -6,6 +6,7 @@
 #include "Characters/SG_Character.h"
 #include "HumanCharacter.generated.h"
 
+class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
@@ -16,17 +17,28 @@ private:
 
 	UObject* FocusedInteractableObject = nullptr;
 
+	FName MainHandSocket;
+	FName SecondaryHandSocket;
+
+	AItemBase* MainHandItem;
+	AItemBase* SecondaryHandItem;
+
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
 
 protected:
 
+	virtual void BeginPlay();
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	bool bIsRightHanded = true;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
-	float InteractionDistance = 200;
+	float InteractionRange = 200;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;

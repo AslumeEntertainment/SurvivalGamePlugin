@@ -7,7 +7,24 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Interactables/Items/ItemBase.h"
 
+
+void AHumanCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (bIsRightHanded)
+	{
+		MainHandSocket = FName("Hand_R_Socket");
+		SecondaryHandSocket = FName("Hand_L_Socket");
+	}
+	else
+	{
+		MainHandSocket = FName("Hand_L_Socket");
+		SecondaryHandSocket = FName("Hand_R_Socket");
+	}
+}
 
 void AHumanCharacter::Tick(float DeltaTime)
 {
@@ -18,7 +35,7 @@ void AHumanCharacter::Tick(float DeltaTime)
 void AHumanCharacter::EmitInteractionChecker()
 {
 	FVector StartTrace = GetFollowCamera()->GetComponentLocation();
-	FVector EndTrace = GetFollowCamera()->GetForwardVector() * InteractionDistance + StartTrace;
+	FVector EndTrace = GetFollowCamera()->GetForwardVector() * InteractionRange + StartTrace;
 
 	const FName TraceTag("InteractableTraceTag");
 
@@ -79,7 +96,10 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		FocusedInteractableObject = nullptr;
 		return;
 	}
-
+	if (!InteractableActor->bCanInteract())
+	{
+		return;
+	}
 	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitComponent);
 	if (HitMeshComponent != nullptr && GetController()->IsLocalPlayerController())
 	{
@@ -115,18 +135,32 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::AttemptEquipWithMainHand()
 {
-	if (IsValid(FocusedInteractableObject))
+	if (IsValid(MainHandItem))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to unequip with main hand"));
+		MainHandItem->OnItemUnequiped(this);
+		MainHandItem = nullptr;
+	}
+	else if (IsValid(FocusedInteractableObject) && Cast<AItemBase>(FocusedInteractableObject))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with main hand"));
-		Cast<AActor>(FocusedInteractableObject)->Destroy();
+		MainHandItem = Cast<AItemBase>(FocusedInteractableObject);
+		MainHandItem->OnItemEquiped(this, MainHandSocket);
 	}
 }
 
 void AHumanCharacter::AttemptEquipWithSecondaryHand()
 {
-	if (IsValid(FocusedInteractableObject))
+	if (IsValid(SecondaryHandItem))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to unequip with secondary hand"));
+		SecondaryHandItem->OnItemUnequiped(this);
+		SecondaryHandItem = nullptr;
+	}
+	else if(IsValid(FocusedInteractableObject) && Cast<AItemBase>(FocusedInteractableObject))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with secondary hand"));
-		Cast<AActor>(FocusedInteractableObject)->Destroy();
+		SecondaryHandItem = Cast<AItemBase>(FocusedInteractableObject);
+		SecondaryHandItem->OnItemEquiped(this, SecondaryHandSocket);
 	}
 }
