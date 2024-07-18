@@ -7,6 +7,7 @@
 #include "../InteractableInterface.h"
 #include "ItemBase.generated.h"
 
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface
 {
@@ -15,6 +16,10 @@ class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInte
 public:	
 	// Sets default values for this actor's properties
 	AItemBase();
+
+private:
+	UPROPERTY(Replicated)
+	bool bIsAttached = false;
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,8 +37,14 @@ public:
 
 	void Use();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interact")
-	void InteractRequest();
-	virtual void InteractRequest_Implementation();
+	UFUNCTION(NetMulticast, Reliable)
+	void OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void OnItemUnequiped(ACharacter* PlayerCharacter);
+
+
+	virtual void InteractRequest() override;
+	virtual bool bCanInteract() override;
 
 };

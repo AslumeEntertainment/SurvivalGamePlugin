@@ -3,6 +3,8 @@
 
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -11,6 +13,13 @@ AItemBase::AItemBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	SetRootComponent(StaticMesh);
+}
+
+void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AItemBase, bIsAttached);
 }
 
 // Called when the game starts or when spawned
@@ -31,8 +40,28 @@ void AItemBase::Use()
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 }
 
-void AItemBase::InteractRequest_Implementation()
+void AItemBase::OnItemEquiped_Implementation(ACharacter* PlayerCharacter, FName SocketName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Picking up item"));
+	UE_LOG(LogTemp, Warning, TEXT("Equiping item"));
+	AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	bIsAttached = true;
+	//Destroy();
+}
+
+void AItemBase::OnItemUnequiped_Implementation(ACharacter* PlayerCharacter)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Unequiping item"));
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	bIsAttached = false;
+}
+
+void AItemBase::InteractRequest()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Interacting with item"));
+}
+
+bool AItemBase::bCanInteract()
+{
+	return !bIsAttached;
 }
 
