@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayAbilities/SG_AttributeSet.h"
+#include "GAS/SG_AttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
 USG_AttributeSet::USG_AttributeSet()

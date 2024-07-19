@@ -125,8 +125,11 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithMainHand);
 		EnhancedInputComponent->BindAction(EquipSecondaryHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithSecondaryHand);
+		
 		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseMainHandItem);
 		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseSecondaryHandItem);
+		
+		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseAbility);
 	}
 
 	else
@@ -191,4 +194,9 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Secondary hand is empty, performing another action"));
 	}
+}
+
+void AHumanCharacter::UseAbility()
+{
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Action);
 }

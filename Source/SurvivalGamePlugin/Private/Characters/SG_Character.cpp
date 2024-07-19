@@ -12,9 +12,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
-#include "GameplayAbilities/SG_AbilitySystemComponent.h"
-#include "GameplayAbilities/SG_AttributeSet.h"
-#include "GameplayAbilities/SG_GameplayAbility.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/SG_AttributeSet.h"
+#include "GAS/SG_GameplayAbility.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -101,6 +101,23 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
+{
+	if (!IsValid(AbilitySystemComponent))
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	if (bIsPressed)
+	{
+		AbilitySystemComponent->AbilityLocalInputPressed(static_cast<int32>(AbilityInputID));
+	}
+	else
+	{
+		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
 	}
 }
 

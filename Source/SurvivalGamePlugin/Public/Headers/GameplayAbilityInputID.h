@@ -10,5 +10,5 @@ enum class EGameplayAbilityInputID : uint8
 	None,
 	Confirm,
 	Cancel,
-	Punch
+	Action
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayAbilities/SG_GameplayAbility.h"
+#include "GAS/SG_GameplayAbility.h"
 
 USG_GameplayAbility::USG_GameplayAbility()
 {

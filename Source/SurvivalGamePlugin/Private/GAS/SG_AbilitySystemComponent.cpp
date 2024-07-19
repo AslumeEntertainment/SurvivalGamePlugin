@@ -1,5 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayAbilities/SG_AbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
