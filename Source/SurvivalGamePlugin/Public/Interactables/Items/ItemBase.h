@@ -35,14 +35,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
 	void Use();
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName);
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void OnItemUnequiped(ACharacter* PlayerCharacter);
-
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;

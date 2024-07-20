@@ -10,5 +10,7 @@ enum class EGameplayAbilityInputID : uint8
 	None,
 	Confirm,
 	Cancel,
-	Action
+	Action,
+	EquipMain,
+	EquipSecondary
 };

@@ -40,15 +40,14 @@ void AItemBase::Use()
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 }
 
-void AItemBase::OnItemEquiped_Implementation(ACharacter* PlayerCharacter, FName SocketName)
+void AItemBase::OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Equiping item"));
 	AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	bIsAttached = true;
-	//Destroy();
 }
 
-void AItemBase::OnItemUnequiped_Implementation(ACharacter* PlayerCharacter)
+void AItemBase::OnItemUnequiped(ACharacter* PlayerCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Unequiping item"));
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);

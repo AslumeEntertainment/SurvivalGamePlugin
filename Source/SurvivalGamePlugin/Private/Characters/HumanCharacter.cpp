@@ -140,34 +140,12 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::AttemptEquipWithMainHand()
 {
-	if (IsValid(MainHandItem))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to unequip with main hand"));
-		MainHandItem->OnItemUnequiped(this);
-		MainHandItem = nullptr;
-	}
-	else if (IsValid(FocusedInteractableObject) && Cast<AItemBase>(FocusedInteractableObject))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with main hand"));
-		MainHandItem = Cast<AItemBase>(FocusedInteractableObject);
-		MainHandItem->OnItemEquiped(this, MainHandSocket);
-	}
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::EquipMain);
 }
 
 void AHumanCharacter::AttemptEquipWithSecondaryHand()
 {
-	if (IsValid(SecondaryHandItem))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to unequip with secondary hand"));
-		SecondaryHandItem->OnItemUnequiped(this);
-		SecondaryHandItem = nullptr;
-	}
-	else if(IsValid(FocusedInteractableObject) && Cast<AItemBase>(FocusedInteractableObject))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Attempting to equip with secondary hand"));
-		SecondaryHandItem = Cast<AItemBase>(FocusedInteractableObject);
-		SecondaryHandItem->OnItemEquiped(this, SecondaryHandSocket);
-	}
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::EquipSecondary);
 }
 
 void AHumanCharacter::AttemptUseMainHandItem()
@@ -199,4 +177,19 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 void AHumanCharacter::UseAbility()
 {
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Action);
+}
+
+UObject* AHumanCharacter::GetFocusedInteractableObject()
+{
+	return FocusedInteractableObject;
+}
+
+FName AHumanCharacter::GetMainHandSocket()
+{
+	return MainHandSocket;
+}
+
+FName AHumanCharacter::GetSecondaryHandSocket()
+{
+	return SecondaryHandSocket;
 }

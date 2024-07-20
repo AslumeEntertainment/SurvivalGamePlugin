@@ -20,9 +20,6 @@ private:
 	FName MainHandSocket;
 	FName SecondaryHandSocket;
 
-	AItemBase* MainHandItem;
-	AItemBase* SecondaryHandItem;
-
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
 
@@ -65,4 +62,19 @@ protected:
 	void AttemptUseSecondaryHandItem();
 
 	void UseAbility();
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, Category = "Equipment")
+	AItemBase* MainHandItem;
+	UPROPERTY(BlueprintReadWrite, Category = "Equipment")
+	AItemBase* SecondaryHandItem;
+
+	UFUNCTION(BlueprintCallable)
+	UObject* GetFocusedInteractableObject();
+
+	UFUNCTION(BlueprintCallable)
+	FName GetMainHandSocket();
+	UFUNCTION(BlueprintCallable)
+	FName GetSecondaryHandSocket();
 };
