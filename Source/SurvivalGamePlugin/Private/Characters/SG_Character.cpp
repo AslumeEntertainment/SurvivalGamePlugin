@@ -94,7 +94,8 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		if (AbilitySystemComponent && InputComponent)
 		{
-			const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGameplayAbilityInputID", static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+			FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+			const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
 			AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 		}
 	}
@@ -201,7 +202,8 @@ void ASG_Character::OnRep_PlayerState()
 
 	if (AbilitySystemComponent && InputComponent)
 	{
-		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGameplayAbilityInputID", static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
 		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 	}
 }

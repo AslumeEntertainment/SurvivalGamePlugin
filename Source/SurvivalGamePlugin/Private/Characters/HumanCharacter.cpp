@@ -152,8 +152,7 @@ void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Using item from the main hand"));
-		MainHandItem->Use();
+		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseMain);
 	}
 	else
 	{
@@ -165,8 +164,7 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Using item from the secondary hand"));
-		SecondaryHandItem->Use();
+		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseSecondary);
 	}
 	else
 	{
