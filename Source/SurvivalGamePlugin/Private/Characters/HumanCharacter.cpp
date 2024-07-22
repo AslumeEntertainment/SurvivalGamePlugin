@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Interactables/Items/ItemBase.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 void AHumanCharacter::BeginPlay()
@@ -130,6 +131,8 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseSecondaryHandItem);
 		
 		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseAbility);
+
+		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Triggered, this, &AHumanCharacter::OpenCraftingWindow);
 	}
 
 	else
@@ -175,6 +178,26 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 void AHumanCharacter::UseAbility()
 {
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Action);
+}
+
+void AHumanCharacter::OpenCraftingWindow()
+{
+	
+	if (!IsValid(MainHandItem) || !IsValid(SecondaryHandItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player needs to have an item in both hands!"));
+		return;
+	}
+	
+	TArray<FItemCraftingDataStruct> CraftingRecipes;// = MainHandItem->ItemData.GetAllCraftingRecipesWithItem(SecondaryHandItem->ItemData);
+	/*
+	if (CraftingRecipes.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player cannot craft anything with their current items!"));
+		return;
+	}
+	*/
+	CraftingWindowToggleDelegate.Broadcast(CraftingRecipes);
 }
 
 UObject* AHumanCharacter::GetFocusedInteractableObject()

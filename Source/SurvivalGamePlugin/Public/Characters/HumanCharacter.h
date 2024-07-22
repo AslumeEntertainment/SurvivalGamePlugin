@@ -8,6 +8,8 @@
 
 class AItemBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCraftingNotifySignature, TArray<FItemCraftingDataStruct>, CraftingRecipes);
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
 {
@@ -55,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* AbilityAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CraftingAction;
+
 	void AttemptEquipWithMainHand();
 	void AttemptEquipWithSecondaryHand();
 
@@ -62,6 +67,8 @@ protected:
 	void AttemptUseSecondaryHandItem();
 
 	void UseAbility();
+
+	void OpenCraftingWindow();
 
 public:
 
@@ -77,4 +84,7 @@ public:
 	FName GetMainHandSocket();
 	UFUNCTION(BlueprintCallable)
 	FName GetSecondaryHandSocket();
+
+	FCraftingNotifySignature CraftingWindowToggleDelegate;
+
 };

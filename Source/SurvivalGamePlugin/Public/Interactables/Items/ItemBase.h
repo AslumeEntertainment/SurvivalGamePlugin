@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Headers/ItemDataStruct.h"
 #include "../InteractableInterface.h"
 #include "ItemBase.generated.h"
 
@@ -25,8 +26,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Testing")
-	FText ItemName;
+	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
+	FName ItemID;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
@@ -34,6 +35,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(BlueprintReadOnly, Category = "ItemData")
+	FItemDataStruct ItemData;
 
 	UFUNCTION(BlueprintCallable)
 	void Use();

@@ -29,6 +29,7 @@ public class SurvivalGamePlugin : ModuleRules
                 "OnlineSubsystem",
                 "OnlineSubsystemUtils",
                 "EnhancedInput",
+				"UMG",
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }
