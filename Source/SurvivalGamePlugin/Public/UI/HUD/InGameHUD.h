@@ -40,5 +40,5 @@ public:
 	void ShowGameplayWidget();
 
 	UFUNCTION()
-	void ToggleCraftingWindow(TArray<FItemCraftingDataStruct> CraftingRecipes);
+	void ToggleCraftingWindow(FDataTableRowHandle MainItemRowData, FName IngredientItemName);
 };

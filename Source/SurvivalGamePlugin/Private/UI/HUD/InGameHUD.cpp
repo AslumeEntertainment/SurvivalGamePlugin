@@ -50,7 +50,7 @@ void AInGameHUD::ShowGameplayWidget()
 	GameplayWidget->AddToViewport();
 }
 
-void AInGameHUD::ToggleCraftingWindow(TArray<FItemCraftingDataStruct> CraftingRecipes)
+void AInGameHUD::ToggleCraftingWindow(FDataTableRowHandle MainItemRowData, FName IngredientItemName)
 {
 	if (!PlayerOwner || !CraftingWindowWidget)
 	{
@@ -60,13 +60,43 @@ void AInGameHUD::ToggleCraftingWindow(TArray<FItemCraftingDataStruct> CraftingRe
 	if (CraftingWindowWidget->IsInViewport())
 	{
 		CraftingWindowWidget->RemoveFromParent();
+		CraftingWindowWidget->ClearRecipes();
 		PlayerOwner->SetInputMode(FInputModeGameOnly());
 		PlayerOwner->bShowMouseCursor = false;
 	}
 	else
 	{
+		FItemDataStruct* ItemData = MainItemRowData.GetRow<FItemDataStruct>(TEXT("AInGameHUD::ToggleCraftingWindow: Retrieving main hand item data"));
+		if (!ItemData)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow ItemData == nullptr"));
+			return;
+		}
+
+
+		for (FItemCraftingDataStruct CraftingRecipe : ItemData->CraftableItems)
+		{
+			if (CraftingRecipe.IngredientItemID == IngredientItemName)
+			{
+				FDataTableRowHandle CraftingRecipeRowData = MainItemRowData;
+				CraftingRecipeRowData.RowName = CraftingRecipe.ProductItemID;
+
+				FItemDataStruct* ProductItemData = CraftingRecipeRowData.GetRow<FItemDataStruct>(TEXT("AInGameHUD::ToggleCraftingWindow: Retrieving item data for product item"));
+				if (!ProductItemData)
+				{
+					UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow ProductItemData == nullptr"));
+					return;
+				}
+
+				UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
+				ItemIcon->SetItemImage(ProductItemData->ItemImage);
+				ItemIcon->SetItemName(ProductItemData->ItemName);
+				CraftingWindowWidget->AddCraftingRecipe(ItemIcon);
+			}
+		}
+
 		CraftingWindowWidget->AddToViewport();
-		PlayerOwner->SetInputMode(FInputModeUIOnly());
+		PlayerOwner->SetInputMode(FInputModeGameAndUI());
 		PlayerOwner->bShowMouseCursor = true;
 	}
 }

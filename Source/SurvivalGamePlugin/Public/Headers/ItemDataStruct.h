@@ -36,22 +36,22 @@ struct FItemDataStruct : public FTableRowBase
 		ItemActorClass = nullptr;
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FName ItemID;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FText ItemName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UTexture2D* ItemImage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float ItemDurability;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AItemBase> ItemActorClass;
 
 	bool operator==(const FItemDataStruct& Item) const
@@ -63,24 +63,22 @@ struct FItemDataStruct : public FTableRowBase
 		else return false;
 	}
 
-	TArray<FItemCraftingDataStruct> GetAllCraftingRecipesWithItem(FItemDataStruct& Item)
+	bool bCanCraftWithItem(FName IngredientItemName)
 	{
-		TArray<FItemCraftingDataStruct> CraftingRecipes;
-
 		if (CraftableItems.IsEmpty())
 		{
-			return CraftingRecipes;
+			return false;
 		}
 
 		for (FItemCraftingDataStruct CraftingRecipe : CraftableItems)
 		{
-			if (CraftingRecipe.IngredientItemID == Item.ItemID)
+			if (CraftingRecipe.IngredientItemID == IngredientItemName)
 			{
-				CraftingRecipes.Add(CraftingRecipe);
+				return true;
 			}
 		}
 
-		return CraftingRecipes;
+		return false;
 	}
 
 };

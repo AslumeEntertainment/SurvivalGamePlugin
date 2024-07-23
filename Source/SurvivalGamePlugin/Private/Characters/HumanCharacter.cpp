@@ -113,15 +113,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-
+	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithMainHand);
@@ -182,22 +174,53 @@ void AHumanCharacter::UseAbility()
 
 void AHumanCharacter::OpenCraftingWindow()
 {
-	
+	//Check if player has 2 items equiped
 	if (!IsValid(MainHandItem) || !IsValid(SecondaryHandItem))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player needs to have an item in both hands!"));
 		return;
 	}
-	
-	TArray<FItemCraftingDataStruct> CraftingRecipes;// = MainHandItem->ItemData.GetAllCraftingRecipesWithItem(SecondaryHandItem->ItemData);
-	/*
-	if (CraftingRecipes.IsEmpty())
+
+	//Check if the player can craft using their equiped items
+	FItemDataStruct* MainItemData = MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT("AHumanCharacter::OpenCraftingWindow: Retrieving main hand item data"));
+	if (!MainItemData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow MainItemData == nullptr"));
+		return;
+	}
+	if (!MainItemData->bCanCraftWithItem(SecondaryHandItem->ItemData.RowName))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player cannot craft anything with their current items!"));
 		return;
 	}
-	*/
-	CraftingWindowToggleDelegate.Broadcast(CraftingRecipes);
+	
+	//Toggle the crafting window and flip between the mapping input contexts
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (!IsValid(PlayerController))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(PlayerController) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+	if (!IsValid(Subsystem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(Subsystem) == false"));
+		return;
+	}
+	
+	bIsCraftingWindowOpen = !bIsCraftingWindowOpen;
+	if (bIsCraftingWindowOpen)
+	{
+		Subsystem->RemoveMappingContext(DefaultMappingContext);
+		Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
+	}
+	else
+	{
+		Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+	}
+
+	CraftingWindowToggleDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->ItemData.RowName);
 }
 
 UObject* AHumanCharacter::GetFocusedInteractableObject()

@@ -26,9 +26,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
-	FName ItemID;
-
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
 
@@ -36,8 +33,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(BlueprintReadOnly, Category = "ItemData")
-	FItemDataStruct ItemData;
+	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
+	FDataTableRowHandle ItemData;
 
 	UFUNCTION(BlueprintCallable)
 	void Use();

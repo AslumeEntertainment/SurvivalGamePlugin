@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
+#include "Headers/ItemDataStruct.h"
 #include "HumanCharacter.generated.h"
 
 class AItemBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCraftingNotifySignature, TArray<FItemCraftingDataStruct>, CraftingRecipes);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCraftingNotifySignature, FDataTableRowHandle, MainItemRowData, FName, IngredientItemName);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
@@ -16,6 +17,8 @@ class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
 	GENERATED_BODY()
 	
 private:
+
+	bool bIsCraftingWindowOpen = false;
 
 	UObject* FocusedInteractableObject = nullptr;
 
@@ -41,6 +44,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* CraftingWindowOnlyMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipMainHandAction;
