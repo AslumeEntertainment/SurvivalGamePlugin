@@ -46,11 +46,13 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	{
 		Player->SecondaryHandItem->Destroy();
 	}
+
 	if (HasAuthority(&ActivationInfo))
 	{
-		AActor* NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
+		AActor* NewItemActor = NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
 		if (Cast<AItemBase>(NewItemActor))
 		{
+			Player->MainHandItem->OnItemUnequiped(Player);
 			Player->MainHandItem->Destroy();
 			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetMainHandSocket());
 			Player->MainHandItem = Cast<AItemBase>(NewItemActor);

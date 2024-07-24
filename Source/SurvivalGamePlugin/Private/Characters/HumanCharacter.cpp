@@ -127,6 +127,7 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseAbility);
 
 		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Triggered, this, &AHumanCharacter::OpenCraftingWindow);
+		EnhancedInputComponent->BindAction(DisassembleAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptDisassembleItem);
 	}
 
 	else
@@ -208,6 +209,17 @@ void AHumanCharacter::OpenCraftingWindow()
 	bIsCraftingWindowOpen = true;
 }
 
+void AHumanCharacter::AttemptDisassembleItem()
+{
+	if (!IsValid(MainHandItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Disassembing: Player is not holding an item in their main hand!"));
+		return;
+	}
+
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Disassemble);
+}
+
 UObject* AHumanCharacter::GetFocusedInteractableObject()
 {
 	return FocusedInteractableObject;
@@ -265,6 +277,7 @@ void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputC
 			Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 			break;
+
 		case EInputMappingContextState::Crafting:
 			Subsystem->RemoveMappingContext(DefaultMappingContext);
 			Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);

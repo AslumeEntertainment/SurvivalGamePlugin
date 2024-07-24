@@ -6,6 +6,12 @@
 #include "Engine/DataTable.h"
 #include "ItemDataStruct.generated.h"
 
+UENUM(BlueprintType)
+enum class EItemDisassembleRequirement : uint8
+{
+	Unable,
+	EmptyHand,
+};
 
 USTRUCT(BlueprintType)
 struct FItemCraftingDataStruct : public FTableRowBase
@@ -34,10 +40,8 @@ struct FItemDataStruct : public FTableRowBase
 		ItemImage = nullptr;
 		ItemDurability = 0;
 		ItemActorClass = nullptr;
+		DisassembleRequirement = EItemDisassembleRequirement::Unable;
 	}
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FName ItemID;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FText ItemName;
@@ -52,16 +56,16 @@ struct FItemDataStruct : public FTableRowBase
 	TArray<FItemCraftingDataStruct> CraftableItems;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class AItemBase> ItemActorClass;
+	EItemDisassembleRequirement DisassembleRequirement;
 
-	bool operator==(const FItemDataStruct& Item) const
-	{
-		if (ItemID == Item.ItemID) 
-		{
-			return true;
-		}
-		else return false;
-	}
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FName MainParentItem;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FName IngredientParentItem;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AItemBase> ItemActorClass;
 
 	bool bCanCraftWithItem(FName IngredientItemName)
 	{

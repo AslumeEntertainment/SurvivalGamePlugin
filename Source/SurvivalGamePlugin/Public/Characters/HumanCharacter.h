@@ -74,6 +74,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* CraftingAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* DisassembleAction;
+
 	void AttemptEquipWithMainHand();
 	void AttemptEquipWithSecondaryHand();
 
@@ -83,6 +86,7 @@ protected:
 	void UseAbility();
 
 	void OpenCraftingWindow();
+	void AttemptDisassembleItem();
 
 public:
 

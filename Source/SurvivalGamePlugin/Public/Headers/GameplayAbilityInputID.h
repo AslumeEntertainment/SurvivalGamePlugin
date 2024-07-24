@@ -14,5 +14,6 @@ enum class EGameplayAbilityInputID : uint8
 	EquipMain,
 	EquipSecondary,
 	UseMain,
-	UseSecondary
+	UseSecondary,
+	Disassemble
 };
