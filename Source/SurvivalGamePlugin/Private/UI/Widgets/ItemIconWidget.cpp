@@ -9,9 +9,7 @@
 
 void UItemIconWidget::OnIconClicked()
 {
-	FString TextString = TXT_ItemName->GetText().ToString();
-	TextString.RemoveSpacesInline();
-	IconClicked.Broadcast(FName(*TextString));
+	IconClicked.Broadcast(TXT_ItemName->GetText());
 }
 
 void UItemIconWidget::NativeOnInitialized()

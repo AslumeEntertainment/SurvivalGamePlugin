@@ -10,6 +10,14 @@
 class AItemBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCraftingNotifySignature, FDataTableRowHandle, MainItemRowData, FName, IngredientItemName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUINotifySignature);
+
+UENUM(BlueprintType)
+enum class EInputMappingContextState : uint8
+{
+	Default,
+	Crafting
+};
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
@@ -91,6 +99,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FName GetSecondaryHandSocket();
 
-	FCraftingNotifySignature CraftingWindowToggleDelegate;
+	UFUNCTION()
+	void CraftItem(FText ProductItemName);
+	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
+
+	FCraftingNotifySignature CraftingWindowOpenDelegate;
+	FUINotifySignature CraftingWindowCloseDelegate;
 
 };

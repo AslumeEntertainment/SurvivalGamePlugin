@@ -51,6 +51,8 @@ void AItemBase::OnItemUnequiped(ACharacter* PlayerCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Unequiping item"));
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	SetActorRotation(PlayerCharacter->GetActorRotation());
+	SetActorLocation(PlayerCharacter->GetActorLocation() + PlayerCharacter->GetActorForwardVector());
 	bIsAttached = false;
 }
 

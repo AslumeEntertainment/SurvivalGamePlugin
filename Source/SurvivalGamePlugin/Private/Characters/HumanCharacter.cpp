@@ -10,6 +10,8 @@
 #include "Interactables/Items/ItemBase.h"
 #include "UI/HUD/InGameHUD.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+
 
 void AHumanCharacter::BeginPlay()
 {
@@ -174,6 +176,14 @@ void AHumanCharacter::UseAbility()
 
 void AHumanCharacter::OpenCraftingWindow()
 {
+	//Check if the crafting window is being opened
+	if (bIsCraftingWindowOpen)
+	{
+		CraftingWindowCloseDelegate.Broadcast();
+		bIsCraftingWindowOpen = false;
+		return;
+	}
+
 	//Check if player has 2 items equiped
 	if (!IsValid(MainHandItem) || !IsValid(SecondaryHandItem))
 	{
@@ -194,33 +204,8 @@ void AHumanCharacter::OpenCraftingWindow()
 		return;
 	}
 	
-	//Toggle the crafting window and flip between the mapping input contexts
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (!IsValid(PlayerController))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(PlayerController) == false"));
-		return;
-	}
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-	if (!IsValid(Subsystem))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(Subsystem) == false"));
-		return;
-	}
-	
-	bIsCraftingWindowOpen = !bIsCraftingWindowOpen;
-	if (bIsCraftingWindowOpen)
-	{
-		Subsystem->RemoveMappingContext(DefaultMappingContext);
-		Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
-	}
-	else
-	{
-		Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
-		Subsystem->AddMappingContext(DefaultMappingContext, 0);
-	}
-
-	CraftingWindowToggleDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->ItemData.RowName);
+	CraftingWindowOpenDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->ItemData.RowName);
+	bIsCraftingWindowOpen = true;
 }
 
 UObject* AHumanCharacter::GetFocusedInteractableObject()
@@ -236,4 +221,53 @@ FName AHumanCharacter::GetMainHandSocket()
 FName AHumanCharacter::GetSecondaryHandSocket()
 {
 	return SecondaryHandSocket;
+}
+
+void AHumanCharacter::CraftItem(FText ProductItemName)
+{
+	CraftingWindowCloseDelegate.Broadcast();
+	bIsCraftingWindowOpen = false;
+
+	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString();
+	GameplayTagString.RemoveSpacesInline();
+	FGameplayTag ProductNameTag;
+	ProductNameTag.FromExportString(GameplayTagString);
+	
+	if (!ProductNameTag.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::CraftItem ProductNameTag.IsValid() == false"));
+		return;
+	}
+	
+	FGameplayEventData EventData;
+	EventData.EventTag = ProductNameTag;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, ProductNameTag, EventData);
+}
+
+void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputContextState)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (!IsValid(PlayerController))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(PlayerController) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+	if (!IsValid(Subsystem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(Subsystem) == false"));
+		return;
+	}
+
+	switch (InputContextState)
+	{
+		case EInputMappingContextState::Default: 
+			Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			break;
+		case EInputMappingContextState::Crafting:
+			Subsystem->RemoveMappingContext(DefaultMappingContext);
+			Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
+			break;
+	}
 }
