@@ -5,6 +5,14 @@
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/ItemBase.h"
 
+#include "Net/UnrealNetwork.h"
+
+
+void USGGA_CraftItem::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	DOREPLIFETIME(USGGA_CraftItem, NewItemActor);
+}
+
 void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
@@ -26,10 +34,10 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	}
 
 	FName ProductItemName = FName(*TriggerEventData->EventTag.ToString().RightChop(6));
-	FDataTableRowHandle ProductItemRowData = Player->MainHandItem->ItemData;
+	FDataTableRowHandle ProductItemRowData = Player->GetMainHandItem()->ItemData;
 	ProductItemRowData.RowName = ProductItemName;
 	
-	FItemDataStruct* MainItemData = Player->MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_CraftItem::ActivateAbility: Retrieving main hand item data"));
+	FItemDataStruct* MainItemData = Player->GetMainHandItem()->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_CraftItem::ActivateAbility: Retrieving main hand item data"));
 	if (!MainItemData)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility MainItemData == nullptr"));
@@ -44,19 +52,30 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	
 	if (MainItemData->GetCraftingRecipeByProductName(ProductItemName).bIsIngredientDestroyed)
 	{
-		Player->SecondaryHandItem->Destroy();
+		Player->GetSecondaryHandItem()->Destroy();
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Destroying the ingredient item"));
 	}
 
 	if (HasAuthority(&ActivationInfo))
 	{
-		AActor* NewItemActor = NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-		if (Cast<AItemBase>(NewItemActor))
-		{
-			Player->MainHandItem->OnItemUnequiped(Player);
-			Player->MainHandItem->Destroy();
-			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetMainHandSocket());
-			Player->MainHandItem = Cast<AItemBase>(NewItemActor);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Server: Spawning a new item and replacing the old one"));
+
+		NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
+	}
+	
+	if (Cast<AItemBase>(NewItemActor))
+	{
+		Player->GetMainHandItem()->OnItemUnequiped(Player);
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Unequiping the old main item"));
+
+		Player->GetMainHandItem()->Destroy();
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Destroying the old main item"));
+
+		Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetMainHandSocket());
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Equiping the new main item"));
+
+		Player->SetMainHandItem(Cast<AItemBase>(NewItemActor));
+		UE_LOG(LogTemp, Warning, TEXT("Crafting: Setting MainHandItem to a valid AItemBase"));
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

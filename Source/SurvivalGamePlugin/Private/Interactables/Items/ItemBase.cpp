@@ -11,6 +11,7 @@ AItemBase::AItemBase()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
@@ -42,14 +43,12 @@ void AItemBase::Use()
 
 void AItemBase::OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Equiping item"));
 	AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	bIsAttached = true;
 }
 
 void AItemBase::OnItemUnequiped(ACharacter* PlayerCharacter)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Unequiping item"));
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorRotation(PlayerCharacter->GetActorRotation());
 	SetActorLocation(PlayerCharacter->GetActorLocation() + PlayerCharacter->GetActorForwardVector());

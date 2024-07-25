@@ -9,9 +9,18 @@
 #include "InputActionValue.h"
 #include "Interactables/Items/ItemBase.h"
 #include "UI/HUD/InGameHUD.h"
+#include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 
+
+void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
+}
 
 void AHumanCharacter::BeginPlay()
 {
@@ -66,12 +75,18 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
 	IInteractableInterface* InteractableComponent = Cast<IInteractableInterface>(HitComponent);
 
+	AController* PlayerController = GetController();
+	if (!IsValid(PlayerController)) //Local controller will have Controller != Null and Controller->Role != ROLE_Authority
+	{
+		return; 
+	}
+
 	if (HitActor == nullptr)
 	{
 		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
 		{
 			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent) && GetController()->IsLocalPlayerController())
+			if (Cast<UMeshComponent>(InteractableMeshComponent) && PlayerController->IsLocalPlayerController())
 			{
 				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 			}
@@ -90,7 +105,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
 		{
 			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent) && GetController()->IsLocalPlayerController())
+			if (Cast<UMeshComponent>(InteractableMeshComponent) && PlayerController->IsLocalPlayerController())
 			{
 				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 			}
@@ -104,7 +119,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		return;
 	}
 	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitComponent);
-	if (HitMeshComponent != nullptr && GetController()->IsLocalPlayerController())
+	if (HitMeshComponent != nullptr && PlayerController->IsLocalPlayerController())
 	{
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
@@ -225,6 +240,26 @@ UObject* AHumanCharacter::GetFocusedInteractableObject()
 	return FocusedInteractableObject;
 }
 
+AItemBase* AHumanCharacter::GetMainHandItem()
+{
+	return MainHandItem;
+}
+
+AItemBase* AHumanCharacter::GetSecondaryHandItem()
+{
+	return SecondaryHandItem;
+}
+
+void AHumanCharacter::SetMainHandItem(AItemBase* InItem)
+{
+	MainHandItem = InItem;
+}
+
+void AHumanCharacter::SetSecondaryHandItem(AItemBase* InItem)
+{
+	SecondaryHandItem = InItem;
+}
+
 FName AHumanCharacter::GetMainHandSocket()
 {
 	return MainHandSocket;
@@ -235,12 +270,96 @@ FName AHumanCharacter::GetSecondaryHandSocket()
 	return SecondaryHandSocket;
 }
 
+void AHumanCharacter::ShowPlayerInfo()
+{
+	UE_LOG(LogTemp, Warning, TEXT("===== Character stats ====="));
+
+	if (FocusedInteractableObject)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject is a valid pointer"));
+
+		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(FocusedInteractableObject);
+		if (InteractableActor)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject implements IInteractableInterface"));
+			if (InteractableActor->bCanInteract())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject can be interacted with"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject cannot be interacted with, it is most likely equiped by a player"));
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject == nullptr"));
+	}
+
+	if (IsValid(MainHandItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a valid pointer"));
+
+		if (MainHandItem->bCanInteract())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MainHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MainHandItem cannot be interacted with as it is currently equiped by the player"));
+		}
+
+		FItemDataStruct* MainItemData = MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT(""));
+		if (MainItemData)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a %s"), *MainItemData->ItemName.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MainHandItem does not have valid item data"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MainHandItem == nullptr"));
+	}
+
+	if (IsValid(SecondaryHandItem))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a valid pointer"));
+
+		if (SecondaryHandItem->bCanInteract())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem cannot be interacted with as it is currently equiped by the player"));
+		}
+
+		FItemDataStruct* SecondaryItemData = SecondaryHandItem->ItemData.GetRow<FItemDataStruct>(TEXT(""));
+		if (SecondaryItemData)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a %s"), *SecondaryItemData->ItemName.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem does not have valid item data"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem == nullptr"));
+	}
+}
+
 void AHumanCharacter::CraftItem(FText ProductItemName)
 {
 	CraftingWindowCloseDelegate.Broadcast();
 	bIsCraftingWindowOpen = false;
 
-	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString();
+	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString(); 
 	GameplayTagString.RemoveSpacesInline();
 	FGameplayTag ProductNameTag;
 	ProductNameTag.FromExportString(GameplayTagString);

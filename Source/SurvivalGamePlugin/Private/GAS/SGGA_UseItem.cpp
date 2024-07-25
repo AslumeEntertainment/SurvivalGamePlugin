@@ -13,7 +13,6 @@ void USGGA_UseItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UseItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-
 	AHumanCharacter* Player = CastChecked<AHumanCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
@@ -21,18 +20,13 @@ void USGGA_UseItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	if (bIsUsingMainHand && IsValid(Player->MainHandItem))
+	if (bIsUsingMainHand && IsValid(Player->GetMainHandItem()))
 	{
-		Player->MainHandItem->Use();
+		Player->GetMainHandItem()->Use();
 	}
-	else if (!bIsUsingMainHand && IsValid(Player->SecondaryHandItem))
+	else if (!bIsUsingMainHand && IsValid(Player->GetSecondaryHandItem()))
 	{
-		Player->SecondaryHandItem->Use();
-	}
-
-	if (UseAnimation) 
-	{
-		Player->PlayAnimMontage(UseAnimation, 1);
+		Player->GetSecondaryHandItem()->Use();
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

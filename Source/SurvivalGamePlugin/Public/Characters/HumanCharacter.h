@@ -90,18 +90,26 @@ protected:
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment")
-	AItemBase* MainHandItem;
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment")
-	AItemBase* SecondaryHandItem;
-
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
+
+	UPROPERTY(Replicated)
+	AItemBase* MainHandItem;
+	UPROPERTY(Replicated)
+	AItemBase* SecondaryHandItem;
+
+	AItemBase* GetMainHandItem();
+	AItemBase* GetSecondaryHandItem();
+	void SetMainHandItem(AItemBase* InItem);
+	void SetSecondaryHandItem(AItemBase* InItem);
 
 	UFUNCTION(BlueprintCallable)
 	FName GetMainHandSocket();
 	UFUNCTION(BlueprintCallable)
 	FName GetSecondaryHandSocket();
+
+	UFUNCTION(BlueprintCallable)
+	void ShowPlayerInfo();
 
 	UFUNCTION()
 	void CraftItem(FText ProductItemName);

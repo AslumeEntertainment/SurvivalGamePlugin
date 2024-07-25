@@ -23,6 +23,4 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
 	bool bIsUsingMainHand = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	class UAnimMontage* UseAnimation;
 };
