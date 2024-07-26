@@ -30,9 +30,6 @@ private:
 
 	UObject* FocusedInteractableObject = nullptr;
 
-	FName MainHandSocket;
-	FName SecondaryHandSocket;
-
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
 
@@ -44,7 +41,13 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditAnywhere, Category = "Interaction")
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
+	FName LeftHandSocket;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
+	FName RightHandSocket;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
@@ -90,18 +93,14 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable)
-	UObject* GetFocusedInteractableObject();
-
 	UPROPERTY(Replicated)
 	AItemBase* MainHandItem;
 	UPROPERTY(Replicated)
 	AItemBase* SecondaryHandItem;
 
-	AItemBase* GetMainHandItem();
-	AItemBase* GetSecondaryHandItem();
-	void SetMainHandItem(AItemBase* InItem);
-	void SetSecondaryHandItem(AItemBase* InItem);
+	UFUNCTION()
+	void CraftItem(FText ProductItemName);
+	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
 	UFUNCTION(BlueprintCallable)
 	FName GetMainHandSocket();
@@ -109,11 +108,10 @@ public:
 	FName GetSecondaryHandSocket();
 
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerInfo();
+	UObject* GetFocusedInteractableObject();
 
-	UFUNCTION()
-	void CraftItem(FText ProductItemName);
-	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
+	UFUNCTION(BlueprintCallable)
+	void ShowPlayerInfo();
 
 	FCraftingNotifySignature CraftingWindowOpenDelegate;
 	FUINotifySignature CraftingWindowCloseDelegate;

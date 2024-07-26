@@ -25,17 +25,6 @@ void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void AHumanCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (bIsRightHanded)
-	{
-		MainHandSocket = FName("Hand_R_Socket");
-		SecondaryHandSocket = FName("Hand_L_Socket");
-	}
-	else
-	{
-		MainHandSocket = FName("Hand_L_Socket");
-		SecondaryHandSocket = FName("Hand_R_Socket");
-	}
 }
 
 void AHumanCharacter::Tick(float DeltaTime)
@@ -235,39 +224,83 @@ void AHumanCharacter::AttemptDisassembleItem()
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Disassemble);
 }
 
-UObject* AHumanCharacter::GetFocusedInteractableObject()
+void AHumanCharacter::CraftItem(FText ProductItemName)
 {
-	return FocusedInteractableObject;
+	CraftingWindowCloseDelegate.Broadcast();
+	bIsCraftingWindowOpen = false;
+
+	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString();
+	GameplayTagString.RemoveSpacesInline();
+	FGameplayTag ProductNameTag;
+	ProductNameTag.FromExportString(GameplayTagString);
+
+	if (!ProductNameTag.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::CraftItem ProductNameTag.IsValid() == false"));
+		return;
+	}
+
+	FGameplayEventData EventData;
+	EventData.EventTag = ProductNameTag;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, ProductNameTag, EventData);
 }
 
-AItemBase* AHumanCharacter::GetMainHandItem()
+void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputContextState)
 {
-	return MainHandItem;
-}
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (!IsValid(PlayerController))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(PlayerController) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+	if (!IsValid(Subsystem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(Subsystem) == false"));
+		return;
+	}
 
-AItemBase* AHumanCharacter::GetSecondaryHandItem()
-{
-	return SecondaryHandItem;
-}
+	switch (InputContextState)
+	{
+	case EInputMappingContextState::Default:
+		Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		break;
 
-void AHumanCharacter::SetMainHandItem(AItemBase* InItem)
-{
-	MainHandItem = InItem;
-}
-
-void AHumanCharacter::SetSecondaryHandItem(AItemBase* InItem)
-{
-	SecondaryHandItem = InItem;
+	case EInputMappingContextState::Crafting:
+		Subsystem->RemoveMappingContext(DefaultMappingContext);
+		Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
+		break;
+	}
 }
 
 FName AHumanCharacter::GetMainHandSocket()
 {
-	return MainHandSocket;
+	if (bIsRightHanded)
+	{
+		return RightHandSocket;
+	}
+	else
+	{
+		return LeftHandSocket;
+	}
 }
 
 FName AHumanCharacter::GetSecondaryHandSocket()
 {
-	return SecondaryHandSocket;
+	if (bIsRightHanded)
+	{
+		return LeftHandSocket;
+	}
+	else
+	{
+		return RightHandSocket;
+	}
+}
+
+UObject* AHumanCharacter::GetFocusedInteractableObject()
+{
+	return FocusedInteractableObject;
 }
 
 void AHumanCharacter::ShowPlayerInfo()
@@ -354,52 +387,4 @@ void AHumanCharacter::ShowPlayerInfo()
 	}
 }
 
-void AHumanCharacter::CraftItem(FText ProductItemName)
-{
-	CraftingWindowCloseDelegate.Broadcast();
-	bIsCraftingWindowOpen = false;
 
-	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString(); 
-	GameplayTagString.RemoveSpacesInline();
-	FGameplayTag ProductNameTag;
-	ProductNameTag.FromExportString(GameplayTagString);
-	
-	if (!ProductNameTag.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::CraftItem ProductNameTag.IsValid() == false"));
-		return;
-	}
-	
-	FGameplayEventData EventData;
-	EventData.EventTag = ProductNameTag;
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, ProductNameTag, EventData);
-}
-
-void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputContextState)
-{
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (!IsValid(PlayerController))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(PlayerController) == false"));
-		return;
-	}
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
-	if (!IsValid(Subsystem))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SwitchInputMappingContext IsValid(Subsystem) == false"));
-		return;
-	}
-
-	switch (InputContextState)
-	{
-		case EInputMappingContextState::Default: 
-			Subsystem->RemoveMappingContext(CraftingWindowOnlyMappingContext);
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-			break;
-
-		case EInputMappingContextState::Crafting:
-			Subsystem->RemoveMappingContext(DefaultMappingContext);
-			Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
-			break;
-	}
-}

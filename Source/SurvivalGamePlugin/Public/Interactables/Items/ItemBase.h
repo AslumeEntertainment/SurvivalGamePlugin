@@ -40,10 +40,10 @@ public:
 	void Use();
 
 	UFUNCTION(BlueprintCallable)
-	void OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName);
+	void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
 
 	UFUNCTION(BlueprintCallable)
-	void OnItemUnequiped(ACharacter* PlayerCharacter);
+	void OnItemUnequiped(ASG_Character* PlayerOwner);
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;

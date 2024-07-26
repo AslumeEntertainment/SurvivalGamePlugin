@@ -46,51 +46,59 @@ void USGGA_AttemptEquipItem::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		*EquipedItem = Cast<AItemBase>(Player->GetFocusedInteractableObject());
 	}
 	*/
+
+	AItemBase** CurrentEquipedItem;
+	FName SocketName;
+
+	if (bIsUsingMainHand)
+	{
+		CurrentEquipedItem = &Player->MainHandItem;
+		SocketName = Player->GetMainHandSocket();
+	}
+	else
+	{
+		CurrentEquipedItem = &Player->SecondaryHandItem;
+		SocketName = Player->GetSecondaryHandSocket();
+	}
+
+	if (IsValid(*CurrentEquipedItem))
+	{
+		(*CurrentEquipedItem)->OnItemUnequiped(Player);
+		*CurrentEquipedItem = nullptr;
+	}
+	else if (IsValid(Player->GetFocusedInteractableObject()) && Cast<AItemBase>(Player->GetFocusedInteractableObject()))
+	{
+		*CurrentEquipedItem = Cast<AItemBase>(Player->GetFocusedInteractableObject());
+		(*CurrentEquipedItem)->OnItemEquiped(Player, SocketName);
+	}
+
+	/*
 	if (bIsUsingMainHand) 
 	{
-		if (IsValid(Player->GetMainHandItem()))
+		if (IsValid(Player->MainHandItem))
 		{
-			Player->GetMainHandItem()->OnItemUnequiped(Player);
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem unequiped succesfully"));
-
-			Player->SetMainHandItem(nullptr);
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem set to nullptr"));
-
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			Player->MainHandItem->OnItemUnequiped(Player);
+			Player->MainHandItem = nullptr;
 		}
 		else if (IsValid(Player->GetFocusedInteractableObject()) && Cast<AItemBase>(Player->GetFocusedInteractableObject()))
 		{
-			Player->SetMainHandItem(Cast<AItemBase>(Player->GetFocusedInteractableObject()));
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem set to a valid AItemBase"));
-
-			Player->GetMainHandItem()->OnItemEquiped(Player, Player->GetMainHandSocket());
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem equiped succesfully"));
-
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			Player->MainHandItem = Cast<AItemBase>(Player->GetFocusedInteractableObject());
+			Player->MainHandItem->OnItemEquiped(Player, Player->GetMainHandSocket());
 		}
 	}
 	else
 	{
-		if (IsValid(Player->GetSecondaryHandItem()))
+		if (IsValid(Player->SecondaryHandItem))
 		{
-			Player->GetSecondaryHandItem()->OnItemUnequiped(Player);
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem unequiped succesfully"));
-
-			Player->SetSecondaryHandItem(nullptr);
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem set to nullptr"));
-
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			Player->SecondaryHandItem->OnItemUnequiped(Player);
+			Player->SecondaryHandItem = nullptr;
 		}
 		else if (IsValid(Player->GetFocusedInteractableObject()) && Cast<AItemBase>(Player->GetFocusedInteractableObject()))
 		{
-			Player->SetSecondaryHandItem(Cast<AItemBase>(Player->GetFocusedInteractableObject()));
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem set to a valid AItemBase"));
-
-			Player->GetSecondaryHandItem()->OnItemEquiped(Player, Player->GetSecondaryHandSocket());
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem equiped succesfully"));
-
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			Player->SecondaryHandItem = Cast<AItemBase>(Player->GetFocusedInteractableObject());
+			Player->SecondaryHandItem->OnItemEquiped(Player, Player->GetSecondaryHandSocket());
 		}
 	}
+	*/
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 }

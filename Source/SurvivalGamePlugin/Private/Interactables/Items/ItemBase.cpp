@@ -3,13 +3,14 @@
 
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/Character.h"
+#include "Characters/SG_Character.h"
+#include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
 AItemBase::AItemBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
@@ -27,7 +28,7 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
@@ -41,17 +42,19 @@ void AItemBase::Use()
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 }
 
-void AItemBase::OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName)
+void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
-	AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	bIsAttached = true;
 }
 
-void AItemBase::OnItemUnequiped(ACharacter* PlayerCharacter)
+void AItemBase::OnItemUnequiped(ASG_Character* PlayerOwner)
 {
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	SetActorRotation(PlayerCharacter->GetActorRotation());
-	SetActorLocation(PlayerCharacter->GetActorLocation() + PlayerCharacter->GetActorForwardVector());
+
+	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFollowCamera()->GetForwardVector() * 100);
+	SetActorRotation(PlayerOwner->GetActorRotation());
+
 	bIsAttached = false;
 }
 

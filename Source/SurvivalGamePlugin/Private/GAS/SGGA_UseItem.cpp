@@ -20,13 +20,13 @@ void USGGA_UseItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	if (bIsUsingMainHand && IsValid(Player->GetMainHandItem()))
+	if (bIsUsingMainHand && IsValid(Player->MainHandItem))
 	{
-		Player->GetMainHandItem()->Use();
+		Player->MainHandItem->Use();
 	}
-	else if (!bIsUsingMainHand && IsValid(Player->GetSecondaryHandItem()))
+	else if (!bIsUsingMainHand && IsValid(Player->SecondaryHandItem))
 	{
-		Player->GetSecondaryHandItem()->Use();
+		Player->SecondaryHandItem->Use();
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

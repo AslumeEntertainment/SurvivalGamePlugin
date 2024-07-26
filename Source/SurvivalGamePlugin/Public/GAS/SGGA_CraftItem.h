@@ -13,11 +13,6 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 {
 	GENERATED_BODY()
-	
-protected:
-
-	UPROPERTY(Replicated)
-	AActor* NewItemActor = nullptr;
 
 public:
 
