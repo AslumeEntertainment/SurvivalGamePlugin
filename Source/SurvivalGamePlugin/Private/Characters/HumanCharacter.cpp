@@ -142,19 +142,38 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::AttemptEquipWithMainHand()
 {
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::EquipMain);
+	FGameplayTag EquipAbilityTag;
+	EquipAbilityTag.FromExportString("Equip.Main");
+	if (!EquipAbilityTag.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptEquipWithMainHand EquipAbilityTag.IsValid() == false"));
+		return;
+	}
+	FGameplayEventData EventData;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
 }
 
 void AHumanCharacter::AttemptEquipWithSecondaryHand()
 {
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::EquipSecondary);
+	FGameplayTag EquipAbilityTag;
+	EquipAbilityTag.FromExportString("Equip.Secondary");
+	if (!EquipAbilityTag.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptEquipWithSecondaryHand EquipAbilityTag.IsValid() == false"));
+		return;
+	}
+	FGameplayEventData EventData;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
 }
 
 void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseMain);
+		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseMain);
+		MainHandItem->Use(this);
 	}
 	else
 	{
@@ -166,7 +185,8 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseSecondary);
+		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseSecondary);
+		SecondaryHandItem->Use(this);
 	}
 	else
 	{
@@ -215,9 +235,9 @@ void AHumanCharacter::OpenCraftingWindow()
 
 void AHumanCharacter::AttemptDisassembleItem()
 {
-	if (!IsValid(MainHandItem))
+	if (!IsValid(MainHandItem) && !IsValid(SecondaryHandItem))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Disassembing: Player is not holding an item in their main hand!"));
+		UE_LOG(LogTemp, Warning, TEXT("Disassembing: Player is not holding any items!"));
 		return;
 	}
 
@@ -241,7 +261,6 @@ void AHumanCharacter::CraftItem(FText ProductItemName)
 	}
 
 	FGameplayEventData EventData;
-	EventData.EventTag = ProductNameTag;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, ProductNameTag, EventData);
 }
 

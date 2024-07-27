@@ -28,7 +28,6 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -37,7 +36,7 @@ void AItemBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AItemBase::Use()
+void AItemBase::Use(ASG_Character* PlayerOwner)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 }
@@ -45,6 +44,7 @@ void AItemBase::Use()
 void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	StaticMesh->SetOverlayMaterial(nullptr);
 	bIsAttached = true;
 }
 

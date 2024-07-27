@@ -37,7 +37,7 @@ public:
 	FDataTableRowHandle ItemData;
 
 	UFUNCTION(BlueprintCallable)
-	void Use();
+	void Use(ASG_Character* PlayerOwner);
 
 	UFUNCTION(BlueprintCallable)
 	void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);

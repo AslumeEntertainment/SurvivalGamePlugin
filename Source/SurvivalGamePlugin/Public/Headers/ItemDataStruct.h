@@ -10,6 +10,7 @@ UENUM(BlueprintType)
 enum class EItemDisassembleRequirement : uint8
 {
 	Unable,
+	Always,
 	EmptyHand,
 };
 
@@ -23,6 +24,9 @@ struct FItemCraftingDataStruct : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName IngredientItemID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsMainItemDestroyed = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsIngredientDestroyed = false;

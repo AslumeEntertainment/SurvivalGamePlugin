@@ -5,6 +5,41 @@
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/ItemBase.h"
 
+
+bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* ItemForDisassembly, AItemBase* OtherEquipedItem)
+{
+	if (!IsValid(ItemForDisassembly))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item is not valid!"));
+		return false;
+	}
+
+	FItemDataStruct* ItemData = ItemForDisassembly->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_AttemptDisassembleItem::AttemptDisassembleItem: Retrieving item data"));
+	if (!ItemData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::AttemptDisassembleItem ItemData == nullptr"));
+		return false;
+	}
+
+	switch (ItemData->DisassembleRequirement)
+	{
+		case EItemDisassembleRequirement::Unable:
+			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
+			return false;
+
+		case EItemDisassembleRequirement::EmptyHand:
+			if (IsValid(OtherEquipedItem))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
+				return false;
+			}
+			break;
+	}
+
+	ItemForDisassemblyData = ItemData;
+	return true;
+}
+
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
@@ -18,56 +53,69 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	FItemDataStruct* MainHandItemData = Player->MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving main hand item data"));
-	if (!MainHandItemData)
+
+	AItemBase** ItemForDisassembly = nullptr;
+	AItemBase** OtherItem = nullptr;
+	FName MainItemSocket;
+	FName IngredientitemSocket;
+
+	if (bCanDisassembleItem(Player->MainHandItem, Player->SecondaryHandItem))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility MainHandItemData == nullptr"));
+		ItemForDisassembly = &Player->MainHandItem;
+		OtherItem = &Player->SecondaryHandItem;
+		MainItemSocket = Player->GetMainHandSocket();
+		IngredientitemSocket = Player->GetSecondaryHandSocket();
+	}
+	else if (bCanDisassembleItem(Player->SecondaryHandItem, Player->MainHandItem))
+	{
+		ItemForDisassembly = &Player->SecondaryHandItem;
+		OtherItem = &Player->MainHandItem;
+		MainItemSocket = Player->GetSecondaryHandSocket();
+		IngredientitemSocket = Player->GetMainHandSocket();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Disassembling: No item can be disassembled!"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(World) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	switch (MainHandItemData->DisassembleRequirement)
+	FItemDataStruct* IngredientParentItemData = (*ItemForDisassembly)->ItemData.DataTable->FindRow<FItemDataStruct>(ItemForDisassemblyData->IngredientParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving ingredient item data"));
+	if (IngredientParentItemData && HasAuthority(&ActivationInfo))
 	{
-		case EItemDisassembleRequirement::Unable:
-			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Equiped item cannot be disassembled!"));
-			break;
-
-		case EItemDisassembleRequirement::EmptyHand:
-			if (IsValid(Player->SecondaryHandItem))
+		AActor* NewItemActor = World->SpawnActor<AActor>(IngredientParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
+		if (Cast<AItemBase>(NewItemActor))
+		{
+			if (!IsValid(*OtherItem))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
-				break;
+				Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, IngredientitemSocket);
+				*OtherItem = Cast<AItemBase>(NewItemActor);
 			}
-
-			UWorld* World = GetWorld();
-			if (!IsValid(World))
+			else
 			{
-				UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(World) == false"));
-				break;
+				Cast<AItemBase>(NewItemActor)->OnItemUnequiped(Player);
 			}
-
-			FItemDataStruct* IngredientParentItemData = Player->MainHandItem->ItemData.DataTable->FindRow<FItemDataStruct>(MainHandItemData->IngredientParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving ingredient parent item data"));
-			if (IngredientParentItemData && HasAuthority(&ActivationInfo))
-			{
-				AActor* NewItemActor = World->SpawnActor<AActor>(IngredientParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-				if (Cast<AItemBase>(NewItemActor))
-				{
-					Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetSecondaryHandSocket());
-					Player->SecondaryHandItem = Cast<AItemBase>(NewItemActor);
-				}
-			}
-
-			FItemDataStruct* MainParentItemData = Player->MainHandItem->ItemData.DataTable->FindRow<FItemDataStruct>(MainHandItemData->MainParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving main parent item data"));
-			if (MainParentItemData && HasAuthority(&ActivationInfo))
-			{
-				AActor* NewItemActor = World->SpawnActor<AActor>(MainParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-				if (Cast<AItemBase>(NewItemActor))
-				{
-					Player->MainHandItem->Destroy();
-					Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetMainHandSocket());
-					Player->MainHandItem = Cast<AItemBase>(NewItemActor);
-				}
-			}
-			break;
+		}
 	}
+
+	FItemDataStruct* MainParentItemData = (*ItemForDisassembly)->ItemData.DataTable->FindRow<FItemDataStruct>(ItemForDisassemblyData->MainParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving main parent item data"));
+	if (MainParentItemData && HasAuthority(&ActivationInfo))
+	{
+		AActor* NewItemActor = World->SpawnActor<AActor>(MainParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
+		if (Cast<AItemBase>(NewItemActor))
+		{
+			(*ItemForDisassembly)->Destroy();
+			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, MainItemSocket);
+			(*ItemForDisassembly) = Cast<AItemBase>(NewItemActor);
+		}
+	}
+
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 }

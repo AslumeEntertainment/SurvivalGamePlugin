@@ -6,9 +6,7 @@
 #include "GAS/SG_GameplayAbility.h"
 #include "SGGA_CraftItem.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 {

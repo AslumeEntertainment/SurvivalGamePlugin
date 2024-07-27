@@ -43,9 +43,19 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		return;
 	}
 	
+	FName EqupmentSocketName;
+	AItemBase** ItemPointer = nullptr;
 	if (MainItemData->GetCraftingRecipeByProductName(ProductItemName).bIsIngredientDestroyed)
 	{
 		Player->SecondaryHandItem->Destroy();
+		ItemPointer = &Player->SecondaryHandItem;
+		EqupmentSocketName = Player->GetSecondaryHandSocket();
+	}
+	if (MainItemData->GetCraftingRecipeByProductName(ProductItemName).bIsMainItemDestroyed)
+	{
+		Player->MainHandItem->Destroy();
+		ItemPointer = &Player->MainHandItem;
+		EqupmentSocketName = Player->GetMainHandSocket();
 	}
 
 	AActor* NewItemActor = nullptr;
@@ -56,9 +66,8 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	
 	if (Cast<AItemBase>(NewItemActor))
 	{
-		Player->MainHandItem->Destroy();
-		Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, Player->GetMainHandSocket());
-		Player->MainHandItem = Cast<AItemBase>(NewItemActor);
+		Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, EqupmentSocketName);
+		*ItemPointer = Cast<AItemBase>(NewItemActor);
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
