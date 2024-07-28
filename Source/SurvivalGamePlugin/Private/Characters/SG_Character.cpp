@@ -4,6 +4,7 @@
 #include "Characters/SG_Character.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -41,10 +42,9 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetMesh());
-	CameraBoom->TargetArmLength = 400.0f; 
+	CameraBoom->SetupAttachment(GetMesh(), FName(TEXT("head")));
+	CameraBoom->TargetArmLength = 0.f; 
 	CameraBoom->bUsePawnControlRotation = true; 
-	CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName(TEXT("CameraSocket")));
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
@@ -61,6 +61,18 @@ ASG_Character::ASG_Character()
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
+	/*
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!IsValid(PlayerController))
+	{
+		return;
+	}
+	
+	PlayerController->PlayerCameraManager->ViewYawMin = -90.f;
+	PlayerController->PlayerCameraManager->ViewYawMax = 90.f;
+	PlayerController->PlayerCameraManager->ViewPitchMin = -50.f;
+	PlayerController->PlayerCameraManager->ViewPitchMax = 80.f;
+	*/
 }
 
 // Called every frame
@@ -147,6 +159,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	if (Controller != nullptr)
 	{
 		AddControllerYawInput(LookAxisVector.X);
+		
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }

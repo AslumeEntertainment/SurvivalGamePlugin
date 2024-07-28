@@ -18,13 +18,15 @@ public:
 	// Sets default values for this actor's properties
 	AItemBase();
 
-private:
-	UPROPERTY(Replicated)
-	bool bIsAttached = false;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(Replicated)
+	bool bIsAttached = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
+	FDataTableRowHandle ItemDataRow;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
@@ -33,8 +35,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
-	FDataTableRowHandle ItemData;
+	UPROPERTY()
+	FItemDataStruct ItemData;
 
 	UFUNCTION(BlueprintCallable)
 	void Use(ASG_Character* PlayerOwner);
@@ -47,5 +49,7 @@ public:
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;
+
+	FName GetItemDataRowName();
 
 };

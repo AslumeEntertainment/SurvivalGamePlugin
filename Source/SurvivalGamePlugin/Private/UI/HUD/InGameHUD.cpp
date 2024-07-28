@@ -51,7 +51,7 @@ void AInGameHUD::ShowGameplayWidget()
 	GameplayWidget->AddToViewport();
 }
 
-void AInGameHUD::OpenCraftingWindow(FDataTableRowHandle MainItemRowData, FName IngredientItemName)
+void AInGameHUD::OpenCraftingWindow(FItemDataStruct MainItemData, FName IngredientItemName)
 {
 	if (!PlayerOwner || !CraftingWindowWidget)
 	{
@@ -64,30 +64,14 @@ void AInGameHUD::OpenCraftingWindow(FDataTableRowHandle MainItemRowData, FName I
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow IsValid(Player) == false"));
 		return;
 	}
-	FItemDataStruct* ItemData = MainItemRowData.GetRow<FItemDataStruct>(TEXT("AInGameHUD::ToggleCraftingWindow: Retrieving main hand item data"));
-	if (!ItemData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow ItemData == nullptr"));
-		return;
-	}
 
-	for (FItemCraftingDataStruct CraftingRecipe : ItemData->CraftableItems)
+	for (FItemCraftingDataStruct CraftingRecipe : MainItemData.CraftableItems)
 	{
 		if (CraftingRecipe.IngredientItemID == IngredientItemName)
 		{
-			FDataTableRowHandle CraftingRecipeRowData = MainItemRowData;
-			CraftingRecipeRowData.RowName = CraftingRecipe.ProductItemID;
-
-			FItemDataStruct* ProductItemData = CraftingRecipeRowData.GetRow<FItemDataStruct>(TEXT("AInGameHUD::ToggleCraftingWindow: Retrieving item data for product item"));
-			if (!ProductItemData)
-			{
-				UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow ProductItemData == nullptr"));
-				return;
-			}
-
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(ProductItemData->ItemImage);
-			ItemIcon->SetItemName(ProductItemData->ItemName);
+			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
+			ItemIcon->SetItemName(CraftingRecipe.ProductItemName);
 			ItemIcon->IconClicked.AddDynamic(Player, &AHumanCharacter::CraftItem);
 			CraftingWindowWidget->AddCraftingRecipe(ItemIcon);
 		}

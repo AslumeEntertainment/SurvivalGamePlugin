@@ -217,19 +217,13 @@ void AHumanCharacter::OpenCraftingWindow()
 	}
 
 	//Check if the player can craft using their equiped items
-	FItemDataStruct* MainItemData = MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT("AHumanCharacter::OpenCraftingWindow: Retrieving main hand item data"));
-	if (!MainItemData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow MainItemData == nullptr"));
-		return;
-	}
-	if (!MainItemData->bCanCraftWithItem(SecondaryHandItem->ItemData.RowName))
+	if (!MainHandItem->ItemData.bCanCraftWithItem(SecondaryHandItem->GetItemDataRowName()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player cannot craft anything with their current items!"));
 		return;
 	}
 	
-	CraftingWindowOpenDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->ItemData.RowName);
+	CraftingWindowOpenDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->GetItemDataRowName());
 	bIsCraftingWindowOpen = true;
 }
 
@@ -361,16 +355,7 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("MainHandItem cannot be interacted with as it is currently equiped by the player"));
 		}
-
-		FItemDataStruct* MainItemData = MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT(""));
-		if (MainItemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a %s"), *MainItemData->ItemName.ToString());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem does not have valid item data"));
-		}
+		UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a %s"), *MainHandItem->ItemData.ItemName.ToString());
 	}
 	else
 	{
@@ -389,16 +374,7 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem cannot be interacted with as it is currently equiped by the player"));
 		}
-
-		FItemDataStruct* SecondaryItemData = SecondaryHandItem->ItemData.GetRow<FItemDataStruct>(TEXT(""));
-		if (SecondaryItemData)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a %s"), *SecondaryItemData->ItemName.ToString());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem does not have valid item data"));
-		}
+		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a %s"), *SecondaryHandItem->ItemData.ItemName.ToString());
 	}
 	else
 	{

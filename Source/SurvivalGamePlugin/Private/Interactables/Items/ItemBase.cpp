@@ -28,6 +28,13 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
+	if (!TempItemData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
+	}
+	ItemData = *TempItemData;
 }
 
 // Called every frame
@@ -66,5 +73,10 @@ void AItemBase::InteractRequest()
 bool AItemBase::bCanInteract()
 {
 	return !bIsAttached;
+}
+
+FName AItemBase::GetItemDataRowName()
+{
+	return ItemDataRow.RowName;
 }
 

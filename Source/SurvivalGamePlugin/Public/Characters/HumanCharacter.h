@@ -9,7 +9,7 @@
 
 class AItemBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCraftingNotifySignature, FDataTableRowHandle, MainItemRowData, FName, IngredientItemName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCraftingNotifySignature, FItemDataStruct, MainItemData, FName, IngredientItemName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUINotifySignature);
 
 UENUM(BlueprintType)

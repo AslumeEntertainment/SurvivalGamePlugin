@@ -27,31 +27,17 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	}
 
 	FName ProductItemName = FName(*TriggerEventData->EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
-	FDataTableRowHandle ProductItemRowData = Player->MainHandItem->ItemData;
-	ProductItemRowData.RowName = ProductItemName;
-	
-	FItemDataStruct* MainItemData = Player->MainHandItem->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_CraftItem::ActivateAbility: Retrieving main hand item data"));
-	if (!MainItemData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility MainItemData == nullptr"));
-		return;
-	}
-	FItemDataStruct* ProductItemData = ProductItemRowData.GetRow<FItemDataStruct>(TEXT("USGGA_CraftItem::ActivateAbility: Retrieving product item data"));
-	if (!ProductItemData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility ProductItemData == nullptr"));
-		return;
-	}
+	FCraftingProcessDataStruct* ProductItemData = CraftingInfoTable->FindRow<FCraftingProcessDataStruct>(ProductItemName, "");
 	
 	FName EqupmentSocketName;
 	AItemBase** ItemPointer = nullptr;
-	if (MainItemData->GetCraftingRecipeByProductName(ProductItemName).bIsIngredientDestroyed)
+	if (ProductItemData->ItemsToDestroy.Contains(Player->SecondaryHandItem->GetItemDataRowName()))
 	{
 		Player->SecondaryHandItem->Destroy();
 		ItemPointer = &Player->SecondaryHandItem;
 		EqupmentSocketName = Player->GetSecondaryHandSocket();
 	}
-	if (MainItemData->GetCraftingRecipeByProductName(ProductItemName).bIsMainItemDestroyed)
+	if (ProductItemData->ItemsToDestroy.Contains(Player->MainHandItem->GetItemDataRowName()))
 	{
 		Player->MainHandItem->Destroy();
 		ItemPointer = &Player->MainHandItem;
@@ -66,8 +52,15 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	
 	if (Cast<AItemBase>(NewItemActor))
 	{
-		Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, EqupmentSocketName);
-		*ItemPointer = Cast<AItemBase>(NewItemActor);
+		if (ItemPointer == nullptr)
+		{
+			Cast<AItemBase>(NewItemActor)->OnItemUnequiped(Player);
+		}
+		else
+		{
+			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, EqupmentSocketName);
+			*ItemPointer = Cast<AItemBase>(NewItemActor);
+		}
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);

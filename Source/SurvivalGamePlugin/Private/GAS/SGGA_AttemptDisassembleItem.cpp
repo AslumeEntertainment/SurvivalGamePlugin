@@ -14,7 +14,7 @@ bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* ItemForDisasse
 		return false;
 	}
 
-	FItemDataStruct* ItemData = ItemForDisassembly->ItemData.GetRow<FItemDataStruct>(TEXT("USGGA_AttemptDisassembleItem::AttemptDisassembleItem: Retrieving item data"));
+	FDisassemblyProcessDataStruct* ItemData = DisassemlyInfoTable->FindRow<FDisassemblyProcessDataStruct>(ItemForDisassembly->GetItemDataRowName(), "");
 	if (!ItemData)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::AttemptDisassembleItem ItemData == nullptr"));
@@ -26,6 +26,9 @@ bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* ItemForDisasse
 		case EItemDisassembleRequirement::Unable:
 			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
 			return false;
+
+		case EItemDisassembleRequirement::Always:
+			break;
 
 		case EItemDisassembleRequirement::EmptyHand:
 			if (IsValid(OtherEquipedItem))
@@ -87,33 +90,28 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	FItemDataStruct* IngredientParentItemData = (*ItemForDisassembly)->ItemData.DataTable->FindRow<FItemDataStruct>(ItemForDisassemblyData->IngredientParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving ingredient item data"));
-	if (IngredientParentItemData && HasAuthority(&ActivationInfo))
+	if (HasAuthority(&ActivationInfo))
 	{
-		AActor* NewItemActor = World->SpawnActor<AActor>(IngredientParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-		if (Cast<AItemBase>(NewItemActor))
+		AActor* IngredientItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, FVector(0, 0, 0), FRotator(0, 0, 0));
+		if (Cast<AItemBase>(IngredientItemActor))
 		{
 			if (!IsValid(*OtherItem))
 			{
-				Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, IngredientitemSocket);
-				*OtherItem = Cast<AItemBase>(NewItemActor);
+				Cast<AItemBase>(IngredientItemActor)->OnItemEquiped(Player, IngredientitemSocket);
+				*OtherItem = Cast<AItemBase>(IngredientItemActor);
 			}
 			else
 			{
-				Cast<AItemBase>(NewItemActor)->OnItemUnequiped(Player);
+				Cast<AItemBase>(IngredientItemActor)->OnItemUnequiped(Player);
 			}
 		}
-	}
 
-	FItemDataStruct* MainParentItemData = (*ItemForDisassembly)->ItemData.DataTable->FindRow<FItemDataStruct>(ItemForDisassemblyData->MainParentItem, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility: Retrieving main parent item data"));
-	if (MainParentItemData && HasAuthority(&ActivationInfo))
-	{
-		AActor* NewItemActor = World->SpawnActor<AActor>(MainParentItemData->ItemActorClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-		if (Cast<AItemBase>(NewItemActor))
+		AActor* MainItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->MainParentItem, FVector(0, 0, 0), FRotator(0, 0, 0));
+		if (Cast<AItemBase>(MainItemActor))
 		{
 			(*ItemForDisassembly)->Destroy();
-			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, MainItemSocket);
-			(*ItemForDisassembly) = Cast<AItemBase>(NewItemActor);
+			Cast<AItemBase>(MainItemActor)->OnItemEquiped(Player, MainItemSocket);
+			(*ItemForDisassembly) = Cast<AItemBase>(MainItemActor);
 		}
 	}
 

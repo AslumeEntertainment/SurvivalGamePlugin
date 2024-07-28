@@ -14,7 +14,10 @@ class SURVIVALGAMEPLUGIN_API USGGA_AttemptDisassembleItem : public USG_GameplayA
 	
 protected:
 
-	FItemDataStruct* ItemForDisassemblyData = nullptr;
+	UPROPERTY(EditDefaultsOnly)
+	UDataTable* DisassemlyInfoTable;
+
+	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 
 	bool bCanDisassembleItem(AItemBase* ItemForDisassembly, AItemBase* OtherEquipedItem);
 

@@ -20,16 +20,13 @@ struct FItemCraftingDataStruct : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName ProductItemID;
+	FText ProductItemName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UTexture2D* ProductItemImage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName IngredientItemID;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsMainItemDestroyed = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsIngredientDestroyed = false;
 
 };
 
@@ -42,9 +39,7 @@ struct FItemDataStruct : public FTableRowBase
 	{
 		ItemName = FText::FromString("None");
 		ItemImage = nullptr;
-		ItemDurability = 0;
-		ItemActorClass = nullptr;
-		DisassembleRequirement = EItemDisassembleRequirement::Unable;
+		ItemDurability = 0.f;
 	}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -58,18 +53,6 @@ struct FItemDataStruct : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	EItemDisassembleRequirement DisassembleRequirement;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FName MainParentItem;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FName IngredientParentItem;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class AItemBase> ItemActorClass;
 
 	bool bCanCraftWithItem(FName IngredientItemName)
 	{
@@ -88,7 +71,7 @@ struct FItemDataStruct : public FTableRowBase
 
 		return false;
 	}
-
+	/*
 	FItemCraftingDataStruct GetCraftingRecipeByProductName(FName ProductName)
 	{
 		for (FItemCraftingDataStruct CraftingRecipe : CraftableItems)
@@ -100,4 +83,68 @@ struct FItemDataStruct : public FTableRowBase
 		}
 		return FItemCraftingDataStruct();
 	}
+	*/
+};
+
+
+USTRUCT(BlueprintType)
+struct FCraftingProcessDataStruct : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	FCraftingProcessDataStruct()
+	{
+		ProcessLength = 0.f;
+		Animation = nullptr;
+		MovementSpeedMultiplier = 0.f;
+	}
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float ProcessLength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UAnimMontage* Animation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float MovementSpeedMultiplier;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<FName> ItemsToDestroy;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AItemBase> ItemActorClass;
+
+};
+
+
+USTRUCT(BlueprintType)
+struct FDisassemblyProcessDataStruct : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	FDisassemblyProcessDataStruct()
+	{
+		ProcessLength = 0.f;
+		Animation = nullptr;
+		MovementSpeedMultiplier = 0.f;
+		DisassembleRequirement = EItemDisassembleRequirement::Unable;
+	}
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float ProcessLength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UAnimMontage* Animation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float MovementSpeedMultiplier;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	EItemDisassembleRequirement DisassembleRequirement;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AItemBase> MainParentItem;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AItemBase> IngredientParentItem;
 };
