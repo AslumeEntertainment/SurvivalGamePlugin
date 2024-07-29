@@ -71,19 +71,6 @@ struct FItemDataStruct : public FTableRowBase
 
 		return false;
 	}
-	/*
-	FItemCraftingDataStruct GetCraftingRecipeByProductName(FName ProductName)
-	{
-		for (FItemCraftingDataStruct CraftingRecipe : CraftableItems)
-		{
-			if (CraftingRecipe.ProductItemID == ProductName)
-			{
-				return CraftingRecipe;
-			}
-		}
-		return FItemCraftingDataStruct();
-	}
-	*/
 };
 
 

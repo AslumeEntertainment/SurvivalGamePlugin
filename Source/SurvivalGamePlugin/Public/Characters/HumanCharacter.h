@@ -26,12 +26,14 @@ class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
 	
 private:
 
-	bool bIsCraftingWindowOpen = false;
-
+	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
+
+	//UFUNCTION(Server, Reliable)
+	void SetFocusedInteractable(UObject* InFocusedInteractable);
 
 protected:
 
@@ -89,6 +91,8 @@ protected:
 	void UseAbility();
 
 	void OpenCraftingWindow();
+	void CloseCraftingWindow();
+
 	void AttemptDisassembleItem();
 
 public:

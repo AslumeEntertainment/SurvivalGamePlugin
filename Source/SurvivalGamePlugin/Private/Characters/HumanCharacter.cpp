@@ -18,6 +18,7 @@ void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
 }
@@ -30,6 +31,11 @@ void AHumanCharacter::BeginPlay()
 void AHumanCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!IsLocallyControlled()) 
+	{
+		return;
+	}
 	EmitInteractionChecker();
 }
 
@@ -52,6 +58,7 @@ void AHumanCharacter::EmitInteractionChecker()
 	CQP.AddIgnoredActor(this);
 	CQP.TraceTag = TraceTag;
 
+	//World->DebugDrawTraceTag = TraceTag;
 	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
 
 	CheckForInteractables(HitResult);
@@ -62,58 +69,47 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 	AActor* HitActor = HitResult.GetActor();
 	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
-	IInteractableInterface* InteractableComponent = Cast<IInteractableInterface>(HitComponent);
 
-	AController* PlayerController = GetController();
-	if (!IsValid(PlayerController)) //Local controller will have Controller != Null and Controller->Role != ROLE_Authority
+	if (FocusedInteractableObject == HitActor)
 	{
-		return; 
+		return;
 	}
-
-	if (HitActor == nullptr)
+	if (InteractableActor == nullptr) 
 	{
-		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
+		if (FocusedInteractableObject == nullptr)
 		{
-			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent) && PlayerController->IsLocalPlayerController())
-			{
-				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-			}
+			return;
+		}
+		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+		if (Cast<UMeshComponent>(InteractableMeshComponent))
+		{
+			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 
-		FocusedInteractableObject = nullptr;
+		SetFocusedInteractable(nullptr);
 		return;
 	}
-	if (InteractableComponent != nullptr)
+	if (FocusedInteractableObject != nullptr)
 	{
-		FocusedInteractableObject = HitComponent;
-		return;
-	}
-	if (InteractableActor == nullptr)
-	{
-		if (FocusedInteractableObject && Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass()))
+		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+		if (Cast<UMeshComponent>(InteractableMeshComponent))
 		{
-			UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-			if (Cast<UMeshComponent>(InteractableMeshComponent) && PlayerController->IsLocalPlayerController())
-			{
-				Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-			}
+			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
+	}
 
-		FocusedInteractableObject = nullptr;
-		return;
-	}
-	if (!InteractableActor->bCanInteract())
-	{
-		return;
-	}
-	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitComponent);
-	if (HitMeshComponent != nullptr && PlayerController->IsLocalPlayerController())
+	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
+	if (HitMeshComponent != nullptr)
 	{
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
-	FocusedInteractableObject = HitActor;
+	SetFocusedInteractable(HitActor);
+}
+
+void AHumanCharacter::SetFocusedInteractable(UObject* InFocusedInteractable)
+{
+	FocusedInteractableObject = InFocusedInteractable;
 }
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,7 +126,9 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		
 		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseAbility);
 
-		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Triggered, this, &AHumanCharacter::OpenCraftingWindow);
+		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Started, this, &AHumanCharacter::OpenCraftingWindow);
+		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Completed, this, &AHumanCharacter::CloseCraftingWindow);
+
 		EnhancedInputComponent->BindAction(DisassembleAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptDisassembleItem);
 	}
 
@@ -201,14 +199,6 @@ void AHumanCharacter::UseAbility()
 
 void AHumanCharacter::OpenCraftingWindow()
 {
-	//Check if the crafting window is being opened
-	if (bIsCraftingWindowOpen)
-	{
-		CraftingWindowCloseDelegate.Broadcast();
-		bIsCraftingWindowOpen = false;
-		return;
-	}
-
 	//Check if player has 2 items equiped
 	if (!IsValid(MainHandItem) || !IsValid(SecondaryHandItem))
 	{
@@ -224,7 +214,11 @@ void AHumanCharacter::OpenCraftingWindow()
 	}
 	
 	CraftingWindowOpenDelegate.Broadcast(MainHandItem->ItemData, SecondaryHandItem->GetItemDataRowName());
-	bIsCraftingWindowOpen = true;
+}
+
+void AHumanCharacter::CloseCraftingWindow()
+{
+	CraftingWindowCloseDelegate.Broadcast();
 }
 
 void AHumanCharacter::AttemptDisassembleItem()
@@ -240,8 +234,7 @@ void AHumanCharacter::AttemptDisassembleItem()
 
 void AHumanCharacter::CraftItem(FText ProductItemName)
 {
-	CraftingWindowCloseDelegate.Broadcast();
-	bIsCraftingWindowOpen = false;
+	CloseCraftingWindow();
 
 	FString GameplayTagString = FString(TEXT("Craft.")) + ProductItemName.ToString();
 	GameplayTagString.RemoveSpacesInline();
@@ -318,67 +311,81 @@ UObject* AHumanCharacter::GetFocusedInteractableObject()
 
 void AHumanCharacter::ShowPlayerInfo()
 {
-	UE_LOG(LogTemp, Warning, TEXT("===== Character stats ====="));
+	FString Prefix;
+	if (HasAuthority())
+	{
+		Prefix = "Server:";
+	}
+	else if (IsLocallyControlled())
+	{
+		Prefix = "Owning Client Connection:";
+	}
+	else
+	{
+		Prefix = "Client:";
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s ===== Character stats ====="), *Prefix);
 
 	if (FocusedInteractableObject)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject is a valid pointer"));
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject is a valid pointer"), *Prefix);
 
 		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(FocusedInteractableObject);
 		if (InteractableActor)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject implements IInteractableInterface"));
+			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);
 			if (InteractableActor->bCanInteract())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject can be interacted with"));
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject can be interacted with"), *Prefix);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject cannot be interacted with, it is most likely equiped by a player"));
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject cannot be interacted with, it is most likely equiped by a player"), *Prefix);
 			}
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FocusedInteractableObject == nullptr"));
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
 	}
 
 	if (IsValid(MainHandItem))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a valid pointer"));
+		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a valid pointer"), *Prefix);
 
 		if (MainHandItem->bCanInteract())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"));
+			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("MainHandItem cannot be interacted with as it is currently equiped by the player"));
+			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("MainHandItem is a %s"), *MainHandItem->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a %s"), *Prefix, *MainHandItem->ItemData.ItemName.ToString());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MainHandItem == nullptr"));
+		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem == nullptr"), *Prefix);
 	}
 
 	if (IsValid(SecondaryHandItem))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a valid pointer"));
+		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a valid pointer"), *Prefix);
 
 		if (SecondaryHandItem->bCanInteract())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"));
+			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem cannot be interacted with as it is currently equiped by the player"));
+			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem is a %s"), *SecondaryHandItem->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a %s"), *Prefix, *SecondaryHandItem->ItemData.ItemName.ToString());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SecondaryHandItem == nullptr"));
+		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem == nullptr"), *Prefix);
 	}
 }
 

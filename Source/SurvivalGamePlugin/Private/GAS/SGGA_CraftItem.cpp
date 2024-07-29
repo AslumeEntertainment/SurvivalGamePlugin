@@ -25,6 +25,16 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(World) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
+	if (!IsValid(Player->MainHandItem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->MainHandItem) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	if (!IsValid(Player->SecondaryHandItem))
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->SecondaryHandItem) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
 
 	FName ProductItemName = FName(*TriggerEventData->EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
 	FCraftingProcessDataStruct* ProductItemData = CraftingInfoTable->FindRow<FCraftingProcessDataStruct>(ProductItemName, "");

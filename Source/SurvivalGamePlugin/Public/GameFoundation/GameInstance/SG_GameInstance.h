@@ -52,8 +52,11 @@ public:
 	FString LobbyMapName = "ThirdPersonMap";
 
 	UPROPERTY(EditAnywhere)
+	FString DefaultGameMapName = "TestWorld";
+
+	UPROPERTY(EditAnywhere)
 	FName GameSessionLocalName = "GameSessionLocalName";
-	
+
 /*
 	UFUNCTION(BlueprintCallable)
 	bool IsPlayerLoggedIn();
