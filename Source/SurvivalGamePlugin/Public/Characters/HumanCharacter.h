@@ -29,11 +29,11 @@ private:
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetFocusedInteractable(UObject* InFocusedInteractable);
+
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
-
-	//UFUNCTION(Server, Reliable)
-	void SetFocusedInteractable(UObject* InFocusedInteractable);
 
 protected:
 

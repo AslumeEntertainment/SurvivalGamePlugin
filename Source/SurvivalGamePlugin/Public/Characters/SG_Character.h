@@ -77,6 +77,9 @@ protected:
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetRepControlRotation(FRotator InControlRotation);
+
 
 public:
 

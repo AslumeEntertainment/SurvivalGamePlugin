@@ -70,13 +70,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class USkyAtmosphereComponent* SkyAtmosphere;;
 
-	UFUNCTION(Server, Reliable)
 	void StartPreparationPeriod();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void PreparationPeriodOver();
 
-	UFUNCTION(Server, Reliable)
 	void SpawnPredator();
 
 	FVector GetValidPredatorLocation();

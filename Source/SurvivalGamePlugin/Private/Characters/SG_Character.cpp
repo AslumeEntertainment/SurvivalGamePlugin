@@ -145,6 +145,11 @@ void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, cons
 	}
 }
 
+void ASG_Character::ServerSetRepControlRotation_Implementation(FRotator InControlRotation)
+{
+	ControlRotation = InControlRotation;
+}
+
 void ASG_Character::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -183,10 +188,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);
 	AddControllerPitchInput(LookAxisVector.Y);
 
-	if (HasAuthority())
-	{
-		ControlRotation = GetControlRotation();
-	}
+	ServerSetRepControlRotation(GetControlRotation());
 }
 
 FRotator ASG_Character::GetRepControlRotation()

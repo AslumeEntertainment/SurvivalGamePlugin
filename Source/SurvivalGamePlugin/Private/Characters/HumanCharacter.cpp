@@ -39,6 +39,11 @@ void AHumanCharacter::Tick(float DeltaTime)
 	EmitInteractionChecker();
 }
 
+void AHumanCharacter::ServerSetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
+{
+	FocusedInteractableObject = InFocusedInteractable;
+}
+
 void AHumanCharacter::EmitInteractionChecker()
 {
 	FVector StartTrace = GetFollowCamera()->GetComponentLocation();
@@ -86,7 +91,11 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 
-		SetFocusedInteractable(nullptr);
+		ServerSetFocusedInteractable(nullptr);
+		return;
+	}
+	if (!InteractableActor->bCanInteract())
+	{
 		return;
 	}
 	if (FocusedInteractableObject != nullptr)
@@ -104,12 +113,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
-	SetFocusedInteractable(HitActor);
-}
-
-void AHumanCharacter::SetFocusedInteractable(UObject* InFocusedInteractable)
-{
-	FocusedInteractableObject = InFocusedInteractable;
+	ServerSetFocusedInteractable(HitActor);
 }
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -199,14 +203,12 @@ void AHumanCharacter::UseAbility()
 
 void AHumanCharacter::OpenCraftingWindow()
 {
-	//Check if player has 2 items equiped
 	if (!IsValid(MainHandItem) || !IsValid(SecondaryHandItem))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player needs to have an item in both hands!"));
 		return;
 	}
 
-	//Check if the player can craft using their equiped items
 	if (!MainHandItem->ItemData.bCanCraftWithItem(SecondaryHandItem->GetItemDataRowName()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player cannot craft anything with their current items!"));
@@ -318,7 +320,7 @@ void AHumanCharacter::ShowPlayerInfo()
 	}
 	else if (IsLocallyControlled())
 	{
-		Prefix = "Owning Client Connection:";
+		Prefix = "Owning Client:";
 	}
 	else
 	{
@@ -362,6 +364,16 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
+		if (MainHandItem->GetActorEnableCollision())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem has collisions enabled"), *Prefix);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem does not have collisions enabled"), *Prefix);
+		}
+
+
 		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a %s"), *Prefix, *MainHandItem->ItemData.ItemName.ToString());
 	}
 	else
@@ -381,6 +393,15 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
+		if (SecondaryHandItem->GetActorEnableCollision())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem has collisions enabled"), *Prefix);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem does not have collisions enabled"), *Prefix);
+		}
+
 		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a %s"), *Prefix, *SecondaryHandItem->ItemData.ItemName.ToString());
 	}
 	else

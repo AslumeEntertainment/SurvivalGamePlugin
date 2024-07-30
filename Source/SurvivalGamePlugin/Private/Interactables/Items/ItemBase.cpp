@@ -37,6 +37,11 @@ void AItemBase::BeginPlay()
 	ItemData = *TempItemData;
 }
 
+void AItemBase::NetMulticastSetActorEnableCollision_Implementation(bool NewActorCollision)
+{
+	SetActorEnableCollision(NewActorCollision);
+}
+
 // Called every frame
 void AItemBase::Tick(float DeltaTime)
 {
@@ -52,7 +57,7 @@ void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
-	SetActorEnableCollision(false);
+	NetMulticastSetActorEnableCollision(false);
 	bIsAttached = true;
 }
 
@@ -62,7 +67,7 @@ void AItemBase::OnItemUnequiped(ASG_Character* PlayerOwner)
 
 	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFollowCamera()->GetForwardVector() * 100);
 	SetActorRotation(PlayerOwner->GetActorRotation());
-	SetActorEnableCollision(true);
+	NetMulticastSetActorEnableCollision(true);
 	bIsAttached = false;
 }
 

@@ -31,6 +31,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastSetActorEnableCollision(bool NewActorCollision);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

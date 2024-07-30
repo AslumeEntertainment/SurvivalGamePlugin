@@ -52,10 +52,14 @@ void ATimeEventManager::BeginPlay()
 
 	SetActorRotation(FRotator(InitialSkyRotation, 270, 0));
 	SkyRotationComponent->RotationRate = FRotator(-360 / DayLength, 0, 0);
-	StartPreparationPeriod();
+
+	if (HasAuthority())
+	{
+		StartPreparationPeriod();
+	}
 }
 
-void ATimeEventManager::StartPreparationPeriod_Implementation()
+void ATimeEventManager::StartPreparationPeriod()
 {
 	GetWorldTimerManager().SetTimer(PreparationPeriodTimer, this, &ATimeEventManager::PreparationPeriodOver, DayLength * DaysForPreparation, 0);
 }
@@ -63,14 +67,18 @@ void ATimeEventManager::StartPreparationPeriod_Implementation()
 void ATimeEventManager::PreparationPeriodOver_Implementation()
 {
 	UGameplayStatics::PlaySound2D(GetWorld(), NotificationSound, 1);
-	SpawnPredator();
+
+	if (HasAuthority())
+	{
+		SpawnPredator();
+	}
 }
 
-void ATimeEventManager::SpawnPredator_Implementation()
+void ATimeEventManager::SpawnPredator()
 {
 	if (!IsValid(TestActorClass))
 	{
-		UE_LOG(LogTemp, Error, TEXT("ATimeEventManager::SpawnPredator_Implementation IsValid(TestActorClass) == false"));
+		UE_LOG(LogTemp, Error, TEXT("ATimeEventManager::SpawnPredator IsValid(TestActorClass) == false"));
 		return;
 	}
 	GetWorld()->SpawnActor<AActor>(TestActorClass, GetValidPredatorLocation(), FRotator(0, 0, 0));
