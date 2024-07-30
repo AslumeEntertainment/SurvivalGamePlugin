@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Headers/ItemDataStruct.h"
 #include "../InteractableInterface.h"
 #include "ItemBase.generated.h"
 
@@ -17,34 +18,41 @@ public:
 	// Sets default values for this actor's properties
 	AItemBase();
 
-private:
-	UPROPERTY(Replicated)
-	bool bIsAttached = false;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Testing")
-	FText ItemName;
+	UPROPERTY(Replicated)
+	bool bIsAttached = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
+	FDataTableRowHandle ItemDataRow;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastSetActorEnableCollision(bool NewActorCollision);
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Use();
+	UPROPERTY()
+	FItemDataStruct ItemData;
 
-	UFUNCTION(NetMulticast, Reliable)
-	void OnItemEquiped(ACharacter* PlayerCharacter, FName SocketName);
+	UFUNCTION(BlueprintCallable)
+	void Use(ASG_Character* PlayerOwner);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void OnItemUnequiped(ACharacter* PlayerCharacter);
+	UFUNCTION(BlueprintCallable)
+	void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
 
+	UFUNCTION(BlueprintCallable)
+	void OnItemUnequiped(ASG_Character* PlayerOwner);
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;
+
+	FName GetItemDataRowName();
 
 };

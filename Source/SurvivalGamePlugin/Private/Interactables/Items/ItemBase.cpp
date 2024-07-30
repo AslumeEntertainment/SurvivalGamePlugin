@@ -3,14 +3,16 @@
 
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/Character.h"
+#include "Characters/SG_Character.h"
+#include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
 AItemBase::AItemBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
@@ -26,7 +28,18 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
+	if (!TempItemData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
+	}
+	ItemData = *TempItemData;
+}
+
+void AItemBase::NetMulticastSetActorEnableCollision_Implementation(bool NewActorCollision)
+{
+	SetActorEnableCollision(NewActorCollision);
 }
 
 // Called every frame
@@ -35,23 +48,26 @@ void AItemBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AItemBase::Use()
+void AItemBase::Use(ASG_Character* PlayerOwner)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 }
 
-void AItemBase::OnItemEquiped_Implementation(ACharacter* PlayerCharacter, FName SocketName)
+void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Equiping item"));
-	AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
+	StaticMesh->SetOverlayMaterial(nullptr);
+	NetMulticastSetActorEnableCollision(false);
 	bIsAttached = true;
-	//Destroy();
 }
 
-void AItemBase::OnItemUnequiped_Implementation(ACharacter* PlayerCharacter)
+void AItemBase::OnItemUnequiped(ASG_Character* PlayerOwner)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Unequiping item"));
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFollowCamera()->GetForwardVector() * 100);
+	SetActorRotation(PlayerOwner->GetActorRotation());
+	NetMulticastSetActorEnableCollision(true);
 	bIsAttached = false;
 }
 
@@ -63,5 +79,10 @@ void AItemBase::InteractRequest()
 bool AItemBase::bCanInteract()
 {
 	return !bIsAttached;
+}
+
+FName AItemBase::GetItemDataRowName()
+{
+	return ItemDataRow.RowName;
 }
 

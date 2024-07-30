@@ -4,6 +4,7 @@
 #include "Characters/SG_Character.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -11,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Net/UnrealNetwork.h"
 
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AttributeSet.h"
@@ -41,8 +43,8 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; 
+	CameraBoom->SetupAttachment(GetMesh(), FName(TEXT("head")));
+	CameraBoom->TargetArmLength = 0.f; 
 	CameraBoom->bUsePawnControlRotation = true; 
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -56,11 +58,32 @@ ASG_Character::ASG_Character()
 	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
 }
 
+void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
+}
+
 // Called when the game starts or when spawned
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (!bIsCamersMovementConstrained)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (!IsValid(PlayerController))
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
+			return;
+		}
+
+		PlayerController->PlayerCameraManager->ViewYawMin = -80.f;
+		PlayerController->PlayerCameraManager->ViewYawMax = 80.f;
+		PlayerController->PlayerCameraManager->ViewPitchMin = -55.f;
+		PlayerController->PlayerCameraManager->ViewPitchMax = 55.f;
+	}
 }
 
 // Called every frame
@@ -94,7 +117,8 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		if (AbilitySystemComponent && InputComponent)
 		{
-			const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGameplayAbilityInputID", static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+			FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+			const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
 			AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 		}
 	}
@@ -121,33 +145,55 @@ void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, cons
 	}
 }
 
+void ASG_Character::ServerSetRepControlRotation_Implementation(FRotator InControlRotation)
+{
+	ControlRotation = InControlRotation;
+}
+
 void ASG_Character::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
+	
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-	if (Controller != nullptr)
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+	if (!bIsCamersMovementConstrained)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (!IsValid(PlayerController))
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::Move IsValid(PlayerController) == false"));
+			return;
+		}
+		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
+		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 	}
+
+	AddMovementInput(ForwardDirection, MovementVector.Y);
+	AddMovementInput(RightDirection, MovementVector.X);
+	
 }
 
 void ASG_Character::Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	if (Controller == nullptr)
 	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		return;
 	}
+	AddControllerYawInput(LookAxisVector.X);
+	AddControllerPitchInput(LookAxisVector.Y);
+
+	ServerSetRepControlRotation(GetControlRotation());
+}
+
+FRotator ASG_Character::GetRepControlRotation()
+{
+	return ControlRotation;
 }
 
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
@@ -201,7 +247,8 @@ void ASG_Character::OnRep_PlayerState()
 
 	if (AbilitySystemComponent && InputComponent)
 	{
-		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGameplayAbilityInputID", static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
 		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 	}
 }

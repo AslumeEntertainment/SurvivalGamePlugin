@@ -32,6 +32,12 @@ public:
 
 protected:
 
+	UPROPERTY(Replicated)
+	FRotator ControlRotation;
+
+	UPROPERTY(EditAnywhere, Category = "Developer")
+	bool bIsCamersMovementConstrained = true;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
@@ -71,11 +77,17 @@ protected:
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetRepControlRotation(FRotator InControlRotation);
+
 
 public:
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	
+	UFUNCTION(BlueprintCallable)
+	FRotator GetRepControlRotation();
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();
