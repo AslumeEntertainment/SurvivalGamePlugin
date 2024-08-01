@@ -11,6 +11,8 @@ enum class EGameplayAbilityInputID : uint8
 	Confirm,
 	Cancel,
 	Action,
+	Punch,
+	TestSwing,
 	Disassemble,
 	AnimalJump,
 	AnimalBite,

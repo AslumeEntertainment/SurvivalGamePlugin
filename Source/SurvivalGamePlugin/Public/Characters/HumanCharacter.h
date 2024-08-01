@@ -49,9 +49,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
 	FName RightHandSocket;
 
-	UPROPERTY(EditAnywhere, Category = "Equipment")
-	bool bIsRightHanded = true;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float InteractionRange = 200;
 
@@ -101,6 +98,9 @@ public:
 	AItemBase* MainHandItem;
 	UPROPERTY(Replicated)
 	AItemBase* SecondaryHandItem;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment")
+	bool bIsRightHanded = true;
 
 	UFUNCTION()
 	void CraftItem(FText ProductItemName);

@@ -128,23 +128,6 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
-void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
-{
-	if (!IsValid(AbilitySystemComponent))
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
-		return;
-	}
-	if (bIsPressed)
-	{
-		AbilitySystemComponent->AbilityLocalInputPressed(static_cast<int32>(AbilityInputID));
-	}
-	else
-	{
-		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
-	}
-}
-
 void ASG_Character::ServerSetRepControlRotation_Implementation(FRotator InControlRotation)
 {
 	ControlRotation = InControlRotation;
@@ -228,6 +211,35 @@ void ASG_Character::GiveAbilities()
 	}
 }
 
+FGameplayAbilitySpecHandle ASG_Character::AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass)
+{
+	if (!HasAuthority())
+	{
+		return FGameplayAbilitySpecHandle();
+	}
+
+	if (!IsValid(AbilityClass))
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::AddAbility_Implementation IsValid(AbilityClass) == false"));
+		return FGameplayAbilitySpecHandle();
+	}
+
+	FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, static_cast<int32>(AbilityClass.GetDefaultObject()->AbilityInputID), this));
+	UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability given!"));
+	return AbilitySpecHandle;
+}
+
+void ASG_Character::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AbilitySystemComponent->ClearAbility(RemovedAbilitySpecHandle);
+	UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability Removed!"));
+}
+
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -250,6 +262,26 @@ void ASG_Character::OnRep_PlayerState()
 		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
 		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
 		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+}
+
+void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
+{
+	if (!IsValid(AbilitySystemComponent))
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Sending ability input ID to Ability System Component"));
+
+	if (bIsPressed)
+	{
+		AbilitySystemComponent->AbilityLocalInputPressed(static_cast<int32>(AbilityInputID));
+	}
+	else
+	{
+		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
 	}
 }
 
