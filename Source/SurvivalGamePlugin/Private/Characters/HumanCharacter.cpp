@@ -174,12 +174,29 @@ void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseMain);
 		MainHandItem->Use(this);
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Main hand is empty, performing another action"));
+		FGameplayTag HandAbilityTag;
+		if (bIsRightHanded)
+		{
+			HandAbilityTag.FromExportString("Punch.Right");
+		}
+		else
+		{
+			HandAbilityTag.FromExportString("Punch.Left");
+		}
+		
+		if (!HandAbilityTag.IsValid())
+		{
+			UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptUseMainHandItem HandAbilityTag.IsValid() == false"));
+			return;
+		}
+
+		FGameplayEventData EventData;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
+		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Punch);
 	}
 }
 
@@ -187,12 +204,29 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::UseSecondary);
 		SecondaryHandItem->Use(this);
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Secondary hand is empty, performing another action"));
+		FGameplayTag HandAbilityTag;
+		if (bIsRightHanded)
+		{
+			HandAbilityTag.FromExportString("Punch.Left");
+		}
+		else
+		{
+			HandAbilityTag.FromExportString("Punch.Right");
+		}
+
+		if (!HandAbilityTag.IsValid())
+		{
+			UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptUseSecondaryHandItem HandAbilityTag.IsValid() == false"));
+			return;
+		}
+
+		FGameplayEventData EventData;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
+		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Punch);
 	}
 }
 

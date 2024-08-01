@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Headers/ItemDataStruct.h"
 #include "../InteractableInterface.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "ItemBase.generated.h"
 
 
@@ -24,6 +25,15 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
+
+	UPROPERTY()
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class USG_GameplayAbility> ItemAbility;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	FGameplayTag BaseAbilityTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;

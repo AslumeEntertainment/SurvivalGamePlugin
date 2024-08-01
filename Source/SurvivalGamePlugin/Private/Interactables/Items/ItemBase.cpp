@@ -3,9 +3,12 @@
 
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
-#include "Characters/SG_Character.h"
+#include "Characters/HumanCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_GameplayAbility.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -51,23 +54,52 @@ void AItemBase::Tick(float DeltaTime)
 void AItemBase::Use(ASG_Character* PlayerOwner)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
+
+	AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
+	if (!IsValid(HumanPlayer))
+	{
+		return;
+	}
+
+	FString AbilityTagSuffix;
+	if ((this == HumanPlayer->MainHandItem && HumanPlayer->bIsRightHanded) || (this == HumanPlayer->SecondaryHandItem) && !HumanPlayer->bIsRightHanded)
+	{
+		AbilityTagSuffix = ".Right";
+	}
+	else
+	{
+		AbilityTagSuffix = ".Left";
+	}
+
+	FGameplayTag AbilityTag;
+	AbilityTag.FromExportString(BaseAbilityTag.ToString() + AbilityTagSuffix);
+	if (AbilityTag.IsValid())
+	{
+		FGameplayEventData EventData;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
+	}
+	/*EGameplayAbilityInputID AbilityInputID = ItemAbility.GetDefaultObject()->AbilityInputID;
+	PlayerOwner->SendLocalInputToAbilitySystemComponent(true, AbilityInputID);*/
 }
 
 void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
+
 	NetMulticastSetActorEnableCollision(false);
+	AbilitySpecHandle = PlayerOwner->AddAbility(ItemAbility);
 	bIsAttached = true;
 }
 
 void AItemBase::OnItemUnequiped(ASG_Character* PlayerOwner)
 {
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-
 	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFollowCamera()->GetForwardVector() * 100);
 	SetActorRotation(PlayerOwner->GetActorRotation());
+
 	NetMulticastSetActorEnableCollision(true);
+	PlayerOwner->RemoveAbility(AbilitySpecHandle);
 	bIsAttached = false;
 }
 

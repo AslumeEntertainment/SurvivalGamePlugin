@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "Headers/GameplayAbilityInputID.h"
 #include "SG_Character.generated.h"
 
@@ -75,8 +76,6 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
-
 	UFUNCTION(Server, Reliable)
 	void ServerSetRepControlRotation(FRotator InControlRotation);
 
@@ -93,8 +92,13 @@ public:
 	virtual void InitializeAttributes();
 	virtual void GiveAbilities();
 
+	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass);
+	void RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
+
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+
+	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
