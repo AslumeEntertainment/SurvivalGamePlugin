@@ -14,12 +14,20 @@ class SURVIVALGAMEPLUGIN_API USGGA_BasicPunch : public USG_GameplayAbility
 	
 protected:
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY()
+	class USG_AnimInstance* AnimInst;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AnimationMontage;
+
+	UFUNCTION()
+	void OnMontageBlendOut();
+
+	UFUNCTION()
+	void OnMontageCompleted();
 
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	
-	void OnMontageBlendOut();
+
 };

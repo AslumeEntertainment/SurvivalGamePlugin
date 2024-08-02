@@ -20,28 +20,36 @@ void USGGA_BasicPunch::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicPunch::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
+	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
 	if (!IsValid(AnimInst))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicPunch::ActivateAbility IsValid(AnimInst) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 	
-	if ((TriggerEventData->EventTag.GetTagName() == FName("Punch.Left") && Player->bIsRightHanded) || (TriggerEventData->EventTag.GetTagName() == FName("Punch.Right") && !Player->bIsRightHanded))
+	if (TriggerEventData->EventTag.GetTagName() == FName("Punch.Left"))
 	{
 		AnimInst->bIsMirrored = true;
 	}
-	else
+	else if(TriggerEventData->EventTag.GetTagName() == FName("Punch.Right"))
 	{
 		AnimInst->bIsMirrored = false;
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicPunch::OnMontageBlendOut);
+	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicPunch::OnMontageCompleted);
+	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicPunch::OnMontageBlendOut);
 	PlayMontageTask->ReadyForActivation();
 }
 
 void USGGA_BasicPunch::OnMontageBlendOut()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("PUNCH END!"));
+}
+
+void USGGA_BasicPunch::OnMontageCompleted()
+{
+	AnimInst->bIsMirrored = false;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

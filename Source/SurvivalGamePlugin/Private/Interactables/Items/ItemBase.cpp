@@ -78,8 +78,6 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
 	}
-	/*EGameplayAbilityInputID AbilityInputID = ItemAbility.GetDefaultObject()->AbilityInputID;
-	PlayerOwner->SendLocalInputToAbilitySystemComponent(true, AbilityInputID);*/
 }
 
 void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
