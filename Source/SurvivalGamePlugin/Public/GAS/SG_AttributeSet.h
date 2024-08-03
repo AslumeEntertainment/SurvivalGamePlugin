@@ -28,13 +28,7 @@ public:
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Health);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health)
-	FGameplayAttributeData Durability;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Durability);
-
 	UFUNCTION()
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
 
-	UFUNCTION()
-	virtual void OnRep_Durability(const FGameplayAttributeData& OldDurability);
 };

@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCamersMovementConstrained = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float BaseMaxWalkingSpeed = 500.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
@@ -85,6 +88,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	
+	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
+	void ResetWalkingSpeed();
+
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 	

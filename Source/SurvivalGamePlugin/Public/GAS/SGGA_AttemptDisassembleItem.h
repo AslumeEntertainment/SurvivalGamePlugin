@@ -11,18 +11,30 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_AttemptDisassembleItem : public USG_GameplayAbility
 {
 	GENERATED_BODY()
-	
-protected:
-
-	UPROPERTY(EditDefaultsOnly)
-	UDataTable* DisassemlyInfoTable;
-
-	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
-
-	bool bCanDisassembleItem(AItemBase* ItemForDisassembly, AItemBase* OtherEquipedItem);
 
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	UDataTable* DisassemlyInfoTable;
+
+	UPROPERTY()
+	class AHumanCharacter* Player;
+
+	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
+	AItemBase** ItemForDisassembly = nullptr;
+	AItemBase** OtherItem = nullptr;
+	FName MainItemSocket;
+	FName IngredientitemSocket;
+
+	bool bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem);
+
+	UFUNCTION()
+	void OnAnimMontageBlendOut();
+
+	UFUNCTION()
+	void OnAnimMontageCanceled();
 };
