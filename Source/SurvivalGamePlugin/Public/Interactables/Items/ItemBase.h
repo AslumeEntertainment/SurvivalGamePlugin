@@ -26,6 +26,9 @@ protected:
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
 
+	UPROPERTY(Replicated)
+	float CurrentDurability;
+
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 

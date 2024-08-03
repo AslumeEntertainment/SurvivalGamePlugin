@@ -25,6 +25,7 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
+	DOREPLIFETIME(AItemBase, CurrentDurability);
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +39,7 @@ void AItemBase::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
 	}
 	ItemData = *TempItemData;
+	CurrentDurability = ItemData.ItemDurability;
 }
 
 void AItemBase::NetMulticastSetActorEnableCollision_Implementation(bool NewActorCollision)
