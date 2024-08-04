@@ -51,8 +51,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	FString LobbyMapName = "ThirdPersonMap";
 
-	UPROPERTY(EditAnywhere)
-	FString DefaultGameMapName = "TestWorld";
+	//UPROPERTY(EditAnywhere)
+	//FString DefaultGameMapName = "TestWorld";
 
 	UPROPERTY(EditAnywhere)
 	FName GameSessionLocalName = "GameSessionLocalName";
