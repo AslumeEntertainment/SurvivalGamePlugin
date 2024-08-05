@@ -11,6 +11,8 @@
 
 struct FTeamManagementInfo;
 class APlayerController;
+class ATeamManager;
+class USG_GameInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameplayGameMode : public AGameModeBase
@@ -18,12 +20,15 @@ class SURVIVALGAMEPLUGIN_API AGameplayGameMode : public AGameModeBase
 	GENERATED_BODY()
 	
 private:
+
+	friend USG_GameInstance;
+
 	UFUNCTION()
-	bool JoinTeam(APlayerController* TriggeringPlayer, ETeam TeamToJoin);
+	void JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin);
 
-	ETeam GetCurrentTeam(APlayerController* TriggeringPlayer);
+	ETeam GetCurrentTeam(AController* TriggeringPlayer);
 
-	bool LeaveTeam(APlayerController* TriggeringPlayer, ETeam TeamToLeave);
+	bool LeaveTeam(AController* TriggeringPlayer, ETeam TeamToLeave);
 
 	UFUNCTION()
 	bool UpdatePlayer(APlayerController* TriggeringPlayer /*, Soon add info of the player*/);
@@ -33,5 +38,10 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TMap<ETeam, FTeamInfo> Teams;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ATeamManager> TeamManagerClassToSearch;
+
 	void PostLogin(APlayerController* NewPlayer) override;
+
+	void StartPlay() override;
 };

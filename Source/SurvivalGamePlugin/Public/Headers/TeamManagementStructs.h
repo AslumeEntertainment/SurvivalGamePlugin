@@ -34,6 +34,6 @@ struct FTeamInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<APlayerController*, FPlayerCharacterInfo> Players;
+	TMap<AController*, FPlayerCharacterInfo> Players;
 
 };

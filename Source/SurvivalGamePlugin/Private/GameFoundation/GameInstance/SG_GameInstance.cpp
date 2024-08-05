@@ -10,6 +10,7 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 
+#include "GameFoundation/GameModes/GameplayGameMode.h"
 
 DEFINE_LOG_CATEGORY_STATIC(Networking, Log, All);
 
@@ -290,6 +291,15 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 
 	UE_LOG(Networking, Display, TEXT("New Player Registered Successfully"));
 
+	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
+
+	if (IsValid(GameMode) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(GameMode) == false check the settings to ensure that the GameMode is derived form AGameplayGameMode"));
+		return;
+	}
+	GameMode->JoinTeam(InPlayerController, ETeam::Teamless);
+
 }
 
 void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
@@ -352,6 +362,16 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 	}
 
 	UE_LOG(Networking, Display, TEXT("Player Unegistered Successfully"));
+
+	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
+
+	if (IsValid(GameMode) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(GameMode) == false check the settings to ensure that the GameMode is derived form AGameplayGameMode"));
+		return;
+	}
+	ETeam TeamToLeave = GameMode->GetCurrentTeam(InPlayerController);
+	GameMode->LeaveTeam(InPlayerController, TeamToLeave);
 }
 
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
