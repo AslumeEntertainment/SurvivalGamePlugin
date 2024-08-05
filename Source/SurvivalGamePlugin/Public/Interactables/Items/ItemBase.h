@@ -27,6 +27,9 @@ protected:
 	bool bIsAttached = false;
 
 	UPROPERTY(Replicated)
+	class ASG_Character* PlayerOwner;
+
+	UPROPERTY(Replicated)
 	float CurrentDurability;
 
 	UPROPERTY()
@@ -55,13 +58,16 @@ public:
 	FItemDataStruct ItemData;
 
 	UFUNCTION(BlueprintCallable)
-	void Use(ASG_Character* PlayerOwner);
+	void Use();
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void ServerLoseDurability(float LostDurability);
 
 	UFUNCTION(BlueprintCallable)
-	void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
+	virtual void OnItemEquiped(ASG_Character* NewPlayerOwner, FName SocketName);
 
 	UFUNCTION(BlueprintCallable)
-	void OnItemUnequiped(ASG_Character* PlayerOwner);
+	virtual void OnItemUnequiped();
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;

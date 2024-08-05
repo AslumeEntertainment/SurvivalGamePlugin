@@ -9,6 +9,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_GameplayAbility.h"
+#include "Headers/SG_GameplayAbilityTargetData.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -26,6 +27,7 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
 	DOREPLIFETIME(AItemBase, CurrentDurability);
+	DOREPLIFETIME(AItemBase, PlayerOwner);
 }
 
 // Called when the game starts or when spawned
@@ -53,7 +55,7 @@ void AItemBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AItemBase::Use(ASG_Character* PlayerOwner)
+void AItemBase::Use()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Using item"));
 
@@ -78,12 +80,26 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 	if (AbilityTag.IsValid())
 	{
 		FGameplayEventData EventData;
+		FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
+		CustomTargetData->ItemActor = this;
+		EventData.TargetData.Add(CustomTargetData);
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
 	}
 }
 
-void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
+void AItemBase::ServerLoseDurability_Implementation(float LostDurability)
 {
+	CurrentDurability -= LostDurability;
+	if (CurrentDurability <= 0)
+	{
+		//OnItemUnequiped();
+		Destroy();
+	}
+}
+
+void AItemBase::OnItemEquiped(ASG_Character* NewPlayerOwner, FName SocketName)
+{
+	PlayerOwner = NewPlayerOwner;
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
@@ -92,14 +108,15 @@ void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 	bIsAttached = true;
 }
 
-void AItemBase::OnItemUnequiped(ASG_Character* PlayerOwner)
+void AItemBase::OnItemUnequiped()
 {
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFollowCamera()->GetForwardVector() * 100);
+	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFirstPersonCamera()->GetForwardVector() * 100);
 	SetActorRotation(PlayerOwner->GetActorRotation());
 
 	NetMulticastSetActorEnableCollision(true);
 	PlayerOwner->RemoveAbility(AbilitySpecHandle);
+	PlayerOwner = nullptr;
 	bIsAttached = false;
 }
 

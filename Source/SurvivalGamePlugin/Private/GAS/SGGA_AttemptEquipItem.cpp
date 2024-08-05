@@ -36,7 +36,7 @@ void USGGA_AttemptEquipItem::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	if (IsValid(*CurrentEquipedItem))
 	{
-		(*CurrentEquipedItem)->OnItemUnequiped(Player);
+		(*CurrentEquipedItem)->OnItemUnequiped();
 		*CurrentEquipedItem = nullptr;
 	}
 	else if (IsValid(Player->GetFocusedInteractableObject()) && Cast<AItemBase>(Player->GetFocusedInteractableObject()))
@@ -45,5 +45,5 @@ void USGGA_AttemptEquipItem::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		(*CurrentEquipedItem)->OnItemEquiped(Player, SocketName);
 	}
 
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

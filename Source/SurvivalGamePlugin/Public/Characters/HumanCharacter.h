@@ -98,6 +98,8 @@ public:
 	AItemBase* MainHandItem;
 	UPROPERTY(Replicated)
 	AItemBase* SecondaryHandItem;
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	AItemBase* ActiveItem;
 
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
