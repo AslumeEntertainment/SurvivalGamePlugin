@@ -6,32 +6,50 @@
 #include "Kismet/GameplayStatics.h" 
 
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
+#include "Level/TeamManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
 
-bool AGameplayGameMode::JoinTeam(APlayerController* TriggeringPlayer, ETeam TeamToJoin)
+void AGameplayGameMode::StartPlay()
+{
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(World) == false"));
+		return;
+	}
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(World, TeamManagerClassToSearch, FoundActors);
+
+	ATeamManager* TeamManager = CastChecked<ATeamManager>(FoundActors[0]);
+
+	TeamManager->OnPlayerChangingTeams.BindDynamic(this, &AGameplayGameMode::JoinTeam);
+
+}
+
+void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin)
 {
 	ETeam CurrentTeam = GetCurrentTeam(TriggeringPlayer);
 
 	if (LeaveTeam(TriggeringPlayer, CurrentTeam) == false)
 	{
 		UE_LOG(TeamManagement, Warning, TEXT("AGameplayGameMode::JoinTeam - Player could not leave current team: %s"), *UEnum::GetValueAsString(CurrentTeam));
-		return false;
+		return;
 	}
 
 	FTeamInfo* TeamInfoPtr = Teams.Find(TeamToJoin);
 	if (TeamInfoPtr == nullptr)
 	{
 		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::JoinTeam - No team associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToJoin));
-		return false;
+		return;
 	}
 
 	TeamInfoPtr->Players.Add(TriggeringPlayer);
-
-	return true;
 }
 
-ETeam AGameplayGameMode::GetCurrentTeam(APlayerController* TriggeringPlayer)
+ETeam AGameplayGameMode::GetCurrentTeam(AController* TriggeringPlayer)
 {
 	ETeam PlayerTeam = ETeam::Teamless;
 	TArray<FTeamInfo> TeamArray;
@@ -49,7 +67,7 @@ ETeam AGameplayGameMode::GetCurrentTeam(APlayerController* TriggeringPlayer)
 	return PlayerTeam;
 }
 
-bool AGameplayGameMode::LeaveTeam(APlayerController* TriggeringPlayer, ETeam TeamToLeave)
+bool AGameplayGameMode::LeaveTeam(AController* TriggeringPlayer, ETeam TeamToLeave)
 {
 	FTeamInfo* TeamInfoPtr = Teams.Find(TeamToLeave);
 	if (TeamInfoPtr == nullptr)
@@ -87,6 +105,9 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 	}
 
 	GameInstance->RegisterNewPlayer(NewPlayer);
+
 }
+
+
 
 
