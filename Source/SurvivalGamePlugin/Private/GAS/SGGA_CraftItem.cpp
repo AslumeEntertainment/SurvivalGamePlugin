@@ -81,7 +81,7 @@ void USGGA_CraftItem::OnAnimMontageBlendOut()
 	{
 		if (ItemPointer == nullptr)
 		{
-			Cast<AItemBase>(NewItemActor)->OnItemUnequiped(Player);
+			Cast<AItemBase>(NewItemActor)->OnItemUnequiped();
 		}
 		else
 		{

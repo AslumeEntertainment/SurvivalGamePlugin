@@ -21,6 +21,7 @@ void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, ActiveItem, COND_None, REPNOTIFY_Always);
 }
 
 void AHumanCharacter::BeginPlay()
@@ -46,8 +47,8 @@ void AHumanCharacter::ServerSetFocusedInteractable_Implementation(UObject* InFoc
 
 void AHumanCharacter::EmitInteractionChecker()
 {
-	FVector StartTrace = GetFollowCamera()->GetComponentLocation();
-	FVector EndTrace = GetFollowCamera()->GetForwardVector() * InteractionRange + StartTrace;
+	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
+	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
 
 	const FName TraceTag("InteractableTraceTag");
 
@@ -174,7 +175,7 @@ void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		MainHandItem->Use(this);
+		MainHandItem->Use();
 	}
 	else
 	{
@@ -196,7 +197,6 @@ void AHumanCharacter::AttemptUseMainHandItem()
 
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
-		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Punch);
 	}
 }
 
@@ -204,7 +204,7 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		SecondaryHandItem->Use(this);
+		SecondaryHandItem->Use();
 	}
 	else
 	{

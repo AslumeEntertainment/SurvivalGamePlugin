@@ -28,6 +28,8 @@ protected:
 	UPROPERTY()
 	AItemBase* UsedItem = nullptr;
 
+	AHumanCharacter* Player;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackAnimationMontage;
 

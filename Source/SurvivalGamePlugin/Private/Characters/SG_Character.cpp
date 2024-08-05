@@ -45,11 +45,11 @@ ASG_Character::ASG_Character()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh(), FName(TEXT("head")));
 	CameraBoom->TargetArmLength = 0.f; 
-	CameraBoom->bUsePawnControlRotation = true; 
+	CameraBoom->bUsePawnControlRotation = false;
 
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
-	FollowCamera->bUsePawnControlRotation = false; 
+	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCamera->SetupAttachment(CameraBoom);
+	FirstPersonCamera->bUsePawnControlRotation = false;
 
 	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);

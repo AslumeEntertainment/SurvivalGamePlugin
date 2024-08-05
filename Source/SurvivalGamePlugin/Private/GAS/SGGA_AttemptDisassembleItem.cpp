@@ -108,7 +108,7 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
 			}
 			else
 			{
-				Cast<AItemBase>(IngredientItemActor)->OnItemUnequiped(Player);
+				Cast<AItemBase>(IngredientItemActor)->OnItemUnequiped();
 			}
 		}
 
