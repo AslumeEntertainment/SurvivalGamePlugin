@@ -23,7 +23,12 @@ void AGameplayGameMode::StartPlay()
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(World, TeamManagerClassToSearch, FoundActors);
 
-	ATeamManager* TeamManager = CastChecked<ATeamManager>(FoundActors[0]);
+	ATeamManager* TeamManager = Cast<ATeamManager>(FoundActors[0]);
+	if (IsValid(TeamManager) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(TeamManager) == false - Please ensure there is an actor derived of class ATeamManager placed in the world"));
+		return;
+	}
 
 	TeamManager->OnPlayerChangingTeams.BindDynamic(this, &AGameplayGameMode::JoinTeam);
 
@@ -47,6 +52,8 @@ void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin
 	}
 
 	TeamInfoPtr->Players.Add(TriggeringPlayer);
+	
+	UE_LOG(TeamManagement, Display, TEXT("Player(%s) Successfully joined Team: %s"), *TriggeringPlayer->GetName(), *UEnum::GetValueAsString(TeamToJoin));
 }
 
 ETeam AGameplayGameMode::GetCurrentTeam(AController* TriggeringPlayer)
@@ -76,8 +83,13 @@ bool AGameplayGameMode::LeaveTeam(AController* TriggeringPlayer, ETeam TeamToLea
 		return false;
 	}
 
-	TeamInfoPtr->Players.Remove(TriggeringPlayer);
+	if (!TeamInfoPtr->Players.Contains(TriggeringPlayer))
+	{
+		return true;
+	}
 
+	TeamInfoPtr->Players.Remove(TriggeringPlayer);
+	UE_LOG(TeamManagement, Display, TEXT("Player(%s) Successfully left Team: %s"), *TriggeringPlayer->GetName(), *UEnum::GetValueAsString(TeamToLeave));
 	return true;
 }
 
