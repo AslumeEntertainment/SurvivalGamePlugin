@@ -19,7 +19,7 @@ protected:
 
 public:
 
-	virtual void OnItemEquiped(ASG_Character* NewPlayerOwner, FName SocketName) override;
+	virtual void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName) override;
 	virtual void OnItemUnequiped() override;
 
 	float GetItemDamage();

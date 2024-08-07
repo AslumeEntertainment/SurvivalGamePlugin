@@ -27,7 +27,6 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
 	DOREPLIFETIME(AItemBase, CurrentDurability);
-	DOREPLIFETIME(AItemBase, PlayerOwner);
 }
 
 // Called when the game starts or when spawned
@@ -49,19 +48,12 @@ void AItemBase::NetMulticastSetActorEnableCollision_Implementation(bool NewActor
 	SetActorEnableCollision(NewActorCollision);
 }
 
-// Called every frame
-void AItemBase::Tick(float DeltaTime)
+void AItemBase::Use(ASG_Character* PlayerOwner)
 {
-	Super::Tick(DeltaTime);
-}
-
-void AItemBase::Use()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Using item"));
-
 	AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
 	if (!IsValid(HumanPlayer))
 	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::Use IsValid(PlayerOwner) == false"));
 		return;
 	}
 
@@ -92,32 +84,47 @@ void AItemBase::ServerLoseDurability_Implementation(float LostDurability)
 	CurrentDurability -= LostDurability;
 	if (CurrentDurability <= 0)
 	{
-		//OnItemUnequiped();
-		Destroy();
+		DestroyItem();
 	}
 }
 
-void AItemBase::OnItemEquiped(ASG_Character* NewPlayerOwner, FName SocketName)
+void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
-	PlayerOwner = NewPlayerOwner;
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
 	NetMulticastSetActorEnableCollision(false);
 	AbilitySpecHandle = PlayerOwner->AddAbility(ItemAbility);
 	bIsAttached = true;
+	SetOwner(PlayerOwner);
 }
 
 void AItemBase::OnItemUnequiped()
 {
+	ASG_Character* PlayerOwner = Cast<ASG_Character>(GetAttachParentActor());
+	if (!IsValid(PlayerOwner))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(PlayerOwner) == false"));
+		return;
+	}
+
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	SetActorLocation(PlayerOwner->GetActorLocation() + PlayerOwner->GetFirstPersonCamera()->GetForwardVector() * 100);
+	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
 	SetActorRotation(PlayerOwner->GetActorRotation());
 
 	NetMulticastSetActorEnableCollision(true);
 	PlayerOwner->RemoveAbility(AbilitySpecHandle);
-	PlayerOwner = nullptr;
 	bIsAttached = false;
+	SetOwner(nullptr);
+}
+
+void AItemBase::DestroyItem()
+{
+	if (IsValid(GetAttachParentActor()))
+	{
+		OnItemUnequiped();
+	}
+	Destroy();
 }
 
 void AItemBase::InteractRequest()
@@ -133,5 +140,10 @@ bool AItemBase::bCanInteract()
 FName AItemBase::GetItemDataRowName()
 {
 	return ItemDataRow.RowName;
+}
+
+UStaticMeshComponent* AItemBase::GetItemMesh()
+{
+	return StaticMesh;
 }
 

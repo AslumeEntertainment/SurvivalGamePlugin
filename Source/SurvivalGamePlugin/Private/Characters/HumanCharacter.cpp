@@ -2,7 +2,7 @@
 
 
 #include "Characters/HumanCharacter.h"
-#include "Interactables/InteractableInterface.h"
+#include "Interfaces/InteractableInterface.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -175,7 +175,7 @@ void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		MainHandItem->Use();
+		MainHandItem->Use(this);
 	}
 	else
 	{
@@ -204,7 +204,7 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		SecondaryHandItem->Use();
+		SecondaryHandItem->Use(this);
 	}
 	else
 	{
@@ -314,6 +314,16 @@ void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputC
 		Subsystem->AddMappingContext(CraftingWindowOnlyMappingContext, 0);
 		break;
 	}
+}
+
+FName AHumanCharacter::GetLeftHandSocket()
+{
+	return LeftHandSocket;
+}
+
+FName AHumanCharacter::GetRightHandSocket()
+{
+	return RightHandSocket;
 }
 
 FName AHumanCharacter::GetMainHandSocket()

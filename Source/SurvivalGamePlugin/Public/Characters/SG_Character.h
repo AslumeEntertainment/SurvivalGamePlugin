@@ -8,6 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpecHandle.h"
+#include "Interfaces/HittableInterface.h"
 #include "Headers/GameplayAbilityInputID.h"
 #include "SG_Character.generated.h"
 
@@ -22,7 +23,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface, public IHittableInterface
 {
 	GENERATED_BODY()
 
@@ -41,6 +42,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float BaseMaxWalkingSpeed = 500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float BaseDamage = 10.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -90,8 +94,17 @@ public:
 	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
 	void ResetWalkingSpeed();
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void OnHitNotifyRecieved(FVector DamageOrigin);
+
+	virtual void OnHit() override;
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
+	UFUNCTION(BlueprintCallable)
+	float GetBaseDamage();
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();

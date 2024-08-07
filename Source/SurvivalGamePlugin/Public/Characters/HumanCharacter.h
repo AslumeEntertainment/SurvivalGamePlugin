@@ -109,6 +109,10 @@ public:
 	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
 	UFUNCTION(BlueprintCallable)
+	FName GetLeftHandSocket();
+	UFUNCTION(BlueprintCallable)
+	FName GetRightHandSocket();
+	UFUNCTION(BlueprintCallable)
 	FName GetMainHandSocket();
 	UFUNCTION(BlueprintCallable)
 	FName GetSecondaryHandSocket();

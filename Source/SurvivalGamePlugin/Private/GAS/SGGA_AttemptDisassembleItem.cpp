@@ -98,7 +98,7 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
 
 	if (HasAuthority(&CurrentActivationInfo))
 	{
-		AActor* IngredientItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, FVector(0, 0, 0), FRotator(0, 0, 0));
+		AActor* IngredientItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 		if (Cast<AItemBase>(IngredientItemActor))
 		{
 			if (!IsValid(*OtherItem))
@@ -106,16 +106,12 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
 				Cast<AItemBase>(IngredientItemActor)->OnItemEquiped(Player, IngredientitemSocket);
 				*OtherItem = Cast<AItemBase>(IngredientItemActor);
 			}
-			else
-			{
-				Cast<AItemBase>(IngredientItemActor)->OnItemUnequiped();
-			}
 		}
 
 		AActor* MainItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->MainParentItem, FVector(0, 0, 0), FRotator(0, 0, 0));
 		if (Cast<AItemBase>(MainItemActor))
 		{
-			(*ItemForDisassembly)->Destroy();
+			(*ItemForDisassembly)->DestroyItem();
 			Cast<AItemBase>(MainItemActor)->OnItemEquiped(Player, MainItemSocket);
 			(*ItemForDisassembly) = Cast<AItemBase>(MainItemActor);
 		}

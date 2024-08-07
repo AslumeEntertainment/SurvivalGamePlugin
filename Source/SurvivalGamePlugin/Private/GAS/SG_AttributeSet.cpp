@@ -13,10 +13,22 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageRight, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageLeft, COND_None, REPNOTIFY_Always);
 }
 
 void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Health, OldHealth);
+}
+
+void USG_AttributeSet::OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageRight, OldDamageRight);
+}
+
+void USG_AttributeSet::OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageLeft, OldDamageLeft);
 }
 
