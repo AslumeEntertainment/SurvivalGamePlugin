@@ -19,19 +19,20 @@ public:
 
 protected:
 
-	UPROPERTY()
-	class USG_AnimInstance* AnimInst;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
 	bool bUsesItem = false;
 
-	UPROPERTY()
-	AItemBase* UsedItem = nullptr;
-
-	AHumanCharacter* Player;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackAnimationMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	FGameplayTag OnHitGameplayEventTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	TSubclassOf<UGameplayEffect> GameplayEffectClass;
+
+	AHumanCharacter* Player;
+	class USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();
@@ -41,5 +42,8 @@ protected:
 
 	UFUNCTION()
 	void OnAnimMontageCanceled();
+
+	UFUNCTION()
+	void OnEventRecieved(FGameplayEventData Payload);
 
 };

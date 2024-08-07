@@ -7,6 +7,7 @@
 #include "Headers/SG_GameplayAbilityTargetData.h"
 #include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -46,9 +47,8 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		}
 		
-		UsedItem = CustomTargetData->ItemActor;
-		Player->ActiveItem = UsedItem;
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, FString::Printf(TEXT("This skill was triggered by a %s!"), *UsedItem->ItemData.ItemName.ToString()));
+		Player->ActiveItem = CustomTargetData->ItemActor;
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, FString::Printf(TEXT("This skill was triggered by a %s!"), *Player->ActiveItem->ItemData.ItemName.ToString()));
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage);
@@ -56,6 +56,10 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);
 	PlayMontageTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, OnHitGameplayEventTag, nullptr, true, true);
+	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_BasicAttackAbility::OnEventRecieved);
+	WaitGameplayEventTask->Activate();
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
@@ -77,4 +81,11 @@ void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 	Player->ActiveItem = nullptr;
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void USGGA_BasicAttackAbility::OnEventRecieved(FGameplayEventData Payload)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit - Sending GameplayEffect to target"));
+	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

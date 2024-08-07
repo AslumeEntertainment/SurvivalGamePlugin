@@ -60,13 +60,13 @@ void USGGA_CraftItem::OnAnimMontageBlendOut()
 	AItemBase** ItemPointer = nullptr;
 	if (ProductItemData->ItemsToDestroy.Contains(Player->SecondaryHandItem->GetItemDataRowName()))
 	{
-		Player->SecondaryHandItem->Destroy();
+		Player->SecondaryHandItem->DestroyItem();
 		ItemPointer = &Player->SecondaryHandItem;
 		EqupmentSocketName = Player->GetSecondaryHandSocket();
 	}
 	if (ProductItemData->ItemsToDestroy.Contains(Player->MainHandItem->GetItemDataRowName()))
 	{
-		Player->MainHandItem->Destroy();
+		Player->MainHandItem->DestroyItem();
 		ItemPointer = &Player->MainHandItem;
 		EqupmentSocketName = Player->GetMainHandSocket();
 	}
@@ -74,16 +74,12 @@ void USGGA_CraftItem::OnAnimMontageBlendOut()
 	AActor* NewItemActor = nullptr;
 	if (HasAuthority(&CurrentActivationInfo))
 	{
-		NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, Player->GetActorLocation(), Player->GetActorRotation());
+		NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	}
 
 	if (Cast<AItemBase>(NewItemActor))
 	{
-		if (ItemPointer == nullptr)
-		{
-			Cast<AItemBase>(NewItemActor)->OnItemUnequiped();
-		}
-		else
+		if (ItemPointer != nullptr)
 		{
 			Cast<AItemBase>(NewItemActor)->OnItemEquiped(Player, EqupmentSocketName);
 			*ItemPointer = Cast<AItemBase>(NewItemActor);

@@ -28,7 +28,21 @@ public:
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Health);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_DamageRight)
+	FGameplayAttributeData DamageRight;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, DamageRight);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_DamageLeft)
+	FGameplayAttributeData DamageLeft;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, DamageLeft);
+
 	UFUNCTION()
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+
+	UFUNCTION()
+	virtual void OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight);
+
+	UFUNCTION()
+	virtual void OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft);
 
 };

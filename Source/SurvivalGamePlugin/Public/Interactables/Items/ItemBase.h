@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Headers/ItemDataStruct.h"
-#include "../InteractableInterface.h"
+#include "Interfaces/InteractableInterface.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "ItemBase.generated.h"
 
@@ -25,9 +25,6 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
-
-	UPROPERTY(Replicated)
-	class ASG_Character* PlayerOwner;
 
 	UPROPERTY(Replicated)
 	float CurrentDurability;
@@ -51,27 +48,28 @@ protected:
 	void NetMulticastSetActorEnableCollision(bool NewActorCollision);
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
 	UFUNCTION(BlueprintCallable)
-	void Use();
+	void Use(ASG_Character* PlayerOwner);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void ServerLoseDurability(float LostDurability);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void OnItemEquiped(ASG_Character* NewPlayerOwner, FName SocketName);
+	virtual void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void OnItemUnequiped();
+	virtual void OnItemUnequiped(); 
+
+	UFUNCTION(BlueprintCallable)
+	virtual void DestroyItem();
 
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract() override;
 
 	FName GetItemDataRowName();
-
+	class UStaticMeshComponent* GetItemMesh();
 };

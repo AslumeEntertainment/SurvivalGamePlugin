@@ -3,6 +3,7 @@
 
 #include "Characters/SG_Character.h"
 #include "Engine/LocalPlayer.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
@@ -14,6 +15,10 @@
 #include "InputActionValue.h"
 #include "Net/UnrealNetwork.h"
 
+#include "Characters/HumanCharacter.h"
+#include "Interactables/Items/ItemBase.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AttributeSet.h"
 #include "GAS/SG_GameplayAbility.h"
@@ -70,7 +75,10 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (!bIsCamersMovementConstrained)
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), BaseDamage);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), BaseDamage);
+
+	if (bIsCamersMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (!IsValid(PlayerController))
@@ -143,7 +151,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	if (!bIsCamersMovementConstrained)
+	if (bIsCamersMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (!IsValid(PlayerController))
@@ -184,9 +192,71 @@ void ASG_Character::ResetWalkingSpeed()
 	GetCharacterMovement()->MaxWalkSpeed = BaseMaxWalkingSpeed;
 }
 
+void ASG_Character::OnHitNotifyRecieved_Implementation(FVector DamageOrigin)
+{
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation IsValid(World) == false"));
+		return;
+	}
+	
+	TArray<AActor*> OutActors;
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	
+	UKismetSystemLibrary::DrawDebugSphere(World, DamageOrigin, 50.f, 12, FLinearColor::Green, 2.f, 1.f);
+
+	if (!UKismetSystemLibrary::SphereOverlapActors(World, DamageOrigin, 50.f, ObjectTypes, nullptr, ActorsToIgnore, OutActors))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation - Nothing was hit"));
+		return;
+	}
+	for (AActor* OutActor : OutActors)
+	{
+		IHittableInterface* HittableActor = Cast<IHittableInterface>(OutActor);
+		if (HittableActor == nullptr)
+		{
+			continue;
+		}
+		HittableActor->OnHit();
+		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation - Hit registered"));
+	}
+}
+
+void ASG_Character::OnHit()
+{
+	if (!IsValid(GetInstigator())) {
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHit IsValid(GetInstigator() == false"));
+		return;
+	}
+	FGameplayEventData EventData;
+	EventData.Instigator = GetInstigator();
+	EventData.Target = this;
+	EventData.TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(this);
+	
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Combat.Hit"));
+	if (EventTag.IsValid())
+	{
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetInstigator(), EventTag, EventData);
+		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit - Event sent"));
+	}
+}
+
+FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
+{
+	return GetActorLocation() + GetFirstPersonCamera()->GetForwardVector() * DistanceFromPlayer;
+}
+
 FRotator ASG_Character::GetRepControlRotation()
 {
 	return ControlRotation;
+}
+
+float ASG_Character::GetBaseDamage()
+{
+	return BaseDamage;
 }
 
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
