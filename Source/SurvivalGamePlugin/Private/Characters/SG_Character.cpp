@@ -220,28 +220,24 @@ void ASG_Character::OnHitNotifyRecieved_Implementation(FVector DamageOrigin)
 		{
 			continue;
 		}
-		HittableActor->OnHit();
-		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation - Hit registered"));
+		HittableActor->OnHit(this);
 	}
 }
 
-void ASG_Character::OnHit()
+void ASG_Character::OnHit(ASG_Character* InstigatingPlayer)
 {
-	if (!IsValid(GetInstigator())) {
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHit IsValid(GetInstigator() == false"));
-		return;
-	}
 	FGameplayEventData EventData;
-	EventData.Instigator = GetInstigator();
+	EventData.Instigator = InstigatingPlayer;
 	EventData.Target = this;
 	EventData.TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(this);
 	
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Combat.Hit"));
-	if (EventTag.IsValid())
+	if (!EventTag.IsValid())
 	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetInstigator(), EventTag, EventData);
-		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit - Event sent"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHit EventTag.IsValid() == false"));
+		return;
 	}
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(InstigatingPlayer, EventTag, EventData);
 }
 
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
