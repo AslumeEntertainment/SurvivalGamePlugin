@@ -97,7 +97,7 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void OnHitNotifyRecieved(FVector DamageOrigin);
 
-	virtual void OnHit() override;
+	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);

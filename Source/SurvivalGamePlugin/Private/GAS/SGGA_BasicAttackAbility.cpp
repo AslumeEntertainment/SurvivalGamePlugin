@@ -6,6 +6,7 @@
 #include "Interactables/Items/ItemBase.h"
 #include "Headers/SG_GameplayAbilityTargetData.h"
 #include "Animation/SG_AnimInstance.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
@@ -46,9 +47,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CustomTargetData == nullptr"));
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		}
-		
 		Player->ActiveItem = CustomTargetData->ItemActor;
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Green, FString::Printf(TEXT("This skill was triggered by a %s!"), *Player->ActiveItem->ItemData.ItemName.ToString()));
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage);
@@ -85,7 +84,9 @@ void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 
 void USGGA_BasicAttackAbility::OnEventRecieved(FGameplayEventData Payload)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit - Sending GameplayEffect to target"));
-	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1);
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	if (IsValid(Player->ActiveItem))
+	{
+		Player->ActiveItem->ServerLoseDurability(20.f);
+	}
+	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
 }
