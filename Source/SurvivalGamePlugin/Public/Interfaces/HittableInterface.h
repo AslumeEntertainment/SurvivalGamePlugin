@@ -25,4 +25,6 @@ public:
 
 	virtual void OnHit(ASG_Character* InstigatingPlayer) = 0;
 
+	virtual bool bCanBeHit() = 0;
+
 };
