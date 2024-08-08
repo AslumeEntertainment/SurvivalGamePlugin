@@ -23,10 +23,16 @@ public:
 	USG_AttributeSet();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Health);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxHealth)
+	FGameplayAttributeData MaxHealth;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxHealth);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_DamageRight)
 	FGameplayAttributeData DamageRight;
@@ -36,8 +42,13 @@ public:
 	FGameplayAttributeData DamageLeft;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, DamageLeft);
 
+protected:
+
 	UFUNCTION()
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+
+	UFUNCTION()
+	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
 
 	UFUNCTION()
 	virtual void OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight);

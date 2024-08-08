@@ -75,18 +75,17 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), BaseDamage);
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), BaseDamage);
+	InitializeAttributes();
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!IsValid(PlayerController))
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
+		return;
+	}
 
 	if (bIsCamersMovementConstrained)
 	{
-		APlayerController* PlayerController = Cast<APlayerController>(Controller);
-		if (!IsValid(PlayerController))
-		{
-			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
-			return;
-		}
-
 		PlayerController->PlayerCameraManager->ViewYawMin = -80.f;
 		PlayerController->PlayerCameraManager->ViewYawMax = 80.f;
 		PlayerController->PlayerCameraManager->ViewPitchMin = -55.f;
@@ -220,6 +219,10 @@ void ASG_Character::OnHitNotifyRecieved_Implementation(FVector DamageOrigin)
 		{
 			continue;
 		}
+		if (HittableActor->bCanBeHit() == false)
+		{
+			continue;
+		}
 		HittableActor->OnHit(this);
 	}
 }
@@ -240,6 +243,22 @@ void ASG_Character::OnHit(ASG_Character* InstigatingPlayer)
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(InstigatingPlayer, EventTag, EventData);
 }
 
+bool ASG_Character::bCanBeHit()
+{
+	return IsAlive();
+}
+
+void ASG_Character::Die()
+{
+	bIsAlive = false;
+
+	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), 0);
+	UnPossessed();
+}
+
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 {
 	return GetActorLocation() + GetFirstPersonCamera()->GetForwardVector() * DistanceFromPlayer;
@@ -255,6 +274,11 @@ float ASG_Character::GetBaseDamage()
 	return BaseDamage;
 }
 
+bool ASG_Character::IsAlive()
+{
+	return bIsAlive;
+}
+
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -264,6 +288,9 @@ void ASG_Character::InitializeAttributes()
 {
 	if (AbilitySystemComponent && DefaultAttributeEffect)
 	{
+		AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), BaseDamage);
+		AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), BaseDamage);
+
 		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
 
@@ -322,7 +349,6 @@ void ASG_Character::PossessedBy(AController* NewController)
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
-	InitializeAttributes();
 	GiveAbilities();
 }
 
@@ -331,7 +357,6 @@ void ASG_Character::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
-	InitializeAttributes();
 
 	if (AbilitySystemComponent && InputComponent)
 	{

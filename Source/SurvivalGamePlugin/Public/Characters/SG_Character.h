@@ -31,6 +31,9 @@ public:
 
 	ASG_Character();
 
+private:
+
+	bool bIsAlive = true;
 
 protected:
 
@@ -38,7 +41,7 @@ protected:
 	FRotator ControlRotation;
 
 	UPROPERTY(EditAnywhere, Category = "Developer")
-	bool bIsCamersMovementConstrained = true;
+	bool bIsCamersMovementConstrained = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float BaseMaxWalkingSpeed = 500.f;
@@ -98,6 +101,10 @@ public:
 	void OnHitNotifyRecieved(FVector DamageOrigin);
 
 	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
+	virtual bool bCanBeHit() override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void Die();
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
@@ -105,6 +112,8 @@ public:
 	FRotator GetRepControlRotation();
 	UFUNCTION(BlueprintCallable)
 	float GetBaseDamage();
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive();
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();
