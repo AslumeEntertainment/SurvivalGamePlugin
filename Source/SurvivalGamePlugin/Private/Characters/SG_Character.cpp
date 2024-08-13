@@ -15,9 +15,6 @@
 #include "InputActionValue.h"
 #include "Net/UnrealNetwork.h"
 
-#include "Characters/HumanCharacter.h"
-#include "Interactables/Items/ItemBase.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AttributeSet.h"
