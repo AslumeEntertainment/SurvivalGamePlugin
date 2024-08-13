@@ -4,20 +4,27 @@
 #include "GAS/SGGA_AttemptDisassembleItem.h"
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/ItemBase.h"
+#include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility CommitAbility == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 	Player = CastChecked<AHumanCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
+	if (!IsValid(AnimInst))
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(AnimInst) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
@@ -26,14 +33,14 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		ItemForDisassembly = &Player->MainHandItem;
 		OtherItem = &Player->SecondaryHandItem;
 		MainItemSocket = Player->GetMainHandSocket();
-		IngredientitemSocket = Player->GetSecondaryHandSocket();
+		IngredientItemSocket = Player->GetSecondaryHandSocket();
 	}
 	else if (bCanDisassembleItem(Player->SecondaryHandItem, Player->MainHandItem))
 	{
 		ItemForDisassembly = &Player->SecondaryHandItem;
 		OtherItem = &Player->MainHandItem;
 		MainItemSocket = Player->GetSecondaryHandSocket();
-		IngredientitemSocket = Player->GetMainHandSocket();
+		IngredientItemSocket = Player->GetMainHandSocket();
 	}
 	else
 	{
@@ -42,12 +49,26 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		return;
 	}
 
+	if (MainItemSocket == Player->GetLeftHandSocket())
+	{
+		AnimInst->bIsMirrored = true;
+	}
+
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		SpawnNewItems();
+	}
+
 	Player->MultiplyMaxWalkingSpeed(ItemForDisassemblyData->MovementSpeedMultiplier);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut);
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCanceled);
 	PlayMontageTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishDisassembly"), nullptr, true, true);
+	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnDisassemblyFinished);
+	WaitGameplayEventTask->Activate();
 }
 
 bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem)
@@ -61,7 +82,7 @@ bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDis
 	FDisassemblyProcessDataStruct* ItemData = DisassemlyInfoTable->FindRow<FDisassemblyProcessDataStruct>(MainItemForDisassembly->GetItemDataRowName(), "");
 	if (!ItemData)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::AttemptDisassembleItem ItemData == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::AttemptDisassembleItem ItemData == nullptr"));
 		return false;
 	}
 
@@ -87,37 +108,35 @@ bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDis
 	return true;
 }
 
-void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
+void USGGA_AttemptDisassembleItem::SpawnNewItems()
 {
 	UWorld* World = GetWorld();
 	if (!IsValid(World))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems IsValid(World) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	if (HasAuthority(&CurrentActivationInfo))
+	AActor* MainItem = World->SpawnActor<AActor>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(Cast<AItemBase>(MainItem)))
 	{
-		AActor* IngredientItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-		if (Cast<AItemBase>(IngredientItemActor))
-		{
-			if (!IsValid(*OtherItem))
-			{
-				Cast<AItemBase>(IngredientItemActor)->OnItemEquiped(Player, IngredientitemSocket);
-				*OtherItem = Cast<AItemBase>(IngredientItemActor);
-			}
-		}
-
-		AActor* MainItemActor = World->SpawnActor<AActor>(ItemForDisassemblyData->MainParentItem, FVector(0, 0, 0), FRotator(0, 0, 0));
-		if (Cast<AItemBase>(MainItemActor))
-		{
-			(*ItemForDisassembly)->DestroyItem();
-			Cast<AItemBase>(MainItemActor)->OnItemEquiped(Player, MainItemSocket);
-			(*ItemForDisassembly) = Cast<AItemBase>(MainItemActor);
-		}
+		MainItemActor = Cast<AItemBase>(MainItem);
+		MainItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
+	}
+	AActor* IngredientItem = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(Cast<AItemBase>(IngredientItem)))
+	{
+		IngredientItemActor = Cast<AItemBase>(IngredientItem);
+		IngredientItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems - New items have been spawned and kept hidden until ability has finished"));
+}
+
+void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
+{
 	Player->ResetWalkingSpeed();
+	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -126,4 +145,32 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 	Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly animation was unexpectedly canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
+{
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
+	(*ItemForDisassembly)->DestroyItem();
+
+	if (IsValid(MainItemActor))
+	{
+		MainItemActor->OnItemEquiped(Player, MainItemSocket);
+		MainItemActor->SetActorScale3D(FVector(1, 1, 1));
+		(*ItemForDisassembly) = MainItemActor;
+	}
+
+	if (!IsValid(*OtherItem) && IsValid(IngredientItemActor))
+	{
+		IngredientItemActor->OnItemEquiped(Player, IngredientItemSocket);
+		IngredientItemActor->SetActorScale3D(FVector(1, 1, 1));
+		*OtherItem = IngredientItemActor;
+	}
+	else if (IsValid(*OtherItem) && IsValid(IngredientItemActor))
+	{
+		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
+		IngredientItemActor->SetActorRotation(Player->GetActorRotation());
+		IngredientItemActor->SetActorScale3D(FVector(1, 1, 1));
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Disassembly process finished!"));
 }

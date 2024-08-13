@@ -23,18 +23,29 @@ protected:
 
 	UPROPERTY()
 	class AHumanCharacter* Player;
+	class USG_AnimInstance* AnimInst;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 	AItemBase** ItemForDisassembly = nullptr;
 	AItemBase** OtherItem = nullptr;
+
 	FName MainItemSocket;
-	FName IngredientitemSocket;
+	FName IngredientItemSocket;
+
+	AItemBase* MainItemActor;
+	AItemBase* IngredientItemActor;
 
 	bool bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem);
+
+	UFUNCTION()
+	void SpawnNewItems();
 
 	UFUNCTION()
 	void OnAnimMontageBlendOut();
 
 	UFUNCTION()
 	void OnAnimMontageCanceled();
+
+	UFUNCTION()
+	void OnDisassemblyFinished(FGameplayEventData Payload);
 };

@@ -21,15 +21,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
 
-	UPROPERTY()
-	class AHumanCharacter* Player;
+	AHumanCharacter* Player;
+	class USG_AnimInstance* AnimInst;
+
+	class AItemBase* ProductItem;
+	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;
 
 	UFUNCTION()
-	void OnAnimMontageBlendOut();
+	void SpawnProductItem();
+
+	UFUNCTION()
+	void OnAnimMontageCompleted();
 
 	UFUNCTION()
 	void OnAnimMontageCanceled();
+
+	UFUNCTION()
+	void OnCraftingFinished(FGameplayEventData Payload);
 
 };

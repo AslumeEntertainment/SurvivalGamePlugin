@@ -4,13 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
-#include "SG_HitAnimNotify.generated.h"
+#include "SG_AnimNotify_TriggerGameplayEvent.generated.h"
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API USG_HitAnimNotify : public UAnimNotify
+class SURVIVALGAMEPLUGIN_API USG_AnimNotify_TriggerGameplayEvent : public UAnimNotify
 {
 	GENERATED_BODY()
+
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "GameplayTag")
+	FGameplayTag EventTag;
 
 public:
 
