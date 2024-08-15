@@ -19,7 +19,7 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->bShowMouseCursor = false;
 	}
 
-	AHumanCharacter* Player = Cast<AHumanCharacter>(PlayerOwner->GetPawn());
+	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
@@ -37,8 +37,11 @@ void AInGameHUD::BeginPlay()
 	CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
 
 	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
-	Player->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);
-	Player->CraftingWindowCloseDelegate.AddDynamic(this, &AInGameHUD::CloseCraftingWindow);
+	if (Cast<AHumanCharacter>(Player))
+	{
+		Cast<AHumanCharacter>(Player)->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);
+		Cast<AHumanCharacter>(Player)->CraftingWindowCloseDelegate.AddDynamic(this, &AInGameHUD::CloseCraftingWindow);
+	}
 
 	ShowGameplayWidget();
 	GameplayWidget->UpdateHealthPercent(1);

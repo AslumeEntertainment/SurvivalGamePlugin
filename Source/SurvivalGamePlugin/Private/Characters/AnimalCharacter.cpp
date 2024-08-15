@@ -37,3 +37,8 @@ void AAnimalCharacter::AttemptScratch()
 {
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::AnimalScratch);
 }
+
+FName AAnimalCharacter::GetMouthSocket()
+{
+	return MouthSocket;
+}
