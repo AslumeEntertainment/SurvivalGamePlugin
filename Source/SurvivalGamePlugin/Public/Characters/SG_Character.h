@@ -22,6 +22,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHealthUpdateSignature, float, HealthPercent);
+
 UCLASS(config = Game)
 class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface, public IHittableInterface
 {
@@ -132,4 +134,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintCallable)
+	FHealthUpdateSignature OnHealthPercentUpdated;
 };

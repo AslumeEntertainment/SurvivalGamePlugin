@@ -17,7 +17,7 @@ class SURVIVALGAMEPLUGIN_API UCraftingWindowWidget : public UUserWidget
 protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* CraftingRecipeWrapBox;;
+	UWrapBox* CraftingRecipeWrapBox;
 
 public:
 
