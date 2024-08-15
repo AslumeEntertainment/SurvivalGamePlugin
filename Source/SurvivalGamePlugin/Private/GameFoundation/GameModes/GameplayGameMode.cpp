@@ -12,7 +12,7 @@ DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
 
 void AGameplayGameMode::StartPlay()
 {
-
+	Super::StartPlay();
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
@@ -22,14 +22,14 @@ void AGameplayGameMode::StartPlay()
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(World, TeamManagerClassToSearch, FoundActors);
-
-	ATeamManager* TeamManager = Cast<ATeamManager>(FoundActors[0]);
-	if (IsValid(TeamManager) == false)
+	
+	if (FoundActors.IsEmpty() == true)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(TeamManager) == false - Please ensure there is an actor derived of class ATeamManager placed in the world"));
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATeamManager placed in the world"));
 		return;
 	}
 
+	ATeamManager* TeamManager = Cast<ATeamManager>(FoundActors[0]);
 	TeamManager->OnPlayerChangingTeams.BindDynamic(this, &AGameplayGameMode::JoinTeam);
 
 }
@@ -62,6 +62,7 @@ ETeam AGameplayGameMode::GetCurrentTeam(AController* TriggeringPlayer)
 	TArray<FTeamInfo> TeamArray;
 	TArray<ETeam> EnumArray;
 	Teams.GenerateValueArray(TeamArray);
+	Teams.GenerateKeyArray(EnumArray);
 	for (int i=0; i< TeamArray.Num() ; i++)
 	{
 		if (TeamArray[i].Players.Contains(TriggeringPlayer))
@@ -118,6 +119,7 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 
 	GameInstance->RegisterNewPlayer(NewPlayer);
 
+	NewPlayer->SetInputMode(FInputModeGameOnly());
 }
 
 
