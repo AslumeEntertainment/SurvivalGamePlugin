@@ -7,6 +7,7 @@
 #include "Headers/ItemDataStruct.h"
 #include "InGameHUD.generated.h"
 
+class UInGameOverlayWidget;
 class UItemIconWidget;
 class UCraftingWindowWidget;
 
@@ -20,7 +21,7 @@ protected:
 	virtual void BeginPlay()override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WidgetClasses")
-	TSubclassOf<UUserWidget> GameplayWidgetClass;
+	TSubclassOf<UInGameOverlayWidget> GameplayWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WidgetClasses")
 	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
@@ -29,7 +30,7 @@ protected:
 	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;
 
 	UPROPERTY()
-	UUserWidget* GameplayWidget;
+	UInGameOverlayWidget* GameplayWidget;
 
 	UPROPERTY()
 	UCraftingWindowWidget* CraftingWindowWidget;
@@ -41,6 +42,7 @@ public:
 
 	UFUNCTION()
 	void OpenCraftingWindow(FItemDataStruct MainItemData, FName IngredientItemName);
+
 	UFUNCTION()
 	void CloseCraftingWindow();
 };

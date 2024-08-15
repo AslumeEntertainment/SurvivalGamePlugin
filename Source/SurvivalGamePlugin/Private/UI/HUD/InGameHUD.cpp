@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Characters/HumanCharacter.h"
 
+#include "UI/Widgets/InGameOverlayWidget.h"
 #include "UI/Widgets/ItemIconWidget.h"
 #include "UI/Widgets/CraftingWindowWidget.h"
 
@@ -32,13 +33,15 @@ void AInGameHUD::BeginPlay()
 		return;
 	}
 
-	GameplayWidget = CreateWidget<UUserWidget>(UGameplayStatics::GetGameInstance(World), GameplayWidgetClass);
+	GameplayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayWidgetClass);
 	CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
 
+	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
 	Player->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);
 	Player->CraftingWindowCloseDelegate.AddDynamic(this, &AInGameHUD::CloseCraftingWindow);
 
 	ShowGameplayWidget();
+	GameplayWidget->UpdateHealthPercent(1);
 }
 
 void AInGameHUD::ShowGameplayWidget()
