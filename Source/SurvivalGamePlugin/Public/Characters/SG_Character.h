@@ -45,8 +45,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCamersMovementConstrained = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	float BaseMaxWalkingSpeed = 500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	FName LeftHandSocket;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	FName RightHandSocket;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float BaseDamage = 10.f;
@@ -109,11 +115,20 @@ public:
 	virtual void Die();
 
 	UFUNCTION(BlueprintCallable)
+	FName GetLeftHandSocket();
+
+	UFUNCTION(BlueprintCallable)
+	FName GetRightHandSocket();
+
+	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
+
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
+
 	UFUNCTION(BlueprintCallable)
 	float GetBaseDamage();
+
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
 	

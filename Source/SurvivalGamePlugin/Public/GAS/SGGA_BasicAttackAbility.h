@@ -31,7 +31,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;
 
-	AHumanCharacter* Player;
+	class ASG_Character* Player;
 	class USG_AnimInstance* AnimInst;
 
 	UFUNCTION()

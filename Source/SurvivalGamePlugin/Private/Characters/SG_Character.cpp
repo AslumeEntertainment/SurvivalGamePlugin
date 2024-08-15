@@ -256,6 +256,16 @@ void ASG_Character::Die()
 	UnPossessed();
 }
 
+FName ASG_Character::GetLeftHandSocket()
+{
+	return LeftHandSocket;
+}
+
+FName ASG_Character::GetRightHandSocket()
+{
+	return RightHandSocket;
+}
+
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 {
 	return GetActorLocation() + GetFirstPersonCamera()->GetForwardVector() * DistanceFromPlayer;

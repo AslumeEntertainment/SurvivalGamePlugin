@@ -12,7 +12,10 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 {
     GENERATED_BODY()
 
-    FSG_GameplayAbilityTargetData() { }
+    FSG_GameplayAbilityTargetData() 
+    {
+        ItemActor = nullptr;
+    }
 
     UPROPERTY()
     AItemBase* ItemActor;
