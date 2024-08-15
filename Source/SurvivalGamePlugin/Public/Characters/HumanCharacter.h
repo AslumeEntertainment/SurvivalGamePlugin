@@ -79,6 +79,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DisassembleAction;
 
+	void AttemptInteraction();
 	void AttemptEquipWithMainHand();
 	void AttemptEquipWithSecondaryHand();
 
@@ -93,6 +94,9 @@ protected:
 	void AttemptDisassembleItem();
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bShouldDrawDebug = true;
 
 	UPROPERTY(Replicated)
 	AItemBase* MainHandItem;
