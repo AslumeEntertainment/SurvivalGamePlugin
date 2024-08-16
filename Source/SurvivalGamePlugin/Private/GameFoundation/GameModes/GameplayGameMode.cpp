@@ -4,10 +4,13 @@
 #include "GameFoundation/GameModes/GameplayGameMode.h"
 
 #include "Kismet/GameplayStatics.h" 
+#include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "Level/TeamManager.h"
 #include "Level/PlayerCustomiser.h"
+#include "Level/TimeEventManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
 
@@ -33,6 +36,18 @@ void AGameplayGameMode::StartPlay()
 	ATeamManager* TeamManager = Cast<ATeamManager>(FoundActors[0]);
 	TeamManager->OnPlayerChangingTeams.BindDynamic(this, &AGameplayGameMode::JoinTeam);
 
+	FoundActors.Empty();
+	
+	UGameplayStatics::GetAllActorsOfClass(World, TimeEventManagerClassToSearch, FoundActors);
+
+	if (FoundActors.IsEmpty() == true)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATimeEventManager placed in the world"));
+		return;
+	}
+
+	ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
+	TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredator);
 }
 
 void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin)
@@ -45,22 +60,7 @@ void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin
 
 	ETeam CurrentTeam = GetCurrentTeam(TriggeringPlayer);
 
-	if (LeaveTeam(TriggeringPlayer, CurrentTeam) == false)
-	{
-		UE_LOG(TeamManagement, Warning, TEXT("AGameplayGameMode::JoinTeam - Player could not leave current team: %s"), *UEnum::GetValueAsString(CurrentTeam));
-		return;
-	}
-
 	DestroyPlayerCustomiser(TriggeringPlayer, CurrentTeam);
-
-	FTeamInfo* TeamInfoPtr = Teams.Find(TeamToJoin);
-	if (TeamInfoPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::JoinTeam - No team associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToJoin));
-		return;
-	}
-
-	TeamInfoPtr->Players.Add(TriggeringPlayer);
 	
 	SpawnPlayerCustomiser(TriggeringPlayer, TeamToJoin);
 
@@ -95,39 +95,28 @@ bool AGameplayGameMode::IsThereSpaceInTeam(ETeam TeamToCheck)
 ETeam AGameplayGameMode::GetCurrentTeam(AController* TriggeringPlayer)
 {
 	ETeam PlayerTeam = ETeam::Teamless;
-	TArray<FTeamInfo> TeamArray;
+	TArray<FPlayerCustomiserSpawn> TeamArray;
 	TArray<ETeam> EnumArray;
-	Teams.GenerateValueArray(TeamArray);
-	Teams.GenerateKeyArray(EnumArray);
+	PerTeamCustomiserSpawnLocations.GenerateValueArray(TeamArray);
+	PerTeamCustomiserSpawnLocations.GenerateKeyArray(EnumArray);
+
 	for (int i=0; i< TeamArray.Num() ; i++)
 	{
-		if (TeamArray[i].Players.Contains(TriggeringPlayer))
+		TArray<APlayerCustomiser*> CustomiserArray;
+		TeamArray[i].Locations.GenerateValueArray(CustomiserArray);
+
+		for (APlayerCustomiser* Customiser : CustomiserArray)
 		{
-			PlayerTeam = EnumArray[i];
-			break;
+			if (Customiser == nullptr) continue;
+			if (Customiser->IsOwningPlayer(TriggeringPlayer))
+			{
+				PlayerTeam = EnumArray[i];
+				break;
+			}
 		}
 	}
 
 	return PlayerTeam;
-}
-
-bool AGameplayGameMode::LeaveTeam(AController* TriggeringPlayer, ETeam TeamToLeave)
-{
-	FTeamInfo* TeamInfoPtr = Teams.Find(TeamToLeave);
-	if (TeamInfoPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::LeaveTeam - No team associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToLeave));
-		return false;
-	}
-
-	if (!TeamInfoPtr->Players.Contains(TriggeringPlayer))
-	{
-		return true;
-	}
-
-	TeamInfoPtr->Players.Remove(TriggeringPlayer);
-	UE_LOG(TeamManagement, Display, TEXT("Player(%s) Successfully left Team: %s"), *TriggeringPlayer->GetName(), *UEnum::GetValueAsString(TeamToLeave));
-	return true;
 }
 
 void AGameplayGameMode::SpawnPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToSpawnTo)
@@ -218,7 +207,6 @@ void AGameplayGameMode::OnPlayerStatusUpdated()
 		UE_LOG(LogTemp, Warning, TEXT("CHECKING READYNESS"));
 	}
 
-	//Run check on that if all players are ready
 	TArray<FPlayerCustomiserSpawn> TeamArray;
 	TArray<ETeam> EnumArray;
 	PerTeamCustomiserSpawnLocations.GenerateValueArray(TeamArray);
@@ -244,10 +232,63 @@ void AGameplayGameMode::OnPlayerStatusUpdated()
 
 	}
 
-	if (bGameShouldStart)
+	if (!bGameShouldStart)
+	{
+		return;
+	}
+	if (bShouldPrintDebug)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GAME IS STARTING"));
 	}
+	
+	//get the appropriate pawns for every player
+	//spawn the pawns
+	//stop the curent pawns tick and posses the pawns
+	//start time event manager timer
+
+}
+
+void AGameplayGameMode::SpawnPredator()
+{
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PREDATOR IS SPAWNING"));
+	}
+}
+
+FVector AGameplayGameMode::GetValidInGameSpawnLocation()
+{
+	FVector PredatorLocation;
+	bool bIsValidLocation = true;
+
+	TArray<AActor*> Players;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), Players);
+
+	TArray<FVector> PlayerLocations;
+	for (AActor* Player : Players)
+	{
+		PlayerLocations.Add(Player->GetActorLocation());
+	}
+
+	do
+	{
+		PredatorLocation.X = FMath::RandRange(BottomLeftArenaCornerCoordinate.X, UpperRightArenaCornerCoordinate.X);
+		PredatorLocation.Y = FMath::RandRange(BottomLeftArenaCornerCoordinate.Y, UpperRightArenaCornerCoordinate.Y);
+		PredatorLocation.Z = FMath::RandRange(BottomLeftArenaCornerCoordinate.Z, UpperRightArenaCornerCoordinate.Z);
+
+		/*
+		for (FVector PlayerLocation : PlayerLocations)
+		{
+			if (UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation) <= MinimalSpawnDistanceFromPlayer)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("Invalid location (Distance = %.2f), searching for a new one..."), UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation)));
+				bIsValidLocation = false;
+			}
+		}
+		*/
+	} while (!bIsValidLocation);
+
+	return PredatorLocation;
 }
 
 void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)

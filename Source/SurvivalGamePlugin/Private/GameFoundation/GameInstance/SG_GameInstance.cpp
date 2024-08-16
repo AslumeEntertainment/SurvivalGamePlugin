@@ -371,7 +371,7 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 		return;
 	}
 	ETeam TeamToLeave = GameMode->GetCurrentTeam(InPlayerController);
-	GameMode->LeaveTeam(InPlayerController, TeamToLeave);
+	GameMode->DestroyPlayerCustomiser(InPlayerController, TeamToLeave);
 }
 
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
