@@ -37,6 +37,12 @@ private:
 
 	bool bIsAlive = true;
 
+	FTimerHandle HealthRegenerationTimerHandle;
+	FTimerHandle HungerDrainTimerHandle;
+
+	void RegenerateHealth();
+	void DrainHunger();
+
 protected:
 
 	UPROPERTY(Replicated)

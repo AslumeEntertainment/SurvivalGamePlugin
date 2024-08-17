@@ -22,6 +22,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
 	bool bUsesItem = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Target")
+	bool bIsTargetSelf = false;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackAnimationMontage;
 
