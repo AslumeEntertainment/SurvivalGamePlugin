@@ -37,6 +37,15 @@ void AInGameHUD::BeginPlay()
 	CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
 
 	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
+	if (Player->OnHealthPercentUpdated.IsBound())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("HUD Player->OnHealthPercentUpdated.IsBound() == true"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("HUD Player->OnHealthPercentUpdated.IsBound() == false"));
+	}
+
 	if (Cast<AHumanCharacter>(Player))
 	{
 		Cast<AHumanCharacter>(Player)->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);

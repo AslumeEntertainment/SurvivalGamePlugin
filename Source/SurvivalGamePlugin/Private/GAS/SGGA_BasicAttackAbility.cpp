@@ -94,5 +94,13 @@ void USGGA_BasicAttackAbility::OnEventRecieved(FGameplayEventData Payload)
 	{
 		Cast<AHumanCharacter>(Player)->ActiveItem->ServerLoseDurability(20.f);
 	}
-	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
+
+	if (bIsTargetSelf)
+	{
+		ApplyGameplayEffectToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Cast<UGameplayEffect>(GameplayEffectClass->GetDefaultObject()), 1, 1);
+	}
+	else
+	{
+		ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
+	}
 }
