@@ -22,16 +22,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
 	bool bUsesItem = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target")
-	bool bIsTargetSelf = false;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackAnimationMontage;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	FGameplayTag OnHitGameplayEventTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;
 
 	class ASG_Character* Player;

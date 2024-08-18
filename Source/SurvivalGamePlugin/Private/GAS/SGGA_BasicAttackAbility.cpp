@@ -4,11 +4,13 @@
 #include "GAS/SGGA_BasicAttackAbility.h"
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/ItemBase.h"
+#include "Interactables/Items/RegeneratingItem.h"
 #include "Headers/SG_GameplayAbilityTargetData.h"
 #include "Animation/SG_AnimInstance.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -94,13 +96,5 @@ void USGGA_BasicAttackAbility::OnEventRecieved(FGameplayEventData Payload)
 	{
 		Cast<AHumanCharacter>(Player)->ActiveItem->ServerLoseDurability(20.f);
 	}
-
-	if (bIsTargetSelf)
-	{
-		ApplyGameplayEffectToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Cast<UGameplayEffect>(GameplayEffectClass->GetDefaultObject()), 1, 1);
-	}
-	else
-	{
-		ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
-	}
+	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
 }

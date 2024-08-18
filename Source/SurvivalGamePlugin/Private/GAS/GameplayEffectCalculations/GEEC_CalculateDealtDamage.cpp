@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/GEEC_CalculateDealtDamage.h"
+#include "GAS/GameplayEffectCalculations/GEEC_CalculateDealtDamage.h"
 #include "GAS/SG_AttributeSet.h"
 #include "Characters/HumanCharacter.h"
 #include "Characters/AnimalCharacter.h"

@@ -60,19 +60,6 @@ ASG_Character::ASG_Character()
 	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
 }
 
-void ASG_Character::RegenerateHealth()
-{
-	if (AttributeSet->HasMaxHunger())
-	{
-		AttributeSet->SetHealth(AttributeSet->GetHealth() + 1.f);
-	}
-}
-
-void ASG_Character::DrainHunger()
-{
-	AttributeSet->SetHunger(AttributeSet->GetHunger() - 1.f);
-}
-
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -86,9 +73,6 @@ void ASG_Character::BeginPlay()
 	Super::BeginPlay();
 	
 	InitializeAttributes();
-
-	GetWorldTimerManager().SetTimer(HealthRegenerationTimerHandle, this, &ASG_Character::RegenerateHealth, AttributeSet->GetHealthRegenerationRate(), true, 0.01f);
-	GetWorldTimerManager().SetTimer(HungerDrainTimerHandle, this, &ASG_Character::DrainHunger, AttributeSet->GetHungerDrainRate(), true, 0.01f);
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (!IsValid(PlayerController))
@@ -323,6 +307,8 @@ void ASG_Character::InitializeAttributes()
 		{
 			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+
+		AbilitySystemComponent->ApplyDefaultEffectsToSelf();
 	}
 }
 
