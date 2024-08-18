@@ -55,7 +55,14 @@ bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 void APlayerCustomiser::SetOwningPlayer(AController* InOwner)
 {
 	OwningPlayer = InOwner;
+	MainPawn = OwningPlayer->GetPawn();
 	SetOwner(OwningPlayer);
+}
+
+void APlayerCustomiser::SetGamePawn(APawn* InGamePawn)
+{
+	GamePawn = InGamePawn;
+	
 }
 
 bool APlayerCustomiser::IsOwningPlayer(AController* CharacterToCheck)
@@ -68,3 +75,36 @@ bool APlayerCustomiser::GetIsPlayerReady()
 	return bIsPlayerReady;
 }
 
+bool APlayerCustomiser::IsPossesingMainPawn()
+{
+	return MainPawn == OwningPlayer->GetPawn();
+}
+
+void APlayerCustomiser::PossessMainPawn()
+{
+	if (IsValid(MainPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::PossessMainPawn IsValid(MainPawn) == false Not right call order"));
+		return;
+	}
+	MainPawn->SetActorTickEnabled(true);
+	OwningPlayer->Possess(MainPawn);
+
+}
+
+void APlayerCustomiser::PossessGamePawn()
+{
+	if (IsValid(GamePawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::PossessGamePawn IsValid(GamePawn) == false Not right call order"));
+		return;
+	}
+	OwningPlayer->Possess(GamePawn);
+	MainPawn->SetActorTickEnabled(false);
+}
+
+
+void APlayerCustomiser::DestroyGamePawn()
+{
+	GamePawn->Destroy();
+}

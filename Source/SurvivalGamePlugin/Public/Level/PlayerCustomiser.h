@@ -10,8 +10,6 @@
 #include "PlayerCustomiser.generated.h"
 
 
-class APlayerController;
-
 DECLARE_DYNAMIC_DELEGATE(FPlayerReadiness);
 
 UCLASS()
@@ -31,6 +29,10 @@ private:
 	UPROPERTY(Replicated)
 	AController* OwningPlayer = nullptr;
 
+	APawn* MainPawn = nullptr;
+
+	APawn* GamePawn = nullptr;
+
 	UFUNCTION(Server, Reliable)
 	void ServerToggleReady();
 
@@ -45,10 +47,20 @@ public:
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
+	//---------------------Called Only on Server by the game mode-------------------
 	void SetOwningPlayer(AController* InOwner);
+	void SetGamePawn(APawn* InGamePawn);
 
 	bool GetIsPlayerReady();
 	bool IsOwningPlayer(AController* CharacterToCheck);
+	bool IsPossesingMainPawn();
+
+	void PossessMainPawn();
+	void PossessGamePawn();
+
+	void DestroyGamePawn();
+	//-----------------------------------------------------------------------------
 
 	FPlayerReadiness OnPlayerReadinessChanged;
+	FPlayerReadiness OnGamePawnDeath;
 };

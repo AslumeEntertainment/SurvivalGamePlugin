@@ -29,6 +29,9 @@ struct FPlayerCustomiserSpawn
 
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameStartSignature, int, DaysForPreparation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameEndSignature);
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameplayGameMode : public AGameModeBase
 {
@@ -47,17 +50,41 @@ private:
 	void SpawnPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToSpawnTo);
 	void DestroyPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToClean);
 
-	FVector GetValidInGameSpawnLocation();
-	//void SpawnSurvivor();
-	void SpawnPredator();
-
 	UFUNCTION()
 	void OnPlayerStatusUpdated();
+
+	FVector GetValidInGameSpawnLocation();
+
+	UFUNCTION()
+	void SpawnSurvivors();
+
+	UFUNCTION()
+	void SpawnPredators();
+
+	void PrepareGame();
+
+	UFUNCTION()
+	void StartGame();
+
+	UFUNCTION()
+	void EndGame();
+
+	UFUNCTION()
+	void OnPlayerReturningToLobby();
+
+	FTimerHandle LoadingPeriodTimer;
+	FTimerHandle LootingPeriodTimer;
 
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	TSubclassOf<ACharacter> DebugSurvivorClass;
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	TSubclassOf<ACharacter> DebugHunterClass;
 
 	UPROPERTY(EditAnywhere, Category = "CharacterSpawning")
 	FVector BottomLeftArenaCornerCoordinate;
@@ -80,7 +107,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
 
+	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	float LoadingPeriodLenght = 5.0f;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	float LootingPeriodLenght = 30.0f;
+
 	void PostLogin(APlayerController* NewPlayer) override;
 
 	void StartPlay() override;
+
+	FGameStartSignature OnGameStart;
+	FGameEndSignature OnGameEnd;
+	
 };

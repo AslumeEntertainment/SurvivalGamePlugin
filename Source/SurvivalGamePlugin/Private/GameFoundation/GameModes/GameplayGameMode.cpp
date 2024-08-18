@@ -47,7 +47,9 @@ void AGameplayGameMode::StartPlay()
 	}
 
 	ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
-	TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredator);
+	TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredators);
+	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartPreparationPeriod);
+	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
 }
 
 void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin)
@@ -159,6 +161,7 @@ void AGameplayGameMode::SpawnPlayerCustomiser(AController* TriggeringPlayer, ETe
 		TeamPtr->Locations.Emplace(PositionArray[i], PlayerCustomiser);
 		PlayerCustomiser->SetOwningPlayer(TriggeringPlayer);
 		PlayerCustomiser->OnPlayerReadinessChanged.BindDynamic(this, &AGameplayGameMode::OnPlayerStatusUpdated);
+		PlayerCustomiser->OnGamePawnDeath.BindDynamic(this, &AGameplayGameMode::OnPlayerReturningToLobby);
 
 		//Extract Player account info regarding pawns and populate the customiser with it
 
@@ -238,21 +241,141 @@ void AGameplayGameMode::OnPlayerStatusUpdated()
 	}
 	if (bShouldPrintDebug)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GAME IS STARTING"));
+		UE_LOG(LogTemp, Error, TEXT("GAME WILL START IN %f SECONDS"), LoadingPeriodLenght);
 	}
 	
-	//get the appropriate pawns for every player
-	//spawn the pawns
-	//stop the curent pawns tick and posses the pawns
-	//start time event manager timer
+
+	PrepareGame();
 
 }
 
-void AGameplayGameMode::SpawnPredator()
+void AGameplayGameMode::PrepareGame()
+{
+	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameplayGameMode::StartGame, 1, true, LoadingPeriodLenght);
+
+	//Start Generating map
+
+	SpawnSurvivors();
+}
+
+void AGameplayGameMode::StartGame()
+{
+	if (false)//check if map is already loaded propperly
+	{
+		if (bShouldPrintDebug)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GAME TAKING LONGER TO LOAD PLEASE WAIT"));
+		}
+		//add some widget showcase
+		return;
+	}
+	GetWorldTimerManager().ClearTimer(LoadingPeriodTimer);
+	LoadingPeriodTimer.Invalidate();
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GAME IS STARTING"));
+	}
+
+	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(ETeam::Survivor);
+	if (TeamPtr == nullptr)
+	{
+		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::PrepareGame - No Spawnpoints associated with enum: ETeam::Survivor, Check the GameMode settings"));
+		return;
+	}
+
+	TArray<APlayerCustomiser*> CustomiserArray;
+	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
+
+	for (int i = 0; i < CustomiserArray.Num(); i++)
+	{
+		if (CustomiserArray[i] == nullptr) continue;
+		CustomiserArray[i]->PossessGamePawn();
+	}
+
+	int PrepDays = 2;//extract preptime from MapSelector
+
+	OnGameStart.Broadcast(PrepDays);
+
+}
+
+void AGameplayGameMode::SpawnSurvivors()
+{
+	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(ETeam::Survivor);
+	if (TeamPtr == nullptr)
+	{
+		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::SpawnSurvivors - No Spawnpoints associated with enum: ETeam::Survivor, Check the GameMode settings"));
+		return;
+	}
+
+	TArray<APlayerCustomiser*> CustomiserArray;
+	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
+
+	for (int i = 0; i < CustomiserArray.Num(); i++)
+	{
+		if (CustomiserArray[i] == nullptr) continue;
+
+		UWorld* World = GetWorld();
+		if (IsValid(World) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnSurvivors IsValid(World) == false"));
+			return;
+		}
+
+		//here get the actual classs once the account logic is done
+
+		ACharacter* GamePawn = World->SpawnActor<ACharacter>(DebugSurvivorClass, GetValidInGameSpawnLocation(), FRotator(), FActorSpawnParameters());
+
+		if (IsValid(GamePawn) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnSurvivors IsValid(PlayerCustomiser) == false"));
+			return;
+		}
+
+		CustomiserArray[i]->SetGamePawn(GamePawn);
+	}
+}
+
+void AGameplayGameMode::SpawnPredators()
 {
 	if (bShouldPrintDebug)
 	{
 		UE_LOG(LogTemp, Error, TEXT("PREDATOR IS SPAWNING"));
+	}
+
+	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(ETeam::Hunter);
+	if (TeamPtr == nullptr)
+	{
+		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::PrepareGame - No Spawnpoints associated with enum: ETeam::Survivor, Check the GameMode settings"));
+		return;
+	}
+
+	TArray<APlayerCustomiser*> CustomiserArray;
+	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
+
+	for (int i = 0; i < CustomiserArray.Num(); i++)
+	{
+		if (CustomiserArray[i] == nullptr) continue;
+
+		UWorld* World = GetWorld();
+		if (IsValid(World) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PrepareGame IsValid(World) == false"));
+			return;
+		}
+
+		//here get the actual classs once the account logic is done
+
+		ACharacter* GamePawn = World->SpawnActor<ACharacter>(DebugHunterClass, GetValidInGameSpawnLocation(), FRotator(), FActorSpawnParameters());
+
+		if (IsValid(GamePawn) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PrepareGame IsValid(PlayerCustomiser) == false"));
+			return;
+		}
+
+		//some fade in for the players
+		CustomiserArray[i]->SetGamePawn(GamePawn);
+		CustomiserArray[i]->PossessGamePawn();
 	}
 }
 
@@ -289,6 +412,89 @@ FVector AGameplayGameMode::GetValidInGameSpawnLocation()
 	} while (!bIsValidLocation);
 
 	return PredatorLocation;
+}
+
+void AGameplayGameMode::OnPlayerReturningToLobby()
+{
+
+	//!!!!!!!!!!!!!!!!!!!!!Eventually that must be changed once there are more than two teams!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+	TArray<FPlayerCustomiserSpawn> TeamArray;
+	TArray<ETeam> EnumArray;
+	PerTeamCustomiserSpawnLocations.GenerateValueArray(TeamArray);
+	PerTeamCustomiserSpawnLocations.GenerateKeyArray(EnumArray);
+
+	bool bGameShouldEnd = false;
+
+	for (int i = 0; i < EnumArray.Num(); i++)
+	{
+		if (EnumArray[i] == ETeam::Teamless)
+		{
+			continue;
+		}
+
+		bGameShouldEnd = true;
+
+		for (TPair<FVector, APlayerCustomiser*> CustomiserPair : TeamArray[i].Locations)
+		{
+			if (IsValid(CustomiserPair.Value) == false)
+			{
+				continue;
+			}
+			bGameShouldEnd = bGameShouldEnd && CustomiserPair.Value->IsPossesingMainPawn();
+		}
+
+	}
+
+	if (!bGameShouldEnd)
+	{
+		return;
+	}
+	
+	//****eventually make the other team win with some widget or some shit
+
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Error, TEXT("GAME ENDED : STARTING LOOTING PERIOD(%f)"), LootingPeriodLenght);
+	}
+
+	GetWorldTimerManager().SetTimer(LootingPeriodTimer, this, &AGameplayGameMode::EndGame, LootingPeriodLenght, false);
+	
+}
+
+void AGameplayGameMode::EndGame()
+{
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Error, TEXT("LOOTING PERIOD ENDED : RETURNING TO LOBBY"));
+	}
+
+	TArray<FPlayerCustomiserSpawn> TeamArray;
+	TArray<ETeam> EnumArray;
+	PerTeamCustomiserSpawnLocations.GenerateValueArray(TeamArray);
+	PerTeamCustomiserSpawnLocations.GenerateKeyArray(EnumArray);
+
+
+	for (int i = 0; i < EnumArray.Num(); i++)
+	{
+		if (EnumArray[i] == ETeam::Teamless)
+		{
+			continue;
+		}
+
+		for (TPair<FVector, APlayerCustomiser*> CustomiserPair : TeamArray[i].Locations)
+		{
+			if (IsValid(CustomiserPair.Value) == false)
+			{
+				continue;
+			}
+			if(CustomiserPair.Value->IsPossesingMainPawn() == false) CustomiserPair.Value->PossessMainPawn();
+			CustomiserPair.Value->DestroyGamePawn();
+		}
+
+	}
+
+	OnGameEnd.Broadcast();
 }
 
 void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)

@@ -50,7 +50,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class USkyAtmosphereComponent* SkyAtmosphere;;
 
-	void StartPreparationPeriod(float InDaysForPreparation);
+	UFUNCTION()
 	void PreparationPeriodOver();
 
 	
@@ -58,6 +58,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
+
+	UFUNCTION()
+	void StartPreparationPeriod(int InDaysForPreparation);
+
+	UFUNCTION()
+	void StopSkyRotation();
 
 	FPreparationPeriodOverSignature OnPreparationOver;
 };
