@@ -30,9 +30,9 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Speed, COND_None, REPNOTIFY_Always);
 }
 
-void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
-	Super::PreAttributeChange(Attribute, NewValue);
+	Super::PreAttributeBaseChange(Attribute, NewValue);
 
 	if (Attribute == GetHealthAttribute())
 	{
@@ -77,14 +77,17 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{	
 		TargetCharacter->OnHealthPercentUpdated.Broadcast(GetHealth() / GetMaxHealth());
+	}
 
-		if (TargetCharacter->OnHealthPercentUpdated.IsBound())
+	if (Data.EvaluatedData.Attribute == GetHungerAttribute())
+	{
+		if (HasMaxHunger())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("USG_AttributeSet OnHealthPercentUpdated.IsBound() == true"));
+			TargetCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("USG_AttributeSet OnHealthPercentUpdated.IsBound() == false"));
+			TargetCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 		}
 	}
 }
