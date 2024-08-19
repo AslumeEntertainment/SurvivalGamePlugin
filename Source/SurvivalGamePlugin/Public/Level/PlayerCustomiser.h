@@ -10,7 +10,8 @@
 #include "PlayerCustomiser.generated.h"
 
 
-DECLARE_DYNAMIC_DELEGATE(FPlayerReadiness);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerReadiness);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerReturningToLobby, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API APlayerCustomiser : public AActor, public IInteractableInterface
@@ -35,6 +36,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerToggleReady();
+
+	UFUNCTION()
+	void AnnounceDeath();
 
 protected:
 	// Called when the game starts or when spawned
@@ -62,5 +66,5 @@ public:
 	//-----------------------------------------------------------------------------
 
 	FPlayerReadiness OnPlayerReadinessChanged;
-	FPlayerReadiness OnGamePawnDeath;
+	FPlayerReturningToLobby OnGamePawnDeath;
 };

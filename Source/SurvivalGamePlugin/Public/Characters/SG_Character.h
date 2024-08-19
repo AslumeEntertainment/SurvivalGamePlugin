@@ -105,6 +105,7 @@ public:
 	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
 	virtual bool bCanBeHit() override;
 
+	//that must go in InGameCharacter
 	UFUNCTION(BlueprintCallable)
 	virtual void Die();
 

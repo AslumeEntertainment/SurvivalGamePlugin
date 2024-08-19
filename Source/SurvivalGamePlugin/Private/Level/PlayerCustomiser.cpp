@@ -2,7 +2,7 @@
 
 
 #include "Level/PlayerCustomiser.h"
-
+#include "Characters/InGameCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -38,7 +38,7 @@ void APlayerCustomiser::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 void APlayerCustomiser::ServerToggleReady_Implementation()
 {
 	bIsPlayerReady = !bIsPlayerReady;
-	OnPlayerReadinessChanged.ExecuteIfBound();
+	OnPlayerReadinessChanged.Broadcast();
 }
 
 void APlayerCustomiser::InteractRequest()
@@ -61,8 +61,23 @@ void APlayerCustomiser::SetOwningPlayer(AController* InOwner)
 
 void APlayerCustomiser::SetGamePawn(APawn* InGamePawn)
 {
+
+	AInGameCharacter* Character = Cast<AInGameCharacter>(InGamePawn);
+
+	if (IsValid(Character) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::SetGamePawn IsValid(Character) == false  Character Is Not Of Class: AInGameCharacter"));
+		return;
+	}
+
+	Character->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::AnnounceDeath);
+
 	GamePawn = InGamePawn;
-	
+}
+
+void APlayerCustomiser::AnnounceDeath()
+{
+	OnGamePawnDeath.Broadcast(this);
 }
 
 bool APlayerCustomiser::IsOwningPlayer(AController* CharacterToCheck)

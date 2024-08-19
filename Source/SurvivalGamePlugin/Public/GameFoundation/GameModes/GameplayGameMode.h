@@ -70,7 +70,7 @@ private:
 	void EndGame();
 
 	UFUNCTION()
-	void OnPlayerReturningToLobby();
+	void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
 
 	FTimerHandle LoadingPeriodTimer;
 	FTimerHandle LootingPeriodTimer;

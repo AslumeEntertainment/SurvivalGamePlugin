@@ -160,8 +160,8 @@ void AGameplayGameMode::SpawnPlayerCustomiser(AController* TriggeringPlayer, ETe
 
 		TeamPtr->Locations.Emplace(PositionArray[i], PlayerCustomiser);
 		PlayerCustomiser->SetOwningPlayer(TriggeringPlayer);
-		PlayerCustomiser->OnPlayerReadinessChanged.BindDynamic(this, &AGameplayGameMode::OnPlayerStatusUpdated);
-		PlayerCustomiser->OnGamePawnDeath.BindDynamic(this, &AGameplayGameMode::OnPlayerReturningToLobby);
+		PlayerCustomiser->OnPlayerReadinessChanged.AddDynamic(this, &AGameplayGameMode::OnPlayerStatusUpdated);
+		PlayerCustomiser->OnGamePawnDeath.AddDynamic(this, &AGameplayGameMode::OnPlayerReturningToLobby);
 
 		//Extract Player account info regarding pawns and populate the customiser with it
 
@@ -414,8 +414,16 @@ FVector AGameplayGameMode::GetValidInGameSpawnLocation()
 	return PredatorLocation;
 }
 
-void AGameplayGameMode::OnPlayerReturningToLobby()
+void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser)
 {
+
+	if (IsValid(TriggeringPlayerCustomiser) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AGameplayGameMode::OnPlayerReturningToLobby IsValid(TriggeringPlayerCustomiser) == false"));
+		return;
+	}
+
+	TriggeringPlayerCustomiser->PossessMainPawn();
 
 	//!!!!!!!!!!!!!!!!!!!!!Eventually that must be changed once there are more than two teams!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
