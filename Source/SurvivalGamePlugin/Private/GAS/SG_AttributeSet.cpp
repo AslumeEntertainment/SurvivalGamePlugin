@@ -17,15 +17,19 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageRight, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageLeft, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Hunger, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHunger, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, HungerDrainRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Energy, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxEnergy, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, EnergyRechargeRate, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, EnergyDrainRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Speed, COND_None, REPNOTIFY_Always);
 }
@@ -52,6 +56,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
 
@@ -76,7 +81,11 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{	
-		TargetCharacter->OnHealthPercentUpdated.Broadcast(GetHealth() / GetMaxHealth());
+		TargetCharacter->NetMulticast_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
+		if (GetHealth() == 0.f)
+		{
+			TargetCharacter->Die();
+		}
 	}
 
 	if (Data.EvaluatedData.Attribute == GetHungerAttribute())

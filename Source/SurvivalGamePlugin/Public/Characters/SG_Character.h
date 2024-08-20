@@ -100,6 +100,15 @@ protected:
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintCallable)
+	FHealthUpdateSignature OnHealthPercentUpdated;
+
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	
 	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
@@ -111,7 +120,10 @@ public:
 	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
 	virtual bool bCanBeHit() override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Die();
 
 	UFUNCTION(BlueprintCallable)
@@ -144,12 +156,4 @@ public:
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHealthPercentUpdated;
 };

@@ -245,7 +245,12 @@ bool ASG_Character::bCanBeHit()
 	return IsAlive();
 }
 
-void ASG_Character::Die()
+void ASG_Character::NetMulticast_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
+{
+	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
+}
+
+void ASG_Character::Die_Implementation()
 {
 	bIsAlive = false;
 
@@ -382,8 +387,6 @@ void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, cons
 		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
 		return;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Sending ability input ID to Ability System Component"));
 
 	if (bIsPressed)
 	{
