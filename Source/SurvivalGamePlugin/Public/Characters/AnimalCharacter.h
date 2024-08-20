@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/SG_Character.h"
+#include "Characters/InGameCharacter.h"
 #include "AnimalCharacter.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AAnimalCharacter : public ASG_Character
+class SURVIVALGAMEPLUGIN_API AAnimalCharacter : public AInGameCharacter
 {
 	GENERATED_BODY()
 

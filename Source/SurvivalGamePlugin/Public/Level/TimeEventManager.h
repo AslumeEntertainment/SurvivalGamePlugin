@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "TimeEventManager.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE(FPreparationPeriodOverSignature);
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ATimeEventManager : public AActor
 {
@@ -14,14 +16,7 @@ class SURVIVALGAMEPLUGIN_API ATimeEventManager : public AActor
 public:	
 	ATimeEventManager();
 
-private:
-
-	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
-	TSubclassOf<AActor> TestActorClass;
-
 protected:
-
-	virtual void BeginPlay() override;
 
 	FTimerHandle PreparationPeriodTimer;
 
@@ -30,21 +25,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
 	float InitialSkyRotation = 90;
-
-	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
-	int DaysForPreparation = 1;
-
-	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
-	USoundBase* NotificationSound;
-
-	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
-	FVector BottomLeftArenaCornerCoordinate;
-
-	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
-	FVector UpperRightArenaCornerCoordinate;
-
-	UPROPERTY(EditAnywhere, Category = "PredatorSpawning")
-	float MinimalSpawnDistanceFromPlayer;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class UStaticMeshComponent* SkySphere;
@@ -70,17 +50,20 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class USkyAtmosphereComponent* SkyAtmosphere;;
 
-	void StartPreparationPeriod();
-
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION()
 	void PreparationPeriodOver();
 
-	void SpawnPredator();
-
-	FVector GetValidPredatorLocation();
 	
 public:	
 
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bShouldPrintDebug = true;
 
+	UFUNCTION()
+	void StartPreparationPeriod(int InDaysForPreparation);
+
+	UFUNCTION()
+	void StopSkyRotation();
+
+	FPreparationPeriodOverSignature OnPreparationOver;
 };

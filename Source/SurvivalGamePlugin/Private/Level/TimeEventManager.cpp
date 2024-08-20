@@ -12,14 +12,13 @@
 #include "Components/VolumetricCloudComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "GameFramework/RotatingMovementComponent.h"
-#include "GameFramework/Character.h"
-#include "Kismet/KismetMathLibrary.h"
+
 
 
 // Sets default values
 ATimeEventManager::ATimeEventManager()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false; //if not working set to true
 
 	SkySphere = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkySphere"));
 	SetRootComponent(SkySphere);
@@ -45,83 +44,31 @@ ATimeEventManager::ATimeEventManager()
 	SkyAtmosphere->SetupAttachment(GetRootComponent());
 }
 
-// Called when the game starts or when spawned
-void ATimeEventManager::BeginPlay()
-{
-	Super::BeginPlay();
 
-	SetActorRotation(FRotator(InitialSkyRotation, 270, 0));
+void ATimeEventManager::StartPreparationPeriod(int InDaysForPreparation)
+{
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("STARTING PREPARATION PERIOD OF %f SECONDS"), DayLength * InDaysForPreparation);
+	}
+	SetActorRotation(FRotator(FMath::RandRange(0, 360), 270, 0));
 	SkyRotationComponent->RotationRate = FRotator(-360 / DayLength, 0, 0);
 
-	if (HasAuthority())
+	GetWorldTimerManager().SetTimer(PreparationPeriodTimer, this, &ATimeEventManager::PreparationPeriodOver, DayLength * InDaysForPreparation, false);
+}
+
+void ATimeEventManager::PreparationPeriodOver()
+{
+	if (bShouldPrintDebug)
 	{
-		StartPreparationPeriod();
+		UE_LOG(LogTemp, Warning, TEXT("PREPARATION PERIOD OVER"));
 	}
+	OnPreparationOver.ExecuteIfBound();
 }
 
-void ATimeEventManager::StartPreparationPeriod()
+void ATimeEventManager::StopSkyRotation()
 {
-	GetWorldTimerManager().SetTimer(PreparationPeriodTimer, this, &ATimeEventManager::PreparationPeriodOver, DayLength * DaysForPreparation, 0);
+	SkyRotationComponent->RotationRate = FRotator(0, 0, 0);
 }
 
-void ATimeEventManager::PreparationPeriodOver_Implementation()
-{
-	UGameplayStatics::PlaySound2D(GetWorld(), NotificationSound, 1);
-
-	if (HasAuthority())
-	{
-		SpawnPredator();
-	}
-}
-
-void ATimeEventManager::SpawnPredator()
-{
-	if (!IsValid(TestActorClass))
-	{
-		UE_LOG(LogTemp, Error, TEXT("ATimeEventManager::SpawnPredator IsValid(TestActorClass) == false"));
-		return;
-	}
-	GetWorld()->SpawnActor<AActor>(TestActorClass, GetValidPredatorLocation(), FRotator(0, 0, 0));
-}
-
-FVector ATimeEventManager::GetValidPredatorLocation()
-{
-	FVector PredatorLocation;
-	bool bIsValidLocation = true;
-
-	TArray<AActor*> Players;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), Players);
-
-	TArray<FVector> PlayerLocations;
-	for (AActor* Player : Players)
-	{
-		PlayerLocations.Add(Player->GetActorLocation());
-	}
-
-	do
-	{
-		PredatorLocation.X = FMath::RandRange(BottomLeftArenaCornerCoordinate.X, UpperRightArenaCornerCoordinate.X);
-		PredatorLocation.Y = FMath::RandRange(BottomLeftArenaCornerCoordinate.Y, UpperRightArenaCornerCoordinate.Y);
-		PredatorLocation.Z = FMath::RandRange(BottomLeftArenaCornerCoordinate.Z, UpperRightArenaCornerCoordinate.Z);
-
-		/*
-		for (FVector PlayerLocation : PlayerLocations)
-		{
-			if (UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation) <= MinimalSpawnDistanceFromPlayer)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString::Printf(TEXT("Invalid location (Distance = %.2f), searching for a new one..."), UKismetMathLibrary::Vector_Distance(PlayerLocation, PredatorLocation)));
-				bIsValidLocation = false;
-			}
-		}
-		*/
-	} while (!bIsValidLocation);
-	
-	return PredatorLocation;
-}
-
-// Called every frame
-void ATimeEventManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
 

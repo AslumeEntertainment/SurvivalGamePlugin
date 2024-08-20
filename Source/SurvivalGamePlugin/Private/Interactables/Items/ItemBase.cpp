@@ -132,7 +132,7 @@ void AItemBase::InteractRequest()
 	UE_LOG(LogTemp, Warning, TEXT("Interacting with item"));
 }
 
-bool AItemBase::bCanInteract()
+bool AItemBase::bCanInteract(AController* InteractingCharacter)
 {
 	return !bIsAttached;
 }

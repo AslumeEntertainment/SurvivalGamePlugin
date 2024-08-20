@@ -74,6 +74,10 @@ void ASG_Character::BeginPlay()
 	
 	InitializeAttributes();
 
+	/*
+	
+	to be moved in player controller
+
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (!IsValid(PlayerController))
 	{
@@ -87,7 +91,7 @@ void ASG_Character::BeginPlay()
 		PlayerController->PlayerCameraManager->ViewYawMax = 80.f;
 		PlayerController->PlayerCameraManager->ViewPitchMin = -55.f;
 		PlayerController->PlayerCameraManager->ViewPitchMax = 55.f;
-	}
+	}*/
 }
 
 // Called every frame

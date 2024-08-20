@@ -123,6 +123,7 @@ public:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
+	//that must go in InGameCharacter
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Die();
 

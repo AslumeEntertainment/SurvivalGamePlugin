@@ -5,6 +5,7 @@
 
 class APawn;
 class APlayerController;
+class APlayerCustomiser;
 
 UENUM(BlueprintType)
 enum class ETeam : uint8
@@ -16,16 +17,17 @@ enum class ETeam : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FPlayerCharacterInfo
+struct FPlayerInfo
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	APawn* PlayerCharacter;
+	APawn* PlayerCharacter = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<APawn> InGamePawnClass;
+	APawn* InGamePawn = nullptr;
 
+	//Possible Pawn Data to choose from that changes depending on the team
 };
 
 USTRUCT(BlueprintType)
@@ -34,6 +36,6 @@ struct FTeamInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<AController*, FPlayerCharacterInfo> Players;
+	TMap<AController*, FPlayerInfo> Players;
 
 };

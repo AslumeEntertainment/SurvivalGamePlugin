@@ -68,7 +68,7 @@ public:
 	virtual void DestroyItem();
 
 	virtual void InteractRequest() override;
-	virtual bool bCanInteract() override;
+	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
 	FName GetItemDataRowName();
 	class UStaticMeshComponent* GetItemMesh();

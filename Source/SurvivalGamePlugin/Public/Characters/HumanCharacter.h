@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/SG_Character.h"
+#include "Characters/InGameCharacter.h"
 #include "Headers/ItemDataStruct.h"
 #include "HumanCharacter.generated.h"
 
@@ -20,7 +20,7 @@ enum class EInputMappingContextState : uint8
 };
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AHumanCharacter : public ASG_Character
+class SURVIVALGAMEPLUGIN_API AHumanCharacter : public AInGameCharacter
 {
 	GENERATED_BODY()
 	
@@ -73,6 +73,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DisassembleAction;
 
+	void AttemptInteraction();
 	void AttemptEquipWithMainHand();
 	void AttemptEquipWithSecondaryHand();
 
@@ -87,6 +88,9 @@ protected:
 	void AttemptDisassembleItem();
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bShouldDrawDebug = true;
 
 	UPROPERTY(Replicated)
 	AItemBase* MainHandItem;

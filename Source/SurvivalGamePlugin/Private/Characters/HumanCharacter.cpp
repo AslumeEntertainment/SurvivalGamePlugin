@@ -64,7 +64,10 @@ void AHumanCharacter::EmitInteractionChecker()
 	CQP.AddIgnoredActor(this);
 	CQP.TraceTag = TraceTag;
 
-	//World->DebugDrawTraceTag = TraceTag;
+	if (bShouldDrawDebug)
+	{
+		World->DebugDrawTraceTag = TraceTag;
+	}
 	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
 
 	CheckForInteractables(HitResult);
@@ -95,7 +98,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		ServerSetFocusedInteractable(nullptr);
 		return;
 	}
-	if (!InteractableActor->bCanInteract())
+	if (!InteractableActor->bCanInteract(GetController()))
 	{
 		return;
 	}
@@ -123,7 +126,7 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithMainHand);
+		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptInteraction);
 		EnhancedInputComponent->BindAction(EquipSecondaryHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithSecondaryHand);
 		
 		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseMainHandItem);
@@ -141,6 +144,33 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AHumanCharacter::AttemptInteraction()
+{
+	if (FocusedInteractableObject == nullptr)
+	{
+		if (bShouldDrawDebug == true)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
+		}
+		return;
+	}
+
+	AItemBase* Item = Cast<AItemBase>(FocusedInteractableObject);
+	if (IsValid(Item) == true)
+	{
+		AttemptEquipWithMainHand();
+		return;
+	}
+
+	IInteractableInterface* Interactable = Cast<IInteractableInterface>(FocusedInteractableObject);
+	if (Interactable != nullptr)
+	{
+		Interactable->InteractRequest();
+		return;
+	};
+
 }
 
 void AHumanCharacter::AttemptEquipWithMainHand()
@@ -371,7 +401,7 @@ void AHumanCharacter::ShowPlayerInfo()
 		if (InteractableActor)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);
-			if (InteractableActor->bCanInteract())
+			if (InteractableActor->bCanInteract(GetController()))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject can be interacted with"), *Prefix);
 			}
@@ -390,7 +420,7 @@ void AHumanCharacter::ShowPlayerInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a valid pointer"), *Prefix);
 
-		if (MainHandItem->bCanInteract())
+		if (MainHandItem->bCanInteract(GetController()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
@@ -419,7 +449,7 @@ void AHumanCharacter::ShowPlayerInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a valid pointer"), *Prefix);
 
-		if (SecondaryHandItem->bCanInteract())
+		if (SecondaryHandItem->bCanInteract(GetController()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
