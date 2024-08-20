@@ -45,8 +45,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCamersMovementConstrained = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	float BaseMaxWalkingSpeed = 500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	FName LeftHandSocket;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	FName RightHandSocket;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float BaseDamage = 10.f;
@@ -94,6 +100,15 @@ protected:
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintCallable)
+	FHealthUpdateSignature OnHealthPercentUpdated;
+
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	
 	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
@@ -105,16 +120,28 @@ public:
 	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
 	virtual bool bCanBeHit() override;
 
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
 	//that must go in InGameCharacter
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Die();
 
 	UFUNCTION(BlueprintCallable)
+	FName GetLeftHandSocket();
+
+	UFUNCTION(BlueprintCallable)
+	FName GetRightHandSocket();
+
+	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
+
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
+
 	UFUNCTION(BlueprintCallable)
 	float GetBaseDamage();
+
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
 	
@@ -130,12 +157,4 @@ public:
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHealthPercentUpdated;
 };

@@ -12,10 +12,17 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 {
     GENERATED_BODY()
 
-    FSG_GameplayAbilityTargetData() { }
+    FSG_GameplayAbilityTargetData() 
+    {
+        ItemActor = nullptr;
+        OptionalFloatProperty = 0.f;
+    }
 
     UPROPERTY()
     AItemBase* ItemActor;
+
+    UPROPERTY()
+    float OptionalFloatProperty;
 
     virtual UScriptStruct* GetScriptStruct() const override
     {
@@ -25,6 +32,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
     bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
     {
         Ar << ItemActor;
+        Ar << OptionalFloatProperty;
         bOutSuccess = true;
         return true;
     }

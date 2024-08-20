@@ -43,12 +43,6 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
-	FName LeftHandSocket;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
-	FName RightHandSocket;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float InteractionRange = 200;
 
@@ -112,10 +106,6 @@ public:
 	void CraftItem(FText ProductItemName);
 	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
-	UFUNCTION(BlueprintCallable)
-	FName GetLeftHandSocket();
-	UFUNCTION(BlueprintCallable)
-	FName GetRightHandSocket();
 	UFUNCTION(BlueprintCallable)
 	FName GetMainHandSocket();
 	UFUNCTION(BlueprintCallable)

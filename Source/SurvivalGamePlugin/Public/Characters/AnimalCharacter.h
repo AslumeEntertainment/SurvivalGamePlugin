@@ -15,7 +15,11 @@ class SURVIVALGAMEPLUGIN_API AAnimalCharacter : public AInGameCharacter
 	GENERATED_BODY()
 
 protected:
+
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	FName MouthSocket;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* AnimalBiteAction;
@@ -25,4 +29,9 @@ protected:
 
 	void AttemptBite();
 	void AttemptScratch();
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+	FName GetMouthSocket();
 };

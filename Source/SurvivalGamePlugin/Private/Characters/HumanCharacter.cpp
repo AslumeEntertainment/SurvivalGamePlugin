@@ -346,25 +346,15 @@ void AHumanCharacter::SwitchInputMappingContext(EInputMappingContextState InputC
 	}
 }
 
-FName AHumanCharacter::GetLeftHandSocket()
-{
-	return LeftHandSocket;
-}
-
-FName AHumanCharacter::GetRightHandSocket()
-{
-	return RightHandSocket;
-}
-
 FName AHumanCharacter::GetMainHandSocket()
 {
 	if (bIsRightHanded)
 	{
-		return RightHandSocket;
+		return GetRightHandSocket();
 	}
 	else
 	{
-		return LeftHandSocket;
+		return GetLeftHandSocket();
 	}
 }
 
@@ -372,11 +362,11 @@ FName AHumanCharacter::GetSecondaryHandSocket()
 {
 	if (bIsRightHanded)
 	{
-		return LeftHandSocket;
+		return GetLeftHandSocket();
 	}
 	else
 	{
-		return RightHandSocket;
+		return GetRightHandSocket();
 	}
 }
 

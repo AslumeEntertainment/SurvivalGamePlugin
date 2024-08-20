@@ -58,7 +58,7 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 	}
 
 	FString AbilityTagSuffix;
-	if ((this == HumanPlayer->MainHandItem && HumanPlayer->bIsRightHanded) || (this == HumanPlayer->SecondaryHandItem) && !HumanPlayer->bIsRightHanded)
+	if (GetAttachParentSocketName() == PlayerOwner->GetRightHandSocket())
 	{
 		AbilityTagSuffix = ".Right";
 	}

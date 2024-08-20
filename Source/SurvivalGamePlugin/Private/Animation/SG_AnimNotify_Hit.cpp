@@ -4,12 +4,13 @@
 #include "Animation/SG_AnimNotify_Hit.h"
 #include "Animation/SG_AnimInstance.h"
 #include "Characters/HumanCharacter.h"
+#include "Characters/AnimalCharacter.h"
 #include "Interactables/Items/ItemBase.h"
 
 
 bool USG_AnimNotify_Hit::Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const
 {
-	AHumanCharacter* Player = Cast<AHumanCharacter>(MeshComp->GetOwner());
+	ASG_Character* Player = Cast<ASG_Character>(MeshComp->GetOwner());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Received_Notify IsValid(Player) == false"));
@@ -21,25 +22,58 @@ bool USG_AnimNotify_Hit::Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimS
 	}
 
 	FVector DamageOrigin;
-	if (IsValid(Player->ActiveItem))
+
+	switch (DamageSource)
 	{
-		DamageOrigin = Player->ActiveItem->GetItemMesh()->GetSocketLocation(FName("DamageOrigin"));
-	}
-	else
-	{
-		USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(MeshComp->GetAnimInstance());
-		if (!IsValid(AnimInst))
+		case EDamageSource::None:
 		{
-			UE_LOG(LogTemp, Error, TEXT("USG_HitAnimNotify::Received_Notify IsValid(AnimInst) == false"));
-			return false;
+			break;
 		}
-		if (AnimInst->bIsMirrored)
+			
+
+		case EDamageSource::Hand:
 		{
-			DamageOrigin = Player->GetMesh()->GetSocketLocation(Player->GetLeftHandSocket());
+			USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(MeshComp->GetAnimInstance());
+			if (!IsValid(AnimInst))
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Received_Notify IsValid(AnimInst) == false"));
+				return false;
+			}
+
+			DamageOrigin = AnimInst->bIsMirrored ? DamageOrigin = Player->GetMesh()->GetSocketLocation(Player->GetLeftHandSocket()) : DamageOrigin = Player->GetMesh()->GetSocketLocation(Player->GetRightHandSocket());
+			break;
 		}
-		else
+
+		case EDamageSource::Item:
 		{
-			DamageOrigin = Player->GetMesh()->GetSocketLocation(Player->GetRightHandSocket());
+			AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(Player);
+			if (!IsValid(HumanPlayer))
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Received_Notify IsValid(AnimInst) == false"));
+				return false;
+			}
+
+			if (!IsValid(HumanPlayer->ActiveItem))
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Received_Notify IsValid(HumanPlayer->ActiveItem) == false"));
+				return false;
+			}
+
+			DamageOrigin = HumanPlayer->ActiveItem->GetItemMesh()->GetSocketLocation(FName("DamageOrigin"));
+			break;
+		}
+
+		case EDamageSource::Mouth:
+		{
+			AAnimalCharacter* AnimalPlayer = Cast<AAnimalCharacter>(Player);
+			if (!IsValid(AnimalPlayer))
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Received_Notify IsValid(AnimalPlayer) == false"));
+				return false;
+			}
+
+			DamageOrigin = AnimalPlayer->GetMesh()->GetSocketLocation(AnimalPlayer->GetMouthSocket());
+			break;
 		}
 	}
 

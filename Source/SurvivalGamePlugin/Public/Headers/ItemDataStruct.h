@@ -23,7 +23,7 @@ struct FItemCraftingDataStruct : public FTableRowBase
 	FText ProductItemName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UTexture2D* ProductItemImage;
+	UTexture2D* ProductItemImage = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName IngredientItemID;

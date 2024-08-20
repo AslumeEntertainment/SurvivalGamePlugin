@@ -6,6 +6,7 @@
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 {
+	UE_LOG(LogTemp, Warning, TEXT("UInGameOverlayWidget::UpdateHealthPercent Player's HealthPercent = %.2f"), CurrentHealthPercent);
 	UMaterialInstanceDynamic* HealthPercentOverlayMaterial = HealthPercentOverlay->GetDynamicMaterial();
 	if (!HealthPercentOverlayMaterial)
 	{

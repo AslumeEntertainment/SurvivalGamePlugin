@@ -25,13 +25,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* AttackAnimationMontage;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	FGameplayTag OnHitGameplayEventTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OnHitRegistered")
+	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;
 
-	AHumanCharacter* Player;
+	class ASG_Character* Player;
 	class USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
