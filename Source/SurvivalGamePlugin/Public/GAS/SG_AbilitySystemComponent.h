@@ -20,11 +20,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
 	TSubclassOf<class UGameplayEffect> HungerDrainEffectClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
+	TSubclassOf<class UGameplayEffect> EnergyRechargeEffectClass;
+
 	UPROPERTY()
 	FActiveGameplayEffectHandle HealthRegenerationEffect;
 
 	UPROPERTY()
 	FActiveGameplayEffectHandle HungerDrainEffect;
+
+	UPROPERTY()
+	FActiveGameplayEffectHandle EnergyRechargeEffect;
 	
 public:
 
@@ -35,4 +41,7 @@ public:
 
 	UFUNCTION()
 	void SetHungerDrainRate(float NewValue);
+
+	UFUNCTION()
+	void SetEnergyRechargeRate(float NewValue);
 };

@@ -13,7 +13,6 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 	{
 		FGameplayEffectSpecHandle HealthRegenerationSpecHandle = MakeOutgoingSpec(HealthRegenerationEffectClass, 1, EffectContext);
 		FGameplayEffectSpec* HealthRegenerationSpec = HealthRegenerationSpecHandle.Data.Get();
-		//HealthRegenerationSpec->
 		HealthRegenerationSpec->Period = GetNumericAttribute(USG_AttributeSet::GetHealthRegenerationRateAttribute());
 		HealthRegenerationEffect = ApplyGameplayEffectSpecToSelf(*HealthRegenerationSpec);
 	}
@@ -25,14 +24,27 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 		HungerDrainSpec->Period = GetNumericAttribute(USG_AttributeSet::GetHungerDrainRateAttribute());
 		HungerDrainEffect = ApplyGameplayEffectSpecToSelf(*HungerDrainSpec);
 	}
+
+	if (IsValid(EnergyRechargeEffectClass))
+	{
+		FGameplayEffectSpecHandle EnergyRechargeSpecHandle = MakeOutgoingSpec(EnergyRechargeEffectClass, 1, EffectContext);
+		FGameplayEffectSpec* EnergyRechargeSpec = EnergyRechargeSpecHandle.Data.Get();
+		EnergyRechargeSpec->Period = GetNumericAttribute(USG_AttributeSet::GetEnergyRechargeRateAttribute());
+		EnergyRechargeEffect = ApplyGameplayEffectSpecToSelf(*EnergyRechargeSpec);
+	}
 }
 
 void USG_AbilitySystemComponent::SetHealthRegenerationRate(float NewValue)
 {
-	//HealthRegenerationEffect
+	//Functionality to be added
 }
 
 void USG_AbilitySystemComponent::SetHungerDrainRate(float NewValue)
 {
-	//
+	//Functionality to be added
+}
+
+void USG_AbilitySystemComponent::SetEnergyRechargeRate(float NewValue)
+{
+	//Functionality to be added
 }
