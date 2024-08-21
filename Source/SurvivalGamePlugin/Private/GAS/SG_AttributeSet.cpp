@@ -5,6 +5,7 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Characters/SG_Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
 USG_AttributeSet::USG_AttributeSet()
@@ -81,6 +82,15 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{	
+		if (HasMaxHealth())
+		{
+			TargetCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+		}
+		else
+		{
+			TargetCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+		}
+
 		TargetCharacter->NetMulticast_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
 		if (GetHealth() == 0.f)
 		{
@@ -98,6 +108,11 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		{
 			TargetCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 		}
+	}
+
+	if (Data.EvaluatedData.Attribute == GetSpeedAttribute())
+	{
+		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = GetSpeed();
 	}
 }
 

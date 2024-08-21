@@ -123,6 +123,9 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ASG_Character::StartSprint);
+
+
 		if (AbilitySystemComponent && InputComponent)
 		{
 			FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
@@ -180,6 +183,11 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(LookAxisVector.Y);
 
 	ServerSetRepControlRotation(GetControlRotation());
+}
+
+void ASG_Character::StartSprint()
+{
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Sprint);
 }
 
 void ASG_Character::MultiplyMaxWalkingSpeed(float SpeedMultiplier)

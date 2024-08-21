@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "GameplayTagContainer.h"
 #include "SG_AnimNotify_TriggerGameplayEvent.generated.h"
 
 

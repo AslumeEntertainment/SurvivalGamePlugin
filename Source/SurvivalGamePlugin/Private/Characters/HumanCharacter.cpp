@@ -148,19 +148,19 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::AttemptInteraction()
 {
+	AItemBase* Item = Cast<AItemBase>(FocusedInteractableObject);
+	if (IsValid(Item) == true || IsValid(MainHandItem) == true)
+	{
+		AttemptEquipWithMainHand();
+		return;
+	}
+
 	if (FocusedInteractableObject == nullptr)
 	{
 		if (bShouldDrawDebug == true)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
 		}
-		return;
-	}
-
-	AItemBase* Item = Cast<AItemBase>(FocusedInteractableObject);
-	if (IsValid(Item) == true)
-	{
-		AttemptEquipWithMainHand();
 		return;
 	}
 
@@ -175,13 +175,7 @@ void AHumanCharacter::AttemptInteraction()
 
 void AHumanCharacter::AttemptEquipWithMainHand()
 {
-	FGameplayTag EquipAbilityTag;
-	EquipAbilityTag.FromExportString("Equip.Main");
-	if (!EquipAbilityTag.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptEquipWithMainHand EquipAbilityTag.IsValid() == false"));
-		return;
-	}
+	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Main"));
 	FGameplayEventData EventData;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
@@ -189,13 +183,7 @@ void AHumanCharacter::AttemptEquipWithMainHand()
 
 void AHumanCharacter::AttemptEquipWithSecondaryHand()
 {
-	FGameplayTag EquipAbilityTag;
-	EquipAbilityTag.FromExportString("Equip.Secondary");
-	if (!EquipAbilityTag.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptEquipWithSecondaryHand EquipAbilityTag.IsValid() == false"));
-		return;
-	}
+	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Secondary"));
 	FGameplayEventData EventData;
 
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
@@ -212,19 +200,12 @@ void AHumanCharacter::AttemptUseMainHandItem()
 		FGameplayTag HandAbilityTag;
 		if (bIsRightHanded)
 		{
-			HandAbilityTag.FromExportString("Punch.Right");
+			HandAbilityTag = FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Right"));
 		}
 		else
 		{
-			HandAbilityTag.FromExportString("Punch.Left");
+			HandAbilityTag = FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Left"));
 		}
-		
-		if (!HandAbilityTag.IsValid())
-		{
-			UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptUseMainHandItem HandAbilityTag.IsValid() == false"));
-			return;
-		}
-
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
 	}
@@ -241,22 +222,15 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 		FGameplayTag HandAbilityTag;
 		if (bIsRightHanded)
 		{
-			HandAbilityTag.FromExportString("Punch.Left");
+			HandAbilityTag = FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Left"));
 		}
 		else
 		{
-			HandAbilityTag.FromExportString("Punch.Right");
-		}
-
-		if (!HandAbilityTag.IsValid())
-		{
-			UE_LOG(LogTemp, Error, TEXT(" AHumanCharacter::AttemptUseSecondaryHandItem HandAbilityTag.IsValid() == false"));
-			return;
+			HandAbilityTag = FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Right"));
 		}
 
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
-		//SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Punch);
 	}
 }
 
