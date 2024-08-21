@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
+#include "Interactables/Items/ItemBase.h"
 #include "SG_GameplayAbilityTargetData.generated.h"
 
 

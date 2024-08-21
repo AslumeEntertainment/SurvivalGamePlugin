@@ -11,6 +11,7 @@
 #include "Level/TeamManager.h"
 #include "Level/PlayerCustomiser.h"
 #include "Level/TimeEventManager.h"
+#include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
 
@@ -525,7 +526,14 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 
 	GameInstance->RegisterNewPlayer(NewPlayer);
 
-	NewPlayer->SetInputMode(FInputModeGameOnly());
+	ASG_PlayerController* PC = Cast<ASG_PlayerController>(NewPlayer);
+	if (IsValid(PC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PostLogin IsValid(PC) == false  PC is not of class ASG_PlayerController"));
+		return;
+	}
+
+	PC->Client_SetInputMode(EInputMode::GameOnly);
 }
 
 
