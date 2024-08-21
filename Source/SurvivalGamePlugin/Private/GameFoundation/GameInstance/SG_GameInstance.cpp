@@ -419,7 +419,25 @@ void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int Cont
 
 	CurrentSessionToJoin = OnlineSessionSearchResult;
 
-	AbandonLocalSession();
+	if(bIsAlreadyInSession)
+	{
+		AbandonLocalSession();
+		return;
+	}
+
+	UE_LOG(Networking, Display, TEXT("NO SESSION TO ABBANDON - JOINING NEW SESSION"));
+
+	JoinSessionDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionComplete::FDelegate::CreateUObject(this, &USG_GameInstance::HandleJoinSessionComplete));
+
+	bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
+	if (!bSuccess)
+	{
+		//fire off error delegate for this shit
+		UE_LOG(Networking, Error, TEXT("Failed to initiate joining session..."));
+		return;
+	}
+	UE_LOG(Networking, Display, TEXT("Joining session..."));
+	
 }
 
 bool USG_GameInstance::AbandonLocalSession()
@@ -428,14 +446,14 @@ bool USG_GameInstance::AbandonLocalSession()
 
 	if (IsValid(World) == false)
 	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(World) == false"));
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(World) == false"));
 		return false;
 	}
 
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
 	if (Subsystem == nullptr)
 	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(Subsystem) == false"));
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(Subsystem) == false"));
 		return false;
 	}
 
@@ -443,7 +461,7 @@ bool USG_GameInstance::AbandonLocalSession()
 
 	if (SessionInterface == nullptr)
 	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(Session) == false"));
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(Session) == false"));
 		return false;
 	}
 

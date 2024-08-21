@@ -23,6 +23,8 @@ class SURVIVALGAMEPLUGIN_API USG_GameInstance : public UGameInstance
 
 private:
 
+	bool bIsAlreadyInSession = false;
+
 	FDelegateHandle LoginDelegateHandle;
 
 	void HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
