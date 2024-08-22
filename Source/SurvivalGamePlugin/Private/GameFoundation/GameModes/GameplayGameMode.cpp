@@ -51,6 +51,35 @@ void AGameplayGameMode::StartPlay()
 	TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredators);
 	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartPreparationPeriod);
 	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
+
+	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
+	if (IsValid(GameInstance) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(GameInstance) == false"));
+		return;
+	}
+
+	GameInstance->OnHostedGameClosing.BindDynamic(this, &AGameplayGameMode::KickAllPlayers);
+}
+
+bool AGameplayGameMode::KickAllPlayers()
+{
+	for (ASG_PlayerController* Player : AllPlayers)
+	{
+		if (Player->IsLocalController())
+		{
+			continue;
+		}
+
+		if (bShouldPrintDebug)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("KICKING: %s"), *Player->GetName());
+		}
+
+		Player->Client_LeaveSession(true);
+	}
+
+	return true;
 }
 
 void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin)
@@ -517,15 +546,6 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 		return;
 	}
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
-	if (IsValid(GameInstance) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PostLogin IsValid(GameInstance) == false"));
-		return;
-	}
-
-	GameInstance->RegisterNewPlayer(NewPlayer);
-
 	ASG_PlayerController* PC = Cast<ASG_PlayerController>(NewPlayer);
 	if (IsValid(PC) == false)
 	{
@@ -533,9 +553,47 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 		return;
 	}
 
-	PC->Client_SetInputMode(EInputMode::GameOnly);
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ADDING %s TO PLAYER LIST"), *PC->GetName());
+	}
+
+	AllPlayers.Add(PC);
+	PC->Client_SetInputMode(EInputMode::GameAndUI);//Must be GameOnly
+
+	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
+	if (IsValid(GameInstance) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PostLogin IsValid(GameInstance) == false"));
+		return;
+	}
+	
+	if (GameInstance->LocalSessionState != ESessionState::Hosting)
+	{
+		return;
+	}
+
+	GameInstance->RegisterNewPlayer(NewPlayer);
 }
 
+void AGameplayGameMode::Logout(AController* Exiting)
+{
+	ASG_PlayerController* PC = Cast<ASG_PlayerController>(Exiting);
+	if (IsValid(PC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::Logout IsValid(PC) == false  PC is not of class ASG_PlayerController"));
+		return;
+	}
+
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("REMOVING %s FROM PLAYER LIST"), *PC->GetName());
+	}
+
+	AllPlayers.Remove(PC);
+
+	Super::Logout(Exiting);
+}
 
 
 

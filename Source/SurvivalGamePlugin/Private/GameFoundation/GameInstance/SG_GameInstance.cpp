@@ -14,38 +14,63 @@
 
 DEFINE_LOG_CATEGORY_STATIC(Networking, Log, All);
 
-bool USG_GameInstance::Login()
+void USG_GameInstance::OnStart()
 {
+	Super::OnStart();
 
 	UWorld* World = GetWorld();
 
 	if (IsValid(World) == false)
 	{
 		UE_LOG(Networking, Error, TEXT("USG_GameInstance::Login IsValid(World) == false"));
-		return false;
+		return;
 	}
 
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
 	if (Subsystem == nullptr)
 	{
 		UE_LOG(Networking, Error, TEXT("USG_GameInstance::Login IsValid(Subsystem) == false"));
-		return false;
+		return;
 	}
 
-	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+	Identity = Subsystem->GetIdentityInterface();
+	SessionInterface = Subsystem->GetSessionInterface();
+	FriendsInterface = Subsystem->GetFriendsInterface();
 
 	if (Identity == nullptr)
 	{
 		UE_LOG(Networking, Error, TEXT("USG_GameInstance::Login IsValid(Identity) == false"));
-		return false;
+		return;
 	}
+
+	if (SessionInterface == nullptr)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::Login IsValid(Session) == false"));
+		return;
+	}
+
+	if (FriendsInterface == nullptr)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::ReadFriendList IsValid(FriendsInterface) == false"));
+		return;
+	}
+
+	Identity->OnLoginCompleteDelegates->AddUObject(this, &USG_GameInstance::HandleLoginComplete);
+	SessionInterface->OnSessionUserInviteAcceptedDelegates.AddUObject(this, &USG_GameInstance::OnSessionUserInviteAccepted);
+	SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleCreateSessionComplete);
+	SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleDestroySessionComplete);
+	SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleJoinSessionComplete);
+}
+
+bool USG_GameInstance::Login()
+{
 
 	if (Identity->GetLoginStatus(0) == ELoginStatus::LoggedIn)
 	{
 		return true;
 	}
 
-	LoginDelegateHandle = Identity->AddOnLoginCompleteDelegate_Handle(0,FOnLoginComplete::FDelegate::CreateUObject(this,&USG_GameInstance::HandleLoginComplete));
+	//LoginDelegateHandle = Identity->AddOnLoginCompleteDelegate_Handle(0,FOnLoginComplete::FDelegate::CreateUObject(this,&USG_GameInstance::HandleLoginComplete));
 
 	if (!Identity->AutoLogin(0 /* LocalUserNum */))
 	{
@@ -68,31 +93,8 @@ bool USG_GameInstance::Login()
 
 void USG_GameInstance::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
 {
-	UWorld* World = GetWorld();
 
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
-
-	if (Identity == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleLoginComplete IsValid(Identity) == false"));
-		return;
-	}
-	Identity->ClearOnLoginCompleteDelegate_Handle(LocalUserNum, this->LoginDelegateHandle);
-
-	LoginDelegateHandle.Reset();
+	Identity->ClearOnLoginCompleteDelegates(0,this);
 
 	if (!bWasSuccessful)
 	{
@@ -102,55 +104,20 @@ void USG_GameInstance::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessf
 	}
 	UE_LOG(Networking, Display, TEXT("Login callback completed!"));
 
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::CreateSession IsValid(Session) == false"));
-		return;
-	}
-
-	SessionInterface->OnSessionUserInviteAcceptedDelegates.AddUObject(this, &USG_GameInstance::OnSessionUserInviteAccepted);
-
+	LocalSessionState = ESessionState::Idle;
 }
 
-bool USG_GameInstance::CreateSession()
+bool USG_GameInstance::CreateSession(bool bIsLANMatch, int NumPublicConnections, bool bShouldAdvertise, bool bAllowInvites, bool bAllowJoinViaPresence, bool bAllowJoinInProgress)
 {
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::CreateSession IsValid(World) == false"));
-		return false;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::CreateSession IsValid(Subsystem) == false"));
-		return false;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::CreateSession IsValid(Session) == false"));
-		return false;
-	}
-
-	CreateSessionDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(FOnCreateSessionComplete::FDelegate::CreateUObject(this, &USG_GameInstance::HandleCreateSessionComplete));
-
-
 	TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
-	SessionSettings->bIsLANMatch = false;
-	SessionSettings->NumPublicConnections = 4;
-	SessionSettings->bShouldAdvertise = false; // Set to true to make this session discoverable with FindSessions.
+	SessionSettings->bIsLANMatch = bIsLANMatch;
+	SessionSettings->NumPublicConnections = NumPublicConnections;
+	SessionSettings->bShouldAdvertise = bShouldAdvertise; // Set to true to make this session discoverable with FindSessions.
 	SessionSettings->bUsesPresence = true;
 	SessionSettings->bUseLobbiesIfAvailable = false;
-	SessionSettings->bAllowInvites = true;
-	SessionSettings->bAllowJoinViaPresence = true;
-	SessionSettings->bAllowJoinInProgress = false;
+	SessionSettings->bAllowInvites = bAllowInvites;
+	SessionSettings->bAllowJoinViaPresence = bAllowJoinViaPresence;
+	SessionSettings->bAllowJoinInProgress = bAllowJoinInProgress;
 
 	// You *must* set at least one setting value, because you can not run FindSessions without any filters.
 	SessionSettings->Settings.Add(
@@ -171,7 +138,6 @@ bool USG_GameInstance::CreateSession()
 
 void USG_GameInstance::HandleCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-
 	UWorld* World = GetWorld();
 
 	if (IsValid(World) == false)
@@ -179,23 +145,6 @@ void USG_GameInstance::HandleCreateSessionComplete(FName SessionName, bool bWasS
 		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleCreateSessionComplete IsValid(World) == false"));
 		return;
 	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleCreateSessionComplete IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleCreateSessionComplete IsValid(Session) == false"));
-		return;
-	}
-	SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionDelegateHandle);
-	CreateSessionDelegateHandle.Reset();
 
 	if (bWasSuccessful == false)
 	{
@@ -205,8 +154,13 @@ void USG_GameInstance::HandleCreateSessionComplete(FName SessionName, bool bWasS
 	}
 
 	UE_LOG(Networking, Display, TEXT("Session Created"));
-
+	//check if work without hsit line
 	World->ServerTravel(LobbyMapName+ "?listen");
+
+	LocalSessionState = ESessionState::Hosting;
+
+	RegisterExistingPlayers();
+
 }
 
 void USG_GameInstance::RegisterExistingPlayers()
@@ -233,29 +187,6 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 {
 
 	UE_LOG(Networking, Display, TEXT("Registering new player..."));
-
-	UWorld* World = InPlayerController->GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(Session) == false"));
-		return;
-	}
 
 	FUniqueNetIdRepl UniqueNetIdRepl;
 	if (InPlayerController->IsLocalPlayerController())
@@ -291,6 +222,15 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 
 	UE_LOG(Networking, Display, TEXT("New Player Registered Successfully"));
 
+	//this may get out of here based on the networking/game flow reworks------
+	UWorld* World = InPlayerController->GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(World) == false"));
+		return;
+	}
+
 	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
 
 	if (IsValid(GameMode) == false)
@@ -299,35 +239,13 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 		return;
 	}
 	GameMode->JoinTeam(InPlayerController, ETeam::Teamless);
+	//------------------------------------------------------------------------
 
 }
 
 void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 {
 	UE_LOG(Networking, Display, TEXT("UnRegistering player..."));
-
-	UWorld* World = InPlayerController->GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::UnRegisterPlayer IsValid(Session) == false"));
-		return;
-	}
 
 	FUniqueNetIdRepl UniqueNetIdRepl;
 	if (InPlayerController->IsLocalPlayerController())
@@ -363,6 +281,14 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 
 	UE_LOG(Networking, Display, TEXT("Player Unegistered Successfully"));
 
+	//this may get out of here based on the networking/game flow reworks------
+	UWorld* World = InPlayerController->GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(World) == false"));
+		return;
+	}
 	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
 
 	if (IsValid(GameMode) == false)
@@ -372,34 +298,11 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 	}
 	ETeam TeamToLeave = GameMode->GetCurrentTeam(InPlayerController);
 	GameMode->DestroyPlayerCustomiser(InPlayerController, TeamToLeave);
+	//-----------------------------------------------------------------------
 }
 
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
 {
-
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::OnSessionUserInviteAccepted IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::OnSessionUserInviteAccepted IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::OnSessionUserInviteAccepted IsValid(Session) == false"));
-		return;
-	}
-
 	if (bWasSuccessful == false)
 	{
 		//fire off error delegate for this shit
@@ -419,15 +322,11 @@ void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int Cont
 
 	CurrentSessionToJoin = OnlineSessionSearchResult;
 
-	if(bIsAlreadyInSession)
+	if (LocalSessionState != ESessionState::Idle)
 	{
-		AbandonLocalSession();
+		DestroySession(false);
 		return;
 	}
-
-	UE_LOG(Networking, Display, TEXT("NO SESSION TO ABBANDON - JOINING NEW SESSION"));
-
-	JoinSessionDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionComplete::FDelegate::CreateUObject(this, &USG_GameInstance::HandleJoinSessionComplete));
 
 	bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
 	if (!bSuccess)
@@ -440,38 +339,43 @@ void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int Cont
 	
 }
 
-bool USG_GameInstance::AbandonLocalSession()
+bool USG_GameInstance::DestroySession(bool InbShouldStayIdle)
 {
-	UWorld* World = GetWorld();
+	bShouldStayIdle = InbShouldStayIdle;
 
-	if (IsValid(World) == false)
+	if (LocalSessionState == ESessionState::Hosting)
 	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(World) == false"));
-		return false;
+		if (OnHostedGameClosing.IsBound() == false)
+		{
+			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession OnHostedGameClosing.IsBound() == false"));
+			return false;
+		}
+		OnHostedGameClosing.Execute();
+
+		UWorld* World = GetWorld();
+
+		if (IsValid(World) == false)
+		{
+			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(World) == false"));
+			return false;
+		}
+
+		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+		if (IsValid(PC) == false)
+		{
+			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(PC) == false"));
+			return false;
+		}
+		
+		UE_LOG(LogTemp, Display, TEXT("SERVER: CLIENT TRAVEL TO IDLE STATE"));
+		PC->ClientTravel(LobbyMapName, ETravelType::TRAVEL_Absolute);
+
 	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(Subsystem) == false"));
-		return false;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::AbandonLocalSession IsValid(Session) == false"));
-		return false;
-	}
-
-	AbandonLocalSessionDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(FOnDestroySessionComplete::FDelegate::CreateUObject(this, &USG_GameInstance::HandleAbandonLocalSessionComplete));
 
 	bool bSuccess = SessionInterface->DestroySession(GameSessionLocalName);
 	if (!bSuccess)
 	{
-		UE_LOG(Networking, Warning, TEXT("Failed to initiate session abandoning........Proceeding anyway"));
-		HandleAbandonLocalSessionComplete("NoSession", true);
+		UE_LOG(Networking, Warning, TEXT("Failed to initiate session abandoning........"));
 		return false;
 	}
 	UE_LOG(Networking, Display, TEXT("Abandoning session..."));
@@ -479,34 +383,8 @@ bool USG_GameInstance::AbandonLocalSession()
 	return true;
 }
 
-void USG_GameInstance::HandleAbandonLocalSessionComplete(FName SessionName, bool bWasSuccessful)
+void USG_GameInstance::HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleDestroySessionComplete IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleDestroySessionComplete IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleDestroySessionComplete IsValid(Session) == false"));
-		return;
-	}
-
-	SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(AbandonLocalSessionDelegateHandle);
-	AbandonLocalSessionDelegateHandle.Reset();
 
 	if (bWasSuccessful == false)
 	{
@@ -515,9 +393,14 @@ void USG_GameInstance::HandleAbandonLocalSessionComplete(FName SessionName, bool
 		return;
 	}
 
-	UE_LOG(Networking, Display, TEXT("Session Abandoned - Joining server session"));
+	LocalSessionState = ESessionState::Idle;
 
-	JoinSessionDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionComplete::FDelegate::CreateUObject(this, &USG_GameInstance::HandleJoinSessionComplete));
+	if (bShouldStayIdle)
+	{
+		return;
+	}
+
+	UE_LOG(Networking, Display, TEXT("Session Abandoned - Joining server session"));
 
 	bool bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
 	if (!bSuccess)
@@ -540,25 +423,6 @@ void USG_GameInstance::HandleJoinSessionComplete(FName SessionName, EOnJoinSessi
 		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleJoinSessionComplete IsValid(World) == false"));
 		return;
 	}
-
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(World);
-	if (Subsystem == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleJoinSessionComplete IsValid(Subsystem) == false"));
-		return;
-	}
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::HandleJoinSessionComplete IsValid(Session) == false"));
-		return;
-	}
-
-	SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionDelegateHandle);
-	JoinSessionDelegateHandle.Reset();
-
 	//establish network error and travel error delegate handle 
 
 	bool bIsIn = (JoinResult == EOnJoinSessionCompleteResult::Success || JoinResult == EOnJoinSessionCompleteResult::AlreadyInSession);
@@ -579,7 +443,89 @@ void USG_GameInstance::HandleJoinSessionComplete(FName SessionName, EOnJoinSessi
 		return;
 	}
 
+	LocalSessionState = ESessionState::Joined;
+
+	//test if it will work without this line
 	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);//add ,true for seamless travel
 
 }
 
+void USG_GameInstance::ReadFriendList()
+{
+	bool bSuccess = FriendsInterface->ReadFriendsList(
+		0 /* LocalUserNum */,
+		TEXT("") /* ListName, unused by EOS */,
+		FOnReadFriendsListComplete::CreateUObject(this, &USG_GameInstance::HandleReadFriendListComplete)
+	);
+
+	if (!bSuccess)
+	{
+		//fire off error delegate for this shit
+		UE_LOG(Networking, Error, TEXT("Failed to start reading friends list..."));
+		return;
+	}
+
+	UE_LOG(Networking, Display, TEXT("Started reading friends list..."));
+
+}
+
+void USG_GameInstance::HandleReadFriendListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr)
+{
+	if (!bWasSuccessful)
+	{
+		//fire off error delegate for this shit
+		UE_LOG(Networking, Error, TEXT("Failed to read friends list..."));
+		return;
+	}
+
+	UE_LOG(Networking, Display, TEXT("Read friends list successfully"));
+
+	TArray<TSharedRef<FOnlineFriend>> FriendsArr;
+	FriendsInterface->GetFriendsList(
+		0 /* LocalUserNum */,
+		TEXT("") /* ListName, unused by EOS */,
+		FriendsArr /* OutFriends */
+	);
+	for (const auto& Friend : FriendsArr)
+	{
+		// Access the friend via Friend.
+		FriendList.Add(Friend->GetDisplayName(), Friend->GetUserId());
+	}
+
+	TArray<FString> FriendNames;
+	FriendList.GenerateKeyArray(FriendNames);
+
+	OnFreindListUpdated.Broadcast(FriendNames);
+
+}
+
+void USG_GameInstance::InviteFriendToSession(FString FriendName)
+{
+	
+	FUniqueNetIdRepl LocalUniqueNetIdRepl;
+	APlayerController* PlayerController = GetFirstLocalPlayerController();
+
+	if (PlayerController->IsLocalPlayerController())
+	{
+		ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+		if (IsValid(LocalPlayer))
+		{
+			LocalUniqueNetIdRepl = LocalPlayer->GetPreferredUniqueNetId();
+		}
+		else
+		{
+			UNetConnection* RemoteNetConnection = Cast<UNetConnection>(PlayerController->Player);
+			check(IsValid(RemoteNetConnection));
+			LocalUniqueNetIdRepl = RemoteNetConnection->PlayerId;
+		}
+	}
+	
+	FUniqueNetIdRef* FriendNetIdPtr = FriendList.Find(FriendName);
+	if (FriendNetIdPtr == nullptr)
+	{
+		UE_LOG(Networking, Error, TEXT("USG_GameInstance::InviteFriendToSession FriendNetIdPtr == nullptr No friend with name: %s"), *FriendName);
+		return;
+	}
+
+	SessionInterface->SendSessionInviteToFriend(*LocalUniqueNetIdRepl.GetUniqueNetId(), GameSessionLocalName, **FriendNetIdPtr);
+}

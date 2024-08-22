@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+
+#include "Headers/SessionState.h"
+
 #include "SG_PlayerController.generated.h"
 
 UENUM(BlueprintType)
@@ -24,6 +27,12 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputMode(EInputMode InputMode);
+
+	UFUNCTION(Client, Reliable)
+	void Client_SetLocalSessionState(ESessionState InSessionState);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_LeaveSession(bool bWasKicked=false);
 
 	void OnNetCleanup(UNetConnection* Connection) override;
 

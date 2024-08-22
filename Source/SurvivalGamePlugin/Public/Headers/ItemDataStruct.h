@@ -6,6 +6,8 @@
 #include "Engine/DataTable.h"
 #include "ItemDataStruct.generated.h"
 
+class AItemBase;
+
 UENUM(BlueprintType)
 enum class EItemDisassembleRequirement : uint8
 {
@@ -99,7 +101,7 @@ struct FCraftingProcessDataStruct : public FTableRowBase
 	TArray<FName> ItemsToDestroy;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class AItemBase> ItemActorClass;
+	TSubclassOf<AItemBase> ItemActorClass;
 
 };
 
@@ -130,8 +132,8 @@ struct FDisassemblyProcessDataStruct : public FTableRowBase
 	EItemDisassembleRequirement DisassembleRequirement;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class AItemBase> MainParentItem;
+	TSubclassOf<AItemBase> MainParentItem;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class AItemBase> IngredientParentItem;
+	TSubclassOf<AItemBase> IngredientParentItem;
 };
