@@ -17,6 +17,50 @@ void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMo
 	}
 }
 
+void ASG_PlayerController::Client_SetLocalSessionState_Implementation(ESessionState InSessionState)
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_SetLocalSessionState_Implementation IsValid(World) == false"));
+		return;
+	}
+
+	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
+	if (IsValid(GameInstance) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_SetLocalSessionState_Implementation IsValid(GameInstance) == false"));
+		return;
+	}
+
+	GameInstance->LocalSessionState = InSessionState;
+}
+
+void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation IsValid(World) == false"));
+		return;
+	}
+
+	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
+	if (IsValid(GameInstance) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation IsValid(GameInstance) == false"));
+		return;
+	}
+	if (GameInstance->LocalSessionState != ESessionState::Hosting)
+	{
+		UE_LOG(LogTemp, Display, TEXT("CLIENT: CLIENT TRAVEL TO IDLE STATE"));
+		ClientTravel(GameInstance->LobbyMapName, ETravelType::TRAVEL_Absolute);
+	}
+
+	GameInstance->DestroySession();
+
+}
+
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {
 	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)
@@ -34,6 +78,8 @@ void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 			UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::OnNetCleanup IsValid(GameInstance) == false"));
 			return;
 		}
+
+		GameInstance->UnRegisterPlayer(this);
 	}
 
 	Super::OnNetCleanup(Connection);

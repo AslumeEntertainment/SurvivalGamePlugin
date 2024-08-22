@@ -4,8 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GAS/SG_GameplayAbility.h"
+
+#include "Headers/ItemDataStruct.h"
+
 #include "SGGA_CraftItem.generated.h"
 
+class AHumanCharacter;
+class USG_AnimInstance;
+//class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
@@ -22,9 +28,9 @@ protected:
 	UDataTable* CraftingInfoTable;
 
 	AHumanCharacter* Player;
-	class USG_AnimInstance* AnimInst;
+	USG_AnimInstance* AnimInst;
 
-	class AItemBase* ProductItem;
+	AItemBase* ProductItem;
 	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;

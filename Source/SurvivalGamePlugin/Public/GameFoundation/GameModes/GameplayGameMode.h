@@ -13,6 +13,7 @@ struct FTeamManagementInfo;
 class APlayerController;
 class ATeamManager;
 class USG_GameInstance;
+class ASG_PlayerController;
 class APlayerCustomiser;
 class ATimeEventManager;
 
@@ -72,8 +73,13 @@ private:
 	UFUNCTION()
 	void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
 
+	UFUNCTION()
+	bool KickAllPlayers();
+
 	FTimerHandle LoadingPeriodTimer;
 	FTimerHandle LootingPeriodTimer;
+
+	TArray<ASG_PlayerController*> AllPlayers;
 
 protected:
 
@@ -114,6 +120,7 @@ protected:
 	float LootingPeriodLenght = 30.0f;
 
 	void PostLogin(APlayerController* NewPlayer) override;
+	void Logout(AController* Exiting) override;
 
 	void StartPlay() override;
 
