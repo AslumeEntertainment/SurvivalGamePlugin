@@ -77,25 +77,6 @@ void ASG_Character::BeginPlay()
 	Super::BeginPlay();
 	
 	InitializeAttributes();
-
-	/*
-	
-	to be moved in player controller
-
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (!IsValid(PlayerController))
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
-		return;
-	}
-
-	if (bIsCamersMovementConstrained)
-	{
-		PlayerController->PlayerCameraManager->ViewYawMin = -80.f;
-		PlayerController->PlayerCameraManager->ViewYawMax = 80.f;
-		PlayerController->PlayerCameraManager->ViewPitchMin = -55.f;
-		PlayerController->PlayerCameraManager->ViewPitchMax = 55.f;
-	}*/
 }
 
 // Called every frame
@@ -158,6 +139,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
+	//--------------------------------this must not be here-----------------------------
 	if (bIsCamersMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -169,7 +151,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
 		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 	}
-
+	//------------------------------------------------------------------------------------
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	AddMovementInput(RightDirection, MovementVector.X);
 	

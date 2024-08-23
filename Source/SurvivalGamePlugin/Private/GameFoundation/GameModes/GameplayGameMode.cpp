@@ -60,6 +60,8 @@ void AGameplayGameMode::StartPlay()
 	}
 
 	GameInstance->OnHostedGameClosing.BindDynamic(this, &AGameplayGameMode::KickAllPlayers);
+	OnRegisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::RegisterNewPlayer);
+	OnUnregisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::UnRegisterPlayer);
 }
 
 bool AGameplayGameMode::KickAllPlayers()
@@ -561,19 +563,14 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 	AllPlayers.Add(PC);
 	PC->Client_SetInputMode(EInputMode::GameAndUI);//Must be GameOnly
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
-	if (IsValid(GameInstance) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PostLogin IsValid(GameInstance) == false"));
-		return;
-	}
-	
-	if (GameInstance->LocalSessionState != ESessionState::Hosting)
-	{
-		return;
-	}
+	PC->OnConnectionCleanUp.BindDynamic(this, &AGameplayGameMode::UnRegisterRequest);
 
-	GameInstance->RegisterNewPlayer(NewPlayer);
+	OnRegisterNeeded.ExecuteIfBound(NewPlayer);
+}
+
+void AGameplayGameMode::UnRegisterRequest(APlayerController* TriggeringPlayer)
+{
+	OnUnregisterNeeded.ExecuteIfBound(TriggeringPlayer);
 }
 
 void AGameplayGameMode::Logout(AController* Exiting)

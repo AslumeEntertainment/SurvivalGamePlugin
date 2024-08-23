@@ -32,7 +32,7 @@ struct FPlayerCustomiserSpawn
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameStartSignature, int, DaysForPreparation);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameEndSignature);
-
+DECLARE_DYNAMIC_DELEGATE_OneParam(FPlayerRegistrationSignature, APlayerController*, TriggeringPlayer);
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameplayGameMode : public AGameModeBase
 {
@@ -76,10 +76,16 @@ private:
 	UFUNCTION()
 	bool KickAllPlayers();
 
+	UFUNCTION()
+	void UnRegisterRequest(APlayerController* TriggeringPlayer);
+
 	FTimerHandle LoadingPeriodTimer;
 	FTimerHandle LootingPeriodTimer;
 
 	TArray<ASG_PlayerController*> AllPlayers;
+
+	FPlayerRegistrationSignature OnRegisterNeeded;
+	FPlayerRegistrationSignature OnUnregisterNeeded;
 
 protected:
 
