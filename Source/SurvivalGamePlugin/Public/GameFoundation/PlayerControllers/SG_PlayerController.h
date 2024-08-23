@@ -17,23 +17,29 @@ enum class EInputMode : uint8
 	GameAndUI,
 };
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FConnectionCleanupSignature, APlayerController*, TriggeringPlayer);
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
-
+protected:
+	UPROPERTY(EditAnywhere, Category = "Developer")
+	bool bIsCamersMovementConstrained = true;
+	
 public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputMode(EInputMode InputMode);
 
-	UFUNCTION(Client, Reliable)
-	void Client_SetLocalSessionState(ESessionState InSessionState);
-
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_LeaveSession(bool bWasKicked=false);
 
 	void OnNetCleanup(UNetConnection* Connection) override;
+
+	void OnPossess(APawn* InPawn) override;
+
+	FConnectionCleanupSignature OnConnectionCleanUp;
 
 };

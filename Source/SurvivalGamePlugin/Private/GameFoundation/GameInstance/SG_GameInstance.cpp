@@ -60,6 +60,13 @@ void USG_GameInstance::OnStart()
 	SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleCreateSessionComplete);
 	SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleDestroySessionComplete);
 	SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &USG_GameInstance::HandleJoinSessionComplete);
+	SessionInterface->OnSessionFailureDelegates.AddUObject(this, &USG_GameInstance::HandleSessionFailure);
+
+	if (GEngine)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &USG_GameInstance::HandleNetworkFailure);
+	}
+
 }
 
 bool USG_GameInstance::Login()
@@ -185,8 +192,13 @@ void USG_GameInstance::RegisterExistingPlayers()
 
 void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 {
-
 	UE_LOG(Networking, Display, TEXT("Registering new player..."));
+
+	if (LocalSessionState != ESessionState::Hosting)
+	{
+		UE_LOG(Networking, Display, TEXT("SESSION ALREADY CLOSED"));
+		return;
+	}
 
 	FUniqueNetIdRepl UniqueNetIdRepl;
 	if (InPlayerController->IsLocalPlayerController())
@@ -212,6 +224,12 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 
 	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
 	check(UniqueNetId != nullptr);
+
+	if (SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
+	{
+		UE_LOG(Networking, Display, TEXT("New Player Already Registered"));
+		return;
+	}
 
 	if (!SessionInterface->RegisterPlayer(GameSessionLocalName, *UniqueNetId, true))
 	{
@@ -222,30 +240,17 @@ void USG_GameInstance::RegisterNewPlayer(APlayerController* InPlayerController)
 
 	UE_LOG(Networking, Display, TEXT("New Player Registered Successfully"));
 
-	//this may get out of here based on the networking/game flow reworks------
-	UWorld* World = InPlayerController->GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(World) == false"));
-		return;
-	}
-
-	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
-
-	if (IsValid(GameMode) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(GameMode) == false check the settings to ensure that the GameMode is derived form AGameplayGameMode"));
-		return;
-	}
-	GameMode->JoinTeam(InPlayerController, ETeam::Teamless);
-	//------------------------------------------------------------------------
-
 }
 
 void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 {
 	UE_LOG(Networking, Display, TEXT("UnRegistering player..."));
+
+	if (LocalSessionState != ESessionState::Hosting)
+	{
+		UE_LOG(Networking, Display, TEXT("SESSION ALREADY CLOSED"));
+		return;
+	}
 
 	FUniqueNetIdRepl UniqueNetIdRepl;
 	if (InPlayerController->IsLocalPlayerController())
@@ -272,6 +277,12 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
 	check(UniqueNetId != nullptr);
 
+	if (!SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
+	{
+		UE_LOG(Networking, Display, TEXT("New Player Already Unregistered"));
+		return;
+	}
+
 	if (!SessionInterface->UnregisterPlayer(GameSessionLocalName, *UniqueNetId))
 	{
 		// The player could not be registered; typically you will want to kick the player from the server in this situation.
@@ -281,24 +292,6 @@ void USG_GameInstance::UnRegisterPlayer(APlayerController* InPlayerController)
 
 	UE_LOG(Networking, Display, TEXT("Player Unegistered Successfully"));
 
-	//this may get out of here based on the networking/game flow reworks------
-	UWorld* World = InPlayerController->GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(Networking, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(World) == false"));
-		return;
-	}
-	AGameplayGameMode* GameMode = World->GetAuthGameMode<AGameplayGameMode>();
-
-	if (IsValid(GameMode) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USG_GameInstance::RegisterNewPlayer IsValid(GameMode) == false check the settings to ensure that the GameMode is derived form AGameplayGameMode"));
-		return;
-	}
-	ETeam TeamToLeave = GameMode->GetCurrentTeam(InPlayerController);
-	GameMode->DestroyPlayerCustomiser(InPlayerController, TeamToLeave);
-	//-----------------------------------------------------------------------
 }
 
 void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
@@ -339,36 +332,22 @@ void USG_GameInstance::OnSessionUserInviteAccepted(bool bWasSuccessful, int Cont
 	
 }
 
-bool USG_GameInstance::DestroySession(bool InbShouldStayIdle)
+void USG_GameInstance::DestroySession(bool InbShouldStayIdle)
 {
 	bShouldStayIdle = InbShouldStayIdle;
 
-	if (LocalSessionState == ESessionState::Hosting)
+	ESessionState PrevState = LocalSessionState;
+
+	LocalSessionState = ESessionState::Idle;
+
+	if (PrevState == ESessionState::Hosting)
 	{
 		if (OnHostedGameClosing.IsBound() == false)
 		{
 			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession OnHostedGameClosing.IsBound() == false"));
-			return false;
+			return;
 		}
 		OnHostedGameClosing.Execute();
-
-		UWorld* World = GetWorld();
-
-		if (IsValid(World) == false)
-		{
-			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(World) == false"));
-			return false;
-		}
-
-		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-		if (IsValid(PC) == false)
-		{
-			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(PC) == false"));
-			return false;
-		}
-		
-		UE_LOG(LogTemp, Display, TEXT("SERVER: CLIENT TRAVEL TO IDLE STATE"));
-		PC->ClientTravel(LobbyMapName, ETravelType::TRAVEL_Absolute);
 
 	}
 
@@ -376,11 +355,9 @@ bool USG_GameInstance::DestroySession(bool InbShouldStayIdle)
 	if (!bSuccess)
 	{
 		UE_LOG(Networking, Warning, TEXT("Failed to initiate session abandoning........"));
-		return false;
+		return;
 	}
 	UE_LOG(Networking, Display, TEXT("Abandoning session..."));
-
-	return true;
 }
 
 void USG_GameInstance::HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful)
@@ -393,10 +370,29 @@ void USG_GameInstance::HandleDestroySessionComplete(FName SessionName, bool bWas
 		return;
 	}
 
-	LocalSessionState = ESessionState::Idle;
-
 	if (bShouldStayIdle)
 	{
+		UWorld* World = GetWorld();
+
+		if (IsValid(World) == false)
+		{
+			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(World) == false"));
+			return;
+		}
+
+		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+		if (IsValid(PC) == false)
+		{
+			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession IsValid(PC) == false"));
+			return;
+		}
+
+		CurrentSessionToJoin = FOnlineSessionSearchResult();
+		ConnectInfo = "";
+
+		UE_LOG(LogTemp, Display, TEXT("SERVER: CLIENT TRAVEL TO IDLE STATE"));
+		PC->ClientTravel(LobbyMapName, ETravelType::TRAVEL_Absolute);
+
 		return;
 	}
 
@@ -528,4 +524,17 @@ void USG_GameInstance::InviteFriendToSession(FString FriendName)
 	}
 
 	SessionInterface->SendSessionInviteToFriend(*LocalUniqueNetIdRepl.GetUniqueNetId(), GameSessionLocalName, **FriendNetIdPtr);
+}
+
+//For some reason this is never called may remove in the future
+void USG_GameInstance::HandleSessionFailure(const FUniqueNetId& PlayerId, ESessionFailure::Type FailureType)
+{
+	UE_LOG(Networking, Error, TEXT("--------------------------------------------------SESSION FAILURE-----------------------------------------"));
+}
+
+void USG_GameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	UE_LOG(Networking, Warning, TEXT("--------------------------------------------------NETWORK FAILURE-----------------------------------------"));
+	UE_LOG(Networking, Error, TEXT("Error: %s") ,  *ErrorString);
+	//fire of networking error delegate
 }

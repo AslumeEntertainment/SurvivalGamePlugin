@@ -42,8 +42,10 @@ protected:
 	UPROPERTY(Replicated)
 	FRotator ControlRotation;
 
+	//---remove that when you clean the movement: line 135--
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCamersMovementConstrained = false;
+	//-----------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	float BaseMaxWalkingSpeed = 500.f;

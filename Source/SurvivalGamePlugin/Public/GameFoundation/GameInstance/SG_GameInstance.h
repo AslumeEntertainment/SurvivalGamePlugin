@@ -48,6 +48,9 @@ private:
 
 	TMap<FString, FUniqueNetIdRef> FriendList;
 
+	void HandleSessionFailure(const FUniqueNetId& PlayerId, ESessionFailure::Type FailureType);
+	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
+
 public:
 
 	void OnStart() override;
@@ -70,7 +73,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FString GetLocalPlayerUsername();
 */
-	
 	UFUNCTION(BlueprintCallable)
 	bool Login();
 
@@ -78,7 +80,7 @@ public:
 	bool CreateSession(bool bIsLANMatch = false, int NumPublicConnections = 4, bool bShouldAdvertise = false, bool bAllowInvites = true, bool bAllowJoinViaPresence = true, bool bAllowJoinInProgress = false);
 
 	UFUNCTION(BlueprintCallable)
-	bool DestroySession(bool bShouldStayIdle = true);
+	void DestroySession(bool bShouldStayIdle = true);
 
 	UFUNCTION(BlueprintCallable)
 	void RegisterNewPlayer(APlayerController* InPlayerController);
