@@ -14,6 +14,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UPostProcessComponent;
 class UInputMappingContext;
 class UInputAction;
 class USG_AbilitySystemComponent;
@@ -62,6 +63,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPostProcessComponent* PostProcessComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
@@ -116,9 +120,13 @@ public:
 	FHealthUpdateSignature OnHealthPercentUpdated;
 
 	UPROPERTY(BlueprintCallable)
+	FHealthUpdateSignature OnHungerPercentUpdated;
+
+	UPROPERTY(BlueprintCallable)
 	FHealthUpdateSignature OnEnergyPercentUpdated;
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+	FORCEINLINE class UPostProcessComponent* GetPostProcessComponent() const { return PostProcessComponent; }
 	
 	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
 	void ResetWalkingSpeed();
@@ -131,6 +139,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);

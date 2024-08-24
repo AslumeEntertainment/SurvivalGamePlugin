@@ -20,6 +20,9 @@ protected:
 	UBorder* HealthPercentOverlay;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBorder* HungerPercentOverlay;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBackgroundBlur* BackgroundBlur;
 
 	UPROPERTY(EditAnywhere)
@@ -29,6 +32,9 @@ public:
 
 	UFUNCTION()
 	void UpdateHealthPercent(float CurrentHealthPercent);
+
+	UFUNCTION()
+	void UpdateHungerPercent(float CurrentHungerPercent);
 
 	UFUNCTION()
 	void UpdateEnergyPercent(float CurrentEneryPercent);

@@ -16,6 +16,11 @@ void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 	HealthPercentOverlayMaterial->SetScalarParameterValue("BoxDimensions", 0.2 + CurrentHealthPercent);
 }
 
+void UInGameOverlayWidget::UpdateHungerPercent(float CurrentHungerPercent)
+{
+	HungerPercentOverlay->SetBrushColor(FLinearColor(0, 0, 0, 0.5 - CurrentHungerPercent));
+}
+
 void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEneryPercent)
 {
 	BackgroundBlur->SetBlurStrength(MaxBlurValue * (1 - CurrentEneryPercent));

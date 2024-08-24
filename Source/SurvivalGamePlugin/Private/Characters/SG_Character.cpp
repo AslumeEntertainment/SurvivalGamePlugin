@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/PostProcessComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
@@ -52,6 +53,9 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
+
+	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
+	PostProcessComponent->SetupAttachment(FirstPersonCamera);
 
 	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
@@ -265,6 +269,11 @@ bool ASG_Character::bCanBeHit()
 void ASG_Character::NetMulticast_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
 {
 	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
+}
+
+void ASG_Character::NetMulticast_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
+{
+	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
 }
 
 void ASG_Character::NetMulticast_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)

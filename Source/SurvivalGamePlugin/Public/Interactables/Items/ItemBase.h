@@ -7,6 +7,7 @@
 #include "Headers/ItemDataStruct.h"
 #include "Interfaces/InteractableInterface.h"
 #include "GameplayAbilitySpecHandle.h"
+#include "GameplayTagContainer.h"
 #include "ItemBase.generated.h"
 
 
