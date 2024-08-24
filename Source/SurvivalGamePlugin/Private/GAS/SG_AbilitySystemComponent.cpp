@@ -32,6 +32,14 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 		EnergyRechargeSpec->Period = GetNumericAttribute(USG_AttributeSet::GetEnergyRechargeRateAttribute());
 		EnergyRechargeEffect = ApplyGameplayEffectSpecToSelf(*EnergyRechargeSpec);
 	}
+
+	if (IsValid(EnergyDrainEffectClass))
+	{
+		FGameplayEffectSpecHandle EnergyDrainSpecHandle = MakeOutgoingSpec(EnergyDrainEffectClass, 1, EffectContext);
+		FGameplayEffectSpec* EnergyDrainSpec = EnergyDrainSpecHandle.Data.Get();
+		EnergyDrainSpec->Period = GetNumericAttribute(USG_AttributeSet::GetEnergyDrainRateAttribute());
+		EnergyDrainEffect = ApplyGameplayEffectSpecToSelf(*EnergyDrainSpec);
+	}
 }
 
 void USG_AbilitySystemComponent::SetHealthRegenerationRate(float NewValue)
@@ -45,6 +53,11 @@ void USG_AbilitySystemComponent::SetHungerDrainRate(float NewValue)
 }
 
 void USG_AbilitySystemComponent::SetEnergyRechargeRate(float NewValue)
+{
+	//Functionality to be added
+}
+
+void USG_AbilitySystemComponent::SetEnergyDrainRate(float NewValue)
 {
 	//Functionality to be added
 }

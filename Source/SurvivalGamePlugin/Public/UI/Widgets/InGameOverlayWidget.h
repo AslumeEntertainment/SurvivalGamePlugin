@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "InGameOverlayWidget.generated.h"
 
+class UBorder;
+class UBackgroundBlur;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UInGameOverlayWidget : public UUserWidget
@@ -15,10 +17,20 @@ class SURVIVALGAMEPLUGIN_API UInGameOverlayWidget : public UUserWidget
 protected:
 	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	class UBorder* HealthPercentOverlay;
+	UBorder* HealthPercentOverlay;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBackgroundBlur* BackgroundBlur;
+
+	UPROPERTY(EditAnywhere)
+	int MaxBlurValue = 15;
 
 public:
 
 	UFUNCTION()
 	void UpdateHealthPercent(float CurrentHealthPercent);
+
+	UFUNCTION()
+	void UpdateEnergyPercent(float CurrentEneryPercent);
+
 };

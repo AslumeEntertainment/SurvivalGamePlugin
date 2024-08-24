@@ -123,8 +123,8 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ASG_Character::StartSprint);
-
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASG_Character::StartSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASG_Character::FinishSprint);
 
 		if (AbilitySystemComponent && InputComponent)
 		{
@@ -188,6 +188,11 @@ void ASG_Character::Look(const FInputActionValue& Value)
 void ASG_Character::StartSprint()
 {
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Sprint);
+}
+
+void ASG_Character::FinishSprint()
+{
+	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Sprint);
 }
 
 void ASG_Character::MultiplyMaxWalkingSpeed(float SpeedMultiplier)
@@ -262,6 +267,11 @@ void ASG_Character::NetMulticast_OnUpdatePlayerHealth_Implementation(float Curre
 	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
 }
 
+void ASG_Character::NetMulticast_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
+{
+	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+}
+
 void ASG_Character::Die_Implementation()
 {
 	bIsAlive = false;
@@ -269,7 +279,6 @@ void ASG_Character::Die_Implementation()
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), 0);
 	UnPossessed();
 }
 
