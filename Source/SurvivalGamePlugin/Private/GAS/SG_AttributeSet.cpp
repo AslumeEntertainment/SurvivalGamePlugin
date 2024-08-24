@@ -115,6 +115,11 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHungerAttribute())
 	{
+		if (GetHunger() <= GetMaxHunger() / 2)
+		{
+			TargetCharacter->NetMulticast_OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
+		}
+		
 		if (HasMaxHunger())
 		{
 			TargetCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
