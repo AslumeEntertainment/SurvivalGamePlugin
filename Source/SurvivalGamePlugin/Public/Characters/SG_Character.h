@@ -89,6 +89,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void StartSprint();
+	void FinishSprint();
 
 
 protected:
@@ -114,6 +115,9 @@ public:
 	UPROPERTY(BlueprintCallable)
 	FHealthUpdateSignature OnHealthPercentUpdated;
 
+	UPROPERTY(BlueprintCallable)
+	FHealthUpdateSignature OnEnergyPercentUpdated;
+
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	
 	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
@@ -127,6 +131,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
 	//that must go in InGameCharacter
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)

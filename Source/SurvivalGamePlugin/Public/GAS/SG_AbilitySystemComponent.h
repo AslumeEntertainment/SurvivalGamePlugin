@@ -23,6 +23,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
 	TSubclassOf<class UGameplayEffect> EnergyRechargeEffectClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
+	TSubclassOf<class UGameplayEffect> EnergyDrainEffectClass;
+
 	UPROPERTY()
 	FActiveGameplayEffectHandle HealthRegenerationEffect;
 
@@ -31,6 +34,9 @@ protected:
 
 	UPROPERTY()
 	FActiveGameplayEffectHandle EnergyRechargeEffect;
+
+	UPROPERTY()
+	FActiveGameplayEffectHandle EnergyDrainEffect;
 	
 public:
 
@@ -44,4 +50,7 @@ public:
 
 	UFUNCTION()
 	void SetEnergyRechargeRate(float NewValue);
+
+	UFUNCTION()
+	void SetEnergyDrainRate(float NewValue);
 };

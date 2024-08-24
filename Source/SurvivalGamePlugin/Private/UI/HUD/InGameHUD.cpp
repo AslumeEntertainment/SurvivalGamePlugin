@@ -37,6 +37,7 @@ void AInGameHUD::BeginPlay()
 	CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
 
 	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
+	Player->OnEnergyPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
 	if (Cast<AHumanCharacter>(Player))
 	{
 		Cast<AHumanCharacter>(Player)->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);
@@ -44,7 +45,6 @@ void AInGameHUD::BeginPlay()
 	}
 
 	ShowGameplayWidget();
-	GameplayWidget->UpdateHealthPercent(1);
 }
 
 void AInGameHUD::ShowGameplayWidget()

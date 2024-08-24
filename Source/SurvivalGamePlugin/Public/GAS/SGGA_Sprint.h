@@ -15,14 +15,11 @@ class SURVIVALGAMEPLUGIN_API USGGA_Sprint : public USG_GameplayAbility
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "GameplayEffect")
-	TSubclassOf<UGameplayEffect> SprintGameplayEffectClass;
-
-	FActiveGameplayEffectHandle EffectHandle;
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	float SpeedMultiplier;
 
 	UFUNCTION()
 	void OnSprintButtonReleased(float TimeHeld);

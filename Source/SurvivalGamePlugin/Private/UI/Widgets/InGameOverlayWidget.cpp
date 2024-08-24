@@ -2,11 +2,11 @@
 
 
 #include "UI/Widgets/InGameOverlayWidget.h"
+#include "Components/BackgroundBlur.h"
 #include "Components/Border.h"
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 {
-	UE_LOG(LogTemp, Warning, TEXT("UInGameOverlayWidget::UpdateHealthPercent Player's HealthPercent = %.2f"), CurrentHealthPercent);
 	UMaterialInstanceDynamic* HealthPercentOverlayMaterial = HealthPercentOverlay->GetDynamicMaterial();
 	if (!HealthPercentOverlayMaterial)
 	{
@@ -14,4 +14,9 @@ void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 		return;
 	}
 	HealthPercentOverlayMaterial->SetScalarParameterValue("BoxDimensions", 0.2 + CurrentHealthPercent);
+}
+
+void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEneryPercent)
+{
+	BackgroundBlur->SetBlurStrength(MaxBlurValue * (1 - CurrentEneryPercent));
 }

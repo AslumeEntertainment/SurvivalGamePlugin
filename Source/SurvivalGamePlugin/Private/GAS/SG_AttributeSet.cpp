@@ -53,6 +53,21 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 	}
 }
 
+void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
+{
+	if (Attribute == GetSpeedAttribute())
+	{
+		ASG_Character* AttributeOwner = Cast<ASG_Character>(GetOwningActor());
+		if (!IsValid(AttributeOwner))
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(AttributeOwner) == false"));
+			return;
+		}
+
+		AttributeOwner->GetCharacterMovement()->MaxWalkSpeed = NewValue;
+	}
+}
+
 void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
@@ -110,9 +125,9 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		}
 	}
 
-	if (Data.EvaluatedData.Attribute == GetSpeedAttribute())
+	if (Data.EvaluatedData.Attribute == GetEnergyAttribute() && GetEnergy() < GetMaxEnergy() / 2)
 	{
-		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = GetSpeed();
+		TargetCharacter->NetMulticast_OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
 	}
 }
 
