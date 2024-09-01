@@ -51,7 +51,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	{
 		SpawnProductItem();
 	}
-	Player->MultiplyMaxWalkingSpeed(ProductItemData->MovementSpeedMultiplier);
+	//Player->MultiplyMaxWalkingSpeed(ProductItemData->MovementSpeedMultiplier);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ProductItemData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
@@ -98,7 +98,7 @@ void USGGA_CraftItem::SpawnProductItem()
 
 void USGGA_CraftItem::OnAnimMontageCompleted()
 {
-	Player->ResetWalkingSpeed();
+	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been completed"));
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -106,7 +106,7 @@ void USGGA_CraftItem::OnAnimMontageCompleted()
 
 void USGGA_CraftItem::OnAnimMontageCanceled()
 {
-	Player->ResetWalkingSpeed();
+	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been canceled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

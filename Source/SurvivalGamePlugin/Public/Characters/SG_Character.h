@@ -14,7 +14,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
-class UPostProcessComponent;
+class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
 class USG_AbilitySystemComponent;
@@ -49,16 +49,10 @@ protected:
 	//-----------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	float BaseMaxWalkingSpeed = 500.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	FName LeftHandSocket;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	FName RightHandSocket;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	float BaseDamage = 10.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -66,8 +60,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	UPostProcessComponent* PostProcessComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UDamageDealingComponent* LeftHandDamageDealingComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UDamageDealingComponent* RightHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
@@ -112,6 +109,8 @@ protected:
 
 public:
 
+	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
 
@@ -128,24 +127,20 @@ public:
 	FHealthUpdateSignature OnEnergyPercentUpdated;
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-	FORCEINLINE class UPostProcessComponent* GetPostProcessComponent() const { return PostProcessComponent; }
-	
-	void MultiplyMaxWalkingSpeed(float SpeedMultiplier);
-	void ResetWalkingSpeed();
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void OnHitNotifyRecieved(FVector DamageOrigin);
+	/*UFUNCTION(BlueprintCallable, Server, Reliable)
+	void OnHitNotifyRecieved(FVector DamageOrigin);*/
 
-	virtual void OnHit(ASG_Character* InstigatingPlayer) override;
+	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 	virtual bool bCanBeHit() override;
 
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void NetMulticast_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
 
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void NetMulticast_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
 	//that must go in InGameCharacter
@@ -163,9 +158,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
-
-	UFUNCTION(BlueprintCallable)
-	float GetBaseDamage();
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

@@ -3,13 +3,13 @@
 
 #include "GAS/SGGA_BasicAttackAbility.h"
 #include "Characters/HumanCharacter.h"
-#include "Interactables/Items/ItemBase.h"
-#include "Interactables/Items/RegeneratingItem.h"
+#include "Interactables/Items/DamageDealingItem.h"
 #include "Headers/SG_GameplayAbilityTargetData.h"
 #include "Animation/SG_AnimInstance.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Components/DamageDealingComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -32,69 +32,124 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
+	if (bCanBeMirrored && TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
 		AnimInst->bIsMirrored = true;
+		MirrorAbilityDamageComponentTags();
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
 		AnimInst->bIsMirrored = false;
 	}
 
-	if (Cast<AHumanCharacter>(Player) && bUsesItem && TriggerEventData->TargetData.Data[0].IsValid())
+	TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;  
+	Player->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
+
+	if (bUsesItem)
 	{
-		FSG_GameplayAbilityTargetData* CustomTargetData = static_cast<FSG_GameplayAbilityTargetData*>(TriggerEventData->TargetData.Data[0].Get());
-		if (CustomTargetData == nullptr)
+		AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(Player);
+		if (!IsValid(HumanPlayer))
 		{
-			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CustomTargetData == nullptr"));
+			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(HumanPlayer) == false"));
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		}
-		Cast<AHumanCharacter>(Player)->ActiveItem = CustomTargetData->ItemActor;
-	}
 
+		ADamageDealingItem* MainHandItem = Cast<ADamageDealingItem>(HumanPlayer->MainHandItem);
+		ADamageDealingItem* SecondaryHandItem = Cast<ADamageDealingItem>(HumanPlayer->SecondaryHandItem);
+
+		if (!IsValid(MainHandItem) && !IsValid(SecondaryHandItem))
+		{
+			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(MainHandItem && SecondaryHandItem) == false"));
+			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		}
+		if (IsValid(MainHandItem))
+		{
+			PlayerDamageDealingComponents.Add(MainHandItem->GetDamageDealingComponent());
+		}
+		if (IsValid(SecondaryHandItem))
+		{
+			PlayerDamageDealingComponents.Add(SecondaryHandItem->GetDamageDealingComponent());
+		}
+	}
+	
+	for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
+	{
+		if (ActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
+		{
+			Player->ActiveDamageDealingComponents.Add(DamageDealingComponent);
+			for (const FDamageGameplayEffect DamageEffect : AdditionalDamageEffects)
+			{
+				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
+			}
+		}
+	}
+	
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);
 	PlayMontageTask->ReadyForActivation();
+}
 
-	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, OnHitGameplayEventTag, nullptr, true, true);
-	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_BasicAttackAbility::OnEventRecieved);
-	WaitGameplayEventTask->Activate();
+void USGGA_BasicAttackAbility::MirrorAbilityDamageComponentTags()
+{
+	if (!HasAuthority(&CurrentActivationInfo))
+	{
+		return;
+	}
+	for (FGameplayTag DamageComponentTag : ActiveDamageComponentTags)
+	{
+		FString TagName = DamageComponentTag.ToString();
+		if (TagName.Contains(".Left"))
+		{
+			TagName = DamageComponentTag.RequestDirectParent().ToString();
+			TagName = TagName + TEXT(".Right");
+		}
+		else if (TagName.Contains(".Right"))
+		{
+			TagName = DamageComponentTag.RequestDirectParent().ToString();
+			TagName = TagName + TEXT(".Left");
+		}
+		DamageComponentTag = DamageComponentTag.RequestGameplayTag(FName(TagName), true);
+		UE_LOG(LogTemp, Warning, TEXT("New Ability GameplayTag - %s"), *DamageComponentTag.ToString());
+	}
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 {
-	AnimInst->bIsMirrored = false;
+	if (AnimInst->bIsMirrored)
+	{
+		AnimInst->bIsMirrored = false;
+		MirrorAbilityDamageComponentTags();
+	}
+	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
+	{
+		DamageDealingComponent->ResetDamageEffects();
+	}
+	Player->ActiveDamageDealingComponents.Empty();
+	
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability complete!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageBlendOut()
 {
-	if (Cast<AHumanCharacter>(Player))
-	{
-		Cast<AHumanCharacter>(Player)->ActiveItem = nullptr;
-	}
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Attack over, blending out anim montage..."));
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 {
-	AnimInst->bIsMirrored = false;
-	if (Cast<AHumanCharacter>(Player))
+	if (AnimInst->bIsMirrored)
 	{
-		Cast<AHumanCharacter>(Player)->ActiveItem = nullptr;
+		AnimInst->bIsMirrored = false;
+		MirrorAbilityDamageComponentTags();
 	}
+	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
+	{
+		DamageDealingComponent->ResetDamageEffects();
+	}
+	Player->ActiveDamageDealingComponents.Empty();
+
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-}
-
-void USGGA_BasicAttackAbility::OnEventRecieved(FGameplayEventData Payload)
-{
-	if (Cast<AHumanCharacter>(Player) != nullptr && IsValid(Cast<AHumanCharacter>(Player)->ActiveItem))
-	{
-		Cast<AHumanCharacter>(Player)->ActiveItem->ServerLoseDurability(20.f);
-	}
-	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, GameplayEffectClass, 1, 1);
 }

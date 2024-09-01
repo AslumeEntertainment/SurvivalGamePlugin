@@ -6,22 +6,30 @@
 #include "Interactables/Items/ItemBase.h"
 #include "DamageDealingItem.generated.h"
 
+class UDamageDealingComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ADamageDealingItem : public AItemBase
 {
 	GENERATED_BODY()
 	
+public:
+
+	ADamageDealingItem();
+
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	float Damage;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UDamageDealingComponent* DamageDealingComponent;
+
+	UFUNCTION()
+	void CalculateDurabilityLost(UObject* HitObject);
 
 public:
 
 	virtual void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName) override;
 	virtual void OnItemUnequiped() override;
 
-	float GetItemDamage();
+	UDamageDealingComponent* GetDamageDealingComponent();
 
 };

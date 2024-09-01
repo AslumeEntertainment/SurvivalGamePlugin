@@ -5,6 +5,7 @@
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Characters/SG_Character.h"
+#include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -20,8 +21,9 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageRight, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageLeft, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Attack, COND_None, REPNOTIFY_Always);
+	/*DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageRight, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageLeft, COND_None, REPNOTIFY_Always);*/
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Hunger, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHunger, COND_None, REPNOTIFY_Always);
@@ -65,6 +67,24 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 		}
 
 		AttributeOwner->GetCharacterMovement()->MaxWalkSpeed = NewValue;
+	}
+
+	if (Attribute == GetAttackAttribute())
+	{
+		ASG_Character* AttributeOwner = Cast<ASG_Character>(GetOwningActor());
+		if (!IsValid(AttributeOwner))
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(AttributeOwner) == false"));
+			return;
+		}
+
+		TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;
+		AttributeOwner->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
+
+		for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
+		{
+			DamageDealingComponent->SetDefaultDamageValue(NewValue);
+		}
 	}
 }
 
@@ -166,15 +186,20 @@ void USG_AttributeSet::OnRep_HealthRegenerationRate(const FGameplayAttributeData
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, HealthRegenerationRate, OldHealthRegenerationRate);
 }
 
-void USG_AttributeSet::OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight)
+void USG_AttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageRight, OldDamageRight);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Attack, OldAttack);
 }
 
-void USG_AttributeSet::OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageLeft, OldDamageLeft);
-}
+//void USG_AttributeSet::OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight)
+//{
+//	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageRight, OldDamageRight);
+//}
+//
+//void USG_AttributeSet::OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft)
+//{
+//	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageLeft, OldDamageLeft);
+//}
 
 void USG_AttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldHunger)
 {

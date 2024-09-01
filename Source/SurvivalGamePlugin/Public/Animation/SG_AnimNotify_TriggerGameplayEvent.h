@@ -13,14 +13,14 @@ class SURVIVALGAMEPLUGIN_API USG_AnimNotify_TriggerGameplayEvent : public UAnimN
 {
 	GENERATED_BODY()
 
-protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = "GameplayTag")
-	FGameplayTag EventTag;
-
 public:
 
-	UFUNCTION(BlueprintCallable)
-	bool Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;
+	UPROPERTY(EditAnywhere, Category = "GameplayTag")
+	FGameplayTag EventTag;
+
+	/*UFUNCTION(BlueprintCallable)
+	bool Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;*/
+
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 };

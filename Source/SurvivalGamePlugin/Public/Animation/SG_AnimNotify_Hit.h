@@ -4,30 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "GameplayTagContainer.h"
 #include "SG_AnimNotify_Hit.generated.h"
 
-UENUM(BlueprintType)
-enum class EDamageSource : uint8
-{
-	None,
-	Hand,
-	Item,
-	Mouth
-};
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AnimNotify_Hit : public UAnimNotify
 {
 	GENERATED_BODY()
 
-protected:
-
-	UPROPERTY(EditDefaultsOnly)
-	EDamageSource DamageSource;
-
 public:
 
-	UFUNCTION(BlueprintCallable)
-	bool Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;
+	UPROPERTY(EditAnywhere)
+	FGameplayTag DamageDealingComponentTag;
+
+	UPROPERTY(EditAnywhere)
+	bool bShouldActivate = false;
+
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+
+	void MirrorNotifyDamageComponentTag();
 
 };
