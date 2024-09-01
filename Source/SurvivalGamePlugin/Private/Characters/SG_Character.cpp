@@ -7,7 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/PostProcessComponent.h"
+#include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
@@ -40,7 +40,6 @@ ASG_Character::ASG_Character()
 
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = BaseMaxWalkingSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -54,8 +53,11 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
 
-	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
-	PostProcessComponent->SetupAttachment(FirstPersonCamera);
+	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
+	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
+
+	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
+	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
 	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
@@ -181,66 +183,12 @@ void ASG_Character::FinishSprint()
 	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Sprint);
 }
 
-void ASG_Character::MultiplyMaxWalkingSpeed(float SpeedMultiplier)
+void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
 {
-	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
-}
-
-void ASG_Character::ResetWalkingSpeed()
-{
-	GetCharacterMovement()->MaxWalkSpeed = BaseMaxWalkingSpeed;
-}
-
-void ASG_Character::OnHitNotifyRecieved_Implementation(FVector DamageOrigin)
-{
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
+	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation IsValid(World) == false"));
-		return;
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
-	
-	TArray<AActor*> OutActors;
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this);
-	
-	UKismetSystemLibrary::DrawDebugSphere(World, DamageOrigin, 50.f, 12, FLinearColor::Green, 2.f, 1.f);
-
-	if (!UKismetSystemLibrary::SphereOverlapActors(World, DamageOrigin, 50.f, ObjectTypes, nullptr, ActorsToIgnore, OutActors))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHitNotifyRecieved_Implementation - Nothing was hit"));
-		return;
-	}
-	for (AActor* OutActor : OutActors)
-	{
-		IHittableInterface* HittableActor = Cast<IHittableInterface>(OutActor);
-		if (HittableActor == nullptr)
-		{
-			continue;
-		}
-		if (HittableActor->bCanBeHit() == false)
-		{
-			continue;
-		}
-		HittableActor->OnHit(this);
-	}
-}
-
-void ASG_Character::OnHit(ASG_Character* InstigatingPlayer)
-{
-	FGameplayEventData EventData;
-	EventData.Instigator = InstigatingPlayer;
-	EventData.Target = this;
-	EventData.TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(this);
-	
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Combat.Hit"));
-	if (!EventTag.IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnHit EventTag.IsValid() == false"));
-		return;
-	}
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(InstigatingPlayer, EventTag, EventData);
 }
 
 bool ASG_Character::bCanBeHit()
@@ -293,11 +241,6 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
-float ASG_Character::GetBaseDamage()
-{
-	return BaseDamage;
-}
-
 bool ASG_Character::IsAlive()
 {
 	return bIsAlive;
@@ -312,9 +255,6 @@ void ASG_Character::InitializeAttributes()
 {
 	if (AbilitySystemComponent && DefaultAttributeEffect)
 	{
-		AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), BaseDamage);
-		AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), BaseDamage);
-
 		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
 

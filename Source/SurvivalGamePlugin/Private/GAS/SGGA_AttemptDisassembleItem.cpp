@@ -59,7 +59,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		SpawnNewItems();
 	}
 
-	Player->MultiplyMaxWalkingSpeed(ItemForDisassemblyData->MovementSpeedMultiplier);
+	//Player->MultiplyMaxWalkingSpeed(ItemForDisassemblyData->MovementSpeedMultiplier);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut);
@@ -135,14 +135,14 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 
 void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
 {
-	Player->ResetWalkingSpeed();
+	//Player->ResetWalkingSpeed();
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 {
-	Player->ResetWalkingSpeed();
+	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly animation was unexpectedly canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

@@ -2,8 +2,16 @@
 
 
 #include "Characters/AnimalCharacter.h"
+#include "Components/DamageDealingComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+
+AAnimalCharacter::AAnimalCharacter()
+{
+	MouthDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("MouthDamageOrigin"));
+	MouthDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("head"));
+}
 
 void AAnimalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {

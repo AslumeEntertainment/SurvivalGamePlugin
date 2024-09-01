@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "GameplayEffectTypes.h"
 #include "HittableInterface.generated.h"
 
 class ASG_Character;
@@ -23,8 +24,10 @@ class SURVIVALGAMEPLUGIN_API IHittableInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-	virtual void OnHit(ASG_Character* InstigatingPlayer) = 0;
-
+	//virtual void OnHit(ASG_Character* InstigatingPlayer) = 0;
+	
+	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) = 0;
+	
 	virtual bool bCanBeHit() = 0;
 
 };

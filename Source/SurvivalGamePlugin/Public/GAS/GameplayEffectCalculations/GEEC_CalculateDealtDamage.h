@@ -14,7 +14,8 @@ class SURVIVALGAMEPLUGIN_API UGEEC_CalculateDealtDamage : public UGameplayEffect
 	
 public:
 
-	UGEEC_CalculateDealtDamage();
+	/*UGEEC_CalculateDealtDamage();
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
+	*/
 };

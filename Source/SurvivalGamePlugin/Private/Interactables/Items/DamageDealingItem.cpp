@@ -5,20 +5,37 @@
 #include "Characters/SG_Character.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AttributeSet.h"
+#include "Components/DamageDealingComponent.h"
 
+
+ADamageDealingItem::ADamageDealingItem()
+{
+    DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageOrigin"));
+    DamageDealingComponent->SetupAttachment(GetItemMesh());
+    DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
+}
+
+void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
+{
+    float DurabilityLost = 20;
+    //calculating...
+    ServerLoseDurability(DurabilityLost);
+}
 
 void ADamageDealingItem::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
     Super::OnItemEquiped(PlayerOwner, SocketName);
 
-    if (SocketName == FName("EquipmentSocket.Right"))
+    if (SocketName == PlayerOwner->GetLeftHandSocket())
     {
-        PlayerOwner->GetAbilitySystemComponent()->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), Damage);
+        DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
     }
-    else if (SocketName == FName("EquipmentSocket.Left"))
+    else if (SocketName == PlayerOwner->GetRightHandSocket())
     {
-        PlayerOwner->GetAbilitySystemComponent()->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), Damage);
+        DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
     }
+    DamageDealingComponent->AddActorToIgnored(this);
+    UE_LOG(LogTemp, Warning, TEXT("Item equiped, it now has the tag %s"), *(DamageDealingComponent->GetDamageComponentTag().ToString()));
 }
 
 void ADamageDealingItem::OnItemUnequiped()
@@ -30,20 +47,17 @@ void ADamageDealingItem::OnItemUnequiped()
         UE_LOG(LogTemp, Error, TEXT("ADamageDealingItem::OnItemUnequiped IsValid(PlayerOwner) == false"));
         return;
     }
-
-    if (SocketName == FName("EquipmentSocket.Right"))
-    {
-        PlayerOwner->GetAbilitySystemComponent()->SetNumericAttributeBase(USG_AttributeSet::GetDamageRightAttribute(), PlayerOwner->GetBaseDamage());
-    }
-    else if (GetAttachParentSocketName() == FName("EquipmentSocket.Left"))
-    {
-        PlayerOwner->GetAbilitySystemComponent()->SetNumericAttributeBase(USG_AttributeSet::GetDamageLeftAttribute(), PlayerOwner->GetBaseDamage());
-    }
-
+    
+    DamageDealingComponent->ResetDamageComponentTagSuffix();
+    UE_LOG(LogTemp, Warning, TEXT("Item unequiped, it now has the tag %s"), *(DamageDealingComponent->GetDamageComponentTag().ToString()));
+    
+    DamageDealingComponent->RemoveActorFromIgnored(this);
+    
     Super::OnItemUnequiped();
 }
 
-float ADamageDealingItem::GetItemDamage()
+UDamageDealingComponent* ADamageDealingItem::GetDamageDealingComponent()
 {
-    return Damage;
+    return DamageDealingComponent;
 }
+
