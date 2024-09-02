@@ -22,8 +22,6 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Attack, COND_None, REPNOTIFY_Always);
-	/*DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageRight, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, DamageLeft, COND_None, REPNOTIFY_Always);*/
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Hunger, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHunger, COND_None, REPNOTIFY_Always);
@@ -92,7 +90,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
 
@@ -126,7 +123,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			TargetCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 
-		TargetCharacter->NetMulticast_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
+		TargetCharacter->OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
 		if (GetHealth() == 0.f)
 		{
 			TargetCharacter->Die();
@@ -137,7 +134,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	{
 		if (GetHunger() <= GetMaxHunger() / 2)
 		{
-			TargetCharacter->NetMulticast_OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
+			TargetCharacter->OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
 		}
 		
 		if (HasMaxHunger())
@@ -152,7 +149,12 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetEnergyAttribute() && GetEnergy() < GetMaxEnergy() / 2)
 	{
-		TargetCharacter->NetMulticast_OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
+		TargetCharacter->OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
+	}
+
+	if (Data.EvaluatedData.Attribute == GetSpeedAttribute())
+	{
+		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = GetSpeed();
 	}
 }
 
@@ -190,16 +192,6 @@ void USG_AttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Attack, OldAttack);
 }
-
-//void USG_AttributeSet::OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight)
-//{
-//	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageRight, OldDamageRight);
-//}
-//
-//void USG_AttributeSet::OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft)
-//{
-//	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, DamageLeft, OldDamageLeft);
-//}
 
 void USG_AttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldHunger)
 {

@@ -7,6 +7,10 @@
 #include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GameplayEffectTypes.h"
+#include "GameplayEffect.h"
 
 
 void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -28,14 +32,9 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(AnimInst) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	if (!IsValid(Player->MainHandItem))
+	if (!IsValid(Player->MainHandItem) || !IsValid(Player->SecondaryHandItem))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->MainHandItem) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}
-	if (!IsValid(Player->SecondaryHandItem))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->SecondaryHandItem) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
@@ -51,7 +50,16 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	{
 		SpawnProductItem();
 	}
-	//Player->MultiplyMaxWalkingSpeed(ProductItemData->MovementSpeedMultiplier);
+	
+	FGameplayEffectContextHandle EffectContext = Player->GetAbilitySystemComponent()->MakeEffectContext();
+	EffectContext.AddSourceObject(Player);
+
+	FGameplayEffectSpecHandle SpecHandle = Player->GetAbilitySystemComponent()->MakeOutgoingSpec(SpeedReductionEffect, 1, EffectContext);
+	FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
+	Spec->SetDuration(ProductItemData->ProcessLength, true);
+
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, FGameplayTag::RequestGameplayTag(TEXT("GameplayEffectCaller.Speed"), true), ProductItemData->MovementSpeedMultiplier);
+	Player->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*Spec);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ProductItemData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
@@ -86,8 +94,7 @@ void USGGA_CraftItem::SpawnProductItem()
 		AnimInst->bIsMirrored = true;
 	}
 
-	AActor* NewItemActor = World->SpawnActor<AActor>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	ProductItem = Cast<AItemBase>(NewItemActor);
+	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(ProductItem))
 	{
 		ProductItem->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
@@ -98,7 +105,6 @@ void USGGA_CraftItem::SpawnProductItem()
 
 void USGGA_CraftItem::OnAnimMontageCompleted()
 {
-	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been completed"));
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -106,8 +112,8 @@ void USGGA_CraftItem::OnAnimMontageCompleted()
 
 void USGGA_CraftItem::OnAnimMontageCanceled()
 {
-	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been canceled"));
+	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

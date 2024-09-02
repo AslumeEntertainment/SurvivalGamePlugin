@@ -14,7 +14,24 @@ UDamageDealingComponent::UDamageDealingComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UDamageDealingComponent::AttemptHit_Implementation()
+void UDamageDealingComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	AddActorToIgnored(GetOwner());
+	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
+}
+
+void UDamageDealingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (GetOwner()->HasAuthority())
+	{
+		AttemptHit();
+	}
+}
+
+void UDamageDealingComponent::AttemptHit()
 {
 	UWorld* World = GetWorld();
 	if (!IsValid(World))
@@ -22,7 +39,7 @@ void UDamageDealingComponent::AttemptHit_Implementation()
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(World) == false"));
 		return;
 	}
-	
+
 	TArray<FHitResult> HitResults;
 
 	UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AttemptHit Number of actors to currently ignore = %d"), ActorsToIgnoreWhenActive.Num());
@@ -33,7 +50,7 @@ void UDamageDealingComponent::AttemptHit_Implementation()
 		return;
 	}
 
-	for (FHitResult HitResult : HitResults)
+	for (const FHitResult HitResult : HitResults)
 	{
 		if (ActorsToIgnoreWhenActive.Contains(HitResult.GetActor()))
 		{
@@ -50,80 +67,35 @@ void UDamageDealingComponent::AttemptHit_Implementation()
 		{
 			HittableActor->OnHit(GameplayEffectSpecHandles);
 			OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
-			AddActorToIgnored(HitResult.GetActor());
-			//ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
+			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 			continue;
 		}
 		if (HittableComponent != nullptr && HittableComponent->bCanBeHit() == true)
 		{
 			HittableComponent->OnHit(GameplayEffectSpecHandles);
 			OnHitLandedSuccessfully.Broadcast(HitResult.GetComponent());
-			RemoveActorFromIgnored(HitResult.GetActor());
-			//ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
+			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 			continue;
 		}
 	}
 }
 
-void UDamageDealingComponent::BeginPlay()
+void UDamageDealingComponent::SetActivation(bool NewState)
 {
-	Super::BeginPlay();
-	AddActorToIgnored(GetOwner());
-	//ActorsToIgnore.Add(GetOwner());
-	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
-}
-
-void UDamageDealingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	AttemptHit();
-}
-
-//void UDamageDealingComponent::OnHitRegistered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-//{
-//	if (ActorsToIgnore.Contains(OtherActor))
-//	{
-//		return;
-//	}
-//
-//	IHittableInterface* HittableActor = Cast<IHittableInterface>(OtherActor);
-//	IHittableInterface* HittableComponent = Cast<IHittableInterface>(OtherComp);
-//
-//	if (HittableActor == nullptr && HittableComponent == nullptr)
-//	{
-//		return;
-//	}
-//	if (HittableActor != nullptr && HittableActor->bCanBeHit() == true)
-//	{
-//		HittableActor->OnHit(GameplayEffectSpecHandles);
-//		OnHitLandedSuccessfully.Broadcast(OtherActor);
-//		return;
-//	}
-//	if (HittableComponent != nullptr && HittableComponent->bCanBeHit() == true)
-//	{
-//		HittableComponent->OnHit(GameplayEffectSpecHandles);
-//		OnHitLandedSuccessfully.Broadcast(OtherComp);
-//		return;
-//	}
-//}
-
-void UDamageDealingComponent::SetActivation_Implementation(bool NewState)
-{
+	if (GetOwner()->HasAuthority() == false)
+	{
+		return;
+	}
 	if (NewState)
 	{
 		ActorsToIgnoreWhenActive.Empty();
 		ActorsToIgnoreWhenActive = ActorsToIgnore;
-		//OnComponentBeginOverlap.AddDynamic(this, &UDamageDealingComponent::OnHitRegistered);
 	}
-	else
-	{
-		//OnComponentBeginOverlap.Clear();
-	}
+
 	SetComponentTickEnabled(NewState);
 }
 
-void UDamageDealingComponent::AddActorToIgnored_Implementation(AActor* ActorToIgnore)
+void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 {
 	if (ActorsToIgnore.Contains(ActorToIgnore) == true)
 	{
@@ -133,7 +105,7 @@ void UDamageDealingComponent::AddActorToIgnored_Implementation(AActor* ActorToIg
 	ActorsToIgnore.Add(ActorToIgnore);
 }
 
-void UDamageDealingComponent::RemoveActorFromIgnored_Implementation(AActor* ActorToUnignore)
+void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 {
 	if (ActorsToIgnore.Contains(ActorToUnignore) == false)
 	{

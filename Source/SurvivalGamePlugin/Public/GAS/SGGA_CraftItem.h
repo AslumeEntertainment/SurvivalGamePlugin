@@ -11,7 +11,6 @@
 
 class AHumanCharacter;
 class USG_AnimInstance;
-//class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
@@ -26,6 +25,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
 
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;

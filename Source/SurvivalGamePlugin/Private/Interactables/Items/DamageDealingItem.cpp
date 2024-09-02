@@ -34,7 +34,7 @@ void ADamageDealingItem::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketN
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
     }
-    DamageDealingComponent->AddActorToIgnored(this);
+    DamageDealingComponent->AddActorToIgnored(PlayerOwner);
     UE_LOG(LogTemp, Warning, TEXT("Item equiped, it now has the tag %s"), *(DamageDealingComponent->GetDamageComponentTag().ToString()));
 }
 
@@ -51,7 +51,7 @@ void ADamageDealingItem::OnItemUnequiped()
     DamageDealingComponent->ResetDamageComponentTagSuffix();
     UE_LOG(LogTemp, Warning, TEXT("Item unequiped, it now has the tag %s"), *(DamageDealingComponent->GetDamageComponentTag().ToString()));
     
-    DamageDealingComponent->RemoveActorFromIgnored(this);
+    DamageDealingComponent->RemoveActorFromIgnored(PlayerOwner);
     
     Super::OnItemUnequiped();
 }

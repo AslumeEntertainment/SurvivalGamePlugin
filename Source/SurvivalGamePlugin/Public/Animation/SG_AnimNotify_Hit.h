@@ -23,6 +23,6 @@ public:
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
-	void MirrorNotifyDamageComponentTag();
+	FGameplayTag GetMirroredNotifyDamageComponentTag();
 
 };

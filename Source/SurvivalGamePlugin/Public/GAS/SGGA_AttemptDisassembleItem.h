@@ -6,6 +6,10 @@
 #include "GAS/SG_GameplayAbility.h"
 #include "SGGA_AttemptDisassembleItem.generated.h"
 
+class AHumanCharacter;
+class AItemBase;
+class USG_AnimInstance;
+class UGameplayEffect;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_AttemptDisassembleItem : public USG_GameplayAbility
@@ -21,9 +25,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* DisassemlyInfoTable;
 
-	UPROPERTY()
-	class AHumanCharacter* Player;
-	class USG_AnimInstance* AnimInst;
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
+	AHumanCharacter* Player;
+	USG_AnimInstance* AnimInst;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 	AItemBase** ItemForDisassembly = nullptr;

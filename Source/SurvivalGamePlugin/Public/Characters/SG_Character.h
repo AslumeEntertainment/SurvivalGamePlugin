@@ -88,7 +88,6 @@ protected:
 	USG_AttributeSet* AttributeSet;
 
 	void Move(const FInputActionValue& Value);
-
 	void Look(const FInputActionValue& Value);
 
 	void StartSprint();
@@ -105,7 +104,6 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetRepControlRotation(FRotator InControlRotation);
-
 
 public:
 
@@ -128,20 +126,17 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 
-	/*UFUNCTION(BlueprintCallable, Server, Reliable)
-	void OnHitNotifyRecieved(FVector DamageOrigin);*/
-
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 	virtual bool bCanBeHit() override;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void NetMulticast_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+	void OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void NetMulticast_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
+	void OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void NetMulticast_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
 	//that must go in InGameCharacter
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
