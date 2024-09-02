@@ -6,6 +6,9 @@
 #include "GAS/SG_GameplayAbility.h"
 #include "SGGA_BasicRestoringAbility.generated.h"
 
+class ASG_Character;
+class ARegeneratingItem;
+class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_BasicRestoringAbility : public USG_GameplayAbility
@@ -33,9 +36,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	float EffectPeriod;
 
-	class ASG_Character* Player;
-	class ARegeneratingItem* RegeneratingItem;
-	class USG_AnimInstance* AnimInst;
+	ASG_Character* Player;
+	ARegeneratingItem* RegeneratingItem;
+	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();

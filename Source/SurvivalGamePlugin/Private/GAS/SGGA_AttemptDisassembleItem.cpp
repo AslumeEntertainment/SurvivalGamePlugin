@@ -7,6 +7,11 @@
 #include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GameplayEffectTypes.h"
+#include "GameplayEffect.h"
+
 
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -15,7 +20,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = CastChecked<AHumanCharacter>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
@@ -59,7 +64,15 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		SpawnNewItems();
 	}
 
-	//Player->MultiplyMaxWalkingSpeed(ItemForDisassemblyData->MovementSpeedMultiplier);
+	FGameplayEffectContextHandle EffectContext = Player->GetAbilitySystemComponent()->MakeEffectContext();
+	EffectContext.AddSourceObject(Player);
+
+	FGameplayEffectSpecHandle SpecHandle = Player->GetAbilitySystemComponent()->MakeOutgoingSpec(SpeedReductionEffect, 1, EffectContext);
+	FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
+	Spec->SetDuration(ItemForDisassemblyData->ProcessLength, true);
+
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, FGameplayTag::RequestGameplayTag(TEXT("GameplayEffectCaller.Speed"), true), ItemForDisassemblyData->MovementSpeedMultiplier);
+	Player->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*Spec);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut);
@@ -89,19 +102,23 @@ bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDis
 	switch (ItemData->DisassembleRequirement)
 	{
 		case EItemDisassembleRequirement::Unable:
+		{
 			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
 			return false;
-
+		}
 		case EItemDisassembleRequirement::Always:
+		{
 			break;
-
+		}
 		case EItemDisassembleRequirement::EmptyHand:
+		{
 			if (IsValid(OtherEquipedItem))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
 				return false;
 			}
 			break;
+		}
 	}
 
 	ItemForDisassemblyData = ItemData;
@@ -117,16 +134,14 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	AActor* MainItem = World->SpawnActor<AActor>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(Cast<AItemBase>(MainItem)))
+	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(MainItemActor))
 	{
-		MainItemActor = Cast<AItemBase>(MainItem);
 		MainItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
 	}
-	AActor* IngredientItem = World->SpawnActor<AActor>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(Cast<AItemBase>(IngredientItem)))
+	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(IngredientItemActor))
 	{
-		IngredientItemActor = Cast<AItemBase>(IngredientItem);
 		IngredientItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
 	}
 
@@ -135,14 +150,12 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 
 void USGGA_AttemptDisassembleItem::OnAnimMontageBlendOut()
 {
-	//Player->ResetWalkingSpeed();
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 {
-	//Player->ResetWalkingSpeed();
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly animation was unexpectedly canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
@@ -158,7 +171,6 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payl
 		MainItemActor->SetActorScale3D(FVector(1, 1, 1));
 		(*ItemForDisassembly) = MainItemActor;
 	}
-
 	if (!IsValid(*OtherItem) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->OnItemEquiped(Player, IngredientItemSocket);

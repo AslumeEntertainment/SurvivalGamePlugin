@@ -85,7 +85,6 @@ void ASG_Character::BeginPlay()
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -196,17 +195,17 @@ bool ASG_Character::bCanBeHit()
 	return IsAlive();
 }
 
-void ASG_Character::NetMulticast_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
+void ASG_Character::OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
 {
 	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
 }
 
-void ASG_Character::NetMulticast_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
+void ASG_Character::OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
 {
 	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
 }
 
-void ASG_Character::NetMulticast_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
+void ASG_Character::OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }

@@ -15,10 +15,6 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(Player) == false"));
 		return;
 	}
-	if (!Player->IsLocallyControlled())
-	{
-		return;
-	}
 	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(MeshComp->GetAnimInstance());
 	if (!IsValid(AnimInst))
 	{
@@ -26,23 +22,24 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		return;
 	}
 
+	FGameplayTag FinalDamageDealingComponentTag = DamageDealingComponentTag;
 	if (AnimInst->bIsMirrored)
 	{
-		MirrorNotifyDamageComponentTag();
+		FinalDamageDealingComponentTag = GetMirroredNotifyDamageComponentTag();
 	}
 
 	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
 	{
-		if (DamageDealingComponentTag == DamageDealingComponent->GetDamageComponentTag())
+		if (FinalDamageDealingComponentTag == DamageDealingComponent->GetDamageComponentTag())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Activating/Deactivating DamageDealingComponent with tag %s"), *FinalDamageDealingComponentTag.ToString());
 			DamageDealingComponent->SetActivation(bShouldActivate);
 		}
 	}
 }
 
-void USG_AnimNotify_Hit::MirrorNotifyDamageComponentTag()
+FGameplayTag USG_AnimNotify_Hit::GetMirroredNotifyDamageComponentTag()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Before mirror: AnimNotify GameplayTag - %s"), *DamageDealingComponentTag.ToString());
 	FString TagName = DamageDealingComponentTag.RequestDirectParent().ToString();
 	if (DamageDealingComponentTag.ToString().Contains(".Left"))
 	{
@@ -52,6 +49,5 @@ void USG_AnimNotify_Hit::MirrorNotifyDamageComponentTag()
 	{
 		TagName = TagName + TEXT(".Left");
 	}
-	DamageDealingComponentTag = DamageDealingComponentTag.RequestGameplayTag(FName(TagName), true);
-	UE_LOG(LogTemp, Warning, TEXT("After mirror: AnimNotify GameplayTag - %s"), *DamageDealingComponentTag.ToString());
+	return FGameplayTag::RequestGameplayTag(FName(TagName), true);
 }

@@ -43,14 +43,6 @@ public:
 	FGameplayAttributeData Attack;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Attack);
 
-	/*UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_DamageRight)
-	FGameplayAttributeData DamageRight;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, DamageRight);
-
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_DamageLeft)
-	FGameplayAttributeData DamageLeft;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, DamageLeft);*/
-
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Hunger)
 	FGameplayAttributeData Hunger;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Hunger);
@@ -100,12 +92,6 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Attack(const FGameplayAttributeData& OldAttack);
-
-	/*UFUNCTION()
-	virtual void OnRep_DamageRight(const FGameplayAttributeData& OldDamageRight);
-
-	UFUNCTION()
-	virtual void OnRep_DamageLeft(const FGameplayAttributeData& OldDamageLeft);*/
 
 	UFUNCTION()
 	virtual void OnRep_Hunger(const FGameplayAttributeData& OldHunger);

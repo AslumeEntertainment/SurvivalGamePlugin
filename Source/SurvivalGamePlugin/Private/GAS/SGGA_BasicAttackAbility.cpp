@@ -35,7 +35,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	if (bCanBeMirrored && TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
 		AnimInst->bIsMirrored = true;
-		MirrorAbilityDamageComponentTags();
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
@@ -72,9 +71,15 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		}
 	}
 	
+	FGameplayTagContainer FinalActiveDamageComponentTags = ActiveDamageComponentTags;
+	if (AnimInst->bIsMirrored)
+	{
+		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
+	}
+
 	for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
 	{
-		if (ActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
+		if (FinalActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
 		{
 			Player->ActiveDamageDealingComponents.Add(DamageDealingComponent);
 			for (const FDamageGameplayEffect DamageEffect : AdditionalDamageEffects)
@@ -91,12 +96,9 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	PlayMontageTask->ReadyForActivation();
 }
 
-void USGGA_BasicAttackAbility::MirrorAbilityDamageComponentTags()
+FGameplayTagContainer USGGA_BasicAttackAbility::GetMirroredAbilityDamageComponentTags()
 {
-	if (!HasAuthority(&CurrentActivationInfo))
-	{
-		return;
-	}
+	FGameplayTagContainer MirroredTags;
 	for (FGameplayTag DamageComponentTag : ActiveDamageComponentTags)
 	{
 		FString TagName = DamageComponentTag.ToString();
@@ -110,9 +112,11 @@ void USGGA_BasicAttackAbility::MirrorAbilityDamageComponentTags()
 			TagName = DamageComponentTag.RequestDirectParent().ToString();
 			TagName = TagName + TEXT(".Left");
 		}
-		DamageComponentTag = DamageComponentTag.RequestGameplayTag(FName(TagName), true);
-		UE_LOG(LogTemp, Warning, TEXT("New Ability GameplayTag - %s"), *DamageComponentTag.ToString());
+		MirroredTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TagName), true));
+		UE_LOG(LogTemp, Warning, TEXT("New Ability GameplayTag - %s"), *TagName);
 	}
+
+	return MirroredTags;
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
@@ -120,7 +124,6 @@ void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 	if (AnimInst->bIsMirrored)
 	{
 		AnimInst->bIsMirrored = false;
-		MirrorAbilityDamageComponentTags();
 	}
 	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
 	{
@@ -142,7 +145,6 @@ void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 	if (AnimInst->bIsMirrored)
 	{
 		AnimInst->bIsMirrored = false;
-		MirrorAbilityDamageComponentTags();
 	}
 	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
 	{

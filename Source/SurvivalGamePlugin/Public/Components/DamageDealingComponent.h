@@ -23,9 +23,14 @@ public:
 
 	UDamageDealingComponent();
 
+protected:
+
+	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 private:
 
-	UFUNCTION(Server, Reliable)
 	void AttemptHit();
 
 protected:
@@ -49,22 +54,16 @@ protected:
 
 	FGameplayEffectSpecHandle DefaultGameplayEffectSpecHandle;
 	TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles;
-
-	virtual void BeginPlay() override;
-
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	/*UFUNCTION()
-	void OnHitRegistered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);*/
-
+	
 public:
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void SetActivation(bool NewState);
 	
-	UFUNCTION(BlueprintCallable, Server, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void AddActorToIgnored(AActor* ActorToIgnore);
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
+	UFUNCTION(BlueprintCallable)
 	void RemoveActorFromIgnored(AActor* ActorToUnignore);
 
 	void SetDefaultDamageValue(float NewValue);
