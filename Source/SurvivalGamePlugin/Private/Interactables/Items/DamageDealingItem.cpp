@@ -4,7 +4,6 @@
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Characters/SG_Character.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AttributeSet.h"
 #include "Components/DamageDealingComponent.h"
 
 

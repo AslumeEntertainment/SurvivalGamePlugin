@@ -3,17 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/SG_GameplayAbility.h"
-
-#include "Headers/ItemDataStruct.h"
-
-#include "SGGA_CraftItem.generated.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
+#include "SGGA_AttemptDisassembleItem.generated.h"
 
 class AHumanCharacter;
+class AItemBase;
 class USG_AnimInstance;
+class UGameplayEffect;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
+class SURVIVALGAMEPLUGIN_API USGGA_AttemptDisassembleItem : public USG_GameplayAbility
 {
 	GENERATED_BODY()
 
@@ -24,7 +23,7 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
-	UDataTable* CraftingInfoTable;
+	UDataTable* DisassemlyInfoTable;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
@@ -32,21 +31,27 @@ protected:
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;
 
-	AItemBase* ProductItem;
-	FName ProductItemSocketName;
+	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
+	AItemBase** ItemForDisassembly = nullptr;
+	AItemBase** OtherItem = nullptr;
 
-	FCraftingProcessDataStruct* ProductItemData = nullptr;
+	FName MainItemSocket;
+	FName IngredientItemSocket;
+
+	AItemBase* MainItemActor;
+	AItemBase* IngredientItemActor;
+
+	bool bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem);
 
 	UFUNCTION()
-	void SpawnProductItem();
+	void SpawnNewItems();
 
 	UFUNCTION()
-	void OnAnimMontageCompleted();
+	void OnAnimMontageBlendOut();
 
 	UFUNCTION()
 	void OnAnimMontageCanceled();
 
 	UFUNCTION()
-	void OnCraftingFinished(FGameplayEventData Payload);
-
+	void OnDisassemblyFinished(FGameplayEventData Payload);
 };

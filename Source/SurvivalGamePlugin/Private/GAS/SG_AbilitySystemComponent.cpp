@@ -2,7 +2,7 @@
 
 
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AttributeSet.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 
 void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 {

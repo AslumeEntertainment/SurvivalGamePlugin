@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/SG_GameplayAbility.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
 #include "SGGA_Sprint.generated.h"
 
 

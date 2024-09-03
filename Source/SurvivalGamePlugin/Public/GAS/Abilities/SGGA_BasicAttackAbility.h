@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/SG_GameplayAbility.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
 #include "Headers/DamageGameplayEffectStruct.h"
 #include "SGGA_BasicAttackAbility.generated.h"
 

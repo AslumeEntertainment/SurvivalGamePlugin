@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/SGGA_CraftItem.h"
+#include "GAS/Abilities/SGGA_CraftItem.h"
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/ItemBase.h"
 #include "Animation/SG_AnimInstance.h"
