@@ -18,8 +18,9 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AttributeSet.h"
-#include "GAS/SG_GameplayAbility.h"
+#include "GAS/SG_GameplayEffectContext.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -186,6 +187,11 @@ void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHa
 {
 	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
+		FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(SpecHandle.Data.Get()->GetContext().Get());
+		if (Context->GetDamageType() == ESG_DamageType::Slash)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GET SLASHED BITCH"));
+		}
 		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }

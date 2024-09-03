@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/SGGA_BasicRestoringAbility.h"
+#include "GAS/Abilities/SGGA_BasicRestoringAbility.h"
 #include "Characters/SG_Character.h"
 #include "Interactables/Items/RegeneratingItem.h"
-#include "Headers/SG_GameplayAbilityTargetData.h"
-#include "Animation/SG_AnimInstance.h"
+#include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"

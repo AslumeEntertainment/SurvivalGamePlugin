@@ -8,8 +8,8 @@
 #include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_GameplayAbility.h"
-#include "Headers/SG_GameplayAbilityTargetData.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
+#include "GAS/SG_GameplayAbilityTargetData.h"
 
 // Sets default values
 AItemBase::AItemBase()

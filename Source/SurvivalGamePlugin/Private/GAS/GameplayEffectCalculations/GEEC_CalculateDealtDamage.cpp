@@ -2,7 +2,7 @@
 
 
 #include "GAS/GameplayEffectCalculations/GEEC_CalculateDealtDamage.h"
-#include "GAS/SG_AttributeSet.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "Characters/HumanCharacter.h"
 #include "Characters/AnimalCharacter.h"
 #include "Animation/SG_AnimInstance.h"

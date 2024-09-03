@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/SG_AttributeSet.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Characters/SG_Character.h"
@@ -92,14 +92,21 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
+	
+	if (!IsValid(&(Data.Target))) 
+	{
+		return;
+	}
+	
+	UAbilitySystemComponent* Target = &(Data.Target);
 
 	ASG_Character* TargetCharacter;
-	if (Data.Target.AbilityActorInfo.IsValid() == false)
+	if (Target->AbilityActorInfo.IsValid() == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute Data.Target.AbilityActorInfo.IsValid() == false"));
 		return;
 	}
-	if (Data.Target.AbilityActorInfo->AvatarActor.IsValid() == false)
+	if (Target->AbilityActorInfo->AvatarActor.IsValid() == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute Data.Target.AbilityActorInfo->AvatarActor.IsValid() == false"));
 		return;

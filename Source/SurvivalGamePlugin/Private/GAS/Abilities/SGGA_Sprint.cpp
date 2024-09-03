@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/SGGA_Sprint.h"
+#include "GAS/Abilities/SGGA_Sprint.h"
 #include "Characters/SG_Character.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AttributeSet.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 
 

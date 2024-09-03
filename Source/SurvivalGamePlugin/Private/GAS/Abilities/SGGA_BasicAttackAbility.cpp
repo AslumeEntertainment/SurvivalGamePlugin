@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAS/SGGA_BasicAttackAbility.h"
+#include "GAS/Abilities/SGGA_BasicAttackAbility.h"
 #include "Characters/HumanCharacter.h"
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Headers/SG_GameplayAbilityTargetData.h"
 #include "Animation/SG_AnimInstance.h"
+#include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"

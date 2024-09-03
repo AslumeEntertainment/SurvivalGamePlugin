@@ -5,8 +5,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Interfaces/HittableInterface.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemGlobals.h"
+#include "GAS/SG_GameplayEffectContext.h"
+#include "GAS/SG_AbilitySystemGlobals.h"
 #include "GameplayEffect.h"
+
 
 UDamageDealingComponent::UDamageDealingComponent()
 {
@@ -170,13 +172,15 @@ FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FD
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(NewGameplayEffect.DamageEffectClass) == false"));
 		return FGameplayEffectSpecHandle();
 	}
-	FGameplayEffectContextHandle EffectContext = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	EffectContext.AddSourceObject(this);
+	FGameplayEffectContextHandle EffectContextHandle = FGameplayEffectContextHandle(USG_AbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
+	Context->SetDamageType(NewGameplayEffect.DamageType);
+	EffectContextHandle.AddSourceObject(this);
 
 	FGameplayEffectSpecHandle EffectSpecHandle = UAbilitySystemBlueprintLibrary::MakeSpecHandle(NewGameplayEffect.DamageEffectClass.GetDefaultObject(), GetOwner(), GetOwner());
 	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
 
-	EffectSpec->SetContext(EffectContext);
+	EffectSpec->SetContext(EffectContextHandle);
 	EffectSpec->SetDuration(NewGameplayEffect.DamageEffectDuration, false);
 	EffectSpec->Period = NewGameplayEffect.DamageEffectPeriod;
 	EffectSpec->SetSetByCallerMagnitude(NewGameplayEffect.SetByCallerMagnitudeDataTag, -NewGameplayEffect.DamageValue);

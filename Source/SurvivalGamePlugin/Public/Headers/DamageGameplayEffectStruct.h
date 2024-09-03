@@ -7,6 +7,15 @@
 #include "DamageGameplayEffectStruct.generated.h"
 
 
+UENUM(BlueprintType)
+enum class ESG_DamageType : uint8
+{
+	None,
+    Slash,
+    Pierce
+};
+
+
 USTRUCT(BlueprintType)
 struct FDamageGameplayEffect
 {
@@ -15,6 +24,7 @@ struct FDamageGameplayEffect
 	FDamageGameplayEffect()
 	{
 		DamageEffectClass = nullptr;
+		DamageType = ESG_DamageType::None;
 		DamageValue = 0.f;
 		DamageEffectDuration = 0.f;
 		DamageEffectPeriod = 0.f;
@@ -25,6 +35,9 @@ struct FDamageGameplayEffect
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FGameplayTag SetByCallerMagnitudeDataTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ESG_DamageType DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DamageValue;
