@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
+#include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayTagContainer.h"
 #include "SG_AnimNotify_TriggerGameplayEvent.generated.h"
 
@@ -17,9 +18,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "GameplayTag")
 	FGameplayTag EventTag;
-
-	/*UFUNCTION(BlueprintCallable)
-	bool Receive_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;*/
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 

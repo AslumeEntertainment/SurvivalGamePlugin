@@ -14,8 +14,9 @@ void USG_AnimNotify_TriggerGameplayEvent::Notify(USkeletalMeshComponent* MeshCom
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_TriggerGameplayEvent::Received_Notify IsValid(Player) == false"));
 		return;
 	}
-
+	
+	UE_LOG(LogTemp, Warning, TEXT("USG_AnimNotify_TriggerGameplayEvent::Notify Sending GameplayEvent to Actor"));
 	FGameplayEventData EventData;
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Player, EventTag, EventData);
-	return;
 }
+

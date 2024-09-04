@@ -299,7 +299,7 @@ FGameplayAbilitySpecHandle ASG_Character::AddAbility(TSubclassOf<class USG_Gamep
 	}
 
 	FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, static_cast<int32>(AbilityClass.GetDefaultObject()->AbilityInputID), this));
-	UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability given!"));
+	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability given!"));
 	return AbilitySpecHandle;
 }
 
@@ -311,7 +311,7 @@ void ASG_Character::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecH
 	}
 
 	AbilitySystemComponent->ClearAbility(RemovedAbilitySpecHandle);
-	UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability Removed!"));
+	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability Removed!"));
 }
 
 void ASG_Character::PossessedBy(AController* NewController)

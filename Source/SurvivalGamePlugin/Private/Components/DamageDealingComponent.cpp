@@ -101,7 +101,7 @@ void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 {
 	if (ActorsToIgnore.Contains(ActorToIgnore) == true)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddActorToIgnored_Implementation Actor is already being ignored!"));
+		//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddActorToIgnored_Implementation Actor is already being ignored!"));
 		return;
 	}
 	ActorsToIgnore.Add(ActorToIgnore);
@@ -111,7 +111,7 @@ void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 {
 	if (ActorsToIgnore.Contains(ActorToUnignore) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::RemoveActorFromIgnored_Implementation Actor is not being ignored!"));
+		//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::RemoveActorFromIgnored_Implementation Actor is not being ignored!"));
 		return;
 	}
 	ActorsToIgnore.Remove(ActorToUnignore);
