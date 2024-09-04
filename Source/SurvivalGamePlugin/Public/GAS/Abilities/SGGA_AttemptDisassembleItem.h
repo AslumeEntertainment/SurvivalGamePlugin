@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Headers/ItemDataStruct.h"
 #include "SGGA_AttemptDisassembleItem.generated.h"
 
 class AHumanCharacter;
@@ -25,9 +26,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* DisassemlyInfoTable;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
-	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
-
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;
 
@@ -35,11 +33,15 @@ protected:
 	AItemBase** ItemForDisassembly = nullptr;
 	AItemBase** OtherItem = nullptr;
 
-	FName MainItemSocket;
-	FName IngredientItemSocket;
-
+	UPROPERTY(Replicated)
 	AItemBase* MainItemActor;
+	UPROPERTY(Replicated)
 	AItemBase* IngredientItemActor;
+
+	UPROPERTY(Replicated)
+	FName MainItemSocket;
+	UPROPERTY(Replicated)
+	FName IngredientItemSocket;
 
 	bool bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem);
 
@@ -47,11 +49,11 @@ protected:
 	void SpawnNewItems();
 
 	UFUNCTION()
-	void OnAnimMontageBlendOut();
+	void OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
 
 	UFUNCTION()
-	void OnAnimMontageCanceled();
+	void OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
 
 	UFUNCTION()
-	void OnDisassemblyFinished(FGameplayEventData Payload);
+	void OnDisassemblyFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload);
 };

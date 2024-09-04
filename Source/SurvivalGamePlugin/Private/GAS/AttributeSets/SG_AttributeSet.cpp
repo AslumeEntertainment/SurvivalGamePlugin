@@ -92,12 +92,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
-	
-	if (!IsValid(&(Data.Target))) 
-	{
-		return;
-	}
-	
 	UAbilitySystemComponent* Target = &(Data.Target);
 
 	ASG_Character* TargetCharacter;
@@ -162,6 +156,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	if (Data.EvaluatedData.Attribute == GetSpeedAttribute())
 	{
 		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = GetSpeed();
+		UE_LOG(LogTemp, Warning, TEXT("Changing speed..."));
 	}
 }
 

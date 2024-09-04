@@ -24,13 +24,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
-	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
-
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;
 
+	UPROPERTY(Replicated)
 	AItemBase* ProductItem;
+	UPROPERTY(Replicated)
 	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;
@@ -39,12 +38,12 @@ protected:
 	void SpawnProductItem();
 
 	UFUNCTION()
-	void OnAnimMontageCompleted();
+	void OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
 
 	UFUNCTION()
-	void OnAnimMontageCanceled();
+	void OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
 
 	UFUNCTION()
-	void OnCraftingFinished(FGameplayEventData Payload);
+	void OnCraftingFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload);
 
 };
