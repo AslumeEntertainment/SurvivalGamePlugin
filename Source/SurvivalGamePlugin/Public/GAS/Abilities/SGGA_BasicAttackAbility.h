@@ -38,6 +38,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TArray<FDamageGameplayEffect> AdditionalDamageEffects;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;
+
 	ASG_Character* Player;
 	USG_AnimInstance* AnimInst;
 

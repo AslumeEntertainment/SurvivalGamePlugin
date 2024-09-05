@@ -1,0 +1,75 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "GAS/GameplayEffectCalculations/GEEC_CalculateFireDamage.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_GameplayEffectContext.h"
+#include "GAS/SG_AbilitySystemGlobals.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Characters/HumanCharacter.h"
+#include "Characters/AnimalCharacter.h"
+#include "Animation/SG_AnimInstance.h"
+
+
+struct FSG_DamageStatics
+{
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
+
+	FSG_DamageStatics()
+	{
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, Health, Target, false);
+	}
+};
+
+static const FSG_DamageStatics& DamageStatics()
+{
+	static FSG_DamageStatics DStatics;
+	return DStatics;
+}
+
+UGEEC_CalculateFireDamage::UGEEC_CalculateFireDamage()
+{
+	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
+}
+
+void UGEEC_CalculateFireDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	UAbilitySystemComponent* TargetAbilitySystemComponent = ExecutionParams.GetTargetAbilitySystemComponent();
+	AActor* TargetActor = TargetAbilitySystemComponent ? TargetAbilitySystemComponent->GetAvatarActor() : nullptr;
+	ASG_Character* TargetCharacter = Cast<ASG_Character>(TargetActor);
+
+	FAggregatorEvaluateParameters EvaluationParameters;
+
+	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
+	
+	float BaseDamage = Spec.GetSetByCallerMagnitude(SetByCallerMagnitudeDataTag, false, -1.0f);
+
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, BaseDamage));
+
+	if (false)
+	{
+		return;
+	}
+
+	if (!IsValid(DefaultBurningEffect.DamageEffectClass))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateFireDamage::Execute_Implementation IsValid(NewGameplayEffect.DamageEffectClass) == false"));
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContextHandle = FGameplayEffectContextHandle(USG_AbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
+	Context->SetDamageType(DefaultBurningEffect.DamageType);
+	EffectContextHandle.AddSourceObject(this);
+
+	FGameplayEffectSpecHandle BurningSpecHandle = UAbilitySystemBlueprintLibrary::MakeSpecHandle(DefaultBurningEffect.DamageEffectClass.GetDefaultObject(), nullptr, nullptr);
+	FGameplayEffectSpec* BurningSpec = BurningSpecHandle.Data.Get();
+
+	BurningSpec->SetContext(EffectContextHandle);
+	BurningSpec->SetSetByCallerMagnitude(SetByCallerMagnitudeEffectDurationTag, DefaultBurningEffect.DamageEffectDuration);
+	BurningSpec->Period = DefaultBurningEffect.DamageEffectPeriod;
+	BurningSpec->SetSetByCallerMagnitude(DefaultBurningEffect.SetByCallerMagnitudeDataTag, -DefaultBurningEffect.DamageValue);
+
+	TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*BurningSpec);
+
+}

@@ -68,7 +68,7 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 
 	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, OnNotifyRecievedGameplayEventTag, nullptr, true, true);
 	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_BasicRestoringAbility::OnEventRecieved);
-	WaitGameplayEventTask->Activate();
+	WaitGameplayEventTask->ReadyForActivation();
 }
 
 void USGGA_BasicRestoringAbility::OnAnimMontageCompleted()
