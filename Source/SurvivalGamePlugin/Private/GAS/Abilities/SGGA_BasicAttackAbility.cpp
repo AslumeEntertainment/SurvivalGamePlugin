@@ -78,12 +78,37 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
 	}
 
+	TArray<FDamageGameplayEffect> InstigatedEffects;
+	TArray<FGameplayEffectSpec> ActiveGameplayEffectSpecs;
+	Player->GetAbilitySystemComponent()->GetAllActiveGameplayEffectSpecs(ActiveGameplayEffectSpecs);
+
+	for (FGameplayEffectSpec ActiveSpec : ActiveGameplayEffectSpecs)
+	{
+		TSubclassOf<UGameplayEffect>* GameEffectPtr = DamagingEffectPerPlayerEffectTable.Find(ActiveSpec.Def.GetClass());
+		if (GameEffectPtr == nullptr)
+		{
+			continue;
+		}
+
+		FDamageGameplayEffect InstigatedEffect;
+		InstigatedEffect.DamageEffectClass = *GameEffectPtr;
+		InstigatedEffect.SetByCallerMagnitudeDataTag = FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage");
+		InstigatedEffect.DamageValue = -ActiveSpec.GetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage"), false);
+
+		InstigatedEffects.Add(InstigatedEffect);
+	}
+
+	/* Config Gameplay effects that are to be used by the active damage dealing components */
 	for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
 	{
 		if (FinalActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
 		{
 			Player->ActiveDamageDealingComponents.Add(DamageDealingComponent);
 			for (const FDamageGameplayEffect DamageEffect : AdditionalDamageEffects)
+			{
+				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
+			}
+			for (const FDamageGameplayEffect DamageEffect : InstigatedEffects)
 			{
 				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
 			}
