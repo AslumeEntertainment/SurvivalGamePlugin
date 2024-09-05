@@ -20,6 +20,7 @@ class SURVIVALGAMEPLUGIN_API USGGA_AttemptDisassembleItem : public USG_GameplayA
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
 protected:
 
@@ -28,6 +29,7 @@ protected:
 
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;
+	float OldSpeed;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 	AItemBase** ItemForDisassembly = nullptr;

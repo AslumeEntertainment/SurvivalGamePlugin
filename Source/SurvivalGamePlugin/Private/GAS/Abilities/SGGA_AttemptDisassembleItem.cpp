@@ -7,7 +7,6 @@
 #include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-//#include "GAS/AbilityTasks/SGAT_PlayMontageAndWaitForEvent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -38,6 +37,9 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
+
+	OldSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute());
+
 	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
 	if (!IsValid(AnimInst))
 	{
@@ -76,17 +78,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		SpawnNewItems();
 	}
 
-	float NewSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) * ItemForDisassemblyData->MovementSpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), NewSpeed);
-
-	/*FGameplayTagContainer EventTagContainer = FGameplayTagContainer();
-	EventTagContainer.AddTag(FGameplayTag::RequestGameplayTag("Notify.FinishDisassembly"));
-
-	USGAT_PlayMontageAndWaitForEvent* Task = USGAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, NAME_None, ItemForDisassemblyData->Animation, EventTagContainer, 1.0f, NAME_None, false, 1.0f);
-	Task->OnCompleted.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCompleted);
-	Task->OnCancelled.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCanceled);
-	Task->EventReceived.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnDisassemblyFinished);
-	Task->ReadyForActivation();*/
+	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed * ItemForDisassemblyData->MovementSpeedMultiplier);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCompleted);
@@ -95,7 +87,15 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishDisassembly"), nullptr, true, true);
 	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnDisassemblyFinished);
-	WaitGameplayEventTask->Activate();
+	WaitGameplayEventTask->ReadyForActivation();
+}
+
+void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem)
@@ -162,29 +162,23 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems - New items have been spawned and kept hidden until ability has finished"));
 }
 
-void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/)
+void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been completed, resetting speed"));
-
-	float OldSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) / ItemForDisassemblyData->MovementSpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
 
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/)
+void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been canceled, resetting speed"));
-
-	float OldSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) / ItemForDisassemblyData->MovementSpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
 
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload)
+void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
 	(*ItemForDisassembly)->DestroyItem();
@@ -192,20 +186,17 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(/*FGameplayTag EventTag
 	if (IsValid(MainItemActor))
 	{
 		MainItemActor->OnItemEquiped(Player, MainItemSocket);
-		//MainItemActor->SetActorScale3D(FVector(1, 1, 1));
 		(*ItemForDisassembly) = MainItemActor;
 	}
 	if (!IsValid(*OtherItem) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->OnItemEquiped(Player, IngredientItemSocket);
-		//IngredientItemActor->SetActorScale3D(FVector(1, 1, 1));
 		*OtherItem = IngredientItemActor;
 	}
 	else if (IsValid(*OtherItem) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());
-		//IngredientItemActor->SetActorScale3D(FVector(1, 1, 1));
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Disassembly process finished!"));

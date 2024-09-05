@@ -12,6 +12,7 @@
 #include "Components/DamageDealingComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
+
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
