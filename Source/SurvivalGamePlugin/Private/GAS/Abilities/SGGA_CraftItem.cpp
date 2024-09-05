@@ -7,7 +7,6 @@
 #include "Animation/SG_AnimInstance.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-//#include "GAS/AbilityTasks/SGAT_PlayMontageAndWaitForEvent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -36,6 +35,9 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
+
+	OldSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute());
+
 	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
 	if (!IsValid(AnimInst))
 	{
@@ -61,17 +63,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		SpawnProductItem();
 	}
 
-	float NewSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) * ProductItemData->MovementSpeedMultiplier;
-	ActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), NewSpeed);
-
-	/*FGameplayTagContainer EventTagContainer = FGameplayTagContainer();
-	EventTagContainer.AddTag(FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"));
-
-	USGAT_PlayMontageAndWaitForEvent* Task = USGAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, NAME_None, ProductItemData->Animation, EventTagContainer, 1.0f, NAME_None, false, 1.0f);
-	Task->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
-	Task->OnCancelled.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCanceled);
-	Task->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
-	Task->ReadyForActivation();*/
+	ActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed * ProductItemData->MovementSpeedMultiplier);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ProductItemData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
@@ -80,7 +72,15 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"), nullptr, true, true);
 	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
-	WaitGameplayEventTask->Activate();
+	WaitGameplayEventTask->ReadyForActivation();
+}
+
+void USGGA_CraftItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Crafting: EndAbility - Speed has been reset"));
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USGGA_CraftItem::SpawnProductItem()
@@ -115,29 +115,23 @@ void USGGA_CraftItem::SpawnProductItem()
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::SpawnProductItem - Product item has been spawned and kept hidden until ability has finished"));
 }
 
-void USGGA_CraftItem::OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/)
+void USGGA_CraftItem::OnAnimMontageCompleted()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been completed, resetting speed"));
-
-	float OldSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) / ProductItemData->MovementSpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been completed"));
 	
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void USGGA_CraftItem::OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/)
+void USGGA_CraftItem::OnAnimMontageCanceled()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Crafting: Ability has been canceled, resetting speed"));
-
-	float OldSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute()) / ProductItemData->MovementSpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetSpeedAttribute(), OldSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been canceled"));
 
 	AnimInst->bIsMirrored = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USGGA_CraftItem::OnCraftingFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload)
+void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Gameplay Event recieved"));
 
@@ -161,7 +155,6 @@ void USGGA_CraftItem::OnCraftingFinished(/*FGameplayTag EventTag, */FGameplayEve
 			Player->SecondaryHandItem = ProductItem;
 		}
 		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
-		//ProductItem->SetActorScale3D(FVector(1, 1, 1));
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));

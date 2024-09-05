@@ -192,6 +192,7 @@ FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FD
 void UDamageDealingComponent::ResetDamageEffects()
 {
 	GameplayEffectSpecHandles.Empty();
+	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
 	GameplayEffectSpecHandles.Add(DefaultGameplayEffectSpecHandle);
 }
 

@@ -18,6 +18,7 @@ class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
 protected:
 
@@ -26,6 +27,7 @@ protected:
 
 	AHumanCharacter* Player;
 	USG_AnimInstance* AnimInst;
+	float OldSpeed;
 
 	UPROPERTY(Replicated)
 	AItemBase* ProductItem;
