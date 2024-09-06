@@ -66,6 +66,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RemoveActorFromIgnored(AActor* ActorToUnignore);
 
+	void ChangeDefaultDamageEffect(FDamageGameplayEffect NewGameplayEffect);
+	void SetDefaultDamageType(ESG_DamageType NewDamageType);
 	void SetDefaultDamageValue(float NewValue);
 	void SetDefaultDamageEffectDuration(float NewValue);
 	void SetDefaultDamageEffectPeriod(float NewValue);

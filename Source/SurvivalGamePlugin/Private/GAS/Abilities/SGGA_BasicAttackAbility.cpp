@@ -42,6 +42,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		AnimInst->bIsMirrored = false;
 	}
 
+	/* Getting every damage dealing component that the user has */
 	TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;  
 	Player->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
 
@@ -72,12 +73,14 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		}
 	}
 	
+	/* Mirroring the tags from the list of damage dealing components that are to be used for this ability */
 	FGameplayTagContainer FinalActiveDamageComponentTags = ActiveDamageComponentTags;
 	if (AnimInst->bIsMirrored)
 	{
 		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
 	}
 
+	/* Look at all Gameplay effects that are currently active on the user's ASC and determine if there are additional effect to be applied */
 	TArray<FDamageGameplayEffect> InstigatedEffects;
 	TArray<FGameplayEffectSpec> ActiveGameplayEffectSpecs;
 	Player->GetAbilitySystemComponent()->GetAllActiveGameplayEffectSpecs(ActiveGameplayEffectSpecs);

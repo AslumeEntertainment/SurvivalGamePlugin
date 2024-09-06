@@ -53,7 +53,7 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 	}
 }
 
-void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
+void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
 	if (Attribute == GetSpeedAttribute())
 	{
@@ -84,6 +84,11 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			DamageDealingComponent->SetDefaultDamageValue(NewValue);
 		}
 	}
+}
+
+void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
+{
+	/* Functionality was moved to USG_AttributeSet::PostAttributeChange */
 }
 
 void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -151,12 +156,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	if (Data.EvaluatedData.Attribute == GetEnergyAttribute() && GetEnergy() < GetMaxEnergy() / 2)
 	{
 		TargetCharacter->OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
-	}
-
-	if (Data.EvaluatedData.Attribute == GetSpeedAttribute())
-	{
-		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = GetSpeed();
-		UE_LOG(LogTemp, Warning, TEXT("Changing speed..."));
 	}
 }
 
