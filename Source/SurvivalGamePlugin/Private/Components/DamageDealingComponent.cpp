@@ -109,12 +109,28 @@ void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 
 void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 {
-	if (ActorsToIgnore.Contains(ActorToUnignore) == false)
+	ActorsToIgnore.Remove(ActorToUnignore);
+}
+
+void UDamageDealingComponent::ChangeDefaultDamageEffect(FDamageGameplayEffect NewGameplayEffect)
+{
+	DefaultDamageEffect = NewGameplayEffect;
+	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
+}
+
+void UDamageDealingComponent::SetDefaultDamageType(ESG_DamageType NewDamageType)
+{
+	if (DefaultGameplayEffectSpecHandle.IsValid() == false)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::RemoveActorFromIgnored_Implementation Actor is not being ignored!"));
+		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDefaultDamageType Damage Dealing Component #%s does not have a default damage effect!"), *DamageComponentTag.ToString());
 		return;
 	}
-	ActorsToIgnore.Remove(ActorToUnignore);
+	DefaultDamageEffect.DamageType = NewDamageType;
+	
+	FGameplayEffectContextHandle EffectContextHandle = DefaultGameplayEffectSpecHandle.Data.Get()->GetContext();
+	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
+	Context->SetDamageType(DefaultDamageEffect.DamageType);
+	DefaultGameplayEffectSpecHandle.Data.Get()->SetContext(EffectContextHandle);
 }
 
 void UDamageDealingComponent::SetDefaultDamageValue(float NewValue)
@@ -125,7 +141,7 @@ void UDamageDealingComponent::SetDefaultDamageValue(float NewValue)
 		return;
 	}
 	DefaultDamageEffect.DamageValue = NewValue;
-	GameplayEffectSpecHandles[0].Data.Get()->SetSetByCallerMagnitude(DefaultDamageEffect.SetByCallerMagnitudeDataTag, -DefaultDamageEffect.DamageValue);
+	DefaultGameplayEffectSpecHandle.Data.Get()->SetSetByCallerMagnitude(DefaultDamageEffect.SetByCallerMagnitudeDataTag, -DefaultDamageEffect.DamageValue);
 }
 
 void UDamageDealingComponent::SetDefaultDamageEffectDuration(float NewValue)
@@ -136,7 +152,7 @@ void UDamageDealingComponent::SetDefaultDamageEffectDuration(float NewValue)
 		return;
 	}
 	DefaultDamageEffect.DamageEffectDuration = NewValue;
-	GameplayEffectSpecHandles[0].Data.Get()->SetDuration(DefaultDamageEffect.DamageEffectDuration, false);
+	DefaultGameplayEffectSpecHandle.Data.Get()->SetDuration(DefaultDamageEffect.DamageEffectDuration, false);
 }
 
 void UDamageDealingComponent::SetDefaultDamageEffectPeriod(float NewValue)
@@ -147,7 +163,7 @@ void UDamageDealingComponent::SetDefaultDamageEffectPeriod(float NewValue)
 		return;
 	}
 	DefaultDamageEffect.DamageEffectPeriod = NewValue;
-	GameplayEffectSpecHandles[0].Data.Get()->Period = DefaultDamageEffect.DamageEffectPeriod;
+	DefaultGameplayEffectSpecHandle.Data.Get()->Period = DefaultDamageEffect.DamageEffectPeriod;
 }
 
 void UDamageDealingComponent::SetDamageComponentTagSuffix(FString Suffix)
