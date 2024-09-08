@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 
 #include "Headers/TeamManagementStructs.h"
+#include "Headers/generalDelegates.h"
 
 #include "GameplayGameMode.generated.h"
 
@@ -17,22 +18,7 @@ class ASG_PlayerController;
 class APlayerCustomiser;
 class ATimeEventManager;
 
-USTRUCT(BlueprintType)
-struct FPlayerCustomiserSpawn
-{
-	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<FVector, APlayerCustomiser*> Locations;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FRotator> Rotations;
-
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameStartSignature, int, DaysForPreparation);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGameEndSignature);
-DECLARE_DYNAMIC_DELEGATE_OneParam(FPlayerRegistrationSignature, APlayerController*, TriggeringPlayer);
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameplayGameMode : public AGameModeBase
 {
@@ -43,24 +29,9 @@ private:
 	friend USG_GameInstance;
 
 	UFUNCTION()
-	void JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin);
-
-	ETeam GetCurrentTeam(AController* TriggeringPlayer);
-
-	bool IsThereSpaceInTeam(ETeam TeamToCheck);
-	void SpawnPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToSpawnTo);
-	void DestroyPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToClean);
-
-	UFUNCTION()
 	void OnPlayerStatusUpdated();
 
 	FVector GetValidInGameSpawnLocation();
-
-	UFUNCTION()
-	void SpawnSurvivors();
-
-	UFUNCTION()
-	void SpawnPredators();
 
 	void PrepareGame();
 
@@ -74,7 +45,7 @@ private:
 	void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
 
 	UFUNCTION()
-	bool KickAllPlayers();
+	void KickAllPlayers();
 
 	UFUNCTION()
 	void UnRegisterRequest(APlayerController* TriggeringPlayer);
@@ -82,21 +53,15 @@ private:
 	FTimerHandle LoadingPeriodTimer;
 	FTimerHandle LootingPeriodTimer;
 
-	TArray<ASG_PlayerController*> AllPlayers;
+	TMap<FString, ASG_PlayerController*> AllPlayers;
 
-	FPlayerRegistrationSignature OnRegisterNeeded;
-	FPlayerRegistrationSignature OnUnregisterNeeded;
+	FPlayerControllerTransferSignature OnRegisterNeeded;
+	FPlayerControllerTransferSignature OnUnregisterNeeded;
 
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
-
-	UPROPERTY(EditAnywhere, Category = "Debug")
-	TSubclassOf<ACharacter> DebugSurvivorClass;
-
-	UPROPERTY(EditAnywhere, Category = "Debug")
-	TSubclassOf<ACharacter> DebugHunterClass;
 
 	UPROPERTY(EditAnywhere, Category = "CharacterSpawning")
 	FVector BottomLeftArenaCornerCoordinate;
@@ -106,15 +71,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "CharacterSpawning")
 	float MinimalSpawnDistanceFromPlayer;
-
-	UPROPERTY(EditAnywhere, Category = "TeamManagement")
-	TMap<ETeam, FPlayerCustomiserSpawn> PerTeamCustomiserSpawnLocations;
-
-	UPROPERTY(EditAnywhere, Category = "TeamManagement")
-	TSubclassOf<APlayerCustomiser> PlayerCustomiserClassToSpawn;
-
-	UPROPERTY(EditAnywhere, Category = "TeamManagement")
-	TSubclassOf<ATeamManager> TeamManagerClassToSearch;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
@@ -127,10 +83,14 @@ protected:
 
 	void PostLogin(APlayerController* NewPlayer) override;
 	void Logout(AController* Exiting) override;
-
+	void SendPlayerListUpdate();
 	void StartPlay() override;
 
-	FGameStartSignature OnGameStart;
-	FGameEndSignature OnGameEnd;
+	UFUNCTION(BlueprintCallable)
+	void KickPlayer(FString PlayerName);
+
+	FIntegerTransferSignature OnGameStart;
+	FVoidDataTransferSignature OnGameEnd;
+	FStringArrayTransferSignature OnPlayerListUpdated;
 	
 };

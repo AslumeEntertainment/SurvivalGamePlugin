@@ -7,14 +7,10 @@
 
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Headers/SessionState.h"
-
+#include "Headers/GeneralDelegates.h"
 #include "OnlineSessionSettings.h" 
 
 #include "SG_GameInstance.generated.h"
-
-DECLARE_DYNAMIC_DELEGATE_RetVal(bool, FHostedGameClosing);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFreindListSignature, TArray<FString>, FriendNames);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_GameInstance : public UGameInstance
@@ -77,7 +73,7 @@ public:
 	bool Login();
 
 	UFUNCTION(BlueprintCallable)
-	bool CreateSession(bool bIsLANMatch = false, int NumPublicConnections = 4, bool bShouldAdvertise = false, bool bAllowInvites = true, bool bAllowJoinViaPresence = true, bool bAllowJoinInProgress = false);
+	bool CreateSession(int NumPublicConnections = 4, bool bShouldAdvertise = false, bool bAllowInvites = true, bool bAllowJoinViaPresence = true, bool bAllowJoinInProgress = false);
 
 	UFUNCTION(BlueprintCallable)
 	void DestroySession(bool bShouldStayIdle = true);
@@ -94,6 +90,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InviteFriendToSession(FString FriendName);
 
-	FHostedGameClosing OnHostedGameClosing;
-	FFreindListSignature OnFreindListUpdated;
+	FVoidDataTransferSignature OnHostedGameClosing;
+	FStringArrayTransferSignature OnFreindListUpdated;
 };

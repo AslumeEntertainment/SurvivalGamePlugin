@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Headers/ButtonDelegates.h"
+#include "Headers/GeneralDelegates.h"
 #include "ItemIconWidget.generated.h"
 
 class UButton;
@@ -40,5 +40,5 @@ public:
 	UFUNCTION()
 	void SetItemImage(UTexture2D* ItemImage);
 
-	FIconClicked IconClicked;
+	FTextTransferSignature IconClicked;
 };

@@ -7,6 +7,7 @@
 #include "Headers/DamageGameplayEffectStruct.h"
 #include "PassiveDamageDealingComponent.generated.h"
 
+class IHittableInterface;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UPassiveDamageDealingComponent : public UCapsuleComponent

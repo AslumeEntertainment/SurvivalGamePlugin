@@ -5,6 +5,7 @@
 
 #include "Kismet/GameplayStatics.h" 
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
@@ -26,18 +27,6 @@ void AGameplayGameMode::StartPlay()
 	}
 
 	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(World, TeamManagerClassToSearch, FoundActors);
-	
-	if (FoundActors.IsEmpty() == true)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATeamManager placed in the world"));
-		return;
-	}
-
-	ATeamManager* TeamManager = Cast<ATeamManager>(FoundActors[0]);
-	TeamManager->OnPlayerChangingTeams.BindDynamic(this, &AGameplayGameMode::JoinTeam);
-
-	FoundActors.Empty();
 	
 	UGameplayStatics::GetAllActorsOfClass(World, TimeEventManagerClassToSearch, FoundActors);
 
@@ -48,7 +37,7 @@ void AGameplayGameMode::StartPlay()
 	}
 
 	ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
-	TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredators);
+	//TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredators);
 	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartPreparationPeriod);
 	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
 
@@ -59,184 +48,33 @@ void AGameplayGameMode::StartPlay()
 		return;
 	}
 
-	GameInstance->OnHostedGameClosing.BindDynamic(this, &AGameplayGameMode::KickAllPlayers);
+	GameInstance->OnHostedGameClosing.AddDynamic(this, &AGameplayGameMode::KickAllPlayers);
 	OnRegisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::RegisterNewPlayer);
 	OnUnregisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::UnRegisterPlayer);
 }
 
-bool AGameplayGameMode::KickAllPlayers()
+void AGameplayGameMode::KickAllPlayers()
 {
-	for (ASG_PlayerController* Player : AllPlayers)
+	for (TPair<FString,ASG_PlayerController*> Player : AllPlayers)
 	{
-		if (Player->IsLocalController())
+		if (Player.Value->IsLocalController())
 		{
 			continue;
 		}
 
 		if (bShouldPrintDebug)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("KICKING: %s"), *Player->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("KICKING: %s"), *Player.Key);
 		}
 
-		Player->Client_LeaveSession(true);
+		Player.Value->Client_LeaveSession(true);
 	}
-
-	return true;
-}
-
-void AGameplayGameMode::JoinTeam(AController* TriggeringPlayer, ETeam TeamToJoin)
-{
-	if(IsThereSpaceInTeam(TeamToJoin) == false)
-	{
-		UE_LOG(TeamManagement, Display, TEXT("AGameplayGameMode::JoinTeam - No free space in team %s"), *UEnum::GetValueAsString(TeamToJoin));
-		return;
-	}
-
-	ETeam CurrentTeam = GetCurrentTeam(TriggeringPlayer);
-
-	DestroyPlayerCustomiser(TriggeringPlayer, CurrentTeam);
-	
-	SpawnPlayerCustomiser(TriggeringPlayer, TeamToJoin);
-
-	UE_LOG(TeamManagement, Display, TEXT("Player(%s) Successfully joined Team: %s"), *TriggeringPlayer->GetName(), *UEnum::GetValueAsString(TeamToJoin));
-}
-
-bool AGameplayGameMode::IsThereSpaceInTeam(ETeam TeamToCheck)
-{
-	if (TeamToCheck == ETeam::Teamless)
-	{
-		return true;
-	}
-
-	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(TeamToCheck);
-	if (TeamPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::DestroyPlayerCustomiser - No Spawnpoints associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToCheck));
-		return false;
-	}
-
-	TArray<APlayerCustomiser*> CustomiserArray;
-	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
-
-	for (int i = 0; i < CustomiserArray.Num(); i++)
-	{
-		if (CustomiserArray[i] == nullptr) return true;
-	}
-
-	return false;
-}
-
-ETeam AGameplayGameMode::GetCurrentTeam(AController* TriggeringPlayer)
-{
-	ETeam PlayerTeam = ETeam::Teamless;
-	TArray<FPlayerCustomiserSpawn> TeamArray;
-	TArray<ETeam> EnumArray;
-	PerTeamCustomiserSpawnLocations.GenerateValueArray(TeamArray);
-	PerTeamCustomiserSpawnLocations.GenerateKeyArray(EnumArray);
-
-	for (int i=0; i< TeamArray.Num() ; i++)
-	{
-		TArray<APlayerCustomiser*> CustomiserArray;
-		TeamArray[i].Locations.GenerateValueArray(CustomiserArray);
-
-		for (APlayerCustomiser* Customiser : CustomiserArray)
-		{
-			if (Customiser == nullptr) continue;
-			if (Customiser->IsOwningPlayer(TriggeringPlayer))
-			{
-				PlayerTeam = EnumArray[i];
-				break;
-			}
-		}
-	}
-
-	return PlayerTeam;
-}
-
-void AGameplayGameMode::SpawnPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToSpawnTo)
-{
-	if (TeamToSpawnTo == ETeam::Teamless)
-	{
-		return;
-	}
-
-	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(TeamToSpawnTo);
-	if (TeamPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::DestroyPlayerCustomiser - No Spawnpoints associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToSpawnTo));
-		return;
-	}
-
-	TArray<FVector> PositionArray;
-	TArray<APlayerCustomiser*> CustomiserArray;
-	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
-	TeamPtr->Locations.GenerateKeyArray(PositionArray);
-
-	for (int i = 0; i < CustomiserArray.Num(); i++)
-	{
-		if (CustomiserArray[i] != nullptr) continue;
-
-		UWorld* World = GetWorld();
-		if (IsValid(World) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnPlayerCustomiser IsValid(World) == false"));
-			return;
-		}
-		APlayerCustomiser* PlayerCustomiser = World->SpawnActor<APlayerCustomiser>(PlayerCustomiserClassToSpawn,PositionArray[i], TeamPtr->Rotations[i], FActorSpawnParameters());
-
-		if (IsValid(PlayerCustomiser) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnPlayerCustomiser IsValid(PlayerCustomiser) == false"));
-			return;
-		}
-
-		TeamPtr->Locations.Emplace(PositionArray[i], PlayerCustomiser);
-		PlayerCustomiser->SetOwningPlayer(TriggeringPlayer);
-		PlayerCustomiser->OnPlayerReadinessChanged.AddDynamic(this, &AGameplayGameMode::OnPlayerStatusUpdated);
-		PlayerCustomiser->OnGamePawnDeath.AddDynamic(this, &AGameplayGameMode::OnPlayerReturningToLobby);
-
-		//Extract Player account info regarding pawns and populate the customiser with it
-
-		return;
-	}
-
-}
-
-void AGameplayGameMode::DestroyPlayerCustomiser(AController* TriggeringPlayer, ETeam TeamToClean)
-{
-	if (TeamToClean == ETeam::Teamless)
-	{
-		return;
-	}
-
-	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(TeamToClean);
-	if (TeamPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::DestroyPlayerCustomiser - No Spawnpoints associated with enum: %s, Check the GameMode settings"), *UEnum::GetValueAsString(TeamToClean));
-		return;
-	}
-
-	TArray<FVector> PositionArray;
-	TArray<APlayerCustomiser*> CustomiserArray;
-	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
-	TeamPtr->Locations.GenerateKeyArray(PositionArray);
-
-	for (int i=0; i<CustomiserArray.Num();i++)
-	{
-		if (CustomiserArray[i] == nullptr) continue;
-
-		if (CustomiserArray[i]->IsOwningPlayer(TriggeringPlayer))
-		{
-			CustomiserArray[i]->Destroy();
-			TeamPtr->Locations.Emplace(PositionArray[i], nullptr);
-			return;
-		}
-	}
-
 }
 
 void AGameplayGameMode::OnPlayerStatusUpdated()
 {
+	/*
+	TO BE REWORKED
 	if (bShouldPrintDebug)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CHECKING READYNESS"));
@@ -275,7 +113,7 @@ void AGameplayGameMode::OnPlayerStatusUpdated()
 	{
 		UE_LOG(LogTemp, Error, TEXT("GAME WILL START IN %f SECONDS"), LoadingPeriodLenght);
 	}
-	
+	*/
 
 	PrepareGame();
 
@@ -287,11 +125,13 @@ void AGameplayGameMode::PrepareGame()
 
 	//Start Generating map
 
-	SpawnSurvivors();
+	//SpawnSurvivors();
 }
 
 void AGameplayGameMode::StartGame()
 {
+	/*
+	* TO BE REWORKED
 	if (false)//check if map is already loaded propperly
 	{
 		if (bShouldPrintDebug)
@@ -324,91 +164,12 @@ void AGameplayGameMode::StartGame()
 		CustomiserArray[i]->PossessGamePawn();
 	}
 
+	*/
+
 	int PrepDays = 2;//extract preptime from MapSelector
 
 	OnGameStart.Broadcast(PrepDays);
 
-}
-
-void AGameplayGameMode::SpawnSurvivors()
-{
-	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(ETeam::Survivor);
-	if (TeamPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::SpawnSurvivors - No Spawnpoints associated with enum: ETeam::Survivor, Check the GameMode settings"));
-		return;
-	}
-
-	TArray<APlayerCustomiser*> CustomiserArray;
-	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
-
-	for (int i = 0; i < CustomiserArray.Num(); i++)
-	{
-		if (CustomiserArray[i] == nullptr) continue;
-
-		UWorld* World = GetWorld();
-		if (IsValid(World) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnSurvivors IsValid(World) == false"));
-			return;
-		}
-
-		//here get the actual classs once the account logic is done
-
-		ACharacter* GamePawn = World->SpawnActor<ACharacter>(DebugSurvivorClass, GetValidInGameSpawnLocation(), FRotator(), FActorSpawnParameters());
-
-		if (IsValid(GamePawn) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::SpawnSurvivors IsValid(PlayerCustomiser) == false"));
-			return;
-		}
-
-		CustomiserArray[i]->SetGamePawn(GamePawn);
-	}
-}
-
-void AGameplayGameMode::SpawnPredators()
-{
-	if (bShouldPrintDebug)
-	{
-		UE_LOG(LogTemp, Error, TEXT("PREDATOR IS SPAWNING"));
-	}
-
-	FPlayerCustomiserSpawn* TeamPtr = PerTeamCustomiserSpawnLocations.Find(ETeam::Hunter);
-	if (TeamPtr == nullptr)
-	{
-		UE_LOG(TeamManagement, Error, TEXT("AGameplayGameMode::PrepareGame - No Spawnpoints associated with enum: ETeam::Survivor, Check the GameMode settings"));
-		return;
-	}
-
-	TArray<APlayerCustomiser*> CustomiserArray;
-	TeamPtr->Locations.GenerateValueArray(CustomiserArray);
-
-	for (int i = 0; i < CustomiserArray.Num(); i++)
-	{
-		if (CustomiserArray[i] == nullptr) continue;
-
-		UWorld* World = GetWorld();
-		if (IsValid(World) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PrepareGame IsValid(World) == false"));
-			return;
-		}
-
-		//here get the actual classs once the account logic is done
-
-		ACharacter* GamePawn = World->SpawnActor<ACharacter>(DebugHunterClass, GetValidInGameSpawnLocation(), FRotator(), FActorSpawnParameters());
-
-		if (IsValid(GamePawn) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::PrepareGame IsValid(PlayerCustomiser) == false"));
-			return;
-		}
-
-		//some fade in for the players
-		CustomiserArray[i]->SetGamePawn(GamePawn);
-		CustomiserArray[i]->PossessGamePawn();
-	}
 }
 
 FVector AGameplayGameMode::GetValidInGameSpawnLocation()
@@ -448,7 +209,9 @@ FVector AGameplayGameMode::GetValidInGameSpawnLocation()
 
 void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser)
 {
-
+	/*
+	
+	TO BE REWORKED
 	if (IsValid(TriggeringPlayerCustomiser) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AGameplayGameMode::OnPlayerReturningToLobby IsValid(TriggeringPlayerCustomiser) == false"));
@@ -499,11 +262,14 @@ void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPl
 	}
 
 	GetWorldTimerManager().SetTimer(LootingPeriodTimer, this, &AGameplayGameMode::EndGame, LootingPeriodLenght, false);
-	
+	*/
 }
 
 void AGameplayGameMode::EndGame()
 {
+	/*
+	TO BE REWORKED
+	
 	if (bShouldPrintDebug)
 	{
 		UE_LOG(LogTemp, Error, TEXT("LOOTING PERIOD ENDED : RETURNING TO LOBBY"));
@@ -533,7 +299,7 @@ void AGameplayGameMode::EndGame()
 		}
 
 	}
-
+	*/
 	OnGameEnd.Broadcast();
 }
 
@@ -560,8 +326,10 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 		UE_LOG(LogTemp, Warning, TEXT("ADDING %s TO PLAYER LIST"), *PC->GetName());
 	}
 
-	AllPlayers.Add(PC);
-	PC->Client_SetInputMode(EInputMode::GameAndUI);//Must be GameOnly
+	AllPlayers.Add(PC->GetPlayerState<APlayerState>()->GetPlayerName(), PC);
+	SendPlayerListUpdate();
+
+	PC->Client_SetInputMode(EInputMode::GameAndUI);//Must be GameOnly by default
 
 	PC->OnConnectionCleanUp.BindDynamic(this, &AGameplayGameMode::UnRegisterRequest);
 
@@ -586,11 +354,33 @@ void AGameplayGameMode::Logout(AController* Exiting)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("REMOVING %s FROM PLAYER LIST"), *PC->GetName());
 	}
-
-	AllPlayers.Remove(PC);
+	
+	AllPlayers.Remove(PC->GetPlayerState<APlayerState>()->GetPlayerName());
+	SendPlayerListUpdate();
 
 	Super::Logout(Exiting);
 }
 
+void AGameplayGameMode::SendPlayerListUpdate()
+{
+	TArray<FString> PlayerNames;
+	AllPlayers.GenerateKeyArray(PlayerNames);
+	OnPlayerListUpdated.Broadcast(PlayerNames);
+}
 
 
+void AGameplayGameMode::KickPlayer(FString PlayerName)
+{
+	ASG_PlayerController** PCPtr = AllPlayers.Find(PlayerName);
+	if (PCPtr == nullptr)
+	{
+		if (bShouldPrintDebug)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player: %s could not be kicked - No such player"), *PlayerName);
+		}
+		return;
+	}
+	
+	(*PCPtr)->Client_LeaveSession(true);
+
+}

@@ -114,10 +114,10 @@ void USG_GameInstance::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessf
 	LocalSessionState = ESessionState::Idle;
 }
 
-bool USG_GameInstance::CreateSession(bool bIsLANMatch, int NumPublicConnections, bool bShouldAdvertise, bool bAllowInvites, bool bAllowJoinViaPresence, bool bAllowJoinInProgress)
+bool USG_GameInstance::CreateSession(int NumPublicConnections, bool bShouldAdvertise, bool bAllowInvites, bool bAllowJoinViaPresence, bool bAllowJoinInProgress)
 {
 	TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
-	SessionSettings->bIsLANMatch = bIsLANMatch;
+	SessionSettings->bIsLANMatch = false;
 	SessionSettings->NumPublicConnections = NumPublicConnections;
 	SessionSettings->bShouldAdvertise = bShouldAdvertise; // Set to true to make this session discoverable with FindSessions.
 	SessionSettings->bUsesPresence = true;
@@ -342,13 +342,7 @@ void USG_GameInstance::DestroySession(bool InbShouldStayIdle)
 
 	if (PrevState == ESessionState::Hosting)
 	{
-		if (OnHostedGameClosing.IsBound() == false)
-		{
-			UE_LOG(Networking, Error, TEXT("USG_GameInstance::DestroySession OnHostedGameClosing.IsBound() == false"));
-			return;
-		}
-		OnHostedGameClosing.Execute();
-
+		OnHostedGameClosing.Broadcast();
 	}
 
 	bool bSuccess = SessionInterface->DestroySession(GameSessionLocalName);
