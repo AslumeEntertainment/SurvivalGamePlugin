@@ -5,7 +5,7 @@
 
 #include "Kismet/GameplayStatics.h" 
 
-#include "GameFoundation/GameInstance/SG_GameInstance.h"
+#include "GameFoundation/GameInstance/SessionSubsystem.h"
 
 
 void ASG_PlayerController::OnPossess(APawn* InPawn)
@@ -41,14 +41,14 @@ void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 		return;
 	}
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
-	if (IsValid(GameInstance) == false)
+	USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
+	if (IsValid(SessionSubsystemPtr) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation IsValid(GameInstance) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay (IsValid(SessionSubsystem) == false"));
 		return;
 	}
 
-	GameInstance->DestroySession();
+	SessionSubsystemPtr->DestroySession();
 
 }
 

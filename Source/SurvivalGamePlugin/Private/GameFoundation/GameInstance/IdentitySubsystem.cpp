@@ -1,0 +1,85 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "GameFoundation/GameInstance/IdentitySubsystem.h"
+
+#include "OnlineSubsystem.h"
+#include "OnlineSubsystemUtils.h"
+
+DEFINE_LOG_CATEGORY_STATIC(IdentitySubsystem, Log, All);
+
+void UIdentitySubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	UWorld* World = GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(IdentitySubsystem, Error, TEXT("Initialize IsValid(World) == false"));
+		return;
+	}
+
+	IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(World);
+	if (OnlineSubsystem == nullptr)
+	{
+		UE_LOG(IdentitySubsystem, Error, TEXT("Initialize IsValid(OnlineSubsystem) == false"));
+		return;
+	}
+
+	IdentityPtr = OnlineSubsystem->GetIdentityInterface();
+
+	if (IdentityPtr == nullptr)
+	{
+		UE_LOG(IdentitySubsystem, Error, TEXT("Initialize IsValid(IdentityPtr) == false"));
+	}
+
+	IdentityPtr->OnLoginCompleteDelegates->AddUObject(this, &UIdentitySubsystem::HandleLoginComplete);
+}
+
+void UIdentitySubsystem::Deinitialize()
+{
+	IdentityPtr = nullptr;
+}
+
+void UIdentitySubsystem::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
+{
+
+	if (!bWasSuccessful)
+	{
+		UE_LOG(IdentitySubsystem, Warning, TEXT("EOS login failed Error: %s"), *Error);
+		OnLoginError.Broadcast(FText::FromString("Login Failed: " + Error));
+		return;
+
+	}
+
+	IdentityPtr->ClearOnLoginCompleteDelegates(0, this);
+	OnLoginError.Broadcast(FText::FromString("Login Successful"));
+	UE_LOG(IdentitySubsystem, Display, TEXT("Login callback completed!"));
+}
+
+bool UIdentitySubsystem::Login()
+{
+	if (IdentityPtr->GetLoginStatus(0) == ELoginStatus::LoggedIn)
+	{
+		return true;
+	}
+
+	if (!IdentityPtr->AutoLogin(0 /* LocalUserNum */))
+	{
+		UE_LOG(IdentitySubsystem, Warning, TEXT("Could not start auto log in for local user..."));
+
+		FOnlineAccountCredentials Credentials;
+		Credentials.Id = "";
+		Credentials.Token = "";
+		Credentials.Type = "accountportal";
+
+		if (!IdentityPtr->Login(0, Credentials))
+		{
+			UE_LOG(IdentitySubsystem, Error, TEXT("Could not start forced log in for local user..."));
+			return false;
+		}
+	}
+	UE_LOG(IdentitySubsystem, Display, TEXT("Started loggin in..."));
+	return true;
+}

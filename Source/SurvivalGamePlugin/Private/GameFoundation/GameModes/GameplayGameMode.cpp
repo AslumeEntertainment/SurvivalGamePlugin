@@ -8,7 +8,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "GameFoundation/GameInstance/SG_GameInstance.h"
+#include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "Level/TeamManager.h"
 #include "Level/PlayerCustomiser.h"
 #include "Level/TimeEventManager.h"
@@ -41,16 +41,16 @@ void AGameplayGameMode::StartPlay()
 	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartPreparationPeriod);
 	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
-	if (IsValid(GameInstance) == false)
+	USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
+	if (IsValid(SessionSubsystemPtr) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(GameInstance) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay (IsValid(SessionSubsystem) == false"));
 		return;
 	}
 
-	GameInstance->OnHostedGameClosing.AddDynamic(this, &AGameplayGameMode::KickAllPlayers);
-	OnRegisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::RegisterNewPlayer);
-	OnUnregisterNeeded.BindDynamic(GameInstance, &USG_GameInstance::UnRegisterPlayer);
+	SessionSubsystemPtr->OnHostedGameClosing.AddDynamic(this, &AGameplayGameMode::KickAllPlayers);
+	OnRegisterNeeded.BindDynamic(SessionSubsystemPtr, &USessionSubsystem::RegisterNewPlayer);
+	OnUnregisterNeeded.BindDynamic(SessionSubsystemPtr, &USessionSubsystem::UnRegisterPlayer);
 }
 
 void AGameplayGameMode::KickAllPlayers()

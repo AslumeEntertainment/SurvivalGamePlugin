@@ -5,6 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 
+#include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "Level/GameManager.h"
@@ -49,7 +50,13 @@ void ALobbyManager::CreateLobby()
 		default: NumConections = 1;
 	}
 
-	bool LobbyCreationStatus = GameInstance->CreateSession(NumConections);
+	USessionSubsystem* SessionSubsystemPtr = GameInstance->GetSubsystem<USessionSubsystem>();
+	if (IsValid(SessionSubsystemPtr)==false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::CreateLobby IsValid(SessionSubsystem)==false"));
+		return;
+	}
+	bool LobbyCreationStatus = SessionSubsystemPtr->CreateSession(NumConections);
 	OnTryCreateLobbyCompleted.Broadcast(LobbyCreationStatus);
 
 	if (bShouldPrintdDebug)
