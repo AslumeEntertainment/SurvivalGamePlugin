@@ -4,14 +4,41 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+
+#include "Interfaces/OnlineUserCloudInterface.h"
+
 #include "UserCloudSubsystem.generated.h"
 
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class SURVIVALGAMEPLUGIN_API UUserCloudSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
+private:
+
+	IOnlineUserCloudPtr UserCloudInterface = nullptr;
+
+	void Initialize(FSubsystemCollectionBase& Collection) override;
+
+	void Deinitialize() override;
+
+	bool ShouldCreateSubsystem(UObject* Outer) const override;
+
+	void HandleLoadSaveFilecomplete(bool bWasSuccessful, const FUniqueNetId& UserId, const FString& FileName);
+
+	void HandleWriteSaveFileComplete(bool bWasSuccessful, const FUniqueNetId&, const FString& FileName);
+
+public:
+
+	UPROPERTY(EditDefaultsOnly)
+	FString SaveFileName = "GeneralSaveFile";
+
+	UFUNCTION()
+	void ReadSaveFile();
+
+	UFUNCTION()
+	void WriteSaveFile();
 };

@@ -7,6 +7,8 @@
 #include "OnlineSubsystemUtils.h"
 #include "Kismet/GameplayStatics.h" 
 
+#include "GameFoundation/GameInstance/IdentitySubsystem.h"
+
 DEFINE_LOG_CATEGORY_STATIC(SessionSubsystem, Log, All);
 
 void USessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -288,36 +290,30 @@ void USessionSubsystem::RegisterNewPlayer(APlayerController* InPlayerController)
 		return;
 	}
 
-	FUniqueNetIdRepl UniqueNetIdRepl;
+	TSharedPtr<const FUniqueNetId> UniqueNetId;
 	if (InPlayerController->IsLocalPlayerController())
 	{
-		ULocalPlayer* LocalPlayer = InPlayerController->GetLocalPlayer();
-		if (IsValid(LocalPlayer))
+		UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
+		if (IsValid(IdentitySubsystemPtr) == false)
 		{
-			LocalUniqueNetIdRepl = LocalPlayer->GetPreferredUniqueNetId();
-			UniqueNetIdRepl = LocalUniqueNetIdRepl;
+			UE_LOG(SessionSubsystem, Error, TEXT("RegisterNewPlayer (IsValid(IdentitySubsystemPtr) == false"));
+			return;
 		}
-		else
-		{
-			UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
-			check(IsValid(RemoteNetConnection));
-			LocalUniqueNetIdRepl = RemoteNetConnection->PlayerId;
-			UniqueNetIdRepl = LocalUniqueNetIdRepl;
-		}
+
+		UniqueNetId = IdentitySubsystemPtr->GetLocalPlayerNetId();
 	}
 	else
 	{
 		UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
 		check(IsValid(RemoteNetConnection));
-		UniqueNetIdRepl = RemoteNetConnection->PlayerId;
+		UniqueNetId = RemoteNetConnection->PlayerId.GetUniqueNetId();
 	}
 
-	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
 	check(UniqueNetId != nullptr);
 
 	if (SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
 	{
-		UE_LOG(SessionSubsystem, Display, TEXT("New Player Already Registered"));
+		UE_LOG(SessionSubsystem, Warning, TEXT("New Player Already Registered"));
 		return;
 	}
 
@@ -341,29 +337,25 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 		return;
 	}
 
-	FUniqueNetIdRepl UniqueNetIdRepl;
+	TSharedPtr<const FUniqueNetId> UniqueNetId;
 	if (InPlayerController->IsLocalPlayerController())
 	{
-		ULocalPlayer* LocalPlayer = InPlayerController->GetLocalPlayer();
-		if (IsValid(LocalPlayer))
+		UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
+		if (IsValid(IdentitySubsystemPtr) == false)
 		{
-			UniqueNetIdRepl = LocalPlayer->GetPreferredUniqueNetId();
+			UE_LOG(SessionSubsystem, Error, TEXT("UnRegisterPlayer (IsValid(IdentitySubsystemPtr) == false"));
+			return;
 		}
-		else
-		{
-			UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
-			check(IsValid(RemoteNetConnection));
-			UniqueNetIdRepl = RemoteNetConnection->PlayerId;
-		}
+
+		UniqueNetId = IdentitySubsystemPtr->GetLocalPlayerNetId();
 	}
 	else
 	{
 		UNetConnection* RemoteNetConnection = Cast<UNetConnection>(InPlayerController->Player);
 		check(IsValid(RemoteNetConnection));
-		UniqueNetIdRepl = RemoteNetConnection->PlayerId;
+		UniqueNetId = RemoteNetConnection->PlayerId.GetUniqueNetId();
 	}
 
-	TSharedPtr<const FUniqueNetId> UniqueNetId = UniqueNetIdRepl.GetUniqueNetId();
 	check(UniqueNetId != nullptr);
 
 	if (!SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
@@ -384,5 +376,12 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 
 void USessionSubsystem::InviteFriendToSession(FUniqueNetIdRef FriendNetIdPtr)
 {
-	SessionInterface->SendSessionInviteToFriend(*LocalUniqueNetIdRepl.GetUniqueNetId(), GameSessionLocalName, *FriendNetIdPtr);
+	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
+	if (IsValid(IdentitySubsystemPtr) == false)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("InviteFriendToSession (IsValid(IdentitySubsystemPtr) == false"));
+		return;
+	}
+	
+	SessionInterface->SendSessionInviteToFriend(*IdentitySubsystemPtr->GetLocalPlayerNetId(), GameSessionLocalName, *FriendNetIdPtr);
 }

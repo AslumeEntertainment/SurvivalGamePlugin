@@ -20,7 +20,9 @@ class SURVIVALGAMEPLUGIN_API UIdentitySubsystem : public UGameInstanceSubsystem
 	
 private:
 
-	IOnlineIdentityPtr IdentityPtr = nullptr;
+	IOnlineIdentityPtr IdentityInterface = nullptr;
+
+	FUniqueNetIdPtr LocalPlayerNetId;
 
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
@@ -32,6 +34,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool Login();
+
+	FUniqueNetIdPtr GetLocalPlayerNetId();
 
 	FVoidDataTransferSignature OnLoginComplete;
 	FTextTransferSignature OnLoginError;

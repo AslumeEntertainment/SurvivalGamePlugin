@@ -27,19 +27,19 @@ void UIdentitySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 
-	IdentityPtr = OnlineSubsystem->GetIdentityInterface();
+	IdentityInterface = OnlineSubsystem->GetIdentityInterface();
 
-	if (IdentityPtr == nullptr)
+	if (IdentityInterface == nullptr)
 	{
-		UE_LOG(IdentitySubsystem, Error, TEXT("Initialize IsValid(IdentityPtr) == false"));
+		UE_LOG(IdentitySubsystem, Error, TEXT("Initialize IsValid(IdentityInterface) == false"));
 	}
 
-	IdentityPtr->OnLoginCompleteDelegates->AddUObject(this, &UIdentitySubsystem::HandleLoginComplete);
+	IdentityInterface->OnLoginCompleteDelegates->AddUObject(this, &UIdentitySubsystem::HandleLoginComplete);
 }
 
 void UIdentitySubsystem::Deinitialize()
 {
-	IdentityPtr = nullptr;
+	IdentityInterface = nullptr;
 }
 
 void UIdentitySubsystem::HandleLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
@@ -53,19 +53,21 @@ void UIdentitySubsystem::HandleLoginComplete(int32 LocalUserNum, bool bWasSucces
 
 	}
 
-	IdentityPtr->ClearOnLoginCompleteDelegates(0, this);
+	LocalPlayerNetId = IdentityInterface->GetUniquePlayerId(0);
+
+	IdentityInterface->ClearOnLoginCompleteDelegates(0, this);
 	OnLoginError.Broadcast(FText::FromString("Login Successful"));
 	UE_LOG(IdentitySubsystem, Display, TEXT("Login callback completed!"));
 }
 
 bool UIdentitySubsystem::Login()
 {
-	if (IdentityPtr->GetLoginStatus(0) == ELoginStatus::LoggedIn)
+	if (IdentityInterface->GetLoginStatus(0) == ELoginStatus::LoggedIn)
 	{
 		return true;
 	}
 
-	if (!IdentityPtr->AutoLogin(0 /* LocalUserNum */))
+	if (!IdentityInterface->AutoLogin(0 /* LocalUserNum */))
 	{
 		UE_LOG(IdentitySubsystem, Warning, TEXT("Could not start auto log in for local user..."));
 
@@ -74,7 +76,7 @@ bool UIdentitySubsystem::Login()
 		Credentials.Token = "";
 		Credentials.Type = "accountportal";
 
-		if (!IdentityPtr->Login(0, Credentials))
+		if (!IdentityInterface->Login(0, Credentials))
 		{
 			UE_LOG(IdentitySubsystem, Error, TEXT("Could not start forced log in for local user..."));
 			return false;
@@ -82,4 +84,9 @@ bool UIdentitySubsystem::Login()
 	}
 	UE_LOG(IdentitySubsystem, Display, TEXT("Started loggin in..."));
 	return true;
+}
+
+FUniqueNetIdPtr UIdentitySubsystem::GetLocalPlayerNetId()
+{
+	return LocalPlayerNetId;
 }

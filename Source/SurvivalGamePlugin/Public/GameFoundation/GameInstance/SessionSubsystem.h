@@ -30,8 +30,6 @@ private:
 
 	IOnlineSessionPtr SessionInterface = nullptr;
 
-	FUniqueNetIdRepl LocalUniqueNetIdRepl;
-
 	FString ConnectInfo = "";
 
 	FOnlineSessionSearchResult CurrentSessionToJoin;

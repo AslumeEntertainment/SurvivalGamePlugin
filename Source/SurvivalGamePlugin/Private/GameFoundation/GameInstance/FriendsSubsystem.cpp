@@ -38,6 +38,8 @@ void UFriendsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UFriendsSubsystem::Deinitialize()
 {
+	FriendList.Empty();
+	FriendsInterface = nullptr;
 }
 
 void UFriendsSubsystem::HandleReadFriendListComplete(int32 LocalUserNum, bool bWasSuccessful, const FString& ListName, const FString& ErrorStr)
