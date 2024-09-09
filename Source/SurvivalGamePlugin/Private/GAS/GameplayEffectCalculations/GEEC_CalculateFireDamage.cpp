@@ -35,15 +35,14 @@ UGEEC_CalculateFireDamage::UGEEC_CalculateFireDamage()
 void UGEEC_CalculateFireDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
 	UAbilitySystemComponent* TargetAbilitySystemComponent = ExecutionParams.GetTargetAbilitySystemComponent();
-	AActor* TargetActor = TargetAbilitySystemComponent ? TargetAbilitySystemComponent->GetAvatarActor() : nullptr;
-	ASG_Character* TargetCharacter = Cast<ASG_Character>(TargetActor);
-
-	FAggregatorEvaluateParameters EvaluationParameters;
+	if (!IsValid(TargetAbilitySystemComponent))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateFireDamage::Execute_Implementation IsValid(TargetAbilitySystemComponent) == false"));
+		return;
+	}
 
 	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
-	
 	float BaseDamage = Spec.GetSetByCallerMagnitude(SetByCallerMagnitudeDataTag, false, -1.0f);
-
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, BaseDamage));
 
 	if (false)

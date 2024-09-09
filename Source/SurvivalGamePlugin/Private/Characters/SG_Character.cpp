@@ -19,8 +19,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -64,7 +64,7 @@ ASG_Character::ASG_Character()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
-	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
+	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -74,7 +74,6 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
 }
 
-// Called when the game starts or when spawned
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
@@ -185,13 +184,10 @@ void ASG_Character::FinishSprint()
 
 void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Actor was hit"));
 	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
-		FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(SpecHandle.Data.Get()->GetContext().Get());
-		if (Context->GetDamageType() == ESG_DamageType::Slash)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("GET SLASHED BITCH"));
-		}
+		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Damage effect is applied"));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
@@ -199,6 +195,16 @@ void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHa
 bool ASG_Character::bCanBeHit()
 {
 	return IsAlive();
+}
+
+void ASG_Character::OnHittableDestroyed_Implementation()
+{
+	bIsAlive = false;
+
+	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	UnPossessed();
 }
 
 void ASG_Character::OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -216,15 +222,15 @@ void ASG_Character::OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, flo
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }
 
-void ASG_Character::Die_Implementation()
-{
-	bIsAlive = false;
-
-	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-	GetMesh()->SetSimulatePhysics(true);
-
-	UnPossessed();
-}
+//void ASG_Character::Die_Implementation()
+//{
+//	bIsAlive = false;
+//
+//	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
+//	GetMesh()->SetSimulatePhysics(true);
+//
+//	UnPossessed();
+//}
 
 FName ASG_Character::GetLeftHandSocket()
 {

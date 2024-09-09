@@ -18,7 +18,7 @@ class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
 class USG_AbilitySystemComponent;
-class USG_AttributeSet;
+class USG_CharacterAttributeSet;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -85,7 +85,7 @@ protected:
 	UInputAction* SprintAction;
 
 	UPROPERTY()
-	USG_AttributeSet* AttributeSet;
+	USG_CharacterAttributeSet* AttributeSet;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -104,6 +104,7 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetRepControlRotation(FRotator InControlRotation);
+
 
 public:
 
@@ -128,6 +129,8 @@ public:
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 	virtual bool bCanBeHit() override;
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void OnHittableDestroyed() override;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
@@ -139,8 +142,8 @@ public:
 	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
 	//that must go in InGameCharacter
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	virtual void Die();
+	/*UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	virtual void Die();*/
 
 	UFUNCTION(BlueprintCallable)
 	FName GetLeftHandSocket();

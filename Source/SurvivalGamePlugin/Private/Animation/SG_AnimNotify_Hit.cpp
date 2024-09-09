@@ -32,7 +32,6 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 	{
 		if (FinalDamageDealingComponentTag == DamageDealingComponent->GetDamageComponentTag())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Activating/Deactivating DamageDealingComponent with tag %s"), *FinalDamageDealingComponentTag.ToString());
 			DamageDealingComponent->SetActivation(bShouldActivate);
 		}
 	}

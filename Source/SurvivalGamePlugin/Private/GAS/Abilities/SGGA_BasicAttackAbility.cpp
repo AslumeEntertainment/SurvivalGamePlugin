@@ -142,7 +142,6 @@ FGameplayTagContainer USGGA_BasicAttackAbility::GetMirroredAbilityDamageComponen
 			TagName = TagName + TEXT(".Left");
 		}
 		MirroredTags.AddTag(FGameplayTag::RequestGameplayTag(FName(TagName), true));
-		UE_LOG(LogTemp, Warning, TEXT("New Ability GameplayTag - %s"), *TagName);
 	}
 
 	return MirroredTags;

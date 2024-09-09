@@ -2,7 +2,7 @@
 
 
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 {
@@ -13,7 +13,7 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 	{
 		FGameplayEffectSpecHandle HealthRegenerationSpecHandle = MakeOutgoingSpec(HealthRegenerationEffectClass, 1, EffectContext);
 		FGameplayEffectSpec* HealthRegenerationSpec = HealthRegenerationSpecHandle.Data.Get();
-		HealthRegenerationSpec->Period = GetNumericAttribute(USG_AttributeSet::GetHealthRegenerationRateAttribute());
+		HealthRegenerationSpec->Period = GetNumericAttribute(USG_CharacterAttributeSet::GetHealthRegenerationRateAttribute());
 		HealthRegenerationEffect = ApplyGameplayEffectSpecToSelf(*HealthRegenerationSpec);
 	}
 	
@@ -21,7 +21,7 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 	{
 		FGameplayEffectSpecHandle HungerDrainSpecHandle = MakeOutgoingSpec(HungerDrainEffectClass, 1, EffectContext);
 		FGameplayEffectSpec* HungerDrainSpec = HungerDrainSpecHandle.Data.Get();
-		HungerDrainSpec->Period = GetNumericAttribute(USG_AttributeSet::GetHungerDrainRateAttribute());
+		HungerDrainSpec->Period = GetNumericAttribute(USG_CharacterAttributeSet::GetHungerDrainRateAttribute());
 		HungerDrainEffect = ApplyGameplayEffectSpecToSelf(*HungerDrainSpec);
 	}
 
@@ -29,7 +29,7 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 	{
 		FGameplayEffectSpecHandle EnergyRechargeSpecHandle = MakeOutgoingSpec(EnergyRechargeEffectClass, 1, EffectContext);
 		FGameplayEffectSpec* EnergyRechargeSpec = EnergyRechargeSpecHandle.Data.Get();
-		EnergyRechargeSpec->Period = GetNumericAttribute(USG_AttributeSet::GetEnergyRechargeRateAttribute());
+		EnergyRechargeSpec->Period = GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyRechargeRateAttribute());
 		EnergyRechargeEffect = ApplyGameplayEffectSpecToSelf(*EnergyRechargeSpec);
 	}
 
@@ -37,7 +37,7 @@ void USG_AbilitySystemComponent::ApplyDefaultEffectsToSelf()
 	{
 		FGameplayEffectSpecHandle EnergyDrainSpecHandle = MakeOutgoingSpec(EnergyDrainEffectClass, 1, EffectContext);
 		FGameplayEffectSpec* EnergyDrainSpec = EnergyDrainSpecHandle.Data.Get();
-		EnergyDrainSpec->Period = GetNumericAttribute(USG_AttributeSet::GetEnergyDrainRateAttribute());
+		EnergyDrainSpec->Period = GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyDrainRateAttribute());
 		EnergyDrainEffect = ApplyGameplayEffectSpecToSelf(*EnergyDrainSpec);
 	}
 }

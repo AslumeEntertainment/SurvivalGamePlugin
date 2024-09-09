@@ -23,11 +23,11 @@ class SURVIVALGAMEPLUGIN_API IHittableInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
-	//virtual void OnHit(ASG_Character* InstigatingPlayer) = 0;
 	
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) = 0;
 	
+	virtual void OnHittableDestroyed() = 0;
+
 	virtual bool bCanBeHit() = 0;
 
 };
