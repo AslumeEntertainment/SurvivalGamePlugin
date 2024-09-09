@@ -16,7 +16,7 @@ class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
 	
 protected:
 
-	void Die() override;
+	//void Die() override;
 
 public:
 

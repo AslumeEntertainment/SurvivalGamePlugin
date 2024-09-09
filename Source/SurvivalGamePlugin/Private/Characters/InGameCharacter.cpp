@@ -3,10 +3,10 @@
 
 #include "Characters/InGameCharacter.h"
 
-void AInGameCharacter::Die()
-{
-	Super::Die();
-
-	OnCharacterDeath.Broadcast();
-
-}
+//void AInGameCharacter::Die()
+//{
+//	Super::Die();
+//
+//	OnCharacterDeath.Broadcast();
+//
+//}

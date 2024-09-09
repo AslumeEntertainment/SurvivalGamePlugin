@@ -43,8 +43,7 @@ void UDamageDealingComponent::AttemptHit()
 	}
 
 	TArray<FHitResult> HitResults;
-
-	UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AttemptHit Number of actors to currently ignore = %d"), ActorsToIgnoreWhenActive.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AttemptHit Number of actors to currently ignore = %d"), ActorsToIgnoreWhenActive.Num());
 
 	if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), DamageCapsuleRadius, DamageCapsuleHeight / 2, UEngineTypes::ConvertToTraceType(ECC_Camera),
 		true, ActorsToIgnoreWhenActive, EDrawDebugTrace::ForOneFrame, HitResults, true) == false)
@@ -58,10 +57,9 @@ void UDamageDealingComponent::AttemptHit()
 		{
 			continue;
 		}
-		IHittableInterface* HittableActor = Cast<IHittableInterface>(HitResult.GetActor());
-		IHittableInterface* HittableComponent = Cast<IHittableInterface>(HitResult.GetComponent());
 
-		if (HittableActor == nullptr && HittableComponent == nullptr)
+		IHittableInterface* HittableActor = Cast<IHittableInterface>(HitResult.GetActor());
+		if (HittableActor == nullptr)
 		{
 			continue;
 		}
@@ -70,14 +68,6 @@ void UDamageDealingComponent::AttemptHit()
 			HittableActor->OnHit(GameplayEffectSpecHandles);
 			OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
 			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
-			continue;
-		}
-		if (HittableComponent != nullptr && HittableComponent->bCanBeHit() == true)
-		{
-			HittableComponent->OnHit(GameplayEffectSpecHandles);
-			OnHitLandedSuccessfully.Broadcast(HitResult.GetComponent());
-			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
-			continue;
 		}
 	}
 }
@@ -209,7 +199,6 @@ void UDamageDealingComponent::ResetDamageEffects()
 {
 	GameplayEffectSpecHandles.Empty();
 	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
-	GameplayEffectSpecHandles.Add(DefaultGameplayEffectSpecHandle);
 }
 
 FGameplayTag UDamageDealingComponent::GetDamageComponentTag()

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
+#include "Headers/DamageGameplayEffectStruct.h"
 #include "SG_GameplayEffectContext.generated.h"
 
 
