@@ -18,6 +18,8 @@ DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
 
 void AGameplayGameMode::StartPlay()
 {
+	UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay"));
+
 	Super::StartPlay();
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
@@ -307,6 +309,8 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+	UE_LOG(LogTemp, Warning, TEXT("LOGGIN IN %s"), *NewPlayer->GetName());
+
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
@@ -333,6 +337,10 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 
 	PC->OnConnectionCleanUp.BindDynamic(this, &AGameplayGameMode::UnRegisterRequest);
 
+
+	/*This Doesnt trigger for the local player since the first login of the local player
+	* is triggered before the start play. 
+	We can you this to avoid registering the local player in the sesion twice */
 	OnRegisterNeeded.ExecuteIfBound(NewPlayer);
 }
 

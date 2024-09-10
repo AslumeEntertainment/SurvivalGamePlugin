@@ -30,4 +30,13 @@ void USG_GameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver
 	UE_LOG(Networking, Warning, TEXT("--------------------------------------------------NETWORK FAILURE-----------------------------------------"));
 	UE_LOG(Networking, Error, TEXT("Error: %s") ,  *ErrorString);
 	//fire of networking error delegate
+
+	USessionSubsystem* SessionSubsystemPtr = GetSubsystem<USessionSubsystem>();
+	if (IsValid(SessionSubsystemPtr) == false)
+	{
+		UE_LOG(Networking, Error, TEXT("CreateSession (IsValid(SessionSubsystemPtr) == false"));
+		return;
+	}
+
+	SessionSubsystemPtr->DestroySession(true, true);
 }

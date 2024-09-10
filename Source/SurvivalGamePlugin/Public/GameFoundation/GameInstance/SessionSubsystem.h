@@ -28,6 +28,8 @@ private:
 
 	bool bShouldStayIdle = true;
 
+	bool bShouldCloseGame = false;
+
 	IOnlineSessionPtr SessionInterface = nullptr;
 
 	FString ConnectInfo = "";
@@ -58,13 +60,42 @@ public:
 	FString LobbyMapName = "ThirdPersonMap";
 
 	UPROPERTY(EditDefaultsOnly)
+	FString MainMenuMap = "EmptyMapo";
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
 	FName GameSessionLocalName = "GameSessionLocalName";
 
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	int NumPublicConnections = 8;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bIsLANMatch = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bShouldAdvertise = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bUsesPresence = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bUseLobbiesIfAvailable = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bAllowInvites = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bAllowJoinViaPresence = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	bool bAllowJoinInProgress = false;
+
+	
 	UFUNCTION(BlueprintCallable)
-	bool CreateSession(int NumPublicConnections = 4, bool bShouldAdvertise = false, bool bAllowInvites = true, bool bAllowJoinViaPresence = true, bool bAllowJoinInProgress = false);
+	bool CreateSession();
 
 	UFUNCTION(BlueprintCallable)
-	void DestroySession(bool InbShouldStayIdle = true);
+	void DestroySession(bool InbShouldStayIdle = true, bool InShouldCloseGame = false);
 
 	UFUNCTION(BlueprintCallable)
 	void RegisterNewPlayer(APlayerController* InPlayerController);
@@ -74,5 +105,6 @@ public:
 
 	void InviteFriendToSession(FUniqueNetIdRef FriendNetIdPtr);
 
+	UPROPERTY(BlueprintReadOnly, BlueprintCallable)
 	FVoidDataTransferSignature OnHostedGameClosing;
 };

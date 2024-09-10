@@ -44,5 +44,4 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LeaveLobby();
 
-	FBooleanTransferSignature OnTryCreateLobbyCompleted;
 };

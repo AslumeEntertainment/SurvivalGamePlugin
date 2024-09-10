@@ -16,6 +16,8 @@ private:
 
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 
+protected:
+
 public:
 
 	void OnStart() override;

@@ -65,14 +65,6 @@ bool USessionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 
 void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("HandleCreateSessionComplete IsValid(World) == false"));
-		return;
-	}
-
 	if (bWasSuccessful == false)
 	{
 		//fire off error delegate for this shit
@@ -81,8 +73,6 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 	}
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Session Created"));
-	//check if work without hsit line
-	World->ServerTravel(LobbyMapName + "?listen");
 
 	LocalSessionState = ESessionState::Hosting;
 
@@ -110,36 +100,37 @@ void USessionSubsystem::RegisterExistingPlayers()
 void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
 
+	bool ShouldGoToMainMenu = bShouldCloseGame;
+
 	if (bWasSuccessful == false)
 	{
 		//fire off error delegate for this shit
 		UE_LOG(SessionSubsystem, Warning, TEXT("Cloud NOT abandon session"));
+		ShouldGoToMainMenu = true;
+	}
+
+	if (ShouldGoToMainMenu)
+	{
+		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Going to main menu"));
+
+		UWorld* World = GetWorld();
+
+		if (IsValid(World) == false)
+		{
+			UE_LOG(SessionSubsystem, Error, TEXT("HandleDestroySessionComplete IsValid(World) == false"));
+			return;
+		}
+
+		LocalSessionState = ESessionState::Idle;
+		World->ServerTravel(MainMenuMap, true);
+
 		return;
 	}
 
 	if (bShouldStayIdle)
 	{
-		UWorld* World = GetWorld();
-
-		if (IsValid(World) == false)
-		{
-			UE_LOG(SessionSubsystem, Error, TEXT("DestroySession IsValid(World) == false"));
-			return;
-		}
-
-		APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
-		if (IsValid(PC) == false)
-		{
-			UE_LOG(SessionSubsystem, Error, TEXT("DestroySession IsValid(PC) == false"));
-			return;
-		}
-
-		CurrentSessionToJoin = FOnlineSessionSearchResult();
-		ConnectInfo = "";
-
-		UE_LOG(LogTemp, Display, TEXT("SERVER: CLIENT TRAVEL TO IDLE STATE"));
-		PC->ClientTravel(LobbyMapName, ETravelType::TRAVEL_Absolute);
-
+		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Hosting local session"));
+		CreateSession();
 		return;
 	}
 
@@ -177,7 +168,8 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 
 	CurrentSessionToJoin = OnlineSessionSearchResult;
 
-	if (LocalSessionState != ESessionState::Idle)
+	UE_LOG(SessionSubsystem, Display, TEXT("Abondoning current session in order to join new session..."));
+	if(LocalSessionState != ESessionState::Idle)
 	{
 		DestroySession(false);
 		return;
@@ -190,7 +182,7 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 		UE_LOG(SessionSubsystem, Error, TEXT("Failed to initiate joining session..."));
 		return;
 	}
-	UE_LOG(SessionSubsystem, Display, TEXT("Joining session..."));
+	
 }
 
 void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult)
@@ -229,22 +221,40 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 
 }
 
-bool USessionSubsystem::CreateSession(int NumPublicConnections, bool bShouldAdvertise, bool bAllowInvites, bool bAllowJoinViaPresence, bool bAllowJoinInProgress)
+bool USessionSubsystem::CreateSession()
 {
+
+	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
+	if (IsValid(IdentitySubsystemPtr) == false)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("CreateSession (IsValid(IdentitySubsystemPtr) == false"));
+		return false;
+	}
+
+	UWorld* World = GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("HandleCreateSessionComplete IsValid(World) == false"));
+		return false;
+	}
+
+	World->ServerTravel(LobbyMapName + "?listen", true);
+
 	TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
-	SessionSettings->bIsLANMatch = false;
+	SessionSettings->bIsLANMatch = bIsLANMatch;
 	SessionSettings->NumPublicConnections = NumPublicConnections;
 	SessionSettings->bShouldAdvertise = bShouldAdvertise; // Set to true to make this session discoverable with FindSessions.
-	SessionSettings->bUsesPresence = true;
-	SessionSettings->bUseLobbiesIfAvailable = false;
+	SessionSettings->bUsesPresence = bUsesPresence;
+	SessionSettings->bUseLobbiesIfAvailable = bUseLobbiesIfAvailable;
 	SessionSettings->bAllowInvites = bAllowInvites;
 	SessionSettings->bAllowJoinViaPresence = bAllowJoinViaPresence;
 	SessionSettings->bAllowJoinInProgress = bAllowJoinInProgress;
 
 	// You *must* set at least one setting value, because you can not run FindSessions without any filters.
 	SessionSettings->Settings.Add(
-		FName(TEXT("SessionSetting")),
-		FOnlineSessionSetting(FString(TEXT("SettingValue")), EOnlineDataAdvertisementType::ViaOnlineService));
+		FName("HostName"),
+		FOnlineSessionSetting(IdentitySubsystemPtr->GetLocalPlayerDisplayName(), EOnlineDataAdvertisementType::ViaOnlineService));
 
 	// Create a session and give the local name "MyLocalSessionName". This name is entirely local to the current player and isn't stored in EOS.
 	bool bSuccess = SessionInterface->CreateSession(0, GameSessionLocalName, *SessionSettings);
@@ -258,9 +268,10 @@ bool USessionSubsystem::CreateSession(int NumPublicConnections, bool bShouldAdve
 	return true;
 }
 
-void USessionSubsystem::DestroySession(bool InbShouldStayIdle)
+void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldCloseGame)
 {
 	bShouldStayIdle = InbShouldStayIdle;
+	bShouldCloseGame = InShouldCloseGame;
 
 	ESessionState PrevState = LocalSessionState;
 
@@ -299,7 +310,7 @@ void USessionSubsystem::RegisterNewPlayer(APlayerController* InPlayerController)
 			UE_LOG(SessionSubsystem, Error, TEXT("RegisterNewPlayer (IsValid(IdentitySubsystemPtr) == false"));
 			return;
 		}
-
+		UE_LOG(SessionSubsystem, Warning, TEXT("Getting The LocalPlayer NetId"));
 		UniqueNetId = IdentitySubsystemPtr->GetLocalPlayerNetId();
 	}
 	else
@@ -309,7 +320,11 @@ void USessionSubsystem::RegisterNewPlayer(APlayerController* InPlayerController)
 		UniqueNetId = RemoteNetConnection->PlayerId.GetUniqueNetId();
 	}
 
-	check(UniqueNetId != nullptr);
+	if (UniqueNetId == nullptr)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("RegisterNewPlayer UniqueNetId == nullptr of %s"), *InPlayerController->GetName());
+		return;
+	}
 
 	if (SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
 	{
@@ -356,7 +371,11 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 		UniqueNetId = RemoteNetConnection->PlayerId.GetUniqueNetId();
 	}
 
-	check(UniqueNetId != nullptr);
+	if (UniqueNetId == nullptr)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("UnegisterNewPlayer UniqueNetId == nullptr of %s"), *InPlayerController->GetName());
+		return;
+	}
 
 	if (!SessionInterface->IsPlayerInSession(GameSessionLocalName, *UniqueNetId))
 	{

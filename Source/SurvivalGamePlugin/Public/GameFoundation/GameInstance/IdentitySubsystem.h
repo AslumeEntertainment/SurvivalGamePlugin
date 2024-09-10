@@ -37,7 +37,11 @@ public:
 
 	FUniqueNetIdPtr GetLocalPlayerNetId();
 
+	FString GetLocalPlayerDisplayName();
+
+	UPROPERTY(BlueprintAssignable)
 	FVoidDataTransferSignature OnLoginComplete;
+
 	FTextTransferSignature OnLoginError;
 
 };

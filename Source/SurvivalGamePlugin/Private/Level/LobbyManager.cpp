@@ -50,20 +50,6 @@ void ALobbyManager::CreateLobby()
 		default: NumConections = 1;
 	}
 
-	USessionSubsystem* SessionSubsystemPtr = GameInstance->GetSubsystem<USessionSubsystem>();
-	if (IsValid(SessionSubsystemPtr)==false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::CreateLobby IsValid(SessionSubsystem)==false"));
-		return;
-	}
-	bool LobbyCreationStatus = SessionSubsystemPtr->CreateSession(NumConections);
-	OnTryCreateLobbyCompleted.Broadcast(LobbyCreationStatus);
-
-	if (bShouldPrintdDebug)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ALobbyManager::CreateLobby LobbyCreationStatus == %s"), (LobbyCreationStatus ? TEXT("true") : TEXT("false")) );
-	}
-
 	AGameManager** GameManagerPtr = TablesByPlayerNum.Find(NumConections);
 	if (GameManagerPtr == nullptr)
 	{
