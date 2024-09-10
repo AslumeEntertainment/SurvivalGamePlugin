@@ -23,6 +23,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBooleanTransferSignature, bool, Sta
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTextTransferSignature, FText, Text);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStringTransferSignature, FString, Text);
+
 //- - - - - - - - - - Arrays - - - - - 
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStringArrayTransferSignature, TArray<FString>, FriendNames);

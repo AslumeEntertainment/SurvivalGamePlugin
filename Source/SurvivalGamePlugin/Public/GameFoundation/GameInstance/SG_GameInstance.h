@@ -7,6 +7,9 @@
 
 #include "SG_GameInstance.generated.h"
 
+class USessionSubsystem;
+class UGlobalWidgetSubsystem;
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_GameInstance : public UGameInstance
 {
@@ -19,6 +22,13 @@ private:
 protected:
 
 public:
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<USessionSubsystem> SessionSubsystemClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGlobalWidgetSubsystem> GlobalWidgetSubsytemClass;
+
 
 	void OnStart() override;
 

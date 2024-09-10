@@ -63,8 +63,11 @@ public:
 	FString MainMenuMap = "EmptyMapo";
 
 
-	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
+	UPROPERTY(EditDefaultsOnly, Category = "ServerSettings")
 	FName GameSessionLocalName = "GameSessionLocalName";
+
+	UPROPERTY(EditDefaultsOnly, Category = "ServerSettings")
+	int ConnectionPort = 7779;
 
 	UPROPERTY(EditDefaultsOnly, Category = "SessionSettings")
 	int NumPublicConnections = 8;
@@ -105,6 +108,12 @@ public:
 
 	void InviteFriendToSession(FUniqueNetIdRef FriendNetIdPtr);
 
-	UPROPERTY(BlueprintReadOnly, BlueprintCallable)
+	//UPROPERTY(BlueprintReadOnly, BlueprintCallable)
 	FVoidDataTransferSignature OnHostedGameClosing;
+
+	UPROPERTY(BlueprintAssignable)
+	FStringTransferSignature OnCoverUpWidgetNeeded;
+
+	UPROPERTY(BlueprintAssignable)
+	FVoidDataTransferSignature OnCoverUpWidgetNotNeeded;
 };

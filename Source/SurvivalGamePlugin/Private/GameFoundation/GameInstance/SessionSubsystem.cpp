@@ -76,6 +76,19 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 
 	LocalSessionState = ESessionState::Hosting;
 
+	UWorld* World = GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("HandleCreateSessionComplete IsValid(World) == false"));
+		return;
+	}
+
+	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING ON LISTEN SERVER + SERVER TRAVEL"));
+
+	//World->GetGameInstance()->EnableListenServer(true, ConnectionPort);
+	World->ServerTravel(LobbyMapName + "?listen", true);
+
 	RegisterExistingPlayers();
 }
 
@@ -109,21 +122,23 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 		ShouldGoToMainMenu = true;
 	}
 
+	UWorld* World = GetWorld();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(SessionSubsystem, Error, TEXT("HandleDestroySessionComplete IsValid(World) == false"));
+		return;
+	}
+
+	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING OFF LISTEN SERVER"));
+	LocalSessionState = ESessionState::Idle;
+	World->GetGameInstance()->EnableListenServer(false, ConnectionPort);
+	World->ServerTravel(MainMenuMap, true);
+
 	if (ShouldGoToMainMenu)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Going to main menu"));
-
-		UWorld* World = GetWorld();
-
-		if (IsValid(World) == false)
-		{
-			UE_LOG(SessionSubsystem, Error, TEXT("HandleDestroySessionComplete IsValid(World) == false"));
-			return;
-		}
-
-		LocalSessionState = ESessionState::Idle;
-		World->ServerTravel(MainMenuMap, true);
-
+		OnCoverUpWidgetNotNeeded.Broadcast();
 		return;
 	}
 
@@ -135,6 +150,8 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 	}
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Joining server session"));
+
+	OnCoverUpWidgetNeeded.Broadcast("Joining Lobby...");
 
 	bool bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
 	if (!bSuccess)
@@ -157,6 +174,7 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 	}
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Invite Accepted"));
+	OnCoverUpWidgetNeeded.Broadcast("Invite Accepted...");
 
 	bool bSuccess = SessionInterface->GetResolvedConnectString(OnlineSessionSearchResult, NAME_GamePort, ConnectInfo);
 	if (!bSuccess)
@@ -168,12 +186,14 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 
 	CurrentSessionToJoin = OnlineSessionSearchResult;
 
-	UE_LOG(SessionSubsystem, Display, TEXT("Abondoning current session in order to join new session..."));
+	UE_LOG(SessionSubsystem, Display, TEXT("Abandoning current session in order to join new session..."));
 	if(LocalSessionState != ESessionState::Idle)
 	{
 		DestroySession(false);
 		return;
 	}
+
+	OnCoverUpWidgetNeeded.Broadcast("Joining Session...");
 
 	bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
 	if (!bSuccess)
@@ -187,6 +207,8 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 
 void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult)
 {
+	OnCoverUpWidgetNeeded.Broadcast("Traveling to lobby...");
+
 	UWorld* World = GetWorld();
 
 	if (IsValid(World) == false)
@@ -219,10 +241,13 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 	//test if it will work without this line
 	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);//add ,true for seamless travel
 
+	OnCoverUpWidgetNotNeeded.Broadcast();
+
 }
 
 bool USessionSubsystem::CreateSession()
 {
+	OnCoverUpWidgetNeeded.Broadcast("Creating Lobby...");
 
 	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
 	if (IsValid(IdentitySubsystemPtr) == false)
@@ -230,16 +255,6 @@ bool USessionSubsystem::CreateSession()
 		UE_LOG(SessionSubsystem, Error, TEXT("CreateSession (IsValid(IdentitySubsystemPtr) == false"));
 		return false;
 	}
-
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("HandleCreateSessionComplete IsValid(World) == false"));
-		return false;
-	}
-
-	World->ServerTravel(LobbyMapName + "?listen", true);
 
 	TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
 	SessionSettings->bIsLANMatch = bIsLANMatch;
@@ -256,7 +271,7 @@ bool USessionSubsystem::CreateSession()
 		FName("HostName"),
 		FOnlineSessionSetting(IdentitySubsystemPtr->GetLocalPlayerDisplayName(), EOnlineDataAdvertisementType::ViaOnlineService));
 
-	// Create a session and give the local name "MyLocalSessionName". This name is entirely local to the current player and isn't stored in EOS.
+	UE_LOG(SessionSubsystem, Warning, TEXT("CREATING SESSION"));
 	bool bSuccess = SessionInterface->CreateSession(0, GameSessionLocalName, *SessionSettings);
 	if (!bSuccess)
 	{
@@ -277,9 +292,12 @@ void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldClos
 
 	LocalSessionState = ESessionState::Idle;
 
+	OnCoverUpWidgetNeeded.Broadcast("Leaving Lobby...");
+
 	if (PrevState == ESessionState::Hosting)
 	{
 		OnHostedGameClosing.Broadcast();
+		OnCoverUpWidgetNeeded.Broadcast("Closing Lobby...");
 	}
 
 	bool bSuccess = SessionInterface->DestroySession(GameSessionLocalName);
@@ -335,7 +353,7 @@ void USessionSubsystem::RegisterNewPlayer(APlayerController* InPlayerController)
 	if (!SessionInterface->RegisterPlayer(GameSessionLocalName, *UniqueNetId, true))
 	{
 		// The player could not be registered; typically you will want to kick the player from the server in this situation.
-		UE_LOG(SessionSubsystem, Error, TEXT("New player could NOT be reghistered"));
+		UE_LOG(SessionSubsystem, Error, TEXT("New player could NOT be registered"));
 		return;
 	}
 
@@ -373,7 +391,7 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 
 	if (UniqueNetId == nullptr)
 	{
-		UE_LOG(SessionSubsystem, Error, TEXT("UnegisterNewPlayer UniqueNetId == nullptr of %s"), *InPlayerController->GetName());
+		UE_LOG(SessionSubsystem, Error, TEXT("UnregisterNewPlayer UniqueNetId == nullptr of %s"), *InPlayerController->GetName());
 		return;
 	}
 
@@ -386,11 +404,11 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 	if (!SessionInterface->UnregisterPlayer(GameSessionLocalName, *UniqueNetId))
 	{
 		// The player could not be registered; typically you will want to kick the player from the server in this situation.
-		UE_LOG(SessionSubsystem, Error, TEXT("Player could NOT be unreghistered"));
+		UE_LOG(SessionSubsystem, Error, TEXT("Player could NOT be unregistered"));
 		return;
 	}
 
-	UE_LOG(SessionSubsystem, Display, TEXT("Player Unegistered Successfully"));
+	UE_LOG(SessionSubsystem, Display, TEXT("Player Unregistered Successfully"));
 }
 
 void USessionSubsystem::InviteFriendToSession(FUniqueNetIdRef FriendNetIdPtr)

@@ -96,3 +96,8 @@ FString UIdentitySubsystem::GetLocalPlayerDisplayName()
 {
 	return IdentityInterface->GetPlayerNickname(*LocalPlayerNetId);
 }
+
+bool UIdentitySubsystem::IsPLayerLoggedIn()
+{
+	return LocalPlayerNetId != nullptr;
+}

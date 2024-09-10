@@ -22,7 +22,7 @@ private:
 
 	IOnlineIdentityPtr IdentityInterface = nullptr;
 
-	FUniqueNetIdPtr LocalPlayerNetId;
+	FUniqueNetIdPtr LocalPlayerNetId = nullptr;
 
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
@@ -38,6 +38,9 @@ public:
 	FUniqueNetIdPtr GetLocalPlayerNetId();
 
 	FString GetLocalPlayerDisplayName();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsPLayerLoggedIn();
 
 	UPROPERTY(BlueprintAssignable)
 	FVoidDataTransferSignature OnLoginComplete;
