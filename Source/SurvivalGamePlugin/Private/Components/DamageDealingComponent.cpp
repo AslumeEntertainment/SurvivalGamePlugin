@@ -178,6 +178,12 @@ FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FD
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(NewGameplayEffect.DamageEffectClass) == false"));
 		return FGameplayEffectSpecHandle();
 	}
+	if (!IsValid(GetOwner()))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(GetOwner()) == false"));
+		return FGameplayEffectSpecHandle();
+	}
+
 	FGameplayEffectContextHandle EffectContextHandle = FGameplayEffectContextHandle(USG_AbilitySystemGlobals::Get().AllocGameplayEffectContext());
 	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
 	Context->SetDamageType(NewGameplayEffect.DamageType);
