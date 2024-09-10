@@ -125,6 +125,20 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	PlayMontageTask->ReadyForActivation();
 }
 
+void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
+	{
+		if (IsValid(DamageDealingComponent))
+		{
+			DamageDealingComponent->ResetDamageEffects();
+		}
+	}
+	Player->ActiveDamageDealingComponents.Empty();
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
 FGameplayTagContainer USGGA_BasicAttackAbility::GetMirroredAbilityDamageComponentTags()
 {
 	FGameplayTagContainer MirroredTags;
@@ -153,19 +167,14 @@ void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 	{
 		AnimInst->bIsMirrored = false;
 	}
-	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
-	{
-		DamageDealingComponent->ResetDamageEffects();
-	}
-	Player->ActiveDamageDealingComponents.Empty();
 	
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability complete!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage complete!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageBlendOut()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Attack over, blending out anim montage..."));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage blending out..."));
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
@@ -174,12 +183,7 @@ void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 	{
 		AnimInst->bIsMirrored = false;
 	}
-	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
-	{
-		DamageDealingComponent->ResetDamageEffects();
-	}
-	Player->ActiveDamageDealingComponents.Empty();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

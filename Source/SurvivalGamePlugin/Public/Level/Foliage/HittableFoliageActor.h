@@ -25,11 +25,26 @@ protected:
 	
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DefauttAttributeValues")
+	UPROPERTY(EditDefaultsOnly, Category = "DefaultAttributeValues")
 	float MaxHealth = 100.f;
 
 	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ToolTip = "Value should follow this format: 000-000\nExample: 009-011"))
 	TMap<TSubclassOf<AActor>, FString> ActorsToDropOnDestroyed;
+
+	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ToolTip = "Should dropped actors be stacked vertically when spawned (Used for trees)"))
+	bool bShouldStackVertically = false;
+
+	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
+		meta = (ToolTip = "The percent of the foliage actor's height at which dropped actors will spawn"))
+	float StartingHeightPercent = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"), 
+		meta = (ToolTip = "How far can the dropped actors spawn from the center of the foliage actor"))
+	float Spread = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
+		meta = (ToolTip = "Defines the limit to how much a dropped actor can be rotated when spawned"))
+	float RotationLimit = 0.5f;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
