@@ -45,8 +45,8 @@ void USG_GameInstance::OnStart()
 		return;
 	}
 
-	SessionSubsystemPtr->OnCoverUpWidgetNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::BeginLoadingScreen);
-	SessionSubsystemPtr->OnCoverUpWidgetNotNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::EndLoadingScreen);
+	//SessionSubsystemPtr->OnCoverUpWidgetNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::BeginLoadingScreen);
+	//SessionSubsystemPtr->OnCoverUpWidgetNotNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::EndLoadingScreen);
 }
 
 void USG_GameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)

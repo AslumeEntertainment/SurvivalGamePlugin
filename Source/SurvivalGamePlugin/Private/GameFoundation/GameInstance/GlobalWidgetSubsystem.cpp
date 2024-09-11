@@ -21,6 +21,8 @@ void UGlobalWidgetSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		UE_LOG(GlobalWidgetSubsystem, Error, TEXT("BeginLoadingScreen IsValid(MoviePlayer) == false"));
 		return;
 	}
+
+	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UGlobalWidgetSubsystem::BeginLoadingScreen);
 }
 
 void UGlobalWidgetSubsystem::Deinitialize()
@@ -49,7 +51,7 @@ bool UGlobalWidgetSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return false;
 }
 
-void UGlobalWidgetSubsystem::BeginLoadingScreen(FString LoadingScreenPackName)
+void UGlobalWidgetSubsystem::BeginLoadingScreen(const FString& LoadingScreenPackName)
 {
 
 

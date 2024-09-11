@@ -69,7 +69,7 @@ public:
 	TMap<FString, FLoadingScreenData> LoadingScreenPacks;
 	
 	UFUNCTION()
-	virtual void BeginLoadingScreen(FString LoadingScreenPackName);
+	virtual void BeginLoadingScreen(const FString& LoadingScreenPackName);
 
 	UFUNCTION()
 	virtual void EndLoadingScreen();

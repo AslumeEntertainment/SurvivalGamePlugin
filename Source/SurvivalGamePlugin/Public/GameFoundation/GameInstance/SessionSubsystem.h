@@ -59,8 +59,8 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FString LobbyMapName = "ThirdPersonMap";
 
-	//UPROPERTY(EditDefaultsOnly)
-	//FString TransitionLoadingMap = "EmptyMapo";
+	UPROPERTY(EditDefaultsOnly)
+	FString TransitionLoadingMap = "TransitionMap";
 
 	UPROPERTY(EditDefaultsOnly)
 	FString MainMenuMap = "EmptyMapo";

@@ -87,7 +87,6 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING ON LISTEN SERVER + SERVER TRAVEL"));
 
 	World->ServerTravel(LobbyMapName + "?listen", true);
-	OnCoverUpWidgetNotNeeded.Broadcast();//hosted session removing loading screen
 	RegisterExistingPlayers();
 }
 
@@ -132,20 +131,19 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING OFF LISTEN SERVER"));
 	LocalSessionState = ESessionState::Idle;
 	World->GetGameInstance()->EnableListenServer(false, ConnectionPort);
-	World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
+	//World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
 
 	if (ShouldGoToMainMenu)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Going to main menu"));
-		//World->ServerTravel(MainMenuMap, true); sloji go tuka i otkomentirai tva v dolniq if ako ne raboti sus startin movietata
-		OnCoverUpWidgetNotNeeded.Broadcast();//returned to main menu removing loading screen
+		World->ServerTravel(MainMenuMap, true);// sloji go tuka i otkomentirai tva v dolniq if ako ne raboti sus startin movietata
 		return;
 	}
 
 	if (bShouldStayIdle)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Hosting local session"));
-		//World->ServerTravel(TransitionLoadingMap, true);
+		World->ServerTravel(TransitionLoadingMap, true);
 		CreateSession();
 		return;
 	}
@@ -220,13 +218,11 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 	LocalSessionState = ESessionState::Joined;
 
 	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);
-	OnCoverUpWidgetNotNeeded.Broadcast();//joined in session removing loading screen
 
 }
 
 bool USessionSubsystem::CreateSession()
 {
-	OnCoverUpWidgetNeeded.Broadcast(CreatingSessionCoverUpMessage);
 
 	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
 	if (IsValid(IdentitySubsystemPtr) == false)
@@ -265,7 +261,6 @@ bool USessionSubsystem::CreateSession()
 void USessionSubsystem::JoinSession()
 {
 
-	OnCoverUpWidgetNeeded.Broadcast(JoinSessionCoverUpMessage);
 
 	bool bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
 	if (!bSuccess)
@@ -279,7 +274,6 @@ void USessionSubsystem::JoinSession()
 
 void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldCloseGame)
 {
-	OnCoverUpWidgetNeeded.Broadcast(LeavingSessionCoverUpMessage);
 
 	bShouldStayIdle = InbShouldStayIdle;
 	bShouldCloseGame = InShouldCloseGame;
