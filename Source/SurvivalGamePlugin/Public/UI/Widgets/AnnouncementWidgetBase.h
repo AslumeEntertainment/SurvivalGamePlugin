@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "CoverUpWidgetBase.generated.h"
+#include "AnnouncementWidgetBase.generated.h"
 
 class UTextBlock;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UCoverUpWidgetBase : public UUserWidget
+class SURVIVALGAMEPLUGIN_API UAnnouncementWidgetBase : public UUserWidget
 {
 	GENERATED_BODY()
 	

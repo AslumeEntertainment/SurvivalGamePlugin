@@ -15,6 +15,13 @@
 
 DEFINE_LOG_CATEGORY_STATIC(Networking, Log, All);
 
+void USG_GameInstance::Init()
+{
+	Super::Init();
+
+
+}
+
 void USG_GameInstance::OnStart()
 {
 	Super::OnStart();
@@ -38,8 +45,8 @@ void USG_GameInstance::OnStart()
 		return;
 	}
 
-	SessionSubsystemPtr->OnCoverUpWidgetNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::ShowAnnouncementWidget);
-	SessionSubsystemPtr->OnCoverUpWidgetNotNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::HideAnnouncementWidget);
+	SessionSubsystemPtr->OnCoverUpWidgetNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::BeginLoadingScreen);
+	SessionSubsystemPtr->OnCoverUpWidgetNotNeeded.AddDynamic(GlobalWidgetSubsystemPtr, &UGlobalWidgetSubsystem::EndLoadingScreen);
 }
 
 void USG_GameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)

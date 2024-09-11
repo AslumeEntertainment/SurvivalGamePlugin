@@ -86,9 +86,8 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING ON LISTEN SERVER + SERVER TRAVEL"));
 
-	//World->GetGameInstance()->EnableListenServer(true, ConnectionPort);
 	World->ServerTravel(LobbyMapName + "?listen", true);
-
+	OnCoverUpWidgetNotNeeded.Broadcast();//hosted session removing loading screen
 	RegisterExistingPlayers();
 }
 
@@ -133,35 +132,27 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING OFF LISTEN SERVER"));
 	LocalSessionState = ESessionState::Idle;
 	World->GetGameInstance()->EnableListenServer(false, ConnectionPort);
-	World->ServerTravel(MainMenuMap, true);
+	World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
 
 	if (ShouldGoToMainMenu)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Going to main menu"));
-		OnCoverUpWidgetNotNeeded.Broadcast();
+		//World->ServerTravel(MainMenuMap, true); sloji go tuka i otkomentirai tva v dolniq if ako ne raboti sus startin movietata
+		OnCoverUpWidgetNotNeeded.Broadcast();//returned to main menu removing loading screen
 		return;
 	}
 
 	if (bShouldStayIdle)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Hosting local session"));
+		//World->ServerTravel(TransitionLoadingMap, true);
 		CreateSession();
 		return;
 	}
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Joining server session"));
 
-	OnCoverUpWidgetNeeded.Broadcast("Joining Lobby...");
-
-	bool bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
-	if (!bSuccess)
-	{
-		//fire off error delegate for this shit
-		UE_LOG(SessionSubsystem, Error, TEXT("Failed to initiate joining session..."));
-		return;
-	}
-	UE_LOG(SessionSubsystem, Display, TEXT("Joining session..."));
-
+	JoinSession();
 }
 
 void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId, ESPMode::ThreadSafe> UserId, const FOnlineSessionSearchResult& OnlineSessionSearchResult)
@@ -174,7 +165,6 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 	}
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Invite Accepted"));
-	OnCoverUpWidgetNeeded.Broadcast("Invite Accepted...");
 
 	bool bSuccess = SessionInterface->GetResolvedConnectString(OnlineSessionSearchResult, NAME_GamePort, ConnectInfo);
 	if (!bSuccess)
@@ -193,21 +183,12 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 		return;
 	}
 
-	OnCoverUpWidgetNeeded.Broadcast("Joining Session...");
-
-	bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
-	if (!bSuccess)
-	{
-		//fire off error delegate for this shit
-		UE_LOG(SessionSubsystem, Error, TEXT("Failed to initiate joining session..."));
-		return;
-	}
+	JoinSession();
 	
 }
 
 void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult)
 {
-	OnCoverUpWidgetNeeded.Broadcast("Traveling to lobby...");
 
 	UWorld* World = GetWorld();
 
@@ -238,16 +219,14 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 
 	LocalSessionState = ESessionState::Joined;
 
-	//test if it will work without this line
-	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);//add ,true for seamless travel
-
-	OnCoverUpWidgetNotNeeded.Broadcast();
+	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);
+	OnCoverUpWidgetNotNeeded.Broadcast();//joined in session removing loading screen
 
 }
 
 bool USessionSubsystem::CreateSession()
 {
-	OnCoverUpWidgetNeeded.Broadcast("Creating Lobby...");
+	OnCoverUpWidgetNeeded.Broadcast(CreatingSessionCoverUpMessage);
 
 	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
 	if (IsValid(IdentitySubsystemPtr) == false)
@@ -283,8 +262,25 @@ bool USessionSubsystem::CreateSession()
 	return true;
 }
 
+void USessionSubsystem::JoinSession()
+{
+
+	OnCoverUpWidgetNeeded.Broadcast(JoinSessionCoverUpMessage);
+
+	bool bSuccess = SessionInterface->JoinSession(0, GameSessionLocalName, CurrentSessionToJoin);
+	if (!bSuccess)
+	{
+		//fire off error delegate for this shit
+		UE_LOG(SessionSubsystem, Error, TEXT("Failed to initiate joining session..."));
+		return;
+	}
+	UE_LOG(SessionSubsystem, Display, TEXT("Joining session..."));
+}
+
 void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldCloseGame)
 {
+	OnCoverUpWidgetNeeded.Broadcast(LeavingSessionCoverUpMessage);
+
 	bShouldStayIdle = InbShouldStayIdle;
 	bShouldCloseGame = InShouldCloseGame;
 
@@ -292,12 +288,9 @@ void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldClos
 
 	LocalSessionState = ESessionState::Idle;
 
-	OnCoverUpWidgetNeeded.Broadcast("Leaving Lobby...");
-
 	if (PrevState == ESessionState::Hosting)
 	{
 		OnHostedGameClosing.Broadcast();
-		OnCoverUpWidgetNeeded.Broadcast("Closing Lobby...");
 	}
 
 	bool bSuccess = SessionInterface->DestroySession(GameSessionLocalName);

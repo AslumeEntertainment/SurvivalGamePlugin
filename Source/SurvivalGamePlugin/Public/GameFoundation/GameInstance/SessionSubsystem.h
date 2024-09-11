@@ -59,9 +59,20 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FString LobbyMapName = "ThirdPersonMap";
 
+	//UPROPERTY(EditDefaultsOnly)
+	//FString TransitionLoadingMap = "EmptyMapo";
+
 	UPROPERTY(EditDefaultsOnly)
 	FString MainMenuMap = "EmptyMapo";
 
+	UPROPERTY(EditDefaultsOnly, Category = "SessionCoverUp")
+	FString LeavingSessionCoverUpMessage = "LeavingSession";
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionCoverUp")
+	FString CreatingSessionCoverUpMessage = "CreatingSession";
+
+	UPROPERTY(EditDefaultsOnly, Category = "SessionCoverUp")
+	FString JoinSessionCoverUpMessage = "JoiningSession";
 
 	UPROPERTY(EditDefaultsOnly, Category = "ServerSettings")
 	FName GameSessionLocalName = "GameSessionLocalName";
@@ -96,6 +107,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	bool CreateSession();
+
+	UFUNCTION(BlueprintCallable)
+	void JoinSession();
 
 	UFUNCTION(BlueprintCallable)
 	void DestroySession(bool InbShouldStayIdle = true, bool InShouldCloseGame = false);

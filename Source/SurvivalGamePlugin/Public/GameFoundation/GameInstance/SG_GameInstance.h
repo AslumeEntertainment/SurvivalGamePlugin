@@ -23,13 +23,14 @@ protected:
 
 public:
 
+	virtual void Init() override;
+
+	void OnStart() override;
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<USessionSubsystem> SessionSubsystemClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGlobalWidgetSubsystem> GlobalWidgetSubsytemClass;
-
-
-	void OnStart() override;
 
 };
