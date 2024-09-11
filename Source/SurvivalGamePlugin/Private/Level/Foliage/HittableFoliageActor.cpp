@@ -26,9 +26,6 @@ AHittableFoliageActor::AHittableFoliageActor()
 void AHittableFoliageActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AttributeSet->SetMaxHealth(MaxHealth);
-	AttributeSet->SetHealth(MaxHealth);
 }
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
@@ -53,12 +50,17 @@ void AHittableFoliageActor::OnHittableDestroyed_Implementation()
 			return;
 		}
 
-		FVector MinBounds, MaxBounds;
-		StaticMesh->GetLocalBounds(MinBounds, MaxBounds);
-		double StartingHeight = (GetActorLocation().Z + MinBounds.Z) + ((MaxBounds.Z - MinBounds.Z) * StartingHeightPercent);
-		FVector CurrentSpawningPoint = GetActorLocation();
-		CurrentSpawningPoint.Z = StartingHeight;
-		//UE_LOG(LogTemp, Warning, TEXT("Actor is located at %s and has the following bounds: %s ; %s"), *GetActorLocation().ToString(), *MinBounds.ToString(), *MaxBounds.ToString());
+		FVector MinLocalBounds, MaxLocalBounds;
+		StaticMesh->GetLocalBounds(MinLocalBounds, MaxLocalBounds);
+		FVector ActorSize = MaxLocalBounds - MinLocalBounds;
+		FVector ActorBottom = GetActorLocation() + GetActorUpVector() * MinLocalBounds.Z;
+		FVector ActorTop = GetActorLocation() + GetActorUpVector() * MaxLocalBounds.Z;
+
+		double LowerHeight = ActorSize.Z * LowerHeightPercent;
+		double UpperHeight = ActorSize.Z * LowerHeightPercent;
+
+		FVector CurrentSpawningPoint = ActorBottom;
+		CurrentSpawningPoint += GetActorUpVector() * (ActorSize.Z * LowerHeightPercent);
 
 		for (auto& Drop : ActorsToDropOnDestroyed)
 		{
@@ -80,15 +82,16 @@ void AHittableFoliageActor::OnHittableDestroyed_Implementation()
 						continue;
 					}
 					FVector NewActorMinBounds, NewActorMaxBounds;
-					StaticMesh->GetLocalBounds(NewActorMinBounds, NewActorMaxBounds);
+					DroppedActorMesh->GetLocalBounds(NewActorMinBounds, NewActorMaxBounds);
 					CurrentSpawningPoint += GetActorUpVector() * (NewActorMaxBounds.Z - NewActorMinBounds.Z);
 				}
 				else
 				{
-					NewActorLocation.Z += FMath::RandRange(StartingHeight, GetActorLocation().Z + (MaxBounds.Z - MinBounds.Z));
+					NewActorLocation.Z = ActorBottom.Z;
+					NewActorLocation.Z += FMath::RandRange(LowerHeight, UpperHeight);
 				}
-				NewActorLocation.X += FMath::RandRange(MinBounds.X, MaxBounds.X) * Spread;
-				NewActorLocation.Y += FMath::RandRange(MinBounds.Y, MaxBounds.Y) * Spread;
+				NewActorLocation.X += FMath::RandRange(MinLocalBounds.X, MaxLocalBounds.X) * Spread;
+				NewActorLocation.Y += FMath::RandRange(MinLocalBounds.Y, MaxLocalBounds.Y) * Spread;
 
 				DroppedActor->SetActorLocation(NewActorLocation);
 			}
