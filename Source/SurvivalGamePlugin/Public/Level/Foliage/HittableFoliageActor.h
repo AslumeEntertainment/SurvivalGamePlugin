@@ -25,9 +25,6 @@ protected:
 	
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DefaultAttributeValues")
-	float MaxHealth = 100.f;
-
 	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ToolTip = "Value should follow this format: 000-000\nExample: 009-011"))
 	TMap<TSubclassOf<AActor>, FString> ActorsToDropOnDestroyed;
 
@@ -35,8 +32,12 @@ protected:
 	bool bShouldStackVertically = false;
 
 	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
-		meta = (ToolTip = "The percent of the foliage actor's height at which dropped actors will spawn"))
-	float StartingHeightPercent = 0.5f;
+		meta = (ToolTip = "The lower percent of the foliage actor's height at which dropped actors will spawn"))
+	float LowerHeightPercent = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
+		meta = (ToolTip = "The upper percent of the foliage actor's height at which dropped actors will spawn"))
+	float UpperHeightPercent = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"), 
 		meta = (ToolTip = "How far can the dropped actors spawn from the center of the foliage actor"))
