@@ -108,5 +108,5 @@ void USGGA_BasicRestoringAbility::OnEventRecieved(FGameplayEventData Payload)
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, OnNotifyRecievedGameplayEventTag, RegeneratingValue);
 	FActiveGameplayEffectHandle GEHandle = Player->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*Spec);
 
-	RegeneratingItem->ServerLoseDurability(1.f);
+	RegeneratingItem->Server_LoseDurability(1.f);
 }

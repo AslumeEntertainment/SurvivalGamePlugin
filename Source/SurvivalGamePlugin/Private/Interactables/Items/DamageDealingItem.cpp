@@ -18,7 +18,7 @@ void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
 {
     float DurabilityLost = 20;
     //calculating...
-    ServerLoseDurability(DurabilityLost);
+    Server_LoseDurability(DurabilityLost);
 }
 
 void ADamageDealingItem::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
