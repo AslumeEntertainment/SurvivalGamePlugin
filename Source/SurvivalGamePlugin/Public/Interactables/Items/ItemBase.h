@@ -10,6 +10,7 @@
 #include "GameplayTagContainer.h"
 #include "ItemBase.generated.h"
 
+class UStaticMeshComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface
@@ -43,10 +44,13 @@ protected:
 	FDataTableRowHandle ItemDataRow;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* StaticMesh;
+	UStaticMeshComponent* StaticMesh;
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetActorPhysics(bool NewActorPhysics);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastSetActorEnableCollision(bool NewActorCollision);
+	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
 
 public:	
 
@@ -57,7 +61,7 @@ public:
 	void Use(ASG_Character* PlayerOwner);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void ServerLoseDurability(float LostDurability);
+	void Server_LoseDurability(float LostDurability);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
@@ -71,6 +75,6 @@ public:
 	virtual void InteractRequest() override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
-	FName GetItemDataRowName();
+	FName GetItemDataRowName() const;
 	class UStaticMeshComponent* GetItemMesh();
 };

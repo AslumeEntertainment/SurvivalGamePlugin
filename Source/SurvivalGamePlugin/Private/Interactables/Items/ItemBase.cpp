@@ -17,6 +17,7 @@ AItemBase::AItemBase()
 	bReplicates = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	SetRootComponent(StaticMesh);
 }
 
@@ -32,8 +33,10 @@ void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
+
 	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
-	if (!TempItemData)
+	if (TempItemData == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
 	}
@@ -41,9 +44,15 @@ void AItemBase::BeginPlay()
 	CurrentDurability = ItemData.ItemDurability;
 }
 
-void AItemBase::NetMulticastSetActorEnableCollision_Implementation(bool NewActorCollision)
+void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
 {
-	SetActorEnableCollision(NewActorCollision);
+	NetMulticast_SetActorPhysics(NewActorPhysics);
+}
+
+void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
+{
+	StaticMesh->SetSimulatePhysics(NewActorPhysics);
+	NewActorPhysics ? StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics) : StaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Use(ASG_Character* PlayerOwner)
@@ -77,7 +86,7 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 	}
 }
 
-void AItemBase::ServerLoseDurability_Implementation(float LostDurability)
+void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 {
 	CurrentDurability -= LostDurability;
 	if (CurrentDurability <= 0)
@@ -88,10 +97,11 @@ void AItemBase::ServerLoseDurability_Implementation(float LostDurability)
 
 void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 {
+	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
+
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
-
-	NetMulticastSetActorEnableCollision(false);
+	
 	AbilitySpecHandle = PlayerOwner->AddAbility(ItemAbility);
 	bIsAttached = true;
 	SetOwner(PlayerOwner);
@@ -110,7 +120,8 @@ void AItemBase::OnItemUnequiped()
 	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
 	SetActorRotation(PlayerOwner->GetActorRotation());
 
-	NetMulticastSetActorEnableCollision(true);
+	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
+
 	PlayerOwner->RemoveAbility(AbilitySpecHandle);
 	bIsAttached = false;
 	SetOwner(nullptr);
@@ -135,7 +146,7 @@ bool AItemBase::bCanInteract(AController* InteractingCharacter)
 	return !bIsAttached;
 }
 
-FName AItemBase::GetItemDataRowName()
+FName AItemBase::GetItemDataRowName() const
 {
 	return ItemDataRow.RowName;
 }

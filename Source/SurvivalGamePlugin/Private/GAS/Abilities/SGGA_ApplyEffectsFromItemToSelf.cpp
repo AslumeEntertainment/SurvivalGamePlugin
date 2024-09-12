@@ -92,5 +92,5 @@ void USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved(FGameplayEventData Payloa
 		Player->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*GrantedEffectSpecHandle.Data.Get());
 	}
 
-	EffectGrantingItem->ServerLoseDurability(1.f);
+	EffectGrantingItem->Server_LoseDurability(1.f);
 }
