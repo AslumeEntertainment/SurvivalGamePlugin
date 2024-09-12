@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "GameManagingStructs.generated.h"
 
 UENUM(BlueprintType)
@@ -24,6 +25,9 @@ struct FRuleset
 
     UPROPERTY(EditAnywhere)
     ETeamDistribution TeamDistribution = ETeamDistribution::AllTogether;
+
+    UPROPERTY(EditAnywhere)
+    int ProgressionType = 1;
 };
 
 USTRUCT(BlueprintType)
@@ -50,6 +54,9 @@ struct FGame
     int Biome = 0;
 
     UPROPERTY(EditAnywhere)
+    TArray<int> GuaranteedStructures;
+
+    UPROPERTY(EditAnywhere)
     TArray<FDeck> Enemies;
 
     UPROPERTY(EditAnywhere)
@@ -70,5 +77,21 @@ struct FCampaign
     int NumPlayers = 1;
 
     UPROPERTY(EditAnywhere)
+    bool IsSuperVised = false;
+
+    UPROPERTY(EditAnywhere)
     TArray<FGame> Games;
+};
+
+USTRUCT(BlueprintType)
+struct FCampaignPersistentData : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FString Code = "Name:2:s:1[d:0[]:1[d:::1-]:p:a:s:e-]";
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UTexture2D* CampaignIcon = nullptr;
+    
 };

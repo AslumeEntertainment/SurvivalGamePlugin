@@ -17,8 +17,6 @@
  * 
  */
 
-class FonlineFriend;
-
 UCLASS(Blueprintable)
 class SURVIVALGAMEPLUGIN_API USessionSubsystem : public UGameInstanceSubsystem
 {
@@ -27,8 +25,6 @@ class SURVIVALGAMEPLUGIN_API USessionSubsystem : public UGameInstanceSubsystem
 private:
 
 	bool bShouldStayIdle = true;
-
-	bool bShouldCloseGame = false;
 
 	IOnlineSessionPtr SessionInterface = nullptr;
 
@@ -112,7 +108,7 @@ public:
 	void JoinSession();
 
 	UFUNCTION(BlueprintCallable)
-	void DestroySession(bool InbShouldStayIdle = true, bool InShouldCloseGame = false);
+	void DestroySession(bool InbShouldStayIdle = true);
 
 	UFUNCTION(BlueprintCallable)
 	void RegisterNewPlayer(APlayerController* InPlayerController);

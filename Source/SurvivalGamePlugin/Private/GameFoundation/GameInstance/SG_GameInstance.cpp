@@ -62,5 +62,5 @@ void USG_GameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver
 		return;
 	}
 
-	SessionSubsystemPtr->DestroySession(true, true);
+	SessionSubsystemPtr->DestroySession();
 }

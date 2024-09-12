@@ -111,7 +111,7 @@ void USessionSubsystem::RegisterExistingPlayers()
 void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
 
-	bool ShouldGoToMainMenu = bShouldCloseGame;
+	bool ShouldGoToMainMenu = bShouldStayIdle;
 
 	if (bWasSuccessful == false)
 	{
@@ -131,22 +131,22 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING OFF LISTEN SERVER"));
 	LocalSessionState = ESessionState::Idle;
 	World->GetGameInstance()->EnableListenServer(false, ConnectionPort);
-	//World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
+	World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
 
 	if (ShouldGoToMainMenu)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Going to main menu"));
-		World->ServerTravel(MainMenuMap, true);// sloji go tuka i otkomentirai tva v dolniq if ako ne raboti sus startin movietata
+		//World->ServerTravel(MainMenuMap, true);// sloji go tuka i otkomentirai tva v dolniq if ako ne raboti sus startin movietata
 		return;
 	}
 
-	if (bShouldStayIdle)
+	/*if (bShouldStayIdle)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Hosting local session"));
-		World->ServerTravel(TransitionLoadingMap, true);
+		//World->ServerTravel(TransitionLoadingMap, true); //tva e s drugite komenatri
 		CreateSession();
 		return;
-	}
+	}*/
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Joining server session"));
 
@@ -272,11 +272,10 @@ void USessionSubsystem::JoinSession()
 	UE_LOG(SessionSubsystem, Display, TEXT("Joining session..."));
 }
 
-void USessionSubsystem::DestroySession(bool InbShouldStayIdle, bool InShouldCloseGame)
+void USessionSubsystem::DestroySession(bool InbShouldStayIdle)
 {
 
 	bShouldStayIdle = InbShouldStayIdle;
-	bShouldCloseGame = InShouldCloseGame;
 
 	ESessionState PrevState = LocalSessionState;
 

@@ -4,11 +4,13 @@
 #include "Level/LobbyManager.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetStringLibrary.h"
 
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "Level/GameManager.h"
+#include "Headers/GameManagingStructs.h"
 
 // Sets default values
 ALobbyManager::ALobbyManager()
@@ -25,13 +27,31 @@ void ALobbyManager::BeginPlay()
 	
 }
 
-void ALobbyManager::SetNumPlayers(int InNumPlayers)
+void ALobbyManager::SetCampaignName(FString Name)
 {
-	NumPlayers = InNumPlayers;
+	CampaignName = Name;
+	OnCampaignNameChanged.Broadcast(CampaignName);
 }
 
-void ALobbyManager::CreateLobby()
+void ALobbyManager::SetNumPlayers(uint8 InNumPlayers)
 {
+	NumPlayers = InNumPlayers;
+	OnPlayerNumChanged.Broadcast(NumPlayers);
+}
+
+void ALobbyManager::SetIsSupervised(bool InIsSupervised)
+{
+	bIsSupervised = InIsSupervised;
+	OnIsSuperVisedChanged.Broadcast(bIsSupervised);
+}
+
+
+void ALobbyManager::OpenPlaySpace()
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
 
 	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(GetGameInstance());
 	if (IsValid(GameInstance) == false)
@@ -40,33 +60,105 @@ void ALobbyManager::CreateLobby()
 		return;
 	}
 
-	int NumConections;
+	uint8 NumConnections;
 	switch (NumPlayers)
 	{
-		case 1: case 2: NumConections = 2; break;
-		case 3: case 4: NumConections = 4; break;
-		case 5: case 6: NumConections = 6; break;
-		case 7: case 8: NumConections = 8; break;
-		default: NumConections = 1;
+		case 1: case 2: NumConnections = 2; break;
+		case 3: case 4: NumConnections = 4; break;
+		case 5: case 6: NumConnections = 6; break;
+		case 7: case 8: NumConnections = 8; break;
+		default: NumConnections = 0;
 	}
 
-	AGameManager** GameManagerPtr = TablesByPlayerNum.Find(NumConections);
+	AGameManager** GameManagerPtr = TablesByPlayerNum.Find(NumConnections);
 	if (GameManagerPtr == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Table for %d players"), NumConections);
+		UE_LOG(LogTemp, Warning, TEXT("No Table for %d players"), NumConnections);
 		return;
 	}
 	ActiveGameManager = *GameManagerPtr;
-	ActiveGameManager->Open();
+	ActiveGameManager->Open(bIsSupervised, CampaignCode);
 
+}
+
+void ALobbyManager::ClosePlaySpace()
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	if (IsValid(ActiveGameManager) == false)
+	{
+		return;
+	}
+	ActiveGameManager->Close();
+	ActiveGameManager = nullptr;
 }
 
 void ALobbyManager::LeaveLobby()
 {
 	ASG_PlayerController* PC = Cast<ASG_PlayerController>(UGameplayStatics::GetPlayerController(this, 0));
 	PC->Client_LeaveSession(true);
+	if (IsValid(ActiveGameManager) == false)
+	{
+		return;
+	}
 	ActiveGameManager->Close();
 	ActiveGameManager = nullptr;
+}
+
+void ALobbyManager::ReceiveCampaignID(FName ID)
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	FCampaignPersistentData* CampaignDataPtr = CampaignDataTable->FindRow<FCampaignPersistentData>(ID, "CampaignSearch");
+	if (CampaignDataPtr == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::ReceiveCampaignID CampaignData == nullptr - No row in data table(%s) with name %s"), *CampaignDataTable->GetName(), *ID.ToString());
+		return;
+	}
+
+	ReceiveCampaignCode(CampaignDataPtr->Code);
+}
+
+void ALobbyManager::ReceiveCampaignCode(FString Code)
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	FString ExtractedCampaignName = "";
+	uint8 ExtractedNumPlayers = 0;
+	bool ExtractedIsSupervised = false;
+
+	FString StrippedCode = "";
+	int DelimiterIndex = 0;
+
+	//Getting the name of the Campaign
+	Code.FindChar(':', DelimiterIndex);
+	ExtractedCampaignName = Code.Left(DelimiterIndex);
+	Code = Code.Mid(DelimiterIndex + 1);
+
+	//Getting the number of players
+	Code.FindChar(':', DelimiterIndex);
+	ExtractedNumPlayers = UKismetStringLibrary::Conv_StringToInt(Code.Left(DelimiterIndex));
+	Code = Code.Mid(DelimiterIndex + 1);
+
+	//getting the supervision status
+	Code.FindChar(':', DelimiterIndex);
+	ExtractedIsSupervised = Code.Left(DelimiterIndex).ToBool();
+	Code = Code.Mid(DelimiterIndex + 1);
+
+	SetCampaignName(ExtractedCampaignName);
+	SetNumPlayers(ExtractedNumPlayers);
+	SetIsSupervised(ExtractedIsSupervised);
+
+	CampaignCode = Code;
 }
 
 

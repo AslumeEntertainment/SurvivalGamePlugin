@@ -8,6 +8,7 @@
 #include "LobbyManager.generated.h"
 
 class AGameManager;
+class UDataTable;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor
@@ -20,7 +21,10 @@ public:
 
 private:
 
-	int NumPlayers = 4;
+	FString CampaignName = "";
+	uint8 NumPlayers = 0;
+	bool bIsSupervised = false;
+	FString CampaignCode = "";
 	AGameManager* ActiveGameManager = nullptr;
 
 protected:
@@ -28,20 +32,46 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
-	bool bShouldPrintdDebug = true;
+	bool bShouldPrintDebug = true;
 
 	UPROPERTY(EditAnywhere, Category = "GameManaging")
 	TMap<int, AGameManager*> TablesByPlayerNum;
 
 public:
 
-	UFUNCTION()
-	void SetNumPlayers(int InNumPlayers);
+	UPROPERTY(EditAnywhere)
+	UDataTable* CampaignDataTable;
 
-	UFUNCTION(BlueprintCallable)//remove this tag
-	void CreateLobby();
+	UFUNCTION(BlueprintCallable)
+	void SetCampaignName(FString Name);
+
+	UFUNCTION(BlueprintCallable)
+	void SetNumPlayers(uint8 InNumPlayers);
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsSupervised(bool InIsSupervised);
+
+	UFUNCTION(BlueprintCallable)
+	void OpenPlaySpace();
+
+	UFUNCTION(BlueprintCallable)
+	void ClosePlaySpace();
 
 	UFUNCTION(BlueprintCallable)
 	void LeaveLobby();
 
+	UFUNCTION(BlueprintCallable)
+	void ReceiveCampaignID(FName ID);
+
+	UFUNCTION(BlueprintCallable)
+	void ReceiveCampaignCode(FString Code);
+
+	UPROPERTY(BlueprintAssignable)
+	FStringTransferSignature OnCampaignNameChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FIntegerTransferSignature OnPlayerNumChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FBooleanTransferSignature OnIsSuperVisedChanged;
 };
