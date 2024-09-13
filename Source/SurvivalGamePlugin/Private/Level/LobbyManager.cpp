@@ -42,7 +42,7 @@ void ALobbyManager::SetNumPlayers(uint8 InNumPlayers)
 void ALobbyManager::SetIsSupervised(bool InIsSupervised)
 {
 	bIsSupervised = InIsSupervised;
-	OnIsSuperVisedChanged.Broadcast(bIsSupervised);
+	OnIsSupervisedChanged.Broadcast(bIsSupervised);
 }
 
 
@@ -133,6 +133,7 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 	}
 
 	FString ExtractedCampaignName = "";
+	FString TempString = "";
 	uint8 ExtractedNumPlayers = 0;
 	bool ExtractedIsSupervised = false;
 
@@ -151,7 +152,12 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 
 	//getting the supervision status
 	Code.FindChar(':', DelimiterIndex);
-	ExtractedIsSupervised = Code.Left(DelimiterIndex).ToBool();
+	TempString = Code.Left(DelimiterIndex);
+	if (TempString == "c")
+	{
+		OnSupervisionChangeable.Broadcast();
+	}
+	ExtractedIsSupervised = TempString.ToBool();
 	Code = Code.Mid(DelimiterIndex + 1);
 
 	SetCampaignName(ExtractedCampaignName);

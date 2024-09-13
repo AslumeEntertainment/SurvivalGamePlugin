@@ -4,11 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
 #include "GameManager.generated.h"
 
 class APlayerCustomiser;
 class USkeletalMeshComponent;
 class USkeletalMesh;
+
+UENUM(BlueprintType)
+enum class ESupervisionState : uint8
+{
+	Closed,
+	Supervised,
+	Unsupervised
+};
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameManager : public AActor
@@ -23,6 +32,12 @@ private:
 
 	bool bIsSuperVised = false;
 
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_ActiveMesh)
+	USkeletalMesh* ActiveMesh = nullptr;
+
+	UFUNCTION()
+	void OnRep_ActiveMesh();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,16 +46,13 @@ protected:
 	USkeletalMeshComponent* GameMaster = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "GameMaster")
-	USkeletalMesh* UnsupervisedMesh = nullptr;
-
-	UPROPERTY(Replicated, EditAnywhere, Category = "GameMaster")
-	USkeletalMesh* SupervisedMesh = nullptr;
+	TMap<ESupervisionState, USkeletalMesh*> MeshesPerSupervisionState;
 
 	UPROPERTY(VisibleDefaultsOnly)
 	TMap<APlayerCustomiser*, int> Teams;
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void NetMulticast_SetSkeletalMesh(bool InSupervised, bool IsClosing = false);
+	void SetActiveSkeletalMesh(ESupervisionState State);
+	void UpdateSkeletalMesh();
 
 public:	
 

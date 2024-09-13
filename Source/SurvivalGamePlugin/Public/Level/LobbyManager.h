@@ -73,5 +73,8 @@ public:
 	FIntegerTransferSignature OnPlayerNumChanged;
 
 	UPROPERTY(BlueprintAssignable)
-	FBooleanTransferSignature OnIsSuperVisedChanged;
+	FBooleanTransferSignature OnIsSupervisedChanged;
+
+	UPROPERTY(BlueprintAssignable)
+	FVoidDataTransferSignature OnSupervisionChangeable;
 };

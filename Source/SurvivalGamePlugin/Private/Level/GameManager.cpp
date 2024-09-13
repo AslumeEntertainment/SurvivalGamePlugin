@@ -17,25 +17,45 @@ AGameManager::AGameManager()
 	GameMaster->SetupAttachment(GetRootComponent());
 }
 
+void AGameManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(AGameManager, ActiveMesh, COND_None, REPNOTIFY_Always);
+}
+
+void AGameManager::OnRep_ActiveMesh()
+{
+	UpdateSkeletalMesh();
+}
+
 // Called when the game starts or when spawned
 void AGameManager::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void AGameManager::NetMulticast_SetSkeletalMesh_Implementation(bool InSupervised, bool IsClosing)
+void AGameManager::SetActiveSkeletalMesh(ESupervisionState State)
 {
-	if (IsClosing)
+	USkeletalMesh** MeshPtr = MeshesPerSupervisionState.Find(State);
+	if (MeshPtr == nullptr)
 	{
-		GameMaster->SetSkeletalMesh(nullptr);
+		UE_LOG(LogTemp, Error, TEXT("AGameManager::SetActiveSkeletalMesh No mesh specified for state: %s"), *UEnum::GetValueAsString(State));
 		return;
 	}
-	InSupervised ? GameMaster->SetSkeletalMesh(SupervisedMesh) : GameMaster->SetSkeletalMesh(UnsupervisedMesh);
+	ActiveMesh = *MeshPtr;
+
+	UpdateSkeletalMesh();
+}
+
+void AGameManager::UpdateSkeletalMesh()
+{
+	GameMaster->SetSkeletalMesh(ActiveMesh);
 }
 
 void AGameManager::Open(bool InSupervisionState, FString CampaignCode)
 {
-	NetMulticast_SetSkeletalMesh(InSupervisionState);
+	SetActiveSkeletalMesh(InSupervisionState ? ESupervisionState::Supervised : ESupervisionState::Unsupervised);
 
 	uint8 ExtractedNumberOfGames = 0;
 
@@ -52,7 +72,7 @@ void AGameManager::Open(bool InSupervisionState, FString CampaignCode)
 
 void AGameManager::Close()
 {
-	NetMulticast_SetSkeletalMesh(false, true);
+	SetActiveSkeletalMesh(ESupervisionState::Closed);
 }
 
 
