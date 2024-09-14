@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "SG_AbilitySystemComponent.generated.h"
 
+class UGameplayEffect;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemComponent
@@ -15,42 +16,10 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
-	TSubclassOf<class UGameplayEffect> HealthRegenerationEffectClass;
+	TSubclassOf<UGameplayEffect> OnSpawnInvincibilityEffectClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
-	TSubclassOf<class UGameplayEffect> HungerDrainEffectClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
-	TSubclassOf<class UGameplayEffect> EnergyRechargeEffectClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
-	TSubclassOf<class UGameplayEffect> EnergyDrainEffectClass;
-
-	UPROPERTY()
-	FActiveGameplayEffectHandle HealthRegenerationEffect;
-
-	UPROPERTY()
-	FActiveGameplayEffectHandle HungerDrainEffect;
-
-	UPROPERTY()
-	FActiveGameplayEffectHandle EnergyRechargeEffect;
-
-	UPROPERTY()
-	FActiveGameplayEffectHandle EnergyDrainEffect;
-	
 public:
 
-	void ApplyDefaultEffectsToSelf();
+	virtual void ApplyDefaultEffectsToSelf();
 
-	UFUNCTION()
-	void SetHealthRegenerationRate(float NewValue);
-
-	UFUNCTION()
-	void SetHungerDrainRate(float NewValue);
-
-	UFUNCTION()
-	void SetEnergyRechargeRate(float NewValue);
-
-	UFUNCTION()
-	void SetEnergyDrainRate(float NewValue);
 };

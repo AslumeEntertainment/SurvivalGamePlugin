@@ -9,7 +9,7 @@
 #include "HittableFoliageActor.generated.h"
 
 class StaticMeshComponent;
-class UAbilitySystemComponent;
+class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
@@ -47,11 +47,14 @@ protected:
 		meta = (ToolTip = "Defines the limit to how much a dropped actor can be rotated when spawned"))
 	float RotationLimit = 0.5f;
 
+	UPROPERTY(EditAnywhere, Category = "ActorTick")
+	float InvincibilityTime = 2.f;
+
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UAbilitySystemComponent* AbilitySystemComponent;
+	USG_AbilitySystemComponent* AbilitySystemComponent;
 
 	UPROPERTY()
 	USG_AttributeSet* AttributeSet;

@@ -17,7 +17,7 @@ class UCameraComponent;
 class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
-class USG_AbilitySystemComponent;
+class USG_CharacterAbilitySystemComponent;
 class USG_CharacterAttributeSet;
 struct FInputActionValue;
 
@@ -66,9 +66,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* RightHandDamageDealingComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	USG_AbilitySystemComponent* AbilitySystemComponent;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
@@ -83,6 +80,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* SprintAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	USG_CharacterAbilitySystemComponent* AbilitySystemComponent;
 
 	UPROPERTY()
 	USG_CharacterAttributeSet* AttributeSet;
