@@ -4,19 +4,20 @@
 #include "Level/Foliage/HittableFoliageActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
-#include "AbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
 AHittableFoliageActor::AHittableFoliageActor()
 {
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
 
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
@@ -26,6 +27,8 @@ AHittableFoliageActor::AHittableFoliageActor()
 void AHittableFoliageActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AbilitySystemComponent->ApplyDefaultEffectsToSelf();
 }
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)

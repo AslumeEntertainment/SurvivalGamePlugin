@@ -17,7 +17,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/SG_CharacterAbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -60,7 +60,7 @@ ASG_Character::ASG_Character()
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
-	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<USG_CharacterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
