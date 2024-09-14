@@ -7,11 +7,11 @@
 
 #include "Interfaces/OnlineUserCloudInterface.h"
 
+#include "Headers/GeneralDelegates.h"
+
 #include "UserCloudSubsystem.generated.h"
 
-/**
- * 
- */
+
 UCLASS(Blueprintable)
 class SURVIVALGAMEPLUGIN_API UUserCloudSubsystem : public UGameInstanceSubsystem
 {
@@ -27,7 +27,7 @@ private:
 
 	bool ShouldCreateSubsystem(UObject* Outer) const override;
 
-	void HandleLoadSaveFilecomplete(bool bWasSuccessful, const FUniqueNetId& UserId, const FString& FileName);
+	void HandleReadSaveFileComplete(bool bWasSuccessful, const FUniqueNetId& UserId, const FString& FileName);
 
 	void HandleWriteSaveFileComplete(bool bWasSuccessful, const FUniqueNetId&, const FString& FileName);
 
@@ -40,5 +40,9 @@ public:
 	void ReadSaveFile();
 
 	UFUNCTION()
-	void WriteSaveFile();
+	void WriteSaveFile(USaveGame* GameToSave);
+
+	FSaveGameTransferSignature OnGameRead;
+	FVoidDataTransferSignature OnWriteFinished;
+	FStringTransferSignature OnError;
 };

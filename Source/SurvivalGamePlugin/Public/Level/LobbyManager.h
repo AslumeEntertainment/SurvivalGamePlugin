@@ -4,11 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
 #include "Headers/GeneralDelegates.h"
+#include "Headers/GameManagingPersistentStructs.h"
+
 #include "LobbyManager.generated.h"
 
 class AGameManager;
 class UDataTable;
+
+
+struct PerCampaignData
+{
+	FCampaignPersistentData Campaign;
+
+	uint8 Progression = 0;
+};
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor
@@ -21,11 +32,16 @@ public:
 
 private:
 
+	TMap<FName, PerCampaignData> PerCampaignProgression;
+
 	FString CampaignName = "";
 	uint8 NumPlayers = 0;
 	bool bIsSupervised = false;
-	FString CampaignCode = "";
+	uint8 CurrentGame = 0;
+
+	
 	AGameManager* ActiveGameManager = nullptr;
+	TArray<FString> CurrentGames;
 
 protected:
 	// Called when the game starts or when spawned

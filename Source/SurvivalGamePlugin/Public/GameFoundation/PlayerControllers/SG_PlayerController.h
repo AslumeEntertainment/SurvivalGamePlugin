@@ -5,9 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 
-#include "Headers/SessionState.h"
+#include "Headers/GeneralDelegates.h"
 
 #include "SG_PlayerController.generated.h"
+
+
+class USG_SaveGame;
 
 UENUM(BlueprintType)
 enum class EInputMode : uint8
@@ -17,18 +20,30 @@ enum class EInputMode : uint8
 	GameAndUI,
 };
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FConnectionCleanupSignature, APlayerController*, TriggeringPlayer);
-
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
 protected:
+
+	USG_SaveGame* Save = nullptr;
+
 	UPROPERTY(EditAnywhere, Category = "Developer")
-	bool bIsCamersMovementConstrained = true;
+	bool bIsCameraMovementConstrained = true;
 	
+	UFUNCTION()
+	void ReceiveReadSave(USaveGame* SaveGame);
+
+	UFUNCTION()
+	void ReadSave();
+
+	UFUNCTION()
+	void WriteSave();
+
 public:
+
+	virtual void BeginPlay() override;
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputMode(EInputMode InputMode);
@@ -40,6 +55,8 @@ public:
 
 	void OnPossess(APawn* InPawn) override;
 
-	FConnectionCleanupSignature OnConnectionCleanUp;
+	FPlayerControllerTransferSignature OnConnectionCleanUp;
 
+	FVoidDataTransferSignature OnReadSaveRequested;
+	FSaveGameTransferSignature OnWriteSaveRequested;
 };

@@ -51,8 +51,8 @@ void AGameplayGameMode::StartPlay()
 	}
 
 	SessionSubsystemPtr->OnHostedGameClosing.AddDynamic(this, &AGameplayGameMode::KickAllPlayers);
-	OnRegisterNeeded.BindDynamic(SessionSubsystemPtr, &USessionSubsystem::RegisterNewPlayer);
-	OnUnregisterNeeded.BindDynamic(SessionSubsystemPtr, &USessionSubsystem::UnRegisterPlayer);
+	OnRegisterNeeded.AddDynamic(SessionSubsystemPtr, &USessionSubsystem::RegisterNewPlayer);
+	OnUnregisterNeeded.AddDynamic(SessionSubsystemPtr, &USessionSubsystem::UnRegisterPlayer);
 }
 
 void AGameplayGameMode::KickAllPlayers()
@@ -335,18 +335,18 @@ void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)
 
 	PC->Client_SetInputMode(EInputMode::GameAndUI);//Must be GameOnly by default
 
-	PC->OnConnectionCleanUp.BindDynamic(this, &AGameplayGameMode::UnRegisterRequest);
+	PC->OnConnectionCleanUp.AddDynamic(this, &AGameplayGameMode::UnRegisterRequest);
 
 
-	/*This Doesnt trigger for the local player since the first login of the local player
+	/*This Doesn't trigger for the local player since the first login of the local player
 	* is triggered before the start play. 
-	We can you this to avoid registering the local player in the sesion twice */
-	OnRegisterNeeded.ExecuteIfBound(NewPlayer);
+	We can you this to avoid registering the local player in the session twice */
+	OnRegisterNeeded.Broadcast(NewPlayer);
 }
 
 void AGameplayGameMode::UnRegisterRequest(APlayerController* TriggeringPlayer)
 {
-	OnUnregisterNeeded.ExecuteIfBound(TriggeringPlayer);
+	OnUnregisterNeeded.Broadcast(TriggeringPlayer);
 }
 
 void AGameplayGameMode::Logout(AController* Exiting)

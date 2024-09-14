@@ -77,7 +77,7 @@ void ALobbyManager::OpenPlaySpace()
 		return;
 	}
 	ActiveGameManager = *GameManagerPtr;
-	ActiveGameManager->Open(bIsSupervised, CampaignCode);
+	ActiveGameManager->Open(bIsSupervised, CurrentGames[CurrentGame]);
 
 }
 
@@ -132,6 +132,8 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 		return;
 	}
 
+	CurrentGames.Empty();
+
 	FString ExtractedCampaignName = "";
 	FString TempString = "";
 	uint8 ExtractedNumPlayers = 0;
@@ -164,7 +166,29 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 	SetNumPlayers(ExtractedNumPlayers);
 	SetIsSupervised(ExtractedIsSupervised);
 
-	CampaignCode = Code;
+	//CampaignCode = Code;
+
+	uint8 ExtractedNumberOfGames = 0;
+
+	//Getting the number of games
+	Code.FindChar('[', DelimiterIndex);
+	ExtractedNumberOfGames = UKismetStringLibrary::Conv_StringToInt(Code.Left(DelimiterIndex));
+	Code = Code.Mid(DelimiterIndex + 1);
+
+	UE_LOG(LogTemp, Error, TEXT("Code: %s"), *Code);
+
+	FString GameString;
+
+	for (uint8 i = 0; i < ExtractedNumberOfGames; i++)
+	{
+		Code.FindChar('-', DelimiterIndex);
+		GameString = Code.Left(DelimiterIndex);
+		Code = Code.Mid(DelimiterIndex + 1);
+
+		UE_LOG(LogTemp, Error, TEXT("Game %d: %s"), i, *GameString);
+		CurrentGames.Add(GameString);
+	}
+
 }
 
 

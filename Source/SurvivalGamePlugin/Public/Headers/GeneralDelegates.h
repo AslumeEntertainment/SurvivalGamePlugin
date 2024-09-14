@@ -37,6 +37,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStringArrayTransferSignature, TArra
 
 //--------------------------------------Engine Classes-------------------------------------
 UDELEGATE()
-DECLARE_DYNAMIC_DELEGATE_OneParam(FPlayerControllerTransferSignature, APlayerController*, TriggeringPlayer);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerTransferSignature, APlayerController*, TriggeringPlayer);
+
+
+class USaveGame;
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaveGameTransferSignature, USaveGame*, ReadGame);
 
 //-----------------------------------------------------------------------------------------

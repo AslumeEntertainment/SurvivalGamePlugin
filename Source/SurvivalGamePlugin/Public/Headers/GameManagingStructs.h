@@ -4,6 +4,8 @@
 #include "Engine/DataTable.h"
 #include "GameManagingStructs.generated.h"
 
+class AItemBase;
+
 UENUM(BlueprintType)
 enum class ETeamDistribution : uint8
 {
@@ -31,18 +33,31 @@ struct FRuleset
 };
 
 USTRUCT(BlueprintType)
+struct FCardPersistentData : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FName RepresentedItem;
+
+    UPROPERTY(EditAnywhere)
+    uint16 Value = 10;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UTexture2D* CardImage = nullptr;
+
+};
+
+USTRUCT(BlueprintType)
 struct FDeck
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    int Hero = 0;
+    uint8 Hero = 0;
 
     UPROPERTY(EditAnywhere)
-    TArray<int> StartingEquipment;
-
-    UPROPERTY(EditAnywhere)
-    TArray<int> SkillTree;
+    TArray<uint16> StartingEquipment;
 };
 
 USTRUCT(BlueprintType)
@@ -81,17 +96,4 @@ struct FCampaign
 
     UPROPERTY(EditAnywhere)
     TArray<FGame> Games;
-};
-
-USTRUCT(BlueprintType)
-struct FCampaignPersistentData : public FTableRowBase
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere)
-    FString Code = "Name:2:s:1[d:0[]:1[d:::1-]:p:a:s:e-]";
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* CampaignIcon = nullptr;
-    
 };

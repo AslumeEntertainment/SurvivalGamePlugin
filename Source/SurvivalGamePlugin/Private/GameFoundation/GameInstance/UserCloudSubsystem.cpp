@@ -5,6 +5,7 @@
 
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "GameFoundation/GameInstance/IdentitySubsystem.h"
 
@@ -35,7 +36,7 @@ void UUserCloudSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		return;
 	}
 
-	UserCloudInterface->OnReadUserFileCompleteDelegates.AddUObject(this, &UUserCloudSubsystem::HandleLoadSaveFilecomplete);
+	UserCloudInterface->OnReadUserFileCompleteDelegates.AddUObject(this, &UUserCloudSubsystem::HandleReadSaveFileComplete);
 	UserCloudInterface->OnWriteUserFileCompleteDelegates.AddUObject(this, &UUserCloudSubsystem::HandleWriteSaveFileComplete);
 }
 
@@ -55,38 +56,52 @@ bool UUserCloudSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return false;
 }
 
-void UUserCloudSubsystem::HandleLoadSaveFilecomplete(bool bWasSuccessful, const FUniqueNetId& UserId, const FString& FileName)
+void UUserCloudSubsystem::HandleReadSaveFileComplete(bool bWasSuccessful, const FUniqueNetId& UserId, const FString& FileName)
 {
+
 	if (!bWasSuccessful)
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleLoadSaceFilecomplete Error finding file: %s"), *SaveFileName);
+		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleLoadSaveFileComplete Error finding file: %s"), *FileName);
+		if (FileName == SaveFileName) OnGameRead.Broadcast(nullptr);
 		return;
 	}
-	
+
+	UE_LOG(UserCloudSubsystem, Display, TEXT("HandleReadSaveFileComplete Reading file: %s - Successful"), *FileName);
+
+	if (FileName != SaveFileName)
+	{
+		return;
+	}
+
 	TArray<uint8> FileContents;
 	if (!UserCloudInterface->GetFileContents(UserId, FileName, FileContents))
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleLoadSaceFilecomplete Error reading file: %s"), *SaveFileName);
+		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleLoadSaveFileComplete Error reading file: %s"), *FileName);
+		OnError.Broadcast("Read Game Data Failed with code: -3(No such fail)");
 		return;
 	}
 	
-
-	// The file data is in FileContents. If you wanted to read the file contents
-	// as a save game, you could so like this:
-	//USaveGame* Data = UGameplayStatics::LoadGameFromMemory(FileContents);
+	USaveGame* Data = UGameplayStatics::LoadGameFromMemory(FileContents);
 	
-	
+	OnGameRead.Broadcast(Data);
 }
 
 void UUserCloudSubsystem::HandleWriteSaveFileComplete(bool bWasSuccessful, const FUniqueNetId&, const FString& FileName)
 {
 	if (!bWasSuccessful)
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleWriteSaveFileComplete Error writing in file: %s"), *SaveFileName);
+		UE_LOG(UserCloudSubsystem, Error, TEXT("HandleWriteSaveFileComplete Error writing in file: %s"), *FileName);
+		if (FileName == SaveFileName) OnError.Broadcast("Write Game Data Failed with code: -2");
 		return;
 	}
 
-	UE_LOG(UserCloudSubsystem, Display, TEXT("HandleWriteSaveFileComplete Writing in file: %s - Successful"), *SaveFileName);
+	if (FileName != SaveFileName)
+	{
+		return;
+	}
+
+	UE_LOG(UserCloudSubsystem, Display, TEXT("HandleWriteSaveFileComplete Writing in file: %s - Successful"), *FileName);
+	OnWriteFinished.Broadcast();
 }
 
 void UUserCloudSubsystem::ReadSaveFile()
@@ -94,7 +109,7 @@ void UUserCloudSubsystem::ReadSaveFile()
 	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
 	if (IsValid(IdentitySubsystemPtr) == false)
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("LoadSaveFile (IsValid(IdentitySubsystemPtr) == false"));
+		UE_LOG(UserCloudSubsystem, Error, TEXT("ReadSaveFile (IsValid(IdentitySubsystemPtr) == false"));
 		return;
 	}
 
@@ -102,20 +117,22 @@ void UUserCloudSubsystem::ReadSaveFile()
 
 	if (!bSuccess)
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("LoadSaveFile Could not start searching for file: %s"), *SaveFileName);
+		UE_LOG(UserCloudSubsystem, Error, TEXT("ReadSaveFile Could not start searching for file: %s"), *SaveFileName);
+		OnError.Broadcast("Read Game Data Failed with code: -1");
 		return;
 	}
 
 	UE_LOG(UserCloudSubsystem, Display, TEXT("LoadSaveFile Searching for file: %s..."), *SaveFileName);
 }
 
-void UUserCloudSubsystem::WriteSaveFile()
+void UUserCloudSubsystem::WriteSaveFile(USaveGame* GameToSave)
 {
 
 	UIdentitySubsystem* IdentitySubsystemPtr = GetGameInstance()->GetSubsystem<UIdentitySubsystem>();
 	if (IsValid(IdentitySubsystemPtr) == false)
 	{
-		UE_LOG(UserCloudSubsystem, Error, TEXT("LoadSaveFile (IsValid(IdentitySubsystemPtr) == false"));
+		UE_LOG(UserCloudSubsystem, Error, TEXT("WriteSaveFile (IsValid(IdentitySubsystemPtr) == false"));
+		OnError.Broadcast("Write Game Data Failed with code: -1");
 		return;
 	}
 
@@ -124,7 +141,7 @@ void UUserCloudSubsystem::WriteSaveFile()
 
 	// If you wanted to write a Save Game to Player Data Storage, you could
 	// populate FileData from a USaveGame* instance:
-	//UGameplayStatics::SaveGameToMemory(SaveGame, FileData);
+	UGameplayStatics::SaveGameToMemory(GameToSave, FileData);
 
 	UserCloudInterface->WriteUserFile(*IdentitySubsystemPtr->GetLocalPlayerNetId(), SaveFileName, FileData);
 }

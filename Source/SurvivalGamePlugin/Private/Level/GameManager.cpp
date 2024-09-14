@@ -53,20 +53,13 @@ void AGameManager::UpdateSkeletalMesh()
 	GameMaster->SetSkeletalMesh(ActiveMesh);
 }
 
-void AGameManager::Open(bool InSupervisionState, FString CampaignCode)
+void AGameManager::Open(bool InSupervisionState, FString GameCode)
 {
 	SetActiveSkeletalMesh(InSupervisionState ? ESupervisionState::Supervised : ESupervisionState::Unsupervised);
 
-	uint8 ExtractedNumberOfGames = 0;
 
 	int DelimiterIndex = 0;
 
-	//Getting the number of games
-	CampaignCode.FindChar(':', DelimiterIndex);
-	ExtractedNumberOfGames = UKismetStringLibrary::Conv_StringToInt(CampaignCode.Left(DelimiterIndex));
-	CampaignCode = CampaignCode.Mid(DelimiterIndex + 1);
-
-	UE_LOG(LogTemp, Error, TEXT("Number of games: %d"), ExtractedNumberOfGames);
 
 }
 
