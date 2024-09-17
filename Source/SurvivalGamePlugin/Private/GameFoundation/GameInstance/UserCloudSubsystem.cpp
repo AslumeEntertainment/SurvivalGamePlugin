@@ -143,7 +143,14 @@ void UUserCloudSubsystem::WriteSaveFile(USaveGame* GameToSave)
 	// populate FileData from a USaveGame* instance:
 	UGameplayStatics::SaveGameToMemory(GameToSave, FileData);
 
-	UserCloudInterface->WriteUserFile(*IdentitySubsystemPtr->GetLocalPlayerNetId(), SaveFileName, FileData);
+	FUniqueNetIdPtr LocalNetId = IdentitySubsystemPtr->GetLocalPlayerNetId();
+	if (LocalNetId == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UUserCloudSubsystem::WriteSaveFile NetId == LocalNetId"));
+		return;
+	}
+
+	UserCloudInterface->WriteUserFile(*LocalNetId, SaveFileName, FileData);
 }
 
 

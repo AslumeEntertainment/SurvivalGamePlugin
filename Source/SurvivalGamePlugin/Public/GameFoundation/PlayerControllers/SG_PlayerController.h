@@ -27,6 +27,7 @@ class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
 	
 protected:
 
+	UPROPERTY()
 	USG_SaveGame* Save = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Developer")
@@ -34,12 +35,6 @@ protected:
 	
 	UFUNCTION()
 	void ReceiveReadSave(USaveGame* SaveGame);
-
-	UFUNCTION()
-	void ReadSave();
-
-	UFUNCTION()
-	void WriteSave();
 
 public:
 
@@ -55,8 +50,25 @@ public:
 
 	void OnPossess(APawn* InPawn) override;
 
+	//Work with save game
+	UFUNCTION()
+	void ReadSave();
+
+	UFUNCTION()
+	void WriteSave();
+
+	USG_SaveGame* GetSave();
+
 	FPlayerControllerTransferSignature OnConnectionCleanUp;
 
 	FVoidDataTransferSignature OnReadSaveRequested;
 	FSaveGameTransferSignature OnWriteSaveRequested;
+
+	FVoidDataTransferSignature OnSaveUpdated;
+
+
+	//----------------Execs--------------------------
+
+	UFUNCTION(Exec)
+	void Cheat_SetMoney(uint32 Money);
 };

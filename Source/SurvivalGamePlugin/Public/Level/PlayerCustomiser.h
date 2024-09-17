@@ -48,7 +48,7 @@ public:
 	// Called every frame
 	//virtual void Tick(float DeltaTime) override;
 
-	virtual void InteractRequest() override;
+	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
 	//---------------------Called Only on Server by the game mode-------------------

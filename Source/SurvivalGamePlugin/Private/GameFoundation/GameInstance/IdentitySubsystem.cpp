@@ -53,8 +53,6 @@ void UIdentitySubsystem::HandleLoginComplete(int32 LocalUserNum, bool bWasSucces
 
 	}
 
-	LocalPlayerNetId = IdentityInterface->GetUniquePlayerId(0);
-
 	IdentityInterface->ClearOnLoginCompleteDelegates(0, this);
 	OnLoginError.Broadcast(FText::FromString("Login Successful"));
 	UE_LOG(IdentitySubsystem, Display, TEXT("Login callback completed!"));
@@ -89,15 +87,15 @@ bool UIdentitySubsystem::Login()
 
 FUniqueNetIdPtr UIdentitySubsystem::GetLocalPlayerNetId()
 {
-	return LocalPlayerNetId;
+	return IdentityInterface->GetUniquePlayerId(0);;
 }
 
 FString UIdentitySubsystem::GetLocalPlayerDisplayName()
 {
-	return IdentityInterface->GetPlayerNickname(*LocalPlayerNetId);
+	return IdentityInterface->GetPlayerNickname(*GetLocalPlayerNetId());
 }
 
 bool UIdentitySubsystem::IsPLayerLoggedIn()
 {
-	return LocalPlayerNetId != nullptr;
+	return GetLocalPlayerNetId() != nullptr;
 }

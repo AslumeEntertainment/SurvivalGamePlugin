@@ -167,7 +167,7 @@ void AHumanCharacter::AttemptInteraction()
 	IInteractableInterface* Interactable = Cast<IInteractableInterface>(FocusedInteractableObject);
 	if (Interactable != nullptr)
 	{
-		Interactable->InteractRequest();
+		Interactable->InteractRequest(GetController());
 		return;
 	};
 

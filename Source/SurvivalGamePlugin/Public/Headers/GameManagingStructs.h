@@ -33,22 +33,6 @@ struct FRuleset
 };
 
 USTRUCT(BlueprintType)
-struct FCardPersistentData : public FTableRowBase
-{
-    GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere)
-    FName RepresentedItem;
-
-    UPROPERTY(EditAnywhere)
-    uint16 Value = 10;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* CardImage = nullptr;
-
-};
-
-USTRUCT(BlueprintType)
 struct FDeck
 {
     GENERATED_BODY()

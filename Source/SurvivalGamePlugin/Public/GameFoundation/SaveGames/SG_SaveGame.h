@@ -9,9 +9,19 @@
 
 #include "SG_SaveGame.generated.h"
 
-/**
- * 
- */
+USTRUCT()
+struct FProgressiveDataHelperStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	FName ID;
+
+	UPROPERTY()
+	uint8 Level = 0;
+};
+
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_SaveGame : public USaveGame
 {
@@ -23,7 +33,7 @@ public:
 	uint32 Money = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "Campaigns")
-	TMap<FName, uint8> Campaigns;
+	TArray<FProgressiveDataHelperStruct> Campaigns;
 
 	UPROPERTY(VisibleAnywhere, Category = "Campaigns")
 	TArray<FName> Biomes;
@@ -32,7 +42,7 @@ public:
 	TArray<FName> ResourseCards;
 
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
-	TMap<FName, uint8> HeroCards;
+	TArray<FProgressiveDataHelperStruct> HeroCards;
 
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
 	TArray<FDeck> Decks;

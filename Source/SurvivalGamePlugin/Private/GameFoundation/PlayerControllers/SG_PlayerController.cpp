@@ -26,6 +26,7 @@ void ASG_PlayerController::BeginPlay()
 	}
 
 	UserCloudSubsystemPtr->OnGameRead.AddDynamic(this, &ASG_PlayerController::ReceiveReadSave);
+	UserCloudSubsystemPtr->OnWriteFinished.AddDynamic(this, &ASG_PlayerController::ReadSave);
 	OnReadSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::ReadSaveFile);
 	OnWriteSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::WriteSaveFile);
 
@@ -74,14 +75,14 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::ReceiveReadSave Read save complete"));
 
 	Save = Cast<USG_SaveGame>(SaveGame);
-	if (IsValid(Save) == true)
+	if (IsValid(Save) == false)
 	{
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
+		Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+		WriteSave();
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
-	Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
-	WriteSave();
+	OnSaveUpdated.Broadcast();
 
 }
 
@@ -97,6 +98,11 @@ void ASG_PlayerController::WriteSave()
 	OnWriteSaveRequested.Broadcast(Save);
 }
 
+USG_SaveGame* ASG_PlayerController::GetSave()
+{
+	return Save;
+}
+
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {
 	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)
@@ -106,5 +112,11 @@ void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 	}
 
 	Super::OnNetCleanup(Connection);
+}
+
+void ASG_PlayerController::Cheat_SetMoney(uint32 Money)
+{
+	Save->Money = Money;
+	WriteSave();
 }
 

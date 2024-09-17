@@ -41,7 +41,7 @@ void APlayerCustomiser::ServerToggleReady_Implementation()
 	OnPlayerReadinessChanged.Broadcast();
 }
 
-void APlayerCustomiser::InteractRequest()
+void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Interacting with Customiser"));
 	ServerToggleReady();

@@ -5,45 +5,82 @@
 #include "GameManagingPersistentStructs.generated.h"
 
 USTRUCT(BlueprintType)
-struct FBoosterPackPersistentData : public FTableRowBase
+struct FPersistentDataUnit : public FTableRowBase
 {
-    GENERATED_BODY()
+    GENERATED_USTRUCT_BODY()
 
     UPROPERTY(EditAnywhere)
-    FText PackName;
+    FName ID;
+
+    UPROPERTY(EditAnywhere)
+    FText UnitName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UTexture2D* UnitImage = nullptr;
+
+};
+
+USTRUCT()
+struct FBoosterPackHelperStruct
+{
+    GENERATED_USTRUCT_BODY()
+
+    UPROPERTY(EditAnywhere)
+    FDataTableRowHandle RepresentedUnit;
+
+    UPROPERTY(EditAnywhere)
+    uint16 Chance = 25;
+};
+
+USTRUCT(BlueprintType)
+struct FBoosterPackPersistentData : public FPersistentDataUnit
+{
+    GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
     uint16 Cost = 10;
 
     UPROPERTY(EditAnywhere)
-    TMap<FName, uint16> PossibleHeroes;
+    uint8 NumberOfHeroes = 1;
 
     UPROPERTY(EditAnywhere)
-    TMap<FName, uint16> PossibleResources;
+    TArray<FBoosterPackHelperStruct> PossibleHeroes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* PackImage = nullptr;
+    UPROPERTY(EditAnywhere)
+    uint8 NumberOfResources = 5;
+
+    UPROPERTY(EditAnywhere)
+    TArray<FBoosterPackHelperStruct> PossibleResources;
+
+    UPROPERTY(EditAnywhere)
+    uint8 NumberOfCampaigns = 1;
+
+    UPROPERTY(EditAnywhere)
+    TArray<FBoosterPackHelperStruct> PossibleCampaigns;
+
+    UPROPERTY(EditAnywhere)
+    uint8 NumberOfBiomes = 0;
+
+    UPROPERTY(EditAnywhere)
+    TArray<FBoosterPackHelperStruct> PossibleBiomes;
 
 };
 
 USTRUCT(BlueprintType)
-struct FResourseCardPersistentData : public FTableRowBase
+struct FResourseCardPersistentData : public FPersistentDataUnit
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    FName RersentedItem = "00";
+    FDataTableRowHandle RepresentedItem;
 
     UPROPERTY(EditAnywhere)
     uint16 Value = 10;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* CardImage = nullptr;
-
 };
 
 USTRUCT(BlueprintType)
-struct FHeroCardPersistentData : public FTableRowBase
+struct FHeroCardPersistentData : public FPersistentDataUnit
 {
     GENERATED_BODY()
 
@@ -53,33 +90,24 @@ struct FHeroCardPersistentData : public FTableRowBase
     UPROPERTY(EditAnywhere)
     TMap<uint8, uint16> ValuePerLevel;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* CardImage = nullptr;
-
 };
 
 USTRUCT(BlueprintType)
-struct FBiomePersistentData : public FTableRowBase
+struct FBiomePersistentData : public FPersistentDataUnit
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
     FString Seed = "Idfk how to represent this shit";
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* BiomeImage = nullptr;
-
 };
 
 USTRUCT(BlueprintType)
-struct FCampaignPersistentData : public FTableRowBase
+struct FCampaignPersistentData : public FPersistentDataUnit
 {
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
     FString Code = "Name:2:s:1[d:0[]:1[d:::1~]:p:a:s:e-]";
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D* CampaignImage = nullptr;
     
 };

@@ -45,9 +45,12 @@ class SURVIVALGAMEPLUGIN_API UGlobalWidgetSubsystem : public UGameInstanceSubsys
 	GENERATED_BODY()
 	
 private:
-
 	IGameMoviePlayer* MoviePlayer = nullptr;
+
+	UPROPERTY()
 	UAnnouncementWidgetBase* AnnouncementWidget = nullptr;
+
+	UPROPERTY()
 	UUserWidget* LoadingScreenWidget = nullptr;
 
 	bool bShouldShowAnnouncementOnload = false;

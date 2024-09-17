@@ -10,9 +10,7 @@
 
 #include "IdentitySubsystem.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UIdentitySubsystem : public UGameInstanceSubsystem
 {
@@ -21,8 +19,6 @@ class SURVIVALGAMEPLUGIN_API UIdentitySubsystem : public UGameInstanceSubsystem
 private:
 
 	IOnlineIdentityPtr IdentityInterface = nullptr;
-
-	FUniqueNetIdPtr LocalPlayerNetId = nullptr;
 
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 
