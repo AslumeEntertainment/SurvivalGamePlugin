@@ -44,22 +44,12 @@ void AShopKeeper::BeginPlay()
 		return;
 	}
 
-	TArray<FBoosterPackPersistentData*> Rows;
-	BoosterPackTable->GetAllRows<FBoosterPackPersistentData>("GettingBoosterPacks", Rows);
-
-	for (FBoosterPackPersistentData* Row : Rows)
-	{
-		BoosterIDs.Add(Row->ID);
-		BoosterNames.Add(Row->UnitName);
-		BoosterIcons.Add(Row->UnitImage);
-		BoosterCosts.Add(Row->Cost);
-	}
-
 	ShopWidget->OnExitButton.AddDynamic(this, &AShopKeeper::StopInteracting);
 	ShopWidget->OnPackSelected.AddDynamic(this, &AShopKeeper::BoosterPackSelected);
+	ShopWidget->OnHeroCardSelected.AddDynamic(this, &AShopKeeper::HeroCardSelected);
+	ShopWidget->OnResourceCardSelected.AddDynamic(this, &AShopKeeper::ResourceCardSelected);
 
 	NotificationWidget->OnCancelButton.AddDynamic(this, &AShopKeeper::HideNotification);
-	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::BuyBoosterPack);
 }
 
 void AShopKeeper::InteractRequest(AController* InteractingCharacter)
@@ -70,7 +60,6 @@ void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
-	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterCosts);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 
 	UpdateWidgets();
@@ -89,11 +78,16 @@ void AShopKeeper::StopInteracting()
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 	ShopWidget->RemoveFromParent();
 	InteractingPlayer = nullptr;
+
+	ActiveIndex = -1;
+
 }
 
 void AShopKeeper::BoosterPackSelected(int Index)
 {
-	SelectedPackIndex = Index;
+	ActiveIndex = Index;
+
+	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::BuyBoosterPack);
 
 	bool CanAfford = BoosterCosts[Index] <= InteractingPlayer->GetSave()->Money;
 
@@ -103,7 +97,7 @@ void AShopKeeper::BoosterPackSelected(int Index)
 
 void AShopKeeper::BuyBoosterPack()
 {
-	FBoosterPackPersistentData* Pack = BoosterPackTable->FindRow<FBoosterPackPersistentData>(BoosterIDs[SelectedPackIndex], "Buying Pack");
+	FBoosterPackPersistentData* Pack = BoosterPackTable->FindRow<FBoosterPackPersistentData>(BoosterIDs[ActiveIndex], "Buying Pack");
 
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 
@@ -147,7 +141,7 @@ void AShopKeeper::BuyBoosterPack()
 			if (RNG <= Entry.Chance)
 			{
 				Drops.Add(Entry.RepresentedUnit);
-				Save->ResourseCards.Add(Entry.RepresentedUnit.RowName);
+				Save->ResourceCards.Add(Entry.RepresentedUnit.RowName);
 				break;
 			}
 		}
@@ -193,6 +187,72 @@ void AShopKeeper::BuyBoosterPack()
 	StartLootingAnimation(Drops);
 }
 
+void AShopKeeper::HeroCardSelected(int Index)
+{
+	ActiveIndex = Index;
+
+	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::SellHeroCard);
+
+	ShowNotification(true, SellingAction, HeroNames[Index], HeroCosts[Index]);
+}
+
+void AShopKeeper::SellHeroCard()
+{
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AShopKeeper::BuyBoosterPack IsValid(Save) == false"));
+		return;
+	}
+
+	Save->Money += HeroCosts[ActiveIndex];
+
+	Save->HeroCards.RemoveAt(ActiveIndex);
+
+	InteractingPlayer->WriteSave();
+
+	/*HeroIcons.RemoveAt(ActiveIndex);
+	HeroNames.RemoveAt(ActiveIndex);
+	HeroCosts.RemoveAt(ActiveIndex);
+	ShopWidget->RemoveHeroCard(ActiveIndex);*/
+
+	HideNotification();
+}
+
+void AShopKeeper::ResourceCardSelected(int Index)
+{
+	ActiveIndex = Index;
+
+	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::SellResourceCard);
+
+	ShowNotification(true, SellingAction, ResourceNames[Index], ResourceCosts[Index]);
+}
+
+void AShopKeeper::SellResourceCard()
+{
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AShopKeeper::BuyBoosterPack IsValid(Save) == false"));
+		return;
+	}
+
+	Save->Money += ResourceCosts[ActiveIndex];
+
+	Save->ResourceCards.RemoveAt(ActiveIndex);
+
+	InteractingPlayer->WriteSave();
+
+	/*ResourceIcons.RemoveAt(ActiveIndex);
+	ResourceNames.RemoveAt(ActiveIndex);
+	ResourceCosts.RemoveAt(ActiveIndex);
+	ShopWidget->RemoveResourceCard(ActiveIndex);*/
+
+	HideNotification();
+}
+
 void AShopKeeper::StartLootingAnimation(TArray<FDataTableRowHandle> Drops)
 {
 	TArray<FText> DropNames;
@@ -218,11 +278,70 @@ void AShopKeeper::ShowNotification(bool CanAfford, FText Action, FText Object, u
 void AShopKeeper::HideNotification()
 {
 	NotificationWidget->RemoveFromParent();
+	NotificationWidget->OnOkButton.RemoveAll(this);
+	ActiveIndex = -1;
 }
 
 void AShopKeeper::UpdateWidgets()
 {
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 	ShopWidget->SetMoney(Save->Money);
+	FillShopWidget();
 }
 
+void AShopKeeper::FillShopWidget()
+{
+	ActiveIndex = -1;
+
+	BoosterIDs.Empty();
+	BoosterNames.Empty();
+	BoosterIcons.Empty();
+	BoosterCosts.Empty();
+	HeroNames.Empty();
+	HeroIcons.Empty();
+	HeroCosts.Empty();
+	ResourceNames.Empty();
+	ResourceIcons.Empty();
+	ResourceCosts.Empty();
+
+	TArray<FBoosterPackPersistentData*> Rows;
+	BoosterPackTable->GetAllRows<FBoosterPackPersistentData>("GettingBoosterPacks", Rows);
+
+	for (FBoosterPackPersistentData* Row : Rows)
+	{
+		BoosterIDs.Add(Row->ID);
+		BoosterNames.Add(Row->UnitName);
+		BoosterIcons.Add(Row->UnitImage);
+		BoosterCosts.Add(Row->Cost);
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+
+	for (FProgressiveDataHelperStruct Hero : Save->HeroCards)
+	{
+		FHeroCardPersistentData* HeroCard = HeroTable->FindRow<FHeroCardPersistentData>(Hero.ID, "Filling Heroes");
+
+		uint16* HeroCostPtr = HeroCard->ValuePerLevel.Find(Hero.Level);
+		if (HeroCostPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hero[%s] doesn't have value for level %d"), *Hero.ID.ToString(), Hero.Level);
+			return;
+		}
+
+		HeroNames.Add(HeroCard->UnitName);
+		HeroIcons.Add(HeroCard->UnitImage);
+		HeroCosts.Add(*HeroCostPtr);
+	}
+
+	for (FName Resource : Save->ResourceCards)
+	{
+		FResourseCardPersistentData* ResourceCard = ResourceTable->FindRow<FResourseCardPersistentData>(Resource, "Filling Resources");
+
+		ResourceNames.Add(ResourceCard->UnitName);
+		ResourceIcons.Add(ResourceCard->UnitImage);
+		ResourceCosts.Add(ResourceCard->Value);
+	}
+
+	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterCosts);
+	ShopWidget->FillSells(HeroNames, HeroIcons, HeroCosts, ResourceNames, ResourceIcons, ResourceCosts);
+}

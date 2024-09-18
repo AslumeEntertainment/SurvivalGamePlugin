@@ -7,14 +7,14 @@
 
 #include "Headers/GeneralDelegates.h"
 
-#include "BoosterPackWidgetBase.generated.h"
+#include "ShopUnitWidgetBase.generated.h"
 
 class UButton;
 class UTextBlock;
 class UImage;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UBoosterPackWidgetBase : public UUserWidget
+class SURVIVALGAMEPLUGIN_API UShopUnitWidgetBase : public UUserWidget
 {
 	GENERATED_BODY()
 	

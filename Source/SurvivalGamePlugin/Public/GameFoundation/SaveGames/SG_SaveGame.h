@@ -39,7 +39,7 @@ public:
 	TArray<FName> Biomes;
 
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
-	TArray<FName> ResourseCards;
+	TArray<FName> ResourceCards;
 
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
 	TArray<FProgressiveDataHelperStruct> HeroCards;

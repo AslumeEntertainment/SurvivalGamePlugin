@@ -28,12 +28,34 @@ private:
 	UPROPERTY()
 	UShopNotificationWidgetBase* NotificationWidget = nullptr;
 
+	UPROPERTY()
 	TArray<FName> BoosterIDs;
+	UPROPERTY()
 	TArray<FText> BoosterNames;
+	UPROPERTY()
 	TArray<UTexture2D*> BoosterIcons;
+	UPROPERTY()
 	TArray<uint16> BoosterCosts;
 
-	uint16 SelectedPackIndex = -1;
+	UPROPERTY()
+	TArray<FText> HeroNames;
+	UPROPERTY()
+	TArray<UTexture2D*> HeroIcons;
+	UPROPERTY()
+	TArray<uint16> HeroCosts;
+
+	UPROPERTY()
+	TArray<FText> ResourceNames;
+	UPROPERTY()
+	TArray<UTexture2D*> ResourceIcons;
+	UPROPERTY()
+	TArray<uint16> ResourceCosts;
+
+	UPROPERTY()
+	uint16 ActiveIndex = -1;
+
+	UFUNCTION()
+	void FillShopWidget();
 
 	UFUNCTION()
 	void StopInteracting();
@@ -43,6 +65,18 @@ private:
 
 	UFUNCTION()
 	void BuyBoosterPack();
+
+	UFUNCTION()
+	void HeroCardSelected(int Index);
+
+	UFUNCTION()
+	void SellHeroCard();
+
+	UFUNCTION()
+	void ResourceCardSelected(int Index);
+
+	UFUNCTION()
+	void SellResourceCard();
 
 	UFUNCTION()
 	void StartLootingAnimation(TArray<FDataTableRowHandle> Drops);
@@ -60,8 +94,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Data")
 	UDataTable* BoosterPackTable;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* HeroTable;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* ResourceTable;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UShopWidgetBase> ShopWidgetClass;
