@@ -9,8 +9,11 @@
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
+#include "GameFoundation/SaveGames/SG_SaveGame.h"
 #include "Level/GameManager.h"
 #include "Headers/GameManagingStructs.h"
+#include "UI/Widgets/LobbyManagingWidgetBase.h"
+#include "UI/Widgets/CampaignChooserWidgetBase.h"
 
 // Sets default values
 ALobbyManager::ALobbyManager()
@@ -24,27 +27,9 @@ ALobbyManager::ALobbyManager()
 void ALobbyManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
-}
 
-void ALobbyManager::SetCampaignName(FString Name)
-{
-	CampaignName = Name;
-	OnCampaignNameChanged.Broadcast(CampaignName);
+	SetupManagingWidget();
 }
-
-void ALobbyManager::SetNumPlayers(uint8 InNumPlayers)
-{
-	NumPlayers = InNumPlayers;
-	OnPlayerNumChanged.Broadcast(NumPlayers);
-}
-
-void ALobbyManager::SetIsSupervised(bool InIsSupervised)
-{
-	bIsSupervised = InIsSupervised;
-	OnIsSupervisedChanged.Broadcast(bIsSupervised);
-}
-
 
 void ALobbyManager::OpenPlaySpace()
 {
@@ -79,6 +64,7 @@ void ALobbyManager::OpenPlaySpace()
 	ActiveGameManager = *GameManagerPtr;
 	ActiveGameManager->Open(bIsSupervised, CurrentGames[CurrentGame]);
 
+	StopInteracting();
 }
 
 void ALobbyManager::ClosePlaySpace()
@@ -108,48 +94,37 @@ void ALobbyManager::LeaveLobby()
 	ActiveGameManager = nullptr;
 }
 
-void ALobbyManager::ReceiveCampaignID(FName ID)
+void ALobbyManager::SelectCampaign()
 {
-	if (HasAuthority() == false)
-	{
-		return;
-	}
-
-	FCampaignPersistentData* CampaignDataPtr = CampaignDataTable->FindRow<FCampaignPersistentData>(ID, "CampaignSearch");
-	if (CampaignDataPtr == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::ReceiveCampaignID CampaignData == nullptr - No row in data table(%s) with name %s"), *CampaignDataTable->GetName(), *ID.ToString());
-		return;
-	}
-
-	ReceiveCampaignCode(CampaignDataPtr->Code);
+	CampaignChooserWidget->Show();
 }
 
-void ALobbyManager::ReceiveCampaignCode(FString Code)
+void ALobbyManager::CampaignSelected(int Index)
 {
-	if (HasAuthority() == false)
-	{
-		return;
-	}
+
+
+	FString Code = CampaignCodes[Index];
 
 	CurrentGames.Empty();
 
-	FString ExtractedCampaignName = "";
+	FText ExtractedCampaignName;
 	FString TempString = "";
 	uint8 ExtractedNumPlayers = 0;
 	bool ExtractedIsSupervised = false;
+	bool SupervisionChangeable = false;
 
-	FString StrippedCode = "";
 	int DelimiterIndex = 0;
 
 	//Getting the name of the Campaign
 	Code.FindChar(':', DelimiterIndex);
-	ExtractedCampaignName = Code.Left(DelimiterIndex);
+	FString TempStr = Code.Left(DelimiterIndex);
+	ExtractedCampaignName = (TempStr == "" ? CampaignNames[Index] : FText::FromString(TempStr));
 	Code = Code.Mid(DelimiterIndex + 1);
 
 	//Getting the number of players
 	Code.FindChar(':', DelimiterIndex);
-	ExtractedNumPlayers = UKismetStringLibrary::Conv_StringToInt(Code.Left(DelimiterIndex));
+	TempStr = Code.Left(DelimiterIndex);
+	ExtractedNumPlayers = (TempStr == "" ? CampaignPlayerNums[Index] : UKismetStringLibrary::Conv_StringToInt(TempStr));
 	Code = Code.Mid(DelimiterIndex + 1);
 
 	//getting the supervision status
@@ -157,16 +132,15 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 	TempString = Code.Left(DelimiterIndex);
 	if (TempString == "c")
 	{
-		OnSupervisionChangeable.Broadcast();
+		SupervisionChangeable = true;
 	}
 	ExtractedIsSupervised = TempString.ToBool();
 	Code = Code.Mid(DelimiterIndex + 1);
 
-	SetCampaignName(ExtractedCampaignName);
-	SetNumPlayers(ExtractedNumPlayers);
-	SetIsSupervised(ExtractedIsSupervised);
-
-	//CampaignCode = Code;
+	bIsSupervised = ExtractedIsSupervised;
+	NumPlayers = ExtractedNumPlayers;
+	CurrentGame = CampaignProgressions[Index];
+	OnCampaignFillNeeded.Broadcast(ExtractedCampaignName, ExtractedNumPlayers, ExtractedIsSupervised, SupervisionChangeable);
 
 	uint8 ExtractedNumberOfGames = 0;
 
@@ -189,6 +163,113 @@ void ALobbyManager::ReceiveCampaignCode(FString Code)
 		CurrentGames.Add(GameString);
 	}
 
+	CampaignChooserWidget->Hide();
+}
+
+void ALobbyManager::SetSupervision(bool State)
+{
+	bIsSupervised = State;
+	LobbyManagingWidget->SetSupervised(bIsSupervised);
+}
+
+void ALobbyManager::InteractRequest(AController* InteractingCharacter)
+{
+	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
+	if (IsValid(InteractingPlayer) == false)
+	{
+		return;
+	}
+	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	
+	SetupSelectorWidget();
+
+	LobbyManagingWidget->Show();
+}
+
+bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
+{
+	return true;
+}
+
+void ALobbyManager::StopInteracting()
+{
+	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer = nullptr;
+
+	CampaignChooserWidget->MarkForDestruction();
+	CampaignChooserWidget = nullptr;
+
+	LobbyManagingWidget->Hide();
+
+	CampaignNames.Empty();
+	CampaignIcons.Empty();
+	CampaignCodes.Empty();
+
+}
+
+void ALobbyManager::SetupManagingWidget()
+{
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::SetupWidgets IsValid(World) == false"));
+		return;
+	}
+
+	LobbyManagingWidget = CreateWidget<ULobbyManagingWidgetBase>(World, LobbyManagingWidgetBaseClass);
+
+	if (IsValid(LobbyManagingWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::SetupWidgets IsValid(LobbyManagingWidget) == false"));
+		return;
+	}
+
+	OnCampaignFillNeeded.AddDynamic(LobbyManagingWidget, &ULobbyManagingWidgetBase::FillCampaign);
+
+	LobbyManagingWidget->OnChooseCampaignButton.AddDynamic(this, &ALobbyManager::SelectCampaign);
+	LobbyManagingWidget->OnStartCampaignButton.AddDynamic(this, &ALobbyManager::OpenPlaySpace);
+	LobbyManagingWidget->OnStopCampaignButton.AddDynamic(this, &ALobbyManager::ClosePlaySpace);
+	LobbyManagingWidget->OnExitButton.AddDynamic(this, &ALobbyManager::StopInteracting);
+	LobbyManagingWidget->OnLeaveButton.AddDynamic(this, &ALobbyManager::LeaveLobby);
+	LobbyManagingWidget->OnSupervisedChanged.AddDynamic(this, &ALobbyManager::SetSupervision);
+
+}
+
+void ALobbyManager::SetupSelectorWidget()
+{
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+
+	for (FProgressiveDataHelperStruct Campaign : Save->Campaigns)
+	{
+		FCampaignPersistentData* CampaignCard = CampaignTable->FindRow<FCampaignPersistentData>(Campaign.ID, "Filling Campaign");
+
+		CampaignNames.Add(CampaignCard->UnitName);
+		CampaignIcons.Add(CampaignCard->UnitImage);
+		CampaignCodes.Add(CampaignCard->Code);
+		CampaignPlayerNums.Add(CampaignCard->DevPlayerNum);
+		CampaignProgressions.Add(Campaign.Level);
+	}
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::SetupSelectorWidget IsValid(World) == false"));
+		return;
+	}
+
+	CampaignChooserWidget = CreateWidget<UCampaignChooserWidgetBase>(World, CampaignChooserWidgetBaseClass);
+
+	if (IsValid(CampaignChooserWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::SetupSelectorWidget IsValid(CampaignSelectorWidget) == false"));
+		return;
+	}
+
+	CampaignChooserWidget->FillCampaigns(CampaignNames, CampaignIcons, CampaignPlayerNums);
+
+	CampaignChooserWidget->OnCampaignSelected.AddDynamic(this, &ALobbyManager::CampaignSelected);
+	CampaignChooserWidget->OnExitButton.AddDynamic(CampaignChooserWidget, &UCampaignChooserWidgetBase::RemoveFromParent);
 }
 
 

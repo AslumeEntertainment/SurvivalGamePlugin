@@ -81,6 +81,16 @@ void AShopKeeper::StopInteracting()
 
 	ActiveIndex = -1;
 
+	BoosterIDs.Empty();
+	BoosterNames.Empty();
+	BoosterIcons.Empty();
+	BoosterCosts.Empty();
+	HeroNames.Empty();
+	HeroIcons.Empty();
+	HeroCosts.Empty();
+	ResourceNames.Empty();
+	ResourceIcons.Empty();
+	ResourceCosts.Empty();
 }
 
 void AShopKeeper::BoosterPackSelected(int Index)
@@ -212,11 +222,6 @@ void AShopKeeper::SellHeroCard()
 
 	InteractingPlayer->WriteSave();
 
-	/*HeroIcons.RemoveAt(ActiveIndex);
-	HeroNames.RemoveAt(ActiveIndex);
-	HeroCosts.RemoveAt(ActiveIndex);
-	ShopWidget->RemoveHeroCard(ActiveIndex);*/
-
 	HideNotification();
 }
 
@@ -244,11 +249,6 @@ void AShopKeeper::SellResourceCard()
 	Save->ResourceCards.RemoveAt(ActiveIndex);
 
 	InteractingPlayer->WriteSave();
-
-	/*ResourceIcons.RemoveAt(ActiveIndex);
-	ResourceNames.RemoveAt(ActiveIndex);
-	ResourceCosts.RemoveAt(ActiveIndex);
-	ShopWidget->RemoveResourceCard(ActiveIndex);*/
 
 	HideNotification();
 }

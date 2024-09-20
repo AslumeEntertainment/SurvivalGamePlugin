@@ -22,6 +22,8 @@ public:
 
 private:
 
+	//can make a dlegate for getting the save game insted of this if we start optimizing
+	UPROPERTY()
 	ASG_PlayerController* InteractingPlayer = nullptr;
 	UPROPERTY()
 	UShopWidgetBase* ShopWidget = nullptr;
@@ -95,13 +97,13 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* BoosterPackTable;
+	UDataTable* BoosterPackTable = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* HeroTable;
+	UDataTable* HeroTable = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* ResourceTable;
+	UDataTable* ResourceTable = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UShopWidgetBase> ShopWidgetClass;

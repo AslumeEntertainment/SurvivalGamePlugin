@@ -7,6 +7,7 @@
 
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/GameInstance/UserCloudSubsystem.h"
+#include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
 
 void ASG_PlayerController::BeginPlay()
@@ -66,6 +67,13 @@ void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 		return;
 	}
 
+	UGlobalWidgetSubsystem* GlobalWidgetSubsystemPtr = GetGameInstance()->GetSubsystem<UGlobalWidgetSubsystem>();
+	if (IsValid(GlobalWidgetSubsystemPtr) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(GlobalWidgetSubsystemPtr) == false"));
+		return;
+	}
+	GlobalWidgetSubsystemPtr->ShowCoverupWidget();
 	SessionSubsystemPtr->DestroySession();
 
 }
@@ -117,6 +125,12 @@ void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 void ASG_PlayerController::Cheat_SetMoney(uint32 Money)
 {
 	Save->Money = Money;
+	WriteSave();
+}
+
+void ASG_PlayerController::Cheat_ClearAccount()
+{
+	Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
 	WriteSave();
 }
 

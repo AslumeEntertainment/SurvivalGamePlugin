@@ -108,6 +108,9 @@ struct FCampaignPersistentData : public FPersistentDataUnit
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    FString Code = "Name:2:s:1[d:0[]:1[d:::1~]:p:a:s:e-]";
+    uint8 DevPlayerNum = 2;
+
+    UPROPERTY(EditAnywhere)
+    FString Code = "::s:1[d:0[]:1[d:::1~]:p:a:s:e-]";
     
 };

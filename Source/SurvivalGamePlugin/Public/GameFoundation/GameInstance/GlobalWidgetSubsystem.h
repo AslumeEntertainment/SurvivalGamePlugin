@@ -53,6 +53,10 @@ private:
 	UPROPERTY()
 	UUserWidget* LoadingScreenWidget = nullptr;
 
+	UPROPERTY()
+	UUserWidget* CoverupWidget = nullptr;
+
+
 	bool bShouldShowAnnouncementOnload = false;
 
 	void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -69,6 +73,9 @@ public:
 	TSubclassOf<UAnnouncementWidgetBase> AnnouncementWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> CoverupWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
 	TMap<FString, FLoadingScreenData> LoadingScreenPacks;
 	
 	UFUNCTION()
@@ -82,4 +89,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void HideAnnouncementWidget();
+
+	UFUNCTION(BlueprintCallable)
+	void ShowCoverupWidget();
+
+	UFUNCTION(BlueprintCallable)
+	void HideCoverupWidget();
 };

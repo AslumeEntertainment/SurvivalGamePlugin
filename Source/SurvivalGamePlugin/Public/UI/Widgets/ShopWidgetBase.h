@@ -8,7 +8,7 @@
 #include "ShopWidgetBase.generated.h"
 
 class UButton;
-class UScrollBox;
+class UWrapBox;
 class UTextBlock;
 class UImage;
 class UShopUnitWidgetBase;
@@ -26,13 +26,13 @@ protected:
 	UTextBlock* TXT_Money;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UScrollBox* SCRB_BoosterPack;
+	UWrapBox* WRPB_BoosterPack;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UScrollBox* SCRB_Heroes;
+	UWrapBox* WRPB_Heroes;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UScrollBox* SCRB_Resources;
+	UWrapBox* WRPB_Resources;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UShopUnitWidgetBase> ShopUnitWidgetClass;
@@ -55,8 +55,6 @@ public:
 	void FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint16> Costs);
 	void FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<uint16> HeroCosts, TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<uint16> ResourceCosts);
 	void SetMoney(uint32 Money);
-	void RemoveResourceCard(uint16 Index);
-	void RemoveHeroCard(uint16 Index);
 
 	FVoidDataTransferSignature OnExitButton;
 	FIntegerTransferSignature OnPackSelected;

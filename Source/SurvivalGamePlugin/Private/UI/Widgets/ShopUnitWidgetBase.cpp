@@ -18,7 +18,7 @@ void UShopUnitWidgetBase::Config(FText Name, UTexture2D* Image, uint16 Cost)
 {
 
 	TXT_Name->SetText(Name);
-	TXT_Cost->SetText(FText::FromString(FString::FromInt(Cost)));
+	TXT_Cost->SetText(FText::FromString(Cost == InvisibleCost ? "" : FString::FromInt(Cost)));
 	IMG_Icon->SetBrushFromTexture(Image);
 }
 

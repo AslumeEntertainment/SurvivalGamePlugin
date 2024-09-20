@@ -4,7 +4,7 @@
 #include "UI/Widgets/ShopWidgetBase.h"
 
 #include "Components/Button.h"
-#include "Components/ScrollBox.h"
+#include "Components/WrapBox.h"
 #include "Components/TextBlock.h"
 
 #include "UI/Widgets/ShopUnitWidgetBase.h"
@@ -20,7 +20,7 @@ void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Imag
 {
 	UShopUnitWidgetBase* TempUnit = nullptr;
 
-	SCRB_BoosterPack->ClearChildren();
+	WRPB_BoosterPack->ClearChildren();
 	for (int i = 0; i < Names.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
@@ -31,7 +31,7 @@ void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Imag
 		}
 		TempUnit->Config(Names[i], Images[i], Costs[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnBoosterPackClicked);
-		SCRB_BoosterPack->AddChild(TempUnit);
+		WRPB_BoosterPack->AddChild(TempUnit);
 	}
 }
 
@@ -39,7 +39,7 @@ void UShopWidgetBase::FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> Her
 {
 	UShopUnitWidgetBase* TempUnit = nullptr;
 
-	SCRB_Heroes->ClearChildren();
+	WRPB_Heroes->ClearChildren();
 	for (int i = 0; i < HeroNames.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
@@ -51,10 +51,10 @@ void UShopWidgetBase::FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> Her
 		}
 		TempUnit->Config(HeroNames[i], HeroImages[i], HeroCosts[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnHeroCardClicked);
-		SCRB_Heroes->AddChild(TempUnit);
+		WRPB_Heroes->AddChild(TempUnit);
 	}
 
-	SCRB_Resources->ClearChildren();
+	WRPB_Resources->ClearChildren();
 	for (int i = 0; i < ResourceNames.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
@@ -66,23 +66,13 @@ void UShopWidgetBase::FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> Her
 		}
 		TempUnit->Config(ResourceNames[i], ResourceImages[i], ResourceCosts[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnResourceCardClicked);
-		SCRB_Resources->AddChild(TempUnit);
+		WRPB_Resources->AddChild(TempUnit);
 	}
 }
 
 void UShopWidgetBase::SetMoney(uint32 Money)
 {
 	TXT_Money->SetText(FText::FromString(FString::FromInt(Money)));
-}
-
-void UShopWidgetBase::RemoveResourceCard(uint16 Index)
-{
-	SCRB_Resources->RemoveChildAt(Index);
-}
-
-void UShopWidgetBase::RemoveHeroCard(uint16 Index)
-{
-	SCRB_Heroes->RemoveChildAt(Index);
 }
 
 void UShopWidgetBase::OnExitButtonClicked()
@@ -92,15 +82,15 @@ void UShopWidgetBase::OnExitButtonClicked()
 
 void UShopWidgetBase::OnBoosterPackClicked(UUserWidget* Widget)
 {
-	OnPackSelected.Broadcast(SCRB_BoosterPack->GetChildIndex(Widget));
+	OnPackSelected.Broadcast(WRPB_BoosterPack->GetChildIndex(Widget));
 }
 
 void UShopWidgetBase::OnHeroCardClicked(UUserWidget* Widget)
 {
-	OnHeroCardSelected.Broadcast(SCRB_Heroes->GetChildIndex(Widget));
+	OnHeroCardSelected.Broadcast(WRPB_Heroes->GetChildIndex(Widget));
 }
 
 void UShopWidgetBase::OnResourceCardClicked(UUserWidget* Widget)
 {
-	OnResourceCardSelected.Broadcast(SCRB_Resources->GetChildIndex(Widget));
+	OnResourceCardSelected.Broadcast(WRPB_Resources->GetChildIndex(Widget));
 }

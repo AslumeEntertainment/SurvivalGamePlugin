@@ -7,12 +7,15 @@
 
 #include "Headers/GeneralDelegates.h"
 #include "Headers/GameManagingPersistentStructs.h"
+#include "Interfaces/InteractableInterface.h"
 
 #include "LobbyManager.generated.h"
 
 class AGameManager;
 class UDataTable;
-
+class ASG_PlayerController;
+class UCampaignChooserWidgetBase;
+class ULobbyManagingWidgetBase;
 
 struct PerCampaignData
 {
@@ -21,8 +24,10 @@ struct PerCampaignData
 	uint8 Progression = 0;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCampaignRepresentingSignature, FText, Name, uint8, PlayerNum, bool, IsSupervised, bool, IsChangeable);
+
 UCLASS()
-class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor
+class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
 	
@@ -32,9 +37,26 @@ public:
 
 private:
 
+	UPROPERTY()
+	ASG_PlayerController* InteractingPlayer = nullptr;
+	UPROPERTY()
+	UCampaignChooserWidgetBase* CampaignChooserWidget;
+	UPROPERTY()
+	ULobbyManagingWidgetBase* LobbyManagingWidget;
+
+	UPROPERTY()
+	TArray<FText> CampaignNames;
+	UPROPERTY()
+	TArray<UTexture2D*> CampaignIcons;
+	UPROPERTY()
+	TArray<FString> CampaignCodes;
+	UPROPERTY()
+	TArray<uint8> CampaignPlayerNums;
+	UPROPERTY()
+	TArray<uint8> CampaignProgressions;
+
 	TMap<FName, PerCampaignData> PerCampaignProgression;
 
-	FString CampaignName = "";
 	uint8 NumPlayers = 0;
 	bool bIsSupervised = false;
 	uint8 CurrentGame = 0;
@@ -50,22 +72,23 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
 
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* CampaignTable = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UCampaignChooserWidgetBase> CampaignChooserWidgetBaseClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<ULobbyManagingWidgetBase> LobbyManagingWidgetBaseClass;
+
 	UPROPERTY(EditAnywhere, Category = "GameManaging")
-	TMap<int, AGameManager*> TablesByPlayerNum;
+	TMap<uint8, AGameManager*> TablesByPlayerNum;
 
-public:
+	void SetupManagingWidget();
+	void SetupSelectorWidget();
 
-	UPROPERTY(EditAnywhere)
-	UDataTable* CampaignDataTable;
-
-	UFUNCTION(BlueprintCallable)
-	void SetCampaignName(FString Name);
-
-	UFUNCTION(BlueprintCallable)
-	void SetNumPlayers(uint8 InNumPlayers);
-
-	UFUNCTION(BlueprintCallable)
-	void SetIsSupervised(bool InIsSupervised);
+	UFUNCTION()
+	void StopInteracting();
 
 	UFUNCTION(BlueprintCallable)
 	void OpenPlaySpace();
@@ -76,21 +99,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LeaveLobby();
 
-	UFUNCTION(BlueprintCallable)
-	void ReceiveCampaignID(FName ID);
+	UFUNCTION()
+	void SelectCampaign();
 
-	UFUNCTION(BlueprintCallable)
-	void ReceiveCampaignCode(FString Code);
+	UFUNCTION()
+	void CampaignSelected(int Index);
 
-	UPROPERTY(BlueprintAssignable)
-	FStringTransferSignature OnCampaignNameChanged;
+	FCampaignRepresentingSignature OnCampaignFillNeeded;
 
-	UPROPERTY(BlueprintAssignable)
-	FIntegerTransferSignature OnPlayerNumChanged;
+public:
 
-	UPROPERTY(BlueprintAssignable)
-	FBooleanTransferSignature OnIsSupervisedChanged;
+	UFUNCTION()
+	void SetSupervision(bool State);
 
-	UPROPERTY(BlueprintAssignable)
-	FVoidDataTransferSignature OnSupervisionChangeable;
+	virtual void InteractRequest(AController* InteractingCharacter) override;
+	virtual bool bCanInteract(AController* InteractingCharacter) override;
+
 };

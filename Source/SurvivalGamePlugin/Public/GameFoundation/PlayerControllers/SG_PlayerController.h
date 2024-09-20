@@ -71,4 +71,7 @@ public:
 
 	UFUNCTION(Exec)
 	void Cheat_SetMoney(uint32 Money);
+
+	UFUNCTION(Exec)
+	void Cheat_ClearAccount();
 };

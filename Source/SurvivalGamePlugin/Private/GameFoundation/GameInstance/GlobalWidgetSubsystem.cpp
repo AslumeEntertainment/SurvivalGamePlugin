@@ -54,7 +54,6 @@ bool UGlobalWidgetSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 void UGlobalWidgetSubsystem::BeginLoadingScreen(const FString& LoadingScreenPackName)
 {
 
-
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
@@ -126,4 +125,25 @@ void UGlobalWidgetSubsystem::ShowAnnouncementWidget(FString AnnouncementString)
 void UGlobalWidgetSubsystem::HideAnnouncementWidget()
 {
 
+}
+
+void UGlobalWidgetSubsystem::ShowCoverupWidget()
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(GlobalWidgetSubsystem, Error, TEXT("BeginLoadingScreen IsValid(World) == false"));
+		return;
+	}
+
+	CoverupWidget = CreateWidget<UUserWidget>(World, CoverupWidgetClass);
+
+	CoverupWidget->AddToViewport();
+}
+
+void UGlobalWidgetSubsystem::HideCoverupWidget()
+{
+	CoverupWidget->RemoveFromParent();
+	CoverupWidget->Destruct();
+	CoverupWidget = nullptr;
 }
