@@ -111,6 +111,7 @@ USG_SaveGame* ASG_PlayerController::GetSave()
 	return Save;
 }
 
+
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {
 	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)

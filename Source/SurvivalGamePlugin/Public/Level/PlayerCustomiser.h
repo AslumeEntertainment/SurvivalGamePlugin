@@ -4,14 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
+#include "Headers/GeneralDelegates.h"
+#include "Headers/GameManagingStructs.h"
 #include "Interfaces/InteractableInterface.h"
 
 #include "PlayerCustomiser.generated.h"
 
+class ASG_PlayerController;
+class AInGameCharacter;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerReadiness);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerReturningToLobby, APlayerCustomiser*, TriggeringPlayerCustomiser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API APlayerCustomiser : public AActor, public IInteractableInterface
@@ -23,48 +25,61 @@ public:
 	APlayerCustomiser();
 
 private:
-	
-	UPROPERTY(Replicated)
-	bool bIsPlayerReady = false;
 
 	UPROPERTY(Replicated)
-	AController* OwningPlayer = nullptr;
+	bool bIsActive = false;
 
+	UPROPERTY(Replicated)
+	bool bIsTaken = false;
+
+	UPROPERTY()
 	APawn* MainPawn = nullptr;
 
-	APawn* GamePawn = nullptr;
+	UPROPERTY()
+	AInGameCharacter* GamePawn = nullptr;
+
+	UPROPERTY()
+	ASG_PlayerController* InteractingPlayer = nullptr;
 
 	UFUNCTION(Server, Reliable)
-	void ServerToggleReady();
+	void Server_ToggleReady();
+
+	UFUNCTION(Server, Reliable)
+	void Server_InteractRequest(ASG_PlayerController* PC);
 
 	UFUNCTION()
-	void AnnounceDeath();
+	void Server_InGameCharacterDead();
 
 protected:
-	// Called when the game starts or when spawned
-	//virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AInGameCharacter> DefaultHeroClass;
 
 public:	
-	// Called every frame
-	//virtual void Tick(float DeltaTime) override;
 
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
-	//---------------------Called Only on Server by the game mode-------------------
-	void SetOwningPlayer(AController* InOwner);
-	void SetGamePawn(APawn* InGamePawn);
+	UFUNCTION()
+	void Server_StopInteracting();
 
-	bool GetIsPlayerReady();
-	bool IsOwningPlayer(AController* CharacterToCheck);
-	bool IsPossesingMainPawn();
+	UFUNCTION()
+	void Server_SetIsActive(bool State);
 
-	void PossessMainPawn();
-	void PossessGamePawn();
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnHero(FVector Location, FRotator Rotation);
 
-	void DestroyGamePawn();
-	//-----------------------------------------------------------------------------
+	UFUNCTION(Server, Reliable)
+	void Server_DespawnHero();
 
-	FPlayerReadiness OnPlayerReadinessChanged;
-	FPlayerReturningToLobby OnGamePawnDeath;
+	UFUNCTION(Server, Reliable)
+	void Server_PossessMainPawn();
+
+	UFUNCTION(Server, Reliable)
+	void Server_PossessGamePawn();
+
+	FPlayerCustomiserTransferSignature OnPlayerStartInteracting;
+	FPlayerCustomiserTransferSignature OnPlayerStopInteracting;
+	FPlayerCustomiserTransferSignature OnPlayerReadinessChanged;
+	FPlayerCustomiserTransferSignature OnInGameCharacterDeath;
 };

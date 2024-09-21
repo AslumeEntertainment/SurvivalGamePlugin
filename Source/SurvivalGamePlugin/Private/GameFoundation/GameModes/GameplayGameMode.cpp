@@ -3,7 +3,6 @@
 
 #include "GameFoundation/GameModes/GameplayGameMode.h"
 
-#include "Kismet/GameplayStatics.h" 
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -11,7 +10,6 @@
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "Level/TeamManager.h"
 #include "Level/PlayerCustomiser.h"
-#include "Level/TimeEventManager.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
@@ -21,27 +19,6 @@ void AGameplayGameMode::StartPlay()
 	UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay"));
 
 	Super::StartPlay();
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay IsValid(World) == false"));
-		return;
-	}
-
-	TArray<AActor*> FoundActors;
-	
-	UGameplayStatics::GetAllActorsOfClass(World, TimeEventManagerClassToSearch, FoundActors);
-
-	if (FoundActors.IsEmpty() == true)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGameplayGameMode::StartPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATimeEventManager placed in the world"));
-		return;
-	}
-
-	ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
-	//TimeEventManager->OnPreparationOver.BindDynamic(this, &AGameplayGameMode::SpawnPredators);
-	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartPreparationPeriod);
-	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
 
 	USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
 	if (IsValid(SessionSubsystemPtr) == false)
@@ -123,7 +100,7 @@ void AGameplayGameMode::OnPlayerStatusUpdated()
 
 void AGameplayGameMode::PrepareGame()
 {
-	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameplayGameMode::StartGame, 1, true, LoadingPeriodLenght);
+	//GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameplayGameMode::StartGame, 1, true, LoadingPeriodLenght);
 
 	//Start Generating map
 
@@ -170,7 +147,7 @@ void AGameplayGameMode::StartGame()
 
 	int PrepDays = 2;//extract preptime from MapSelector
 
-	OnGameStart.Broadcast(PrepDays);
+	//OnGameStart.Broadcast(PrepDays);
 
 }
 
@@ -180,7 +157,7 @@ FVector AGameplayGameMode::GetValidInGameSpawnLocation()
 	bool bIsValidLocation = true;
 
 	TArray<AActor*> Players;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), Players);
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacter::StaticClass(), Players);
 
 	TArray<FVector> PlayerLocations;
 	for (AActor* Player : Players)
@@ -302,7 +279,7 @@ void AGameplayGameMode::EndGame()
 
 	}
 	*/
-	OnGameEnd.Broadcast();
+	//OnGameEnd.Broadcast();
 }
 
 void AGameplayGameMode::PostLogin(APlayerController* NewPlayer)

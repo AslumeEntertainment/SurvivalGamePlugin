@@ -4,6 +4,18 @@
 #include "Engine/DataTable.h"
 #include "GameManagingPersistentStructs.generated.h"
 
+USTRUCT()
+struct FProgressiveDataHelperStruct
+{
+    GENERATED_USTRUCT_BODY()
+
+    UPROPERTY()
+    FName ID;
+
+    UPROPERTY()
+    uint8 Level = 0;
+};
+
 USTRUCT(BlueprintType)
 struct FPersistentDataUnit : public FTableRowBase
 {
@@ -90,6 +102,18 @@ struct FHeroCardPersistentData : public FPersistentDataUnit
     UPROPERTY(EditAnywhere)
     TMap<uint8, uint16> ValuePerLevel;
 
+};
+
+USTRUCT(BlueprintType)
+struct FDeckPersistentData : public FPersistentDataUnit
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    uint8 Hero = 0;
+
+    UPROPERTY(EditAnywhere)
+    TArray<uint16> StartingEquipment;
 };
 
 USTRUCT(BlueprintType)

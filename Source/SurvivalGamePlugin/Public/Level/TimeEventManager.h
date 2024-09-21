@@ -6,8 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "TimeEventManager.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE(FPreparationPeriodOverSignature);
-
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ATimeEventManager : public AActor
 {
@@ -17,8 +15,6 @@ public:
 	ATimeEventManager();
 
 protected:
-
-	FTimerHandle PreparationPeriodTimer;
 
 	UPROPERTY(EditAnywhere, Category = "DayNightCycle")
 	float DayLength = 30;
@@ -50,20 +46,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class USkyAtmosphereComponent* SkyAtmosphere;;
 
-	UFUNCTION()
-	void PreparationPeriodOver();
-
-	
 public:	
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
 
 	UFUNCTION()
-	void StartPreparationPeriod(int InDaysForPreparation);
+	void StartSkyRotation();
 
 	UFUNCTION()
 	void StopSkyRotation();
 
-	FPreparationPeriodOverSignature OnPreparationOver;
 };

@@ -63,7 +63,8 @@ void ALobbyManager::OpenPlaySpace()
 	}
 	ActiveGameManager = *GameManagerPtr;
 	ActiveGameManager->OnGameProgressed.AddDynamic(this, &ALobbyManager::ProgressGame);
-	ActiveGameManager->Open(bIsSupervised, CurrentGames[CurrentGame]);
+	ActiveGameManager->Open(bIsSupervised, NumPlayers);
+	ActiveGameManager->Update(CurrentGames[CurrentGame]);
 
 	StopInteracting();
 }
@@ -185,6 +186,10 @@ void ALobbyManager::SetCurrentGame(int Index)
 {
 	CurrentGame = Index;
 	SendCampaign();
+	if (IsValid(ActiveGameManager) == true)
+	{
+		ActiveGameManager->Update(CurrentGameNames[CurrentGame]);
+	}
 }
 
 void ALobbyManager::ProgressGame()
@@ -243,7 +248,7 @@ void ALobbyManager::InteractRequest(AController* InteractingCharacter)
 
 bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
 {
-	return HasAuthority();
+	return true;// HasAuthority();
 }
 
 void ALobbyManager::StopInteracting()

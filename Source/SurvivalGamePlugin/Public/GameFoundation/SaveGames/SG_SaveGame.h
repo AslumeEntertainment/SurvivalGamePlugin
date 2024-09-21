@@ -5,21 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 
-#include "Headers/GameManagingStructs.h"
+#include "Headers/GameManagingPersistentStructs.h"
 
 #include "SG_SaveGame.generated.h"
-
-USTRUCT()
-struct FProgressiveDataHelperStruct
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY()
-	FName ID;
-
-	UPROPERTY()
-	uint8 Level = 0;
-};
 
 
 UCLASS()
@@ -45,6 +33,6 @@ public:
 	TArray<FProgressiveDataHelperStruct> HeroCards;
 
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
-	TArray<FDeck> Decks;
+	TArray<FDeckPersistentData> Decks;
 
 };

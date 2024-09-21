@@ -50,7 +50,7 @@ private:
 	UFUNCTION()
 	void UnRegisterRequest(APlayerController* TriggeringPlayer);
 
-	FTimerHandle LoadingPeriodTimer;
+	
 	FTimerHandle LootingPeriodTimer;
 
 	TMap<FString, ASG_PlayerController*> AllPlayers;
@@ -72,15 +72,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "CharacterSpawning")
 	float MinimalSpawnDistanceFromPlayer;
 
-	UPROPERTY(EditAnywhere, Category = "GameProgression")
-	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
-
-	UPROPERTY(EditAnywhere, Category = "GameProgression")
-	float LoadingPeriodLenght = 5.0f;
-
-	UPROPERTY(EditAnywhere, Category = "GameProgression")
-	float LootingPeriodLenght = 30.0f;
-
 	void PostLogin(APlayerController* NewPlayer) override;
 	void Logout(AController* Exiting) override;
 	void SendPlayerListUpdate();
@@ -89,8 +80,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void KickPlayer(FString PlayerName);
 
-	FIntegerTransferSignature OnGameStart;
-	FVoidDataTransferSignature OnGameEnd;
 	FStringArrayTransferSignature OnPlayerListUpdated;
 	
 };
