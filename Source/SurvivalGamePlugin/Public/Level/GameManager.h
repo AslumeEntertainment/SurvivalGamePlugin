@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
+#include "Headers/GeneralDelegates.h"
 #include "GameManager.generated.h"
 
 class APlayerCustomiser;
@@ -58,4 +58,7 @@ public:
 
 	void Open(bool InSupervisionState, FString CampaignCode);
 	void Close();
+
+	FVoidDataTransferSignature OnGameProgressed;
+
 };

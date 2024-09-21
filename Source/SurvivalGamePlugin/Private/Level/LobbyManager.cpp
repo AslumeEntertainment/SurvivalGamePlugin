@@ -62,6 +62,7 @@ void ALobbyManager::OpenPlaySpace()
 		return;
 	}
 	ActiveGameManager = *GameManagerPtr;
+	ActiveGameManager->OnGameProgressed.AddDynamic(this, &ALobbyManager::ProgressGame);
 	ActiveGameManager->Open(bIsSupervised, CurrentGames[CurrentGame]);
 
 	StopInteracting();
@@ -79,6 +80,7 @@ void ALobbyManager::ClosePlaySpace()
 		return;
 	}
 	ActiveGameManager->Close();
+	ActiveGameManager->OnGameProgressed.RemoveAll(this);
 	ActiveGameManager = nullptr;
 }
 
@@ -102,9 +104,9 @@ void ALobbyManager::SelectCampaign()
 void ALobbyManager::CampaignSelected(int Index)
 {
 
-
 	FString Code = CampaignCodes[Index];
 
+	CurrentGameNames.Empty();
 	CurrentGames.Empty();
 
 	FText ExtractedCampaignName;
@@ -137,11 +139,6 @@ void ALobbyManager::CampaignSelected(int Index)
 	ExtractedIsSupervised = TempString.ToBool();
 	Code = Code.Mid(DelimiterIndex + 1);
 
-	bIsSupervised = ExtractedIsSupervised;
-	NumPlayers = ExtractedNumPlayers;
-	CurrentGame = CampaignProgressions[Index];
-	OnCampaignFillNeeded.Broadcast(ExtractedCampaignName, ExtractedNumPlayers, ExtractedIsSupervised, SupervisionChangeable);
-
 	uint8 ExtractedNumberOfGames = 0;
 
 	//Getting the number of games
@@ -152,6 +149,7 @@ void ALobbyManager::CampaignSelected(int Index)
 	UE_LOG(LogTemp, Error, TEXT("Code: %s"), *Code);
 
 	FString GameString;
+	FString GameName;
 
 	for (uint8 i = 0; i < ExtractedNumberOfGames; i++)
 	{
@@ -159,17 +157,74 @@ void ALobbyManager::CampaignSelected(int Index)
 		GameString = Code.Left(DelimiterIndex);
 		Code = Code.Mid(DelimiterIndex + 1);
 
-		UE_LOG(LogTemp, Error, TEXT("Game %d: %s"), i, *GameString);
+		//Getting the name of a Game and stripping it from the code
+		GameString.FindChar(':', DelimiterIndex);
+		GameName = GameString.Left(DelimiterIndex);
+		CurrentGameNames.Add(GameName);
+		GameString = GameString.Mid(DelimiterIndex + 1);
+
+		UE_LOG(LogTemp, Error, TEXT("Game %s: %s"), *GameName, *GameString);
 		CurrentGames.Add(GameString);
+
 	}
 
+	CurrentCampaignID = CampaignIDs[Index];
+	CurrentCampaignName = ExtractedCampaignName;
+	bIsSupervised = ExtractedIsSupervised;
+	NumPlayers = ExtractedNumPlayers;
+	CurrentSupervisionChangeable = SupervisionChangeable;
+	CurrentGame = CampaignProgressions[Index];
+	CurrentMaxProgression = CurrentGame;
+
+	SendCampaign();
+
 	CampaignChooserWidget->Hide();
+}
+
+void ALobbyManager::SetCurrentGame(int Index)
+{
+	CurrentGame = Index;
+	SendCampaign();
+}
+
+void ALobbyManager::ProgressGame()
+{
+	UE_LOG(LogTemp, Error, TEXT("Progressing game"));
+	CurrentGame += 1;
+
+	if (CurrentGame <= CurrentMaxProgression)
+	{
+
+		SetCurrentGame(CurrentGame);
+		return;
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("Updating MaxProgression"));
+	CurrentMaxProgression = CurrentGame;
+	SetCurrentGame(CurrentGame);
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	for (int i = 0; i < Save->Campaigns.Num(); i++)
+	{
+		if (Save->Campaigns[i].ID == CurrentCampaignID)
+		{
+			Save->Campaigns[i].Level = CurrentGame;
+			break;
+		}
+	}
+	InteractingPlayer->WriteSave();
 }
 
 void ALobbyManager::SetSupervision(bool State)
 {
 	bIsSupervised = State;
-	LobbyManagingWidget->SetSupervised(bIsSupervised);
+	SendCampaign();
+}
+
+//Used instead of the above setters but may be too slow. If too slow use setter for the LobbyManagingWidget
+void ALobbyManager::SendCampaign()
+{
+	OnCampaignFillNeeded.Broadcast(CurrentCampaignName, NumPlayers, bIsSupervised, CurrentSupervisionChangeable, CurrentGameNames, CurrentMaxProgression, CurrentGame);
 }
 
 void ALobbyManager::InteractRequest(AController* InteractingCharacter)
@@ -188,7 +243,7 @@ void ALobbyManager::InteractRequest(AController* InteractingCharacter)
 
 bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
 {
-	return true;
+	return HasAuthority();
 }
 
 void ALobbyManager::StopInteracting()
@@ -233,6 +288,7 @@ void ALobbyManager::SetupManagingWidget()
 	LobbyManagingWidget->OnExitButton.AddDynamic(this, &ALobbyManager::StopInteracting);
 	LobbyManagingWidget->OnLeaveButton.AddDynamic(this, &ALobbyManager::LeaveLobby);
 	LobbyManagingWidget->OnSupervisedChanged.AddDynamic(this, &ALobbyManager::SetSupervision);
+	LobbyManagingWidget->OnActiveGameChanged.AddDynamic(this, &ALobbyManager::SetCurrentGame);
 
 }
 
@@ -244,6 +300,7 @@ void ALobbyManager::SetupSelectorWidget()
 	{
 		FCampaignPersistentData* CampaignCard = CampaignTable->FindRow<FCampaignPersistentData>(Campaign.ID, "Filling Campaign");
 
+		CampaignIDs.Add(Campaign.ID);
 		CampaignNames.Add(CampaignCard->UnitName);
 		CampaignIcons.Add(CampaignCard->UnitImage);
 		CampaignCodes.Add(CampaignCard->Code);

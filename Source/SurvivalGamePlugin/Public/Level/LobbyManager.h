@@ -24,7 +24,7 @@ struct PerCampaignData
 	uint8 Progression = 0;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FCampaignRepresentingSignature, FText, Name, uint8, PlayerNum, bool, IsSupervised, bool, IsChangeable);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(FCampaignRepresentingSignature, FText, Name, uint8, PlayerNum, bool, IsSupervised, bool, IsChangeable, TArray<FString>, GameNames, uint8, Progression, uint8, CurrentGame);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor, public IInteractableInterface
@@ -45,6 +45,8 @@ private:
 	ULobbyManagingWidgetBase* LobbyManagingWidget;
 
 	UPROPERTY()
+	TArray<FName> CampaignIDs;
+	UPROPERTY()
 	TArray<FText> CampaignNames;
 	UPROPERTY()
 	TArray<UTexture2D*> CampaignIcons;
@@ -55,15 +57,19 @@ private:
 	UPROPERTY()
 	TArray<uint8> CampaignProgressions;
 
-	TMap<FName, PerCampaignData> PerCampaignProgression;
-
+	FName CurrentCampaignID;
+	FText CurrentCampaignName;
 	uint8 NumPlayers = 0;
 	bool bIsSupervised = false;
+	bool CurrentSupervisionChangeable = false;
 	uint8 CurrentGame = 0;
-
-	
-	AGameManager* ActiveGameManager = nullptr;
+	uint8 CurrentMaxProgression = 0;
+	TArray<FString> CurrentGameNames;
 	TArray<FString> CurrentGames;
+
+	UPROPERTY()
+	AGameManager* ActiveGameManager = nullptr;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -105,12 +111,21 @@ protected:
 	UFUNCTION()
 	void CampaignSelected(int Index);
 
+	UFUNCTION()
+	void SetCurrentGame(int Index);
+
+	UFUNCTION()
+	void ProgressGame();
+
 	FCampaignRepresentingSignature OnCampaignFillNeeded;
 
 public:
 
 	UFUNCTION()
 	void SetSupervision(bool State);
+
+	UFUNCTION()
+	void SendCampaign();
 
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;

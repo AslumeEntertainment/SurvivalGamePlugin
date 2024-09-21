@@ -111,6 +111,6 @@ struct FCampaignPersistentData : public FPersistentDataUnit
     uint8 DevPlayerNum = 2;
 
     UPROPERTY(EditAnywhere)
-    FString Code = "::s:1[d:0[]:1[d:::1~]:p:a:s:e-]";
+    FString Code = "::s:1[:d:0[]:1[d:::1~]:p:a:1:1-]";
     
 };

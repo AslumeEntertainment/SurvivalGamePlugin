@@ -3,9 +3,12 @@
 
 #include "UI/Widgets/LobbyManagingWidgetBase.h"
 
+#include "Components/WidgetSwitcher.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
-#include "Components/WidgetSwitcher.h"
+#include "Components/ScrollBox.h"
+
+#include "UI/Widgets/Core/TextButtonWidgetBase.h"
 
 
 void ULobbyManagingWidgetBase::NativeOnInitialized()
@@ -49,7 +52,7 @@ void ULobbyManagingWidgetBase::SetSupervised(bool State)
 	TXT_Supervised->SetText(FText::FromString(State ? "Supervised" : "Unsupervised"));
 }
 
-void ULobbyManagingWidgetBase::FillCampaign(FText Name, uint8 PlayerNum, bool IsSupervised, bool IsChangeable)
+void ULobbyManagingWidgetBase::FillCampaign(FText Name, uint8 PlayerNum, bool IsSupervised, bool IsChangeable, TArray<FString> Games, uint8 Progression, uint8 CurrentGame)
 {
 	BTN_Supervised->SetIsEnabled(IsChangeable ? !IsSupervised : false);
 	BTN_Unsupervised->SetIsEnabled(IsChangeable ? IsSupervised : false);
@@ -59,6 +62,20 @@ void ULobbyManagingWidgetBase::FillCampaign(FText Name, uint8 PlayerNum, bool Is
 	TXT_Name->SetText(Name);
 	TXT_PlayerNum->SetText(FText::FromString(FString::FromInt(PlayerNum)));
 	SetSupervised(IsSupervised);
+
+	SCRB_Games->ClearChildren();
+	UTextButtonWidgetBase* GameWidget;
+	for (uint8 i=0; i<Games.Num(); i++)
+	{
+		GameWidget = CreateWidget<UTextButtonWidgetBase>(this, GameWidgetClass);
+		GameWidget->OnButtonClickedSelf.AddDynamic(this, &ULobbyManagingWidgetBase::OnGameClicked);
+
+		GameWidget->SetText(FText::FromString(Games[i] + " " + (i <= Progression ? (i == CurrentGame ? CurrentSymbol : CompletedSymbol) : "")));
+		GameWidget->SetEnabledStatus(i <= Progression && i!= CurrentGame);
+
+		SCRB_Games->AddChild(GameWidget);
+
+	}
 
 	CurrentActiveWidget = 1;
 	WSW_CampaignWindow->SetActiveWidgetIndex(1);
@@ -124,4 +141,9 @@ void ULobbyManagingWidgetBase::OnUnsupervisedClicked()
 	OnSupervisedChanged.Broadcast(false);
 	BTN_Supervised->SetIsEnabled(true);
 	BTN_Unsupervised->SetIsEnabled(false);
+}
+
+void ULobbyManagingWidgetBase::OnGameClicked(UUserWidget* Widget)
+{
+	OnActiveGameChanged.Broadcast(SCRB_Games->GetChildIndex(Widget));
 }

@@ -13,6 +13,7 @@ class UScrollBox;
 class UTextBlock;
 class UImage;
 class UWidgetSwitcher;
+class UTextButtonWidgetBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ULobbyManagingWidgetBase : public UUserWidget
@@ -65,6 +66,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Campaign", meta = (BindWidget))
 	UTextBlock* TXT_Supervised;
 
+	UPROPERTY(EditAnywhere, Category = "Campaign", meta = (BindWidget))
+	UScrollBox* SCRB_Games;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UTextButtonWidgetBase> GameWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	FString CompletedSymbol = "+";
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	FString CurrentSymbol = "-";
+
 	UFUNCTION()
 	void OnExitButtonClicked();
 
@@ -86,13 +99,16 @@ protected:
 	UFUNCTION()
 	void OnUnsupervisedClicked();
 
+	UFUNCTION()
+	void OnGameClicked(UUserWidget* Widget);
+
 public:
 	void NativeOnInitialized() override;
 
 	void NativeConstruct() override;
 
 	UFUNCTION()
-	void FillCampaign(FText Name, uint8 PlayerNum, bool IsSupervised, bool IsChangeable);
+	void FillCampaign(FText Name, uint8 PlayerNum, bool IsSupervised, bool IsChangeable, TArray<FString> Games, uint8 MaxProgression, uint8 CurrentGame);
 
 	void ResetCampaign();
 
@@ -114,4 +130,5 @@ public:
 	FVoidDataTransferSignature OnStartCampaignButton;
 	FVoidDataTransferSignature OnStopCampaignButton;
 	FBooleanTransferSignature OnSupervisedChanged;
+	FIntegerTransferSignature OnActiveGameChanged;
 };
