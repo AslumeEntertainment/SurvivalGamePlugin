@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 
-#include "Headers/ButtonDelegates.h"
+#include "Headers/GeneralDelegates.h"
 
 #include "LeaveGameWidgetBase.generated.h"
 
@@ -20,18 +20,10 @@ class SURVIVALGAMEPLUGIN_API ULeaveGameWidgetBase : public UUserWidget
 	GENERATED_BODY()
 	
 private:
-	UFUNCTION()
-	void OnExitClicked();
 
 protected:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BindWidget))
-	UButton* ExitButton;
-
 public:
 
-	virtual void NativeOnInitialized() override;
-
-	FButtonClicked ExitButtonClicked;
 
 };

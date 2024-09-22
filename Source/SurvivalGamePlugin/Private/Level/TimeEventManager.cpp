@@ -45,25 +45,11 @@ ATimeEventManager::ATimeEventManager()
 }
 
 
-void ATimeEventManager::StartPreparationPeriod(int InDaysForPreparation)
+void ATimeEventManager::StartSkyRotation()
 {
-	if (bShouldPrintDebug)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("STARTING PREPARATION PERIOD OF %f SECONDS"), DayLength * InDaysForPreparation);
-	}
 	SetActorRotation(FRotator(FMath::RandRange(0, 360), 270, 0));
 	SkyRotationComponent->RotationRate = FRotator(-360 / DayLength, 0, 0);
 
-	GetWorldTimerManager().SetTimer(PreparationPeriodTimer, this, &ATimeEventManager::PreparationPeriodOver, DayLength * InDaysForPreparation, false);
-}
-
-void ATimeEventManager::PreparationPeriodOver()
-{
-	if (bShouldPrintDebug)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PREPARATION PERIOD OVER"));
-	}
-	OnPreparationOver.ExecuteIfBound();
 }
 
 void ATimeEventManager::StopSkyRotation()

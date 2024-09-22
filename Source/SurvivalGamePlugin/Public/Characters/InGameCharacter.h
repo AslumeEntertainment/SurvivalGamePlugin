@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
+#include "Headers/GeneralDelegates.h"
 #include "InGameCharacter.generated.h"
 
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharacterDeath);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
@@ -20,6 +19,6 @@ protected:
 
 public:
 
-	FCharacterDeath OnCharacterDeath;
+	FVoidDataTransferSignature OnCharacterDeath;
 
 };

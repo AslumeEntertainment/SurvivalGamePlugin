@@ -2,8 +2,13 @@
 
 
 #include "Level/PlayerCustomiser.h"
+
+#include "Kismet/GameplayStatics.h" 
+
+#include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "Characters/InGameCharacter.h"
-#include "Net/UnrealNetwork.h"
+
+
 
 // Sets default values
 APlayerCustomiser::APlayerCustomiser()
@@ -13,113 +18,123 @@ APlayerCustomiser::APlayerCustomiser()
 
 }
 
-/* Called when the game starts or when spawned
-void APlayerCustomiser::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}*/
-
-/* Called every frame
-void APlayerCustomiser::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}*/
 
 void APlayerCustomiser::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsPlayerReady, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, OwningPlayer, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsActive, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsTaken, COND_None, REPNOTIFY_Always);
+
 }
 
-void APlayerCustomiser::ServerToggleReady_Implementation()
-{
-	bIsPlayerReady = !bIsPlayerReady;
-	OnPlayerReadinessChanged.Broadcast();
-}
 
-void APlayerCustomiser::InteractRequest()
+void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Interacting with Customiser"));
-	ServerToggleReady();
+	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest - %s"), *InteractingCharacter->GetName());
+	ASG_PlayerController* PC = Cast<ASG_PlayerController>(InteractingCharacter);
+
+	if (IsValid(PC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	
+	//SetOwner(PC);
+	//UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest OWNR nam: %s"), *GetOwner()->GetName());
+	Server_InteractRequest(PC);
 }
 
 bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 {
-	return IsOwningPlayer(InteractingCharacter);
+	return bIsActive && !bIsTaken;
 }
 
-void APlayerCustomiser::SetOwningPlayer(AController* InOwner)
+void APlayerCustomiser::Server_InteractRequest_Implementation(ASG_PlayerController* PC)
 {
-	OwningPlayer = InOwner;
-	MainPawn = OwningPlayer->GetPawn();
-	SetOwner(OwningPlayer);
+	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_InteractRequest_Implementation "));
+	InteractingPlayer = PC;
+
+	OnPlayerStartInteracting.Broadcast(this);
+	MainPawn = PC->GetPawn();
+
+	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+
+	bIsTaken = true;
+
+	//FOR TESTING ONLY REMOVBE LATER
+	Server_ToggleReady_Implementation();
 }
 
-void APlayerCustomiser::SetGamePawn(APawn* InGamePawn)
+void APlayerCustomiser::Server_StopInteracting()
 {
+	OnPlayerStopInteracting.Broadcast(this);
+	MainPawn = nullptr;
+	GamePawn = nullptr;
 
-	AInGameCharacter* Character = Cast<AInGameCharacter>(InGamePawn);
+	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer = nullptr;
 
-	if (IsValid(Character) == false)
+	bIsTaken = false;
+}
+
+void APlayerCustomiser::Server_ToggleReady_Implementation()
+{
+	OnPlayerReadinessChanged.Broadcast(this);
+}
+
+
+void APlayerCustomiser::Server_SetIsActive(bool State)
+{
+	bIsActive = State;
+}
+
+void APlayerCustomiser::Server_SpawnHero_Implementation(FVector Location, FRotator Rotation)
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::SetGamePawn IsValid(Character) == false  Character Is Not Of Class: AInGameCharacter"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_SpawnHero_Implementation IsValid(World) == false"));
 		return;
 	}
 
-	Character->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::AnnounceDeath);
-
-	GamePawn = InGamePawn;
-}
-
-void APlayerCustomiser::AnnounceDeath()
-{
-	OnGamePawnDeath.Broadcast(this);
-}
-
-bool APlayerCustomiser::IsOwningPlayer(AController* CharacterToCheck)
-{
-	return CharacterToCheck == OwningPlayer;
-}
-
-bool APlayerCustomiser::GetIsPlayerReady()
-{
-	return bIsPlayerReady;
-}
-
-bool APlayerCustomiser::IsPossesingMainPawn()
-{
-	return MainPawn == OwningPlayer->GetPawn();
-}
-
-void APlayerCustomiser::PossessMainPawn()
-{
-	if (IsValid(MainPawn) == false)
+	FActorSpawnParameters SpawnInfo;
+	
+	GamePawn = World->SpawnActor<AInGameCharacter>(DefaultHeroClass, Location, Rotation, SpawnInfo);
+	if (IsValid(GamePawn) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::PossessMainPawn IsValid(MainPawn) == false Not right call order"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_SpawnHero_Implementation IsValid(GamePawn) == false"));
 		return;
 	}
-	MainPawn->SetActorTickEnabled(true);
-	OwningPlayer->Possess(MainPawn);
 
+	GamePawn->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::Server_InGameCharacterDead);
 }
 
-void APlayerCustomiser::PossessGamePawn()
+void APlayerCustomiser::Server_InGameCharacterDead()
+{
+	OnInGameCharacterDeath.Broadcast(this);
+}
+
+void APlayerCustomiser::Server_DespawnHero_Implementation()
 {
 	if (IsValid(GamePawn) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::PossessGamePawn IsValid(GamePawn) == false Not right call order"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_DespawnHero IsValid(GamePawn) == false"));
 		return;
 	}
-	OwningPlayer->Possess(GamePawn);
-	MainPawn->SetActorTickEnabled(false);
-}
-
-
-void APlayerCustomiser::DestroyGamePawn()
-{
 	GamePawn->Destroy();
+	GamePawn = nullptr;
 }
+
+void APlayerCustomiser::Server_PossessMainPawn_Implementation()
+{
+	InteractingPlayer->Possess(MainPawn);
+}
+
+void APlayerCustomiser::Server_PossessGamePawn_Implementation()
+{
+	InteractingPlayer->Possess(GamePawn);
+	Server_DespawnHero_Implementation();
+}
+
+

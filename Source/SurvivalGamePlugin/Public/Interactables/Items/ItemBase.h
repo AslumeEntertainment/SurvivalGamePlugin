@@ -72,7 +72,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void DestroyItem();
 
-	virtual void InteractRequest() override;
+	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
 	FName GetItemDataRowName() const;

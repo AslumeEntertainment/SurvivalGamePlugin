@@ -136,7 +136,7 @@ void AItemBase::DestroyItem()
 	Destroy();
 }
 
-void AItemBase::InteractRequest()
+void AItemBase::InteractRequest(AController* InteractingCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Interacting with item"));
 }

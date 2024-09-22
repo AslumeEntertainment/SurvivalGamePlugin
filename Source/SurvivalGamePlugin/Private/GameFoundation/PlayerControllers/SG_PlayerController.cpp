@@ -5,14 +5,40 @@
 
 #include "Kismet/GameplayStatics.h" 
 
-#include "GameFoundation/GameInstance/SG_GameInstance.h"
+#include "GameFoundation/GameInstance/SessionSubsystem.h"
+#include "GameFoundation/GameInstance/UserCloudSubsystem.h"
+#include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
+#include "GameFoundation/SaveGames/SG_SaveGame.h"
 
+void ASG_PlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (IsLocalPlayerController() == false)
+	{
+		return;
+	}
+
+	UUserCloudSubsystem* UserCloudSubsystemPtr = GetGameInstance()->GetSubsystem<UUserCloudSubsystem>();
+	if (IsValid(UserCloudSubsystemPtr) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::BeginPlay (IsValid(UserCloudSubsystemPtr) == false"));
+		return;
+	}
+
+	UserCloudSubsystemPtr->OnGameRead.AddDynamic(this, &ASG_PlayerController::ReceiveReadSave);
+	UserCloudSubsystemPtr->OnWriteFinished.AddDynamic(this, &ASG_PlayerController::ReadSave);
+	OnReadSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::ReadSaveFile);
+	OnWriteSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::WriteSaveFile);
+
+	ReadSave();
+}
 
 void ASG_PlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (bIsCamersMovementConstrained)
+	if (bIsCameraMovementConstrained)
 	{
 		PlayerCameraManager->ViewYawMin = -80.f;
 		PlayerCameraManager->ViewYawMax = 80.f;
@@ -34,31 +60,78 @@ void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMo
 
 void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 {
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
+	USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
+	if (IsValid(SessionSubsystemPtr) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(SessionSubsystem) == false"));
 		return;
 	}
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(UGameplayStatics::GetGameInstance(World));
-	if (IsValid(GameInstance) == false)
+	UGlobalWidgetSubsystem* GlobalWidgetSubsystemPtr = GetGameInstance()->GetSubsystem<UGlobalWidgetSubsystem>();
+	if (IsValid(GlobalWidgetSubsystemPtr) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation IsValid(GameInstance) == false"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(GlobalWidgetSubsystemPtr) == false"));
 		return;
 	}
-
-	GameInstance->DestroySession();
+	GlobalWidgetSubsystemPtr->ShowCoverupWidget();
+	SessionSubsystemPtr->DestroySession();
 
 }
+
+void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
+{
+	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::ReceiveReadSave Read save complete"));
+
+	Save = Cast<USG_SaveGame>(SaveGame);
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
+		Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+		WriteSave();
+	}
+
+	OnSaveUpdated.Broadcast();
+
+}
+
+void ASG_PlayerController::ReadSave()
+{
+	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::ReadSave Requesting Read"));
+	OnReadSaveRequested.Broadcast();
+}
+
+void ASG_PlayerController::WriteSave()
+{
+	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::WriteSave Requesting Write"));
+	OnWriteSaveRequested.Broadcast(Save);
+}
+
+USG_SaveGame* ASG_PlayerController::GetSave()
+{
+	return Save;
+}
+
 
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {
 	if (GetLocalRole() == ROLE_Authority && PlayerState != NULL)
 	{
 
-		OnConnectionCleanUp.ExecuteIfBound(this);
+		OnConnectionCleanUp.Broadcast(this);
 	}
 
 	Super::OnNetCleanup(Connection);
 }
+
+void ASG_PlayerController::Cheat_SetMoney(uint32 Money)
+{
+	Save->Money = Money;
+	WriteSave();
+}
+
+void ASG_PlayerController::Cheat_ClearAccount()
+{
+	Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+	WriteSave();
+}
+
