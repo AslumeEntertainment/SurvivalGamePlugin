@@ -11,6 +11,8 @@
 #include "UI/HUD/InGameHUD.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GAS/SG_GameplayAbilityTargetData.h"
+#include "GAS/SG_CharacterAbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
 
@@ -40,7 +42,7 @@ void AHumanCharacter::Tick(float DeltaTime)
 	EmitInteractionChecker();
 }
 
-void AHumanCharacter::ServerSetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
+void AHumanCharacter::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
 {
 	FocusedInteractableObject = InFocusedInteractable;
 }
@@ -95,7 +97,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 
-		ServerSetFocusedInteractable(nullptr);
+		Server_SetFocusedInteractable(nullptr);
 		return;
 	}
 	if (!InteractableActor->bCanInteract(GetController()))
@@ -117,7 +119,7 @@ void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
-	ServerSetFocusedInteractable(HitActor);
+	Server_SetFocusedInteractable(HitActor);
 }
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -126,9 +128,10 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptInteraction);
-		EnhancedInputComponent->BindAction(EquipSecondaryHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithSecondaryHand);
-		
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptInteraction);
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AHumanCharacter::StartUnequipItem);
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Completed, this, &AHumanCharacter::CancelUnequipItem);
+
 		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseMainHandItem);
 		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseSecondaryHandItem);
 		
@@ -148,13 +151,6 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::AttemptInteraction()
 {
-	AItemBase* Item = Cast<AItemBase>(FocusedInteractableObject);
-	if (IsValid(Item) == true || IsValid(MainHandItem) == true)
-	{
-		AttemptEquipWithMainHand();
-		return;
-	}
-
 	if (FocusedInteractableObject == nullptr)
 	{
 		if (bShouldDrawDebug == true)
@@ -164,36 +160,36 @@ void AHumanCharacter::AttemptInteraction()
 		return;
 	}
 
-	IInteractableInterface* Interactable = Cast<IInteractableInterface>(FocusedInteractableObject);
-	if (Interactable != nullptr)
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+}
+
+void AHumanCharacter::StartUnequipItem()
+{
+	if (!IsValid(MainHandItem) && !IsValid(SecondaryHandItem))
 	{
-		Interactable->InteractRequest(GetController());
+		UE_LOG(LogTemp, Warning, TEXT("No items to unequip"));
 		return;
-	};
-
+	}
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Unequip);
 }
 
-void AHumanCharacter::AttemptEquipWithMainHand()
+void AHumanCharacter::CancelUnequipItem()
 {
-	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Main"));
-	FGameplayEventData EventData;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
-}
-
-void AHumanCharacter::AttemptEquipWithSecondaryHand()
-{
-	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Secondary"));
-	FGameplayEventData EventData;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
+	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Unequip);
 }
 
 void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		MainHandItem->Use(this);
+		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+		{
+			Server_ContinueUnequipMainHandItem();
+		}
+		else
+		{
+			MainHandItem->Use(this);
+		}
 	}
 	else
 	{
@@ -215,7 +211,14 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		SecondaryHandItem->Use(this);
+		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+		{
+			Server_ContinueUnequipSecondaryHandItem();
+		}
+		else
+		{
+			SecondaryHandItem->Use(this);
+		}
 	}
 	else
 	{
@@ -232,6 +235,16 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
 	}
+}
+
+void AHumanCharacter::Server_ContinueUnequipMainHandItem_Implementation()
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), FGameplayEventData());
+}
+
+void AHumanCharacter::Server_ContinueUnequipSecondaryHandItem_Implementation()
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), FGameplayEventData());
 }
 
 void AHumanCharacter::UseAbility()

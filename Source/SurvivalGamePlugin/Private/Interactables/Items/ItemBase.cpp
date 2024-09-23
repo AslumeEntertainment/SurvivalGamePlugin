@@ -3,6 +3,7 @@
 
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/DamageDealingComponent.h"
 #include "Characters/HumanCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -74,16 +75,15 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 		AbilityTagSuffix = ".Left";
 	}
 
-	FGameplayTag AbilityTag;
-	AbilityTag.FromExportString(BaseAbilityTag.ToString() + AbilityTagSuffix);
-	if (AbilityTag.IsValid())
-	{
-		FGameplayEventData EventData;
-		FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
-		CustomTargetData->ItemActor = this;
-		EventData.TargetData.Add(CustomTargetData);
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
-	}
+	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(BaseAbilityTag.ToString() + AbilityTagSuffix));
+	FGameplayEventData EventData;
+
+	FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
+	CustomTargetData->ItemActor = this;
+	EventData.TargetData.Add(CustomTargetData);
+
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::Use Sending GameplayEvent with tag %s to player..."), *AbilityTag.ToString());
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
@@ -138,7 +138,32 @@ void AItemBase::DestroyItem()
 
 void AItemBase::InteractRequest(AController* InteractingCharacter)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Interacting with item"));
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	AHumanCharacter* InteractingPlayer = Cast<AHumanCharacter>(InteractingCharacter->GetPawn());
+	if (!IsValid(InteractingPlayer))
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == nullptr"));
+		return;
+	}
+
+	if (!IsValid(InteractingPlayer->MainHandItem) && IsValid(GetComponentByClass(UDamageDealingComponent::StaticClass())))
+	{
+		InteractingPlayer->MainHandItem = this;
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetMainHandSocket());
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in main slot"));
+		return;
+	}
+	if (!IsValid(InteractingPlayer->SecondaryHandItem) && !IsValid(GetComponentByClass(UDamageDealingComponent::StaticClass())))
+	{
+		InteractingPlayer->SecondaryHandItem = this;
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetSecondaryHandSocket());
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in secondary slot"));
+		return;
+	}
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)

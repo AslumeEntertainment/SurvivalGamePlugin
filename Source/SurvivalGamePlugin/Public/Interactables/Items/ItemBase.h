@@ -11,6 +11,7 @@
 #include "ItemBase.generated.h"
 
 class UStaticMeshComponent;
+class USG_GameplayAbility;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface
@@ -35,7 +36,7 @@ protected:
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class USG_GameplayAbility> ItemAbility;
+	TSubclassOf<USG_GameplayAbility> ItemAbility;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	FGameplayTag BaseAbilityTag;

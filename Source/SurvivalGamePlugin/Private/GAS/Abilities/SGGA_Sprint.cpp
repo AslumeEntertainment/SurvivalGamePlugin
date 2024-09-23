@@ -22,7 +22,7 @@ void USGGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_Sprint::OnSprintButtonReleased);
-	WaitInputReleaseTask->Activate();
+	WaitInputReleaseTask->ReadyForActivation();
 }
 
 void USGGA_Sprint::OnSprintButtonReleased(float TimeHeld)

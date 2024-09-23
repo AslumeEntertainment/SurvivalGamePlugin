@@ -30,7 +30,7 @@ private:
 	UObject* FocusedInteractableObject = nullptr;
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetFocusedInteractable(UObject* InFocusedInteractable);
+	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
 
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
@@ -53,10 +53,10 @@ protected:
 	UInputMappingContext* CraftingWindowOnlyMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* EquipMainHandAction;
+	UInputAction* InteractAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* EquipSecondaryHandAction;
+	UInputAction* UnequipAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -74,11 +74,16 @@ protected:
 	UInputAction* DisassembleAction;
 
 	void AttemptInteraction();
-	void AttemptEquipWithMainHand();
-	void AttemptEquipWithSecondaryHand();
+	void StartUnequipItem();
+	void CancelUnequipItem();
 
 	void AttemptUseMainHandItem();
 	void AttemptUseSecondaryHandItem();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ContinueUnequipMainHandItem();
+	UFUNCTION(Server, Reliable)
+	void Server_ContinueUnequipSecondaryHandItem();
 
 	void UseAbility();
 

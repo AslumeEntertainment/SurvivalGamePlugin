@@ -4,6 +4,7 @@
 #include "Level/PlayerCustomiser.h"
 
 #include "Kismet/GameplayStatics.h" 
+#include "Net/UnrealNetwork.h"
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "Characters/InGameCharacter.h"
@@ -71,9 +72,12 @@ void APlayerCustomiser::Server_StopInteracting()
 	OnPlayerStopInteracting.Broadcast(this);
 	MainPawn = nullptr;
 	GamePawn = nullptr;
-
-	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-	InteractingPlayer = nullptr;
+	 
+	if (IsValid(InteractingPlayer)  ==  true)
+	{
+	    InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	    InteractingPlayer = nullptr;
+	}
 
 	bIsTaken = false;
 }
