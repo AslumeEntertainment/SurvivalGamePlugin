@@ -10,6 +10,7 @@
 #include "GameplayAbilitySpecHandle.h"
 #include "Interfaces/HittableInterface.h"
 #include "Headers/GameplayAbilityInputID.h"
+#include "Headers/GeneralDelegates.h"
 #include "SG_Character.generated.h"
 
 class USpringArmComponent;
@@ -23,10 +24,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHealthUpdateSignature, float, HealthPercent);
-
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface/*, public IHittableInterface*/
 {
 	GENERATED_BODY()
 
@@ -36,7 +35,15 @@ public:
 
 private:
 
-	bool bIsAlive = true;
+	UPROPERTY(Replicated)
+	UObject* FocusedInteractableObject = nullptr;
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
+
+	void EmitInteractionChecker();
+	void CheckForInteractables(FHitResult HitResult);
+
 
 protected:
 
@@ -47,6 +54,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCamersMovementConstrained = false;
 	//-----------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	float InteractionRange = 200;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	UMaterialInterface* InteractableOverlayMaterial;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
 	FName LeftHandSocket;
@@ -60,17 +73,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* RightHandDamageDealingComponent;
+	UDamageDealingComponent* RightHandDamageDealingComponent;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
@@ -79,7 +92,10 @@ protected:
 	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* SprintAction;
+	UInputAction* InteractAction;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* SprintAction;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_CharacterAbilitySystemComponent* AbilitySystemComponent;
@@ -90,8 +106,10 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
-	void StartSprint();
-	void FinishSprint();
+	void AttemptInteraction();
+
+	/*void StartSprint();
+	void FinishSprint();*/
 
 
 protected:
@@ -103,12 +121,15 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetRepControlRotation(FRotator InControlRotation);
+	void Server_SetRepControlRotation(FRotator InControlRotation);
 
 
 public:
 
-	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+	/*TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;*/
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	bool bShouldDrawDebug = true;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
@@ -116,34 +137,37 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
 
-	UPROPERTY(BlueprintCallable)
+	/*UPROPERTY(BlueprintCallable)
 	FHealthUpdateSignature OnHealthPercentUpdated;
 
 	UPROPERTY(BlueprintCallable)
 	FHealthUpdateSignature OnHungerPercentUpdated;
 
 	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnEnergyPercentUpdated;
+	FHealthUpdateSignature OnEnergyPercentUpdated;*/
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
+	/*virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 	virtual bool bCanBeHit() override;
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;
+	virtual void OnHittableDestroyed() override;*/
 
-	UFUNCTION(BlueprintCallable, Client, Reliable)
+	/*UFUNCTION(BlueprintCallable, Client, Reliable)
 	void OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);*/
 
 	//that must go in InGameCharacter
 	/*UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	virtual void Die();*/
+
+	UFUNCTION(BlueprintCallable)
+	UObject* GetFocusedInteractableObject();
 
 	UFUNCTION(BlueprintCallable)
 	FName GetLeftHandSocket();
@@ -157,8 +181,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 
-	UFUNCTION(BlueprintCallable)
-	bool IsAlive();
+	/*UFUNCTION(BlueprintCallable)
+	bool IsAlive();*/
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();

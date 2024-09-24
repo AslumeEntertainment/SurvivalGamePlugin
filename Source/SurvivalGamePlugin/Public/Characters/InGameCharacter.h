@@ -4,21 +4,77 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
+#include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "InGameCharacter.generated.h"
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
 {
 	GENERATED_BODY()
 	
+public:
+
+	AInGameCharacter();
+
+private:
+
+	bool bIsAlive = true;
+
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UDamageDealingComponent* LeftHandDamageDealingComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UDamageDealingComponent* RightHandDamageDealingComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* SprintAction;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void StartSprint();
+	void FinishSprint();
 
 	//void Die() override;
 
 public:
 
+	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+
 	FVoidDataTransferSignature OnCharacterDeath;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnHealthPercentUpdated;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnHungerPercentUpdated;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnEnergyPercentUpdated;
+
+	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
+
+	virtual bool bCanBeHit() override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void OnHittableDestroyed() override;
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive();
 
 };

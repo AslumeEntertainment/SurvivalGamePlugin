@@ -9,6 +9,8 @@
 #include "Level/TimeEventManager.h"
 #include "Level/PlayerCustomiser.h"
 
+#include "Net/UnrealNetwork.h"
+
 // Sets default values
 AGameManager::AGameManager()
 {

@@ -3,13 +3,13 @@
 
 #include "Animation/SG_AnimNotify_Hit.h"
 #include "Animation/SG_AnimInstance.h"
-#include "Characters/SG_Character.h"
+#include "Characters/InGameCharacter.h"
 #include "Components/DamageDealingComponent.h"
 
 
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
-	ASG_Character* Player = Cast<ASG_Character>(MeshComp->GetOwner());
+	AInGameCharacter* Player = Cast<AInGameCharacter>(MeshComp->GetOwner());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(Player) == false"));

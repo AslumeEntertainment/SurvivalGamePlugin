@@ -4,7 +4,7 @@
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
-#include "Characters/SG_Character.h"
+#include "Characters/InGameCharacter.h"
 #include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -91,7 +91,7 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
 	UAbilitySystemComponent* Target = &(Data.Target);
 
-	ASG_Character* TargetCharacter;
+	AInGameCharacter* TargetCharacter;
 	if (Target->AbilityActorInfo.IsValid() == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostGameplayEffectExecute Data.Target.AbilityActorInfo.IsValid() == false"));
@@ -103,7 +103,7 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 		return;
 	}
 
-	TargetCharacter = Cast<ASG_Character>(Data.Target.AbilityActorInfo->AvatarActor.Get());
+	TargetCharacter = Cast<AInGameCharacter>(Data.Target.AbilityActorInfo->AvatarActor.Get());
 	if (!IsValid(TargetCharacter))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostGameplayEffectExecute IsValid(TargetCharacter) == false"));
@@ -114,7 +114,7 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	{
 		if (GetHunger() <= GetMaxHunger() / 2)
 		{
-			TargetCharacter->OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
+			TargetCharacter->Client_OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
 		}
 		
 		if (HasMaxHunger())
@@ -129,7 +129,7 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 
 	if (Data.EvaluatedData.Attribute == GetEnergyAttribute() && GetEnergy() < GetMaxEnergy() / 2)
 	{
-		TargetCharacter->OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
+		TargetCharacter->Client_OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
 	}
 }
 

@@ -12,6 +12,9 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FIntegerTransferSignature, int, Num);
 
 UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFloatTransferSignature, float, Num);
+
+UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBooleanTransferSignature, bool, State);
 
 //------------------------------------------------------------------------------------------

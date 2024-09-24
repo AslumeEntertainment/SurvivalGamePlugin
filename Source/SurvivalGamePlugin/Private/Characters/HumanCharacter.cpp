@@ -20,10 +20,10 @@ void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
+	/*DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);*/
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, ActiveItem, COND_None, REPNOTIFY_Always);
+	//DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, ActiveItem, COND_None, REPNOTIFY_Always);
 }
 
 void AHumanCharacter::BeginPlay()
@@ -31,96 +31,96 @@ void AHumanCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AHumanCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+//void AHumanCharacter::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//	if (!IsLocallyControlled()) 
+//	{
+//		return;
+//	}
+//	EmitInteractionChecker();
+//}
 
-	if (!IsLocallyControlled()) 
-	{
-		return;
-	}
-	EmitInteractionChecker();
-}
+//void AHumanCharacter::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
+//{
+//	FocusedInteractableObject = InFocusedInteractable;
+//}
 
-void AHumanCharacter::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
-{
-	FocusedInteractableObject = InFocusedInteractable;
-}
+//void AHumanCharacter::EmitInteractionChecker()
+//{
+//	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
+//	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
+//
+//	const FName TraceTag("InteractableTraceTag");
+//
+//	UWorld* World = GetWorld();
+//	if (IsValid(World) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::EmitInteractionChecker IsValid(World) == false"));
+//		return;
+//	}
+//
+//	FHitResult HitResult;
+//	FCollisionQueryParams CQP;
+//	CQP.AddIgnoredActor(this);
+//	CQP.TraceTag = TraceTag;
+//
+//	if (bShouldDrawDebug)
+//	{
+//		World->DebugDrawTraceTag = TraceTag;
+//	}
+//	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
+//
+//	CheckForInteractables(HitResult);
+//}
 
-void AHumanCharacter::EmitInteractionChecker()
-{
-	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
-	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
-
-	const FName TraceTag("InteractableTraceTag");
-
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::EmitInteractionChecker IsValid(World) == false"));
-		return;
-	}
-
-	FHitResult HitResult;
-	FCollisionQueryParams CQP;
-	CQP.AddIgnoredActor(this);
-	CQP.TraceTag = TraceTag;
-
-	if (bShouldDrawDebug)
-	{
-		World->DebugDrawTraceTag = TraceTag;
-	}
-	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
-
-	CheckForInteractables(HitResult);
-}
-
-void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
-{
-	AActor* HitActor = HitResult.GetActor();
-	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
-	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
-
-	if (FocusedInteractableObject == HitActor)
-	{
-		return;
-	}
-	if (InteractableActor == nullptr) 
-	{
-		if (FocusedInteractableObject == nullptr)
-		{
-			return;
-		}
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
-		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-		}
-
-		Server_SetFocusedInteractable(nullptr);
-		return;
-	}
-	if (!InteractableActor->bCanInteract(GetController()))
-	{
-		return;
-	}
-	if (FocusedInteractableObject != nullptr)
-	{
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
-		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-		}
-	}
-
-	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
-	if (HitMeshComponent != nullptr)
-	{
-		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
-	}
-
-	Server_SetFocusedInteractable(HitActor);
-}
+//void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
+//{
+//	AActor* HitActor = HitResult.GetActor();
+//	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+//	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
+//
+//	if (FocusedInteractableObject == HitActor)
+//	{
+//		return;
+//	}
+//	if (InteractableActor == nullptr) 
+//	{
+//		if (FocusedInteractableObject == nullptr)
+//		{
+//			return;
+//		}
+//		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+//		if (Cast<UMeshComponent>(InteractableMeshComponent))
+//		{
+//			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+//		}
+//
+//		Server_SetFocusedInteractable(nullptr);
+//		return;
+//	}
+//	if (!InteractableActor->bCanInteract(GetController()))
+//	{
+//		return;
+//	}
+//	if (FocusedInteractableObject != nullptr)
+//	{
+//		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+//		if (Cast<UMeshComponent>(InteractableMeshComponent))
+//		{
+//			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+//		}
+//	}
+//
+//	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
+//	if (HitMeshComponent != nullptr)
+//	{
+//		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
+//	}
+//
+//	Server_SetFocusedInteractable(HitActor);
+//}
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -149,19 +149,19 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 }
 
-void AHumanCharacter::AttemptInteraction()
-{
-	if (FocusedInteractableObject == nullptr)
-	{
-		if (bShouldDrawDebug == true)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
-		}
-		return;
-	}
-
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
-}
+//void AHumanCharacter::AttemptInteraction()
+//{
+//	if (FocusedInteractableObject == nullptr)
+//	{
+//		if (bShouldDrawDebug == true)
+//		{
+//			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
+//		}
+//		return;
+//	}
+//
+//	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+//}
 
 void AHumanCharacter::StartUnequipItem()
 {
@@ -357,10 +357,10 @@ FName AHumanCharacter::GetSecondaryHandSocket()
 	}
 }
 
-UObject* AHumanCharacter::GetFocusedInteractableObject()
-{
-	return FocusedInteractableObject;
-}
+//UObject* AHumanCharacter::GetFocusedInteractableObject()
+//{
+//	return FocusedInteractableObject;
+//}
 
 void AHumanCharacter::ShowPlayerInfo()
 {
@@ -380,11 +380,11 @@ void AHumanCharacter::ShowPlayerInfo()
 
 	UE_LOG(LogTemp, Warning, TEXT("%s ===== Character stats ====="), *Prefix);
 
-	if (FocusedInteractableObject)
+	if (GetFocusedInteractableObject() != nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject is a valid pointer"), *Prefix);
 
-		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(FocusedInteractableObject);
+		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(GetFocusedInteractableObject());
 		if (InteractableActor)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);

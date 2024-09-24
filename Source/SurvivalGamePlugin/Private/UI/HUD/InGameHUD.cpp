@@ -19,7 +19,7 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->bShowMouseCursor = false;
 	}
 
-	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
+	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));

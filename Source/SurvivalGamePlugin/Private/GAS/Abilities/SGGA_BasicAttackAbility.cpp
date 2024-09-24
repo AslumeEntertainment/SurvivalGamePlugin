@@ -20,7 +20,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = Cast<ASG_Character>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(Player) == false"));
