@@ -4,7 +4,7 @@
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
-#include "Characters/SG_Character.h"
+#include "Characters/InGameCharacter.h"
 #include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interfaces/HittableInterface.h"
@@ -65,10 +65,10 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			AttributeOwner->OnHittableDestroyed();
 		}
 
-		ASG_Character* AttributeOwnerCharacter = Cast<ASG_Character>(GetOwningActor());
+		AInGameCharacter* AttributeOwnerCharacter = Cast<AInGameCharacter>(GetOwningActor());
 		if (IsValid(AttributeOwnerCharacter))
 		{
-			AttributeOwnerCharacter->OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
+			AttributeOwnerCharacter->Client_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
 		}
 	}
 }

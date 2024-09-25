@@ -31,6 +31,7 @@ public class SurvivalGamePlugin : ModuleRules
                 "EnhancedInput",
 				"UMG",
 				"Foliage",
+                "MoviePlayer",
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }

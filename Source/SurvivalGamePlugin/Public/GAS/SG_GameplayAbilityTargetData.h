@@ -15,9 +15,13 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 
     FSG_GameplayAbilityTargetData() 
     {
+        InteractableObject = nullptr;
         ItemActor = nullptr;
         OptionalFloatProperty = 0.f;
     }
+
+    UPROPERTY()
+    UObject* InteractableObject;
 
     UPROPERTY()
     AItemBase* ItemActor;
@@ -32,6 +36,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 
     bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
     {
+        Ar << InteractableObject;
         Ar << ItemActor;
         Ar << OptionalFloatProperty;
         bOutSuccess = true;

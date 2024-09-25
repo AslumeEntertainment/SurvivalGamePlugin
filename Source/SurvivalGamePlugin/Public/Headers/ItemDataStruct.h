@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "GameplayTagContainer.h"
+#include "GAS/Abilities/SG_GameplayAbility.h"
 #include "ItemDataStruct.generated.h"
 
 class AItemBase;
@@ -41,7 +43,8 @@ struct FItemDataStruct : public FTableRowBase
 	{
 		ItemName = FText::FromString("None");
 		ItemImage = nullptr;
-		ItemDurability = 0.f;
+		ItemMaxDurability = 0.f;
+		ItemAbility = nullptr;
 	}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -51,7 +54,13 @@ struct FItemDataStruct : public FTableRowBase
 	UTexture2D* ItemImage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float ItemDurability;
+	float ItemMaxDurability;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<USG_GameplayAbility> ItemAbility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FGameplayTag ItemAbilityTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;

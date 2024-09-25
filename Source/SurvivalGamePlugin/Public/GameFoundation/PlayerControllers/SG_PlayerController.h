@@ -5,9 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 
-#include "Headers/SessionState.h"
+#include "Headers/GeneralDelegates.h"
 
 #include "SG_PlayerController.generated.h"
+
+
+class USG_SaveGame;
 
 UENUM(BlueprintType)
 enum class EInputMode : uint8
@@ -17,18 +20,25 @@ enum class EInputMode : uint8
 	GameAndUI,
 };
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FConnectionCleanupSignature, APlayerController*, TriggeringPlayer);
-
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
 protected:
+
+	UPROPERTY()
+	USG_SaveGame* Save = nullptr;
+
 	UPROPERTY(EditAnywhere, Category = "Developer")
-	bool bIsCamersMovementConstrained = true;
+	bool bIsCameraMovementConstrained = true;
 	
+	UFUNCTION()
+	void ReceiveReadSave(USaveGame* SaveGame);
+
 public:
+
+	virtual void BeginPlay() override;
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputMode(EInputMode InputMode);
@@ -40,6 +50,28 @@ public:
 
 	void OnPossess(APawn* InPawn) override;
 
-	FConnectionCleanupSignature OnConnectionCleanUp;
+	//Work with save game
+	UFUNCTION()
+	void ReadSave();
 
+	UFUNCTION()
+	void WriteSave();
+
+	USG_SaveGame* GetSave();
+
+	FPlayerControllerTransferSignature OnConnectionCleanUp;
+
+	FVoidDataTransferSignature OnReadSaveRequested;
+	FSaveGameTransferSignature OnWriteSaveRequested;
+
+	FVoidDataTransferSignature OnSaveUpdated;
+
+
+	//----------------Execs--------------------------
+
+	UFUNCTION(Exec)
+	void Cheat_SetMoney(uint32 Money);
+
+	UFUNCTION(Exec)
+	void Cheat_ClearAccount();
 };

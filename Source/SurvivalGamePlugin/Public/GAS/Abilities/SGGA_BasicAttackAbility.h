@@ -7,7 +7,7 @@
 #include "Headers/DamageGameplayEffectStruct.h"
 #include "SGGA_BasicAttackAbility.generated.h"
 
-class ASG_Character;
+class AInGameCharacter;
 class USG_AnimInstance;
 
 UCLASS()
@@ -42,7 +42,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;
 
-	ASG_Character* Player;
+	AInGameCharacter* Player;
 	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()

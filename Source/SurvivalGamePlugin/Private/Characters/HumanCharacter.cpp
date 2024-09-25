@@ -11,6 +11,8 @@
 #include "UI/HUD/InGameHUD.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GAS/SG_GameplayAbilityTargetData.h"
+#include "GAS/SG_CharacterAbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
 
@@ -18,10 +20,10 @@ void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
+	/*DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, FocusedInteractableObject, COND_None, REPNOTIFY_Always);*/
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, ActiveItem, COND_None, REPNOTIFY_Always);
+	//DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, ActiveItem, COND_None, REPNOTIFY_Always);
 }
 
 void AHumanCharacter::BeginPlay()
@@ -29,96 +31,96 @@ void AHumanCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AHumanCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+//void AHumanCharacter::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//	if (!IsLocallyControlled()) 
+//	{
+//		return;
+//	}
+//	EmitInteractionChecker();
+//}
 
-	if (!IsLocallyControlled()) 
-	{
-		return;
-	}
-	EmitInteractionChecker();
-}
+//void AHumanCharacter::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
+//{
+//	FocusedInteractableObject = InFocusedInteractable;
+//}
 
-void AHumanCharacter::ServerSetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
-{
-	FocusedInteractableObject = InFocusedInteractable;
-}
+//void AHumanCharacter::EmitInteractionChecker()
+//{
+//	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
+//	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
+//
+//	const FName TraceTag("InteractableTraceTag");
+//
+//	UWorld* World = GetWorld();
+//	if (IsValid(World) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::EmitInteractionChecker IsValid(World) == false"));
+//		return;
+//	}
+//
+//	FHitResult HitResult;
+//	FCollisionQueryParams CQP;
+//	CQP.AddIgnoredActor(this);
+//	CQP.TraceTag = TraceTag;
+//
+//	if (bShouldDrawDebug)
+//	{
+//		World->DebugDrawTraceTag = TraceTag;
+//	}
+//	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
+//
+//	CheckForInteractables(HitResult);
+//}
 
-void AHumanCharacter::EmitInteractionChecker()
-{
-	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
-	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
-
-	const FName TraceTag("InteractableTraceTag");
-
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::EmitInteractionChecker IsValid(World) == false"));
-		return;
-	}
-
-	FHitResult HitResult;
-	FCollisionQueryParams CQP;
-	CQP.AddIgnoredActor(this);
-	CQP.TraceTag = TraceTag;
-
-	if (bShouldDrawDebug)
-	{
-		World->DebugDrawTraceTag = TraceTag;
-	}
-	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
-
-	CheckForInteractables(HitResult);
-}
-
-void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
-{
-	AActor* HitActor = HitResult.GetActor();
-	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
-	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
-
-	if (FocusedInteractableObject == HitActor)
-	{
-		return;
-	}
-	if (InteractableActor == nullptr) 
-	{
-		if (FocusedInteractableObject == nullptr)
-		{
-			return;
-		}
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
-		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-		}
-
-		ServerSetFocusedInteractable(nullptr);
-		return;
-	}
-	if (!InteractableActor->bCanInteract(GetController()))
-	{
-		return;
-	}
-	if (FocusedInteractableObject != nullptr)
-	{
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
-		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
-		}
-	}
-
-	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
-	if (HitMeshComponent != nullptr)
-	{
-		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
-	}
-
-	ServerSetFocusedInteractable(HitActor);
-}
+//void AHumanCharacter::CheckForInteractables(FHitResult HitResult)
+//{
+//	AActor* HitActor = HitResult.GetActor();
+//	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
+//	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
+//
+//	if (FocusedInteractableObject == HitActor)
+//	{
+//		return;
+//	}
+//	if (InteractableActor == nullptr) 
+//	{
+//		if (FocusedInteractableObject == nullptr)
+//		{
+//			return;
+//		}
+//		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+//		if (Cast<UMeshComponent>(InteractableMeshComponent))
+//		{
+//			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+//		}
+//
+//		Server_SetFocusedInteractable(nullptr);
+//		return;
+//	}
+//	if (!InteractableActor->bCanInteract(GetController()))
+//	{
+//		return;
+//	}
+//	if (FocusedInteractableObject != nullptr)
+//	{
+//		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
+//		if (Cast<UMeshComponent>(InteractableMeshComponent))
+//		{
+//			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+//		}
+//	}
+//
+//	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
+//	if (HitMeshComponent != nullptr)
+//	{
+//		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
+//	}
+//
+//	Server_SetFocusedInteractable(HitActor);
+//}
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -126,9 +128,9 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(EquipMainHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptInteraction);
-		EnhancedInputComponent->BindAction(EquipSecondaryHandAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptEquipWithSecondaryHand);
-		
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AHumanCharacter::StartUnequipItem);
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Completed, this, &AHumanCharacter::CancelUnequipItem);
+
 		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseMainHandItem);
 		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptUseSecondaryHandItem);
 		
@@ -146,54 +148,47 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 }
 
-void AHumanCharacter::AttemptInteraction()
+//void AHumanCharacter::AttemptInteraction()
+//{
+//	if (FocusedInteractableObject == nullptr)
+//	{
+//		if (bShouldDrawDebug == true)
+//		{
+//			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
+//		}
+//		return;
+//	}
+//
+//	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+//}
+
+void AHumanCharacter::StartUnequipItem()
 {
-	AItemBase* Item = Cast<AItemBase>(FocusedInteractableObject);
-	if (IsValid(Item) == true || IsValid(MainHandItem) == true)
+	if (!IsValid(MainHandItem) && !IsValid(SecondaryHandItem))
 	{
-		AttemptEquipWithMainHand();
+		UE_LOG(LogTemp, Warning, TEXT("No items to unequip"));
 		return;
 	}
-
-	if (FocusedInteractableObject == nullptr)
-	{
-		if (bShouldDrawDebug == true)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
-		}
-		return;
-	}
-
-	IInteractableInterface* Interactable = Cast<IInteractableInterface>(FocusedInteractableObject);
-	if (Interactable != nullptr)
-	{
-		Interactable->InteractRequest();
-		return;
-	};
-
+	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Unequip);
 }
 
-void AHumanCharacter::AttemptEquipWithMainHand()
+void AHumanCharacter::CancelUnequipItem()
 {
-	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Main"));
-	FGameplayEventData EventData;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
-}
-
-void AHumanCharacter::AttemptEquipWithSecondaryHand()
-{
-	FGameplayTag EquipAbilityTag = FGameplayTag::RequestGameplayTag(FName("Equip.Secondary"));
-	FGameplayEventData EventData;
-
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EquipAbilityTag, EventData);
+	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Unequip);
 }
 
 void AHumanCharacter::AttemptUseMainHandItem()
 {
 	if (IsValid(MainHandItem))
 	{
-		MainHandItem->Use(this);
+		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+		{
+			Server_ContinueUnequipMainHandItem();
+		}
+		else
+		{
+			MainHandItem->Use(this);
+		}
 	}
 	else
 	{
@@ -215,7 +210,14 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 {
 	if (IsValid(SecondaryHandItem))
 	{
-		SecondaryHandItem->Use(this);
+		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+		{
+			Server_ContinueUnequipSecondaryHandItem();
+		}
+		else
+		{
+			SecondaryHandItem->Use(this);
+		}
 	}
 	else
 	{
@@ -232,6 +234,16 @@ void AHumanCharacter::AttemptUseSecondaryHandItem()
 		FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, HandAbilityTag, EventData);
 	}
+}
+
+void AHumanCharacter::Server_ContinueUnequipMainHandItem_Implementation()
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), FGameplayEventData());
+}
+
+void AHumanCharacter::Server_ContinueUnequipSecondaryHandItem_Implementation()
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), FGameplayEventData());
 }
 
 void AHumanCharacter::UseAbility()
@@ -344,10 +356,10 @@ FName AHumanCharacter::GetSecondaryHandSocket()
 	}
 }
 
-UObject* AHumanCharacter::GetFocusedInteractableObject()
-{
-	return FocusedInteractableObject;
-}
+//UObject* AHumanCharacter::GetFocusedInteractableObject()
+//{
+//	return FocusedInteractableObject;
+//}
 
 void AHumanCharacter::ShowPlayerInfo()
 {
@@ -367,11 +379,11 @@ void AHumanCharacter::ShowPlayerInfo()
 
 	UE_LOG(LogTemp, Warning, TEXT("%s ===== Character stats ====="), *Prefix);
 
-	if (FocusedInteractableObject)
+	if (GetFocusedInteractableObject() != nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject is a valid pointer"), *Prefix);
 
-		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(FocusedInteractableObject);
+		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(GetFocusedInteractableObject());
 		if (InteractableActor)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);

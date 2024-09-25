@@ -40,12 +40,12 @@ protected:
 	void SpawnProductItem();
 
 	UFUNCTION()
-	void OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
+	void OnAnimMontageCompleted();
 
 	UFUNCTION()
-	void OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
+	void OnAnimMontageCanceled();
 
 	UFUNCTION()
-	void OnCraftingFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload);
+	void OnCraftingFinished(FGameplayEventData Payload);
 
 };

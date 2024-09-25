@@ -16,7 +16,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayEffectContext : public FGameplayEffect
 protected:
 
 	UPROPERTY()
-	ESG_DamageType DamageType;
+	ESG_DamageType DamageType = ESG_DamageType::None;
 
 public:
 

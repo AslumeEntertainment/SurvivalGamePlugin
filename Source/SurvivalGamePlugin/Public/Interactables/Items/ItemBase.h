@@ -11,6 +11,7 @@
 #include "ItemBase.generated.h"
 
 class UStaticMeshComponent;
+class USG_GameplayAbility;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface
@@ -33,12 +34,6 @@ protected:
 
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class USG_GameplayAbility> ItemAbility;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS")
-	FGameplayTag BaseAbilityTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
@@ -72,7 +67,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void DestroyItem();
 
-	virtual void InteractRequest() override;
+	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
 	FName GetItemDataRowName() const;
