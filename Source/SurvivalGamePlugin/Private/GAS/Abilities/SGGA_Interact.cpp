@@ -2,7 +2,7 @@
 
 
 #include "GAS/Abilities/SGGA_Interact.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/SG_Character.h"
 #include "Interfaces/InteractableInterface.h"
 
 
@@ -13,7 +13,7 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	AHumanCharacter* Player = CastChecked<AHumanCharacter>(ActorInfo->AvatarActor.Get());
+	ASG_Character* Player = Cast<ASG_Character>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility IsValid(Player) == false"));
@@ -31,6 +31,14 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		UE_LOG(LogTemp, Warning, TEXT("Cannot interact!"));
 	}
 	FocusedInteractable->InteractRequest(Player->GetController());
+
+	if (HasAuthority(&ActivationInfo)) {
+		UE_LOG(LogTemp, Warning, TEXT("Server: Interact Successful!"))
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Client: Interact Successful!"))
+	}
+	
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

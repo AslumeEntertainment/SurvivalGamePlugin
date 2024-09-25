@@ -35,12 +35,6 @@ protected:
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
-	UPROPERTY(EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<USG_GameplayAbility> ItemAbility;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GAS")
-	FGameplayTag BaseAbilityTag;
-
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
 

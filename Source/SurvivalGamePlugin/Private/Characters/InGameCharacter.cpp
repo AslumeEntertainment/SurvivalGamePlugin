@@ -78,6 +78,8 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
+	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
+
 	UnPossessed();
 }
 

@@ -42,7 +42,7 @@ void AItemBase::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
 	}
 	ItemData = *TempItemData;
-	CurrentDurability = ItemData.ItemDurability;
+	CurrentDurability = ItemData.ItemMaxDurability;
 }
 
 void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
@@ -75,7 +75,7 @@ void AItemBase::Use(ASG_Character* PlayerOwner)
 		AbilityTagSuffix = ".Left";
 	}
 
-	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(BaseAbilityTag.ToString() + AbilityTagSuffix));
+	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(ItemData.ItemAbilityTag.ToString() + AbilityTagSuffix));
 	FGameplayEventData EventData;
 
 	FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
@@ -102,9 +102,9 @@ void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 	
-	AbilitySpecHandle = PlayerOwner->AddAbility(ItemAbility);
+	AbilitySpecHandle = PlayerOwner->AddAbility(ItemData.ItemAbility);
 	bIsAttached = true;
-	SetOwner(PlayerOwner);
+	//SetOwner(PlayerOwner);
 }
 
 void AItemBase::OnItemUnequiped()
@@ -124,7 +124,7 @@ void AItemBase::OnItemUnequiped()
 
 	PlayerOwner->RemoveAbility(AbilitySpecHandle);
 	bIsAttached = false;
-	SetOwner(nullptr);
+	//SetOwner(nullptr);
 }
 
 void AItemBase::DestroyItem()
