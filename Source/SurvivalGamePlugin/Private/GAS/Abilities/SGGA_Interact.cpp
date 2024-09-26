@@ -39,6 +39,5 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		UE_LOG(LogTemp, Warning, TEXT("Client: Interact Successful!"))
 	}
 	
-
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

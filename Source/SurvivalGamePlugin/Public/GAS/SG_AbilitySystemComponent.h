@@ -20,6 +20,12 @@ protected:
 
 public:
 
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
+
 	virtual void ApplyDefaultEffectsToSelf();
 
 };

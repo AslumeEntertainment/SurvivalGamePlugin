@@ -52,7 +52,7 @@ protected:
 
 	//---remove that when you clean the movement: line 135--
 	UPROPERTY(EditAnywhere, Category = "Developer")
-	bool bIsCamersMovementConstrained = false;
+	bool bIsCameraMovementConstrained = false;
 	//-----------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")

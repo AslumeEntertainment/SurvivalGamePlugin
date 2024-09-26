@@ -73,19 +73,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DisassembleAction;
 
-	/*void AttemptInteraction();*/
+	void MainHandAction();
+	void SecondaryHandAction();
+
 	void StartUnequipItem();
 	void CancelUnequipItem();
 
-	void AttemptUseMainHandItem();
-	void AttemptUseSecondaryHandItem();
-
-	UFUNCTION(Server, Reliable)
-	void Server_ContinueUnequipMainHandItem();
-	UFUNCTION(Server, Reliable)
-	void Server_ContinueUnequipSecondaryHandItem();
-
-	void UseAbility();
+	void UseDebugAbility();
 
 	void OpenCraftingWindow();
 	void CloseCraftingWindow();

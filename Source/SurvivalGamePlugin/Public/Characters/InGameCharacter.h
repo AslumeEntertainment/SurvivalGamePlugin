@@ -6,8 +6,10 @@
 #include "Characters/SG_Character.h"
 #include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
+#include "Headers/ItemDataStruct.h"
 #include "InGameCharacter.generated.h"
 
+class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -23,6 +25,12 @@ private:
 	bool bIsAlive = true;
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	TMap<EEquipmentSlot, AItemBase*> EquipmentSlots;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	TMap<EEquipmentSlot, FName> EquipmentSockets;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
@@ -73,6 +81,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
+	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType);
+
+	bool SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
+
+	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType);
+
+	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

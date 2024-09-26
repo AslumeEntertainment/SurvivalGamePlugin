@@ -5,6 +5,8 @@
 #include "Components/DamageDealingComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Interactables/Items/ItemBase.h"
+#include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_CharacterAbilitySystemComponent.h"
@@ -96,6 +98,42 @@ void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentH
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+}
+
+bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType)
+{
+	return EquipmentSlots.Contains(SlotType);
+}
+
+bool AInGameCharacter::SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item)
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		return false;
+	}
+
+	EquipmentSlots[SlotType] = Item;
+	return true;
+}
+
+AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType)
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		return nullptr;
+	}
+
+	return EquipmentSlots[SlotType];
+}
+
+FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType)
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		return FName();
+	}
+
+	return EquipmentSockets[SlotType];
 }
 
 bool AInGameCharacter::IsAlive()

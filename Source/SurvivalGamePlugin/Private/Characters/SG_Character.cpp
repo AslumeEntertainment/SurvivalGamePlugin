@@ -230,7 +230,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 	//--------------------------------this must not be here-----------------------------
-	if (bIsCamersMovementConstrained)
+	if (bIsCameraMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (!IsValid(PlayerController))

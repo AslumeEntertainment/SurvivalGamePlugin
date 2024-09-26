@@ -52,8 +52,8 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	UFUNCTION(BlueprintCallable)
-	void Use(ASG_Character* PlayerOwner);
+	/*UFUNCTION(BlueprintCallable)
+	void Use(ASG_Character* PlayerOwner);*/
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_LoseDurability(float LostDurability);

@@ -41,6 +41,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	{
 		AnimInst->bIsMirrored = false;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Triggered a BasicAttackAbility with tag - %s"), *TriggerEventData->EventTag.ToString());
 
 	/* Getting every damage dealing component that the user has */
 	TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;  
