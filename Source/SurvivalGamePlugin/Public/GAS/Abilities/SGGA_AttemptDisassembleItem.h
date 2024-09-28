@@ -32,30 +32,21 @@ protected:
 	float OldSpeed;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
-	AItemBase** ItemForDisassembly = nullptr;
-	AItemBase** OtherItem = nullptr;
 
 	UPROPERTY(Replicated)
 	AItemBase* MainItemActor;
 	UPROPERTY(Replicated)
 	AItemBase* IngredientItemActor;
 
-	UPROPERTY(Replicated)
-	FName MainItemSocket;
-	UPROPERTY(Replicated)
-	FName IngredientItemSocket;
-
-	bool bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem);
-
 	UFUNCTION()
 	void SpawnNewItems();
 
 	UFUNCTION()
-	void OnAnimMontageCompleted(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
+	void OnAnimMontageCompleted();
 
 	UFUNCTION()
-	void OnAnimMontageCanceled(/*FGameplayTag EventTag, FGameplayEventData Payload*/);
+	void OnAnimMontageCanceled();
 
 	UFUNCTION()
-	void OnDisassemblyFinished(/*FGameplayTag EventTag, */FGameplayEventData Payload);
+	void OnDisassemblyFinished(FGameplayEventData Payload);
 };

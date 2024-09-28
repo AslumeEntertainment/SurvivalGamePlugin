@@ -25,7 +25,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface/*, public IHittableInterface*/
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -61,11 +61,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
+	/*UPROPERTY(EditDefaultsOnly, Category = "Character")
 	FName LeftHandSocket;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName RightHandSocket;
+	FName RightHandSocket;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -73,17 +73,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* LeftHandDamageDealingComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* RightHandDamageDealingComponent;*/
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
@@ -93,9 +84,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
-
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* SprintAction;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_CharacterAbilitySystemComponent* AbilitySystemComponent;
@@ -107,9 +95,6 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void AttemptInteraction();
-
-	/*void StartSprint();
-	void FinishSprint();*/
 
 
 protected:
@@ -126,8 +111,6 @@ protected:
 
 public:
 
-	/*TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;*/
-
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldDrawDebug = true;
 
@@ -137,52 +120,22 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
 
-	/*UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHealthPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHungerPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnEnergyPercentUpdated;*/
-
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-
-	/*virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-	virtual bool bCanBeHit() override;
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;*/
-
-	/*UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);*/
-
-	//that must go in InGameCharacter
-	/*UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	virtual void Die();*/
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
 
-	UFUNCTION(BlueprintCallable)
+	/*UFUNCTION(BlueprintCallable)
 	FName GetLeftHandSocket();
 
 	UFUNCTION(BlueprintCallable)
-	FName GetRightHandSocket();
+	FName GetRightHandSocket();*/
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
-
-	/*UFUNCTION(BlueprintCallable)
-	bool IsAlive();*/
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();

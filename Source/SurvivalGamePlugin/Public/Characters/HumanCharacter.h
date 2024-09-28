@@ -23,37 +23,15 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public AInGameCharacter
 {
 	GENERATED_BODY()
-	
-//private:
-//
-//	UPROPERTY(Replicated)
-//	UObject* FocusedInteractableObject = nullptr;
-//
-//	UFUNCTION(Server, Reliable)
-//	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
-//
-//	void EmitInteractionChecker();
-//	void CheckForInteractables(FHitResult HitResult);
 
 protected:
 
 	virtual void BeginPlay();
 
-	//virtual void Tick(float DeltaTime) override;
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	/*UPROPERTY(EditDefaultsOnly, Category = "Interaction")
-	float InteractionRange = 200;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
-	UMaterialInterface* InteractableOverlayMaterial;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* CraftingWindowOnlyMappingContext;
-
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* InteractAction;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UnequipAction;
@@ -88,15 +66,10 @@ protected:
 
 public:
 
-	/*UPROPERTY(EditAnywhere, Category = "Debug")
-	bool bShouldDrawDebug = true;*/
-
-	UPROPERTY(Replicated)
+	/*UPROPERTY(Replicated)
 	AItemBase* MainHandItem;
 	UPROPERTY(Replicated)
-	AItemBase* SecondaryHandItem;
-	/*UPROPERTY(Replicated, BlueprintReadOnly)
-	AItemBase* ActiveItem;*/
+	AItemBase* SecondaryHandItem;*/
 
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
@@ -105,13 +78,10 @@ public:
 	void CraftItem(FText ProductItemName);
 	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
-	UFUNCTION(BlueprintCallable)
+	/*UFUNCTION(BlueprintCallable)
 	FName GetMainHandSocket();
 	UFUNCTION(BlueprintCallable)
-	FName GetSecondaryHandSocket();
-
-	/*UFUNCTION(BlueprintCallable)
-	UObject* GetFocusedInteractableObject();*/
+	FName GetSecondaryHandSocket();*/
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();

@@ -5,7 +5,7 @@
 #include "Components/DamageDealingComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Interactables/Items/ItemBase.h"
+#include "Interactables/Items/DamageDealingItem.h"
 #include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
@@ -14,13 +14,6 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
-//void AInGameCharacter::Die()
-//{
-//	Super::Die();
-//
-//	OnCharacterDeath.Broadcast();
-//
-//}
 
 AInGameCharacter::AInGameCharacter()
 {
@@ -100,33 +93,49 @@ void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentE
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }
 
-bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType)
+bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const
 {
 	return EquipmentSlots.Contains(SlotType);
 }
 
-bool AInGameCharacter::SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item)
+void AInGameCharacter::SetEquipedItemAtSlot_Implementation(EEquipmentSlot SlotType, AItemBase* Item)
 {
 	if (HasEquipmentSlotOfType(SlotType) == false)
 	{
-		return false;
+		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player cannot equip item because they don't have the slot for it!"));
+		return;
 	}
 
 	EquipmentSlots[SlotType] = Item;
-	return true;
+	return;
 }
 
-AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType)
+AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType) const
 {
 	if (HasEquipmentSlotOfType(SlotType) == false)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player does not have an equipment slot of such type!"));
 		return nullptr;
 	}
 
 	return EquipmentSlots[SlotType];
 }
 
-FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType)
+TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
+{
+	TArray<ADamageDealingItem*> EquipedWeapons;
+	for (auto& EquipmentSlot : EquipmentSlots)
+	{
+		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
+		if (IsValid(EquipedWeapon))
+		{
+			EquipedWeapons.Add(EquipedWeapon);
+		}
+	}
+	return EquipedWeapons;
+}
+
+FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType) const
 {
 	if (HasEquipmentSlotOfType(SlotType) == false)
 	{

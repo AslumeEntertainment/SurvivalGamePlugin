@@ -96,7 +96,7 @@ void AHittableFoliageActor::OnHittableDestroyed_Implementation()
 				NewActorLocation.X += FMath::RandRange(MinLocalBounds.X, MaxLocalBounds.X) * Spread;
 				NewActorLocation.Y += FMath::RandRange(MinLocalBounds.Y, MaxLocalBounds.Y) * Spread;
 
-				DroppedActor->SetActorLocation(NewActorLocation);
+				DroppedActor->SetActorLocation(NewActorLocation, false, nullptr, ETeleportType::ResetPhysics);
 			}
 		}
 	}

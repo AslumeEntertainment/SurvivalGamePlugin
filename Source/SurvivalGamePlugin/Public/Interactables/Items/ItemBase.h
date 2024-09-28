@@ -11,6 +11,7 @@
 #include "ItemBase.generated.h"
 
 class UStaticMeshComponent;
+class AInGameCharacter;
 class USG_GameplayAbility;
 
 UCLASS()
@@ -19,11 +20,11 @@ class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInte
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+	
 	AItemBase();
 
 protected:
-	// Called when the game starts or when spawned
+	
 	virtual void BeginPlay() override;
 
 	UPROPERTY(Replicated)
@@ -52,14 +53,11 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	/*UFUNCTION(BlueprintCallable)
-	void Use(ASG_Character* PlayerOwner);*/
-
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_LoseDurability(float LostDurability);
 
 	UFUNCTION(BlueprintCallable)
-	virtual void OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName);
+	virtual void OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemUnequiped(); 

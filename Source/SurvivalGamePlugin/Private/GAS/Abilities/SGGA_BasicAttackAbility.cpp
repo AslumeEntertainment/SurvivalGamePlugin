@@ -47,40 +47,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;  
 	Player->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
 
-	if (bUsesItem)
-	{
-		AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(Player);
-		if (!IsValid(HumanPlayer))
-		{
-			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(HumanPlayer) == false"));
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		}
-
-		ADamageDealingItem* MainHandItem = Cast<ADamageDealingItem>(HumanPlayer->MainHandItem);
-		ADamageDealingItem* SecondaryHandItem = Cast<ADamageDealingItem>(HumanPlayer->SecondaryHandItem);
-
-		if (!IsValid(MainHandItem) && !IsValid(SecondaryHandItem))
-		{
-			UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(MainHandItem && SecondaryHandItem) == false"));
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		}
-		if (IsValid(MainHandItem))
-		{
-			PlayerDamageDealingComponents.Add(MainHandItem->GetDamageDealingComponent());
-		}
-		if (IsValid(SecondaryHandItem))
-		{
-			PlayerDamageDealingComponents.Add(SecondaryHandItem->GetDamageDealingComponent());
-		}
-	}
-	
-	/* Mirroring the tags from the list of damage dealing components that are to be used for this ability */
-	FGameplayTagContainer FinalActiveDamageComponentTags = ActiveDamageComponentTags;
-	if (AnimInst->bIsMirrored)
-	{
-		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
-	}
-
 	/* Look at all Gameplay effects that are currently active on the user's ASC and determine if there are additional effect to be applied */
 	TArray<FDamageGameplayEffect> InstigatedEffects;
 	TArray<FGameplayEffectSpec> ActiveGameplayEffectSpecs;
@@ -100,6 +66,23 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		InstigatedEffect.DamageValue = -ActiveSpec.GetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage"), false);
 
 		InstigatedEffects.Add(InstigatedEffect);
+	}
+
+	/* Does the ability use an item */
+	if (bUsesItem)
+	{
+		TArray<ADamageDealingItem*> EquipedWeapons = Player->GetAllEquipedWeapons();
+		for (ADamageDealingItem* Weapon : EquipedWeapons)
+		{
+			PlayerDamageDealingComponents.Add(Weapon->GetDamageDealingComponent());
+		}
+	}
+	
+	/* Mirroring the tags from the list of damage dealing components that are to be used for this ability */
+	FGameplayTagContainer FinalActiveDamageComponentTags = ActiveDamageComponentTags;
+	if (AnimInst->bIsMirrored)
+	{
+		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
 	}
 
 	/* Config Gameplay effects that are to be used by the active damage dealing components */

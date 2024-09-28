@@ -44,7 +44,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(AnimInst) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	if (!IsValid(Player->MainHandItem) || !IsValid(Player->SecondaryHandItem))
+	if (!IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)) || !IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -92,16 +92,16 @@ void USGGA_CraftItem::SpawnProductItem()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 	
-	if (Player->MainHandItem->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
+	if (Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
 	{
-		ProductItemSocketName = Player->GetMainHandSocket();
+		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Main);
 	}
-	else if (Player->SecondaryHandItem->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
+	else if (Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
 	{
-		ProductItemSocketName = Player->GetSecondaryHandSocket();
+		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary);
 	}
 
-	if (ProductItemSocketName == Player->GetLeftHandSocket())
+	if (Player->bIsRightHanded == false)
 	{
 		AnimInst->bIsMirrored = true;
 	}
@@ -135,24 +135,24 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Gameplay Event recieved"));
 
-	if (ProductItemData->ItemsToDestroy.Contains(Player->SecondaryHandItem->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()))
 	{
-		Player->SecondaryHandItem->DestroyItem();
+		Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->DestroyItem();
 	}
-	if (ProductItemData->ItemsToDestroy.Contains(Player->MainHandItem->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName()))
 	{
-		Player->MainHandItem->DestroyItem();
+		Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->DestroyItem();
 	}
 
 	if (IsValid(ProductItem)) 
 	{
-		if (ProductItemSocketName == Player->GetMainHandSocket())
+		if (ProductItemSocketName == Player->GetEquipmentSocketOfType(EEquipmentSlot::Main))
 		{
-			Player->MainHandItem = ProductItem;
+			Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, ProductItem);
 		}
-		else if (ProductItemSocketName == Player->GetSecondaryHandSocket())
+		else if (ProductItemSocketName == Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary))
 		{
-			Player->SecondaryHandItem = ProductItem;
+			Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, ProductItem);
 		}
 		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
 	}

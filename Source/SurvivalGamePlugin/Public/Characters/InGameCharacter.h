@@ -10,6 +10,7 @@
 #include "InGameCharacter.generated.h"
 
 class AItemBase;
+class ADamageDealingItem;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -49,7 +50,6 @@ protected:
 	void StartSprint();
 	void FinishSprint();
 
-	//void Die() override;
 
 public:
 
@@ -82,13 +82,20 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
-	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType);
+	UFUNCTION(BlueprintCallable)
+	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType) const;
 
-	bool SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
 
-	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType);
+	UFUNCTION(BlueprintCallable)
+	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType) const;
 
-	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType);
+	UFUNCTION(BlueprintCallable)
+	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
+
+	UFUNCTION(BlueprintCallable)
+	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

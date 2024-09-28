@@ -93,7 +93,7 @@ void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 	}
 }
 
-void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
+void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
 	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
 
@@ -147,35 +147,22 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed) && InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed) == nullptr)
+	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)) == false)
 	{
 		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in mixed slot"));
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
 	}
-	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot) == nullptr)
+	else if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)) == false)
 	{
 		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in slot"));
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 	}
-	
-	/*if (!IsValid(InteractingPlayer->MainHandItem) && ItemData.EquipmentSlot == EEquipmentSlot::Main)
+	else
 	{
-		InteractingPlayer->MainHandItem = this;
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetMainHandSocket());
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in main slot"));
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Item could not be equiped"));
 	}
-	if (!IsValid(InteractingPlayer->SecondaryHandItem) && ItemData.EquipmentSlot == EEquipmentSlot::Secondary)
-	{
-		InteractingPlayer->SecondaryHandItem = this;
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetSecondaryHandSocket());
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in secondary slot"));
-		return;
-	}*/
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)

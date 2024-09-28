@@ -54,12 +54,6 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
 
-	/*LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
-	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
-	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));*/
-
 	AbilitySystemComponent = CreateDefaultSubobject<USG_CharacterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
@@ -162,7 +156,6 @@ void ASG_Character::BeginPlay()
 	InitializeAttributes();
 }
 
-// Called every frame
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -174,7 +167,6 @@ void ASG_Character::Tick(float DeltaTime)
 	EmitInteractionChecker();
 }
 
-// Called to bind functionality to input
 void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -189,17 +181,11 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
 	{
-		/*EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);*/
-
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASG_Character::Move);
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASG_Character::AttemptInteraction);
-
-		/*EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASG_Character::StartSprint);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASG_Character::FinishSprint);*/
 
 		if (AbilitySystemComponent && InputComponent)
 		{
@@ -249,7 +235,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 
 void ASG_Character::Look(const FInputActionValue& Value)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	FVector2D LookAxisVector = Value.Get<FVector2D>(); 
 
 	if (Controller == nullptr)
 	{
@@ -275,79 +261,9 @@ void ASG_Character::AttemptInteraction()
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
 }
 
-//void ASG_Character::StartSprint()
-//{
-//	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Sprint);
-//}
-
-//void ASG_Character::FinishSprint()
-//{
-//	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Sprint);
-//}
-
-//void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Actor was hit"));
-//	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Damage effect is applied"));
-//		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-//	}
-//}
-
-//bool ASG_Character::bCanBeHit()
-//{
-//	return IsAlive();
-//}
-
-//void ASG_Character::OnHittableDestroyed_Implementation()
-//{
-//	bIsAlive = false;
-//
-//	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-//	GetMesh()->SetSimulatePhysics(true);
-//
-//	UnPossessed();
-//}
-//
-//void ASG_Character::OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
-//{
-//	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
-//}
-//
-//void ASG_Character::OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
-//{
-//	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
-//}
-//
-//void ASG_Character::OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
-//{
-//	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
-//}
-
-//void ASG_Character::Die_Implementation()
-//{
-//	bIsAlive = false;
-//
-//	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-//	GetMesh()->SetSimulatePhysics(true);
-//
-//	UnPossessed();
-//}
-
 UObject* ASG_Character::GetFocusedInteractableObject()
 {
 	return FocusedInteractableObject;
-}
-
-FName ASG_Character::GetLeftHandSocket()
-{
-	return LeftHandSocket;
-}
-
-FName ASG_Character::GetRightHandSocket()
-{
-	return RightHandSocket;
 }
 
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
@@ -359,11 +275,6 @@ FRotator ASG_Character::GetRepControlRotation()
 {
 	return ControlRotation;
 }
-
-//bool ASG_Character::IsAlive()
-//{
-//	return bIsAlive;
-//}
 
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
 {

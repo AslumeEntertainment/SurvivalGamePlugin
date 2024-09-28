@@ -2,7 +2,7 @@
 
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Characters/SG_Character.h"
+#include "Characters/HumanCharacter.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/DamageDealingComponent.h"
 
@@ -21,28 +21,34 @@ void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
     Server_LoseDurability(DurabilityLost);
 }
 
-void ADamageDealingItem::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
+void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
     Super::OnItemEquiped(PlayerOwner, SocketName);
 
-    if (SocketName == PlayerOwner->GetLeftHandSocket())
+    AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
+    if (IsValid(HumanPlayer) == false)
     {
-        DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
+        return;
     }
-    else if (SocketName == PlayerOwner->GetRightHandSocket())
+
+    if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded
+        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
+    }
+    else if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded
+        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded == false)
+    {
+        DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
     }
     DamageDealingComponent->AddActorToIgnored(PlayerOwner);
 }
 
 void ADamageDealingItem::OnItemUnequiped()
 {
-    FName SocketName = GetAttachParentSocketName();
-    ASG_Character* PlayerOwner = Cast<ASG_Character>(GetAttachParentActor());
-    if (!IsValid(PlayerOwner))
+    AHumanCharacter* PlayerOwner = Cast<AHumanCharacter>(GetAttachParentActor());
+    if (IsValid(PlayerOwner) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ADamageDealingItem::OnItemUnequiped IsValid(PlayerOwner) == false"));
         return;
     }
     
