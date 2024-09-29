@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
-#include "Interactables/Items/ItemBase.h"
 #include "SG_GameplayAbilityTargetData.generated.h"
 
 
@@ -13,21 +12,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 {
     GENERATED_BODY()
 
-    FSG_GameplayAbilityTargetData() 
-    {
-        InteractableObject = nullptr;
-        ItemActor = nullptr;
-        OptionalFloatProperty = 0.f;
-    }
-
-    UPROPERTY()
-    UObject* InteractableObject;
-
-    UPROPERTY()
-    AItemBase* ItemActor;
-
-    UPROPERTY()
-    float OptionalFloatProperty;
+    FSG_GameplayAbilityTargetData() {}
 
     virtual UScriptStruct* GetScriptStruct() const override
     {
@@ -36,9 +21,6 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 
     bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
     {
-        Ar << InteractableObject;
-        Ar << ItemActor;
-        Ar << OptionalFloatProperty;
         bOutSuccess = true;
         return true;
     }

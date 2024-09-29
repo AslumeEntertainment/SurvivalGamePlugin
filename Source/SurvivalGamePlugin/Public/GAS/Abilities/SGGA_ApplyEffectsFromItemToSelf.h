@@ -6,7 +6,7 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "SGGA_ApplyEffectsFromItemToSelf.generated.h"
 
-class ASG_Character;
+class AInGameCharacter;
 class AEffectGrantingItem;
 class USG_AnimInstance;
 
@@ -27,7 +27,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	FGameplayTag OnNotifyRecievedGameplayEventTag;
 
-	ASG_Character* Player;
+	AInGameCharacter* Player;
 	AEffectGrantingItem* EffectGrantingItem;
 	USG_AnimInstance* AnimInst;
 

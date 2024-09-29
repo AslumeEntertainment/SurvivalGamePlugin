@@ -48,9 +48,16 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	Player->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
 
 	/* Look at all Gameplay effects that are currently active on the user's ASC and determine if there are additional effect to be applied */
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ActorInfo->AbilitySystemComponent);
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(ASC) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	
 	TArray<FDamageGameplayEffect> InstigatedEffects;
 	TArray<FGameplayEffectSpec> ActiveGameplayEffectSpecs;
-	Player->GetAbilitySystemComponent()->GetAllActiveGameplayEffectSpecs(ActiveGameplayEffectSpecs);
+	ASC->GetAllActiveGameplayEffectSpecs(ActiveGameplayEffectSpecs);
 
 	for (FGameplayEffectSpec ActiveSpec : ActiveGameplayEffectSpecs)
 	{
@@ -69,7 +76,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	}
 
 	/* Does the ability use an item */
-	if (bUsesItem)
+	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains("Item"))
 	{
 		TArray<ADamageDealingItem*> EquipedWeapons = Player->GetAllEquipedWeapons();
 		for (ADamageDealingItem* Weapon : EquipedWeapons)

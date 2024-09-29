@@ -14,10 +14,11 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Interfaces/InteractableInterface.h"
+#include "Interfaces/AbilitySystemControllerInterface.h"
 #include "Net/UnrealNetwork.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_CharacterAbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -53,12 +54,6 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
-
-	AbilitySystemComponent = CreateDefaultSubobject<USG_CharacterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
-
-	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -152,8 +147,6 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	InitializeAttributes();
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -186,13 +179,6 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASG_Character::AttemptInteraction);
-
-		if (AbilitySystemComponent && InputComponent)
-		{
-			FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-			const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-			AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
-		}
 	}
 	else
 	{
@@ -276,95 +262,105 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
-UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
 void ASG_Character::InitializeAttributes()
 {
-	if (AbilitySystemComponent && DefaultAttributeEffect)
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+	if (ASCI == nullptr)
 	{
-		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-		EffectContext.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
-
-		if (SpecHandle.IsValid())
-		{
-			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-		}
-
-		AbilitySystemComponent->ApplyDefaultEffectsToSelf();
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		return;
 	}
+
+	ASCI->AddEffect(DefaultAttributeEffect);
+	//UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
+
+	//if (ASC && DefaultAttributeEffect)
+	//{
+	//	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+	//	EffectContext.AddSourceObject(this);
+
+	//	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
+
+	//	if (SpecHandle.IsValid())
+	//	{
+	//		FActiveGameplayEffectHandle GEHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	//	}
+
+	//	//ASC->ApplyDefaultEffectsToSelf();
+	//}
 }
 
 void ASG_Character::GiveAbilities()
 {
-	if (HasAuthority() && AbilitySystemComponent)
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+	if (ASCI == nullptr)
 	{
-		for (TSubclassOf<USG_GameplayAbility>& StartupAbility : DefaultAbilities)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
-		}
-	}
-}
-
-FGameplayAbilitySpecHandle ASG_Character::AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass)
-{
-	if (!HasAuthority())
-	{
-		return FGameplayAbilitySpecHandle();
-	}
-
-	if (!IsValid(AbilityClass))
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::AddAbility_Implementation IsValid(AbilityClass) == false"));
-		return FGameplayAbilitySpecHandle();
-	}
-
-	FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, static_cast<int32>(AbilityClass.GetDefaultObject()->AbilityInputID), this));
-	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability given!"));
-	return AbilitySpecHandle;
-}
-
-void ASG_Character::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)
-{
-	if (!HasAuthority())
-	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
 		return;
 	}
 
-	AbilitySystemComponent->ClearAbility(RemovedAbilitySpecHandle);
-	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability Removed!"));
+	if (HasAuthority())
+	{
+		for (TSubclassOf<USG_GameplayAbility>& StartupAbility : DefaultAbilities)
+		{
+			ASCI->AddAbility(StartupAbility);
+		}
+	}
 }
 
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::PossessedBy"));
 
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+	if (ASCI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		return;
+	}
+
+	ASCI->InitASC(this);
+	InitializeAttributes();
 	GiveAbilities();
+	/*UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
+	if (ASC && InputComponent)
+	{
+		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+		ASC->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+
+
+	ASC->InitAbilityActorInfo(ASCI->GetAbilitySystemComponentOwner(), this);*/
+}
+
+void ASG_Character::UnPossessed()
+{
+	Super::UnPossessed();
 }
 
 void ASG_Character::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
 
-	if (AbilitySystemComponent && InputComponent)
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+	if (ASCI == nullptr)
 	{
-		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		return;
 	}
+
+	ASCI->InitASC(this);
+	InitializeAttributes();
 }
 
 void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
 {
-	if (!IsValid(AbilitySystemComponent))
+	/*if (!IsValid(AbilitySystemComponent))
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
 		return;
@@ -377,6 +373,6 @@ void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, cons
 	else
 	{
 		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
-	}
+	}*/
 }
 

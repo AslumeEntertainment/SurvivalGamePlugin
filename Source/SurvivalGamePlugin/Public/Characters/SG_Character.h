@@ -5,10 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
-#include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpecHandle.h"
-#include "Interfaces/HittableInterface.h"
 #include "Headers/GameplayAbilityInputID.h"
 #include "Headers/GeneralDelegates.h"
 #include "SG_Character.generated.h"
@@ -18,14 +16,14 @@ class UCameraComponent;
 class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
-class USG_CharacterAbilitySystemComponent;
+class UAbilitySystemComponent;
 class USG_CharacterAttributeSet;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -61,12 +59,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
 
-	/*UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName LeftHandSocket;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName RightHandSocket;*/
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
@@ -85,11 +77,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	USG_CharacterAbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY()
-	USG_CharacterAttributeSet* AttributeSet;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -108,6 +95,10 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
 
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void UnPossessed() override;
+	void OnRep_PlayerState() override;
+
 
 public:
 
@@ -125,27 +116,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
 
-	/*UFUNCTION(BlueprintCallable)
-	FName GetLeftHandSocket();
-
-	UFUNCTION(BlueprintCallable)
-	FName GetRightHandSocket();*/
-
 	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 	
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	virtual void InitializeAttributes();
 	virtual void GiveAbilities();
-
-	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass);
-	void RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
-
-	virtual void PossessedBy(AController* NewController) override;
-	virtual void OnRep_PlayerState() override;
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 

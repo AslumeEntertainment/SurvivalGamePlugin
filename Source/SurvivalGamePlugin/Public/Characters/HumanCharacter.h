@@ -34,15 +34,6 @@ protected:
 	UInputMappingContext* CraftingWindowOnlyMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* UnequipAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* UseMainHandItemAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* UseSecondaryHandItemAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* AbilityAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
@@ -51,10 +42,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DisassembleAction;
 
-	void MainHandAction();
-	void SecondaryHandAction();
+	void MainHandAction() override;
+	void SecondaryHandAction() override;
 
-	void StartUnequipItem();
+	void UnequipItem() override;
 	void CancelUnequipItem();
 
 	void UseDebugAbility();
@@ -66,22 +57,12 @@ protected:
 
 public:
 
-	/*UPROPERTY(Replicated)
-	AItemBase* MainHandItem;
-	UPROPERTY(Replicated)
-	AItemBase* SecondaryHandItem;*/
-
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
 	UFUNCTION()
 	void CraftItem(FText ProductItemName);
 	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
-
-	/*UFUNCTION(BlueprintCallable)
-	FName GetMainHandSocket();
-	UFUNCTION(BlueprintCallable)
-	FName GetSecondaryHandSocket();*/
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();

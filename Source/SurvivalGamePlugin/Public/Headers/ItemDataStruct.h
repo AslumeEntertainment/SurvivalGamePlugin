@@ -69,9 +69,6 @@ struct FItemDataStruct : public FTableRowBase
 	TSubclassOf<USG_GameplayAbility> ItemAbility;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FGameplayTag ItemAbilityTag;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EEquipmentSlot EquipmentSlot;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

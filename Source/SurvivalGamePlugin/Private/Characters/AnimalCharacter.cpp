@@ -17,14 +17,6 @@ void AAnimalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
-
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(AnimalBiteAction, ETriggerEvent::Triggered, this, &AAnimalCharacter::AttemptBite);
@@ -46,7 +38,3 @@ void AAnimalCharacter::AttemptScratch()
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::AnimalScratch);
 }
 
-FName AAnimalCharacter::GetMouthSocket()
-{
-	return MouthSocket;
-}

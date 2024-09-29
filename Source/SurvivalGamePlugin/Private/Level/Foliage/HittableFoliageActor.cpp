@@ -27,8 +27,6 @@ AHittableFoliageActor::AHittableFoliageActor()
 void AHittableFoliageActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AbilitySystemComponent->ApplyDefaultEffectsToSelf();
 }
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)

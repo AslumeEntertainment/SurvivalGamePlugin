@@ -10,19 +10,12 @@
 #include "Interactables/Items/ItemBase.h"
 #include "UI/HUD/InGameHUD.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFoundation/PlayerStates/SG_PlayerState.h"
 
 #include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_CharacterAbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
-
-//void AHumanCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//
-//	//DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, MainHandItem, COND_None, REPNOTIFY_Always);
-//	//DOREPLIFETIME_CONDITION_NOTIFY(AHumanCharacter, SecondaryHandItem, COND_None, REPNOTIFY_Always);
-//}
 
 void AHumanCharacter::BeginPlay()
 {
@@ -42,10 +35,6 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::MainHandAction);
-		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AHumanCharacter::SecondaryHandAction);
-
-		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AHumanCharacter::StartUnequipItem);
 		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Completed, this, &AHumanCharacter::CancelUnequipItem);
 		
 		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseDebugAbility);
@@ -64,67 +53,67 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::MainHandAction()
 {
-	if (IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)))
+	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
+	if (IsValid(SG_PlayerState) == false)
 	{
-		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
-		{
-			AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), FGameplayEventData());
-		}
-		else
-		{
-			FString ItemAbilityTagSuffix = bIsRightHanded ? ".Right" : ".Left";
-
-			FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemAbilityTag.ToString() + ItemAbilityTagSuffix));
-			FGameplayEventData EventData;
-
-			FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
-			CustomTargetData->ItemActor = GetEquipedItemAtSlot(EEquipmentSlot::Main);
-			EventData.TargetData.Add(CustomTargetData);
-
-			AbilitySystemComponent->Server_SendGameplayEventToSelf(AbilityTag, EventData);
-		}
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::MainHandAction IsValid(SG_PlayerState) == false"));
+		return;
 	}
-	else
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
 	{
-		FGameplayTag HandAbilityTag = bIsRightHanded ? FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Right")) : FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Left"));
-
-		//HasAuthority() ? AbilitySystemComponent->Server_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData()) : AbilitySystemComponent->Client_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData());
-		AbilitySystemComponent->Server_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData());
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::MainHandAction IsValid(ASC) == false"));
+		return;
 	}
+
+	FGameplayEventData EventData;
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		ASC->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), &EventData);
+		return;
+	}
+
+	FString ActionSuffix = IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) ? ".Item" : ".Attack";
+	FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
+	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
+
+	//rework after player state changes
+	ASC->HandleGameplayEvent(AbilityTag, &EventData);
 }
  
 void AHumanCharacter::SecondaryHandAction()
 {
-	if (IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
+	if (IsValid(SG_PlayerState) == false)
 	{
-		if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
-		{
-			AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), FGameplayEventData());
-		}
-		else
-		{
-			FString ItemAbilityTagSuffix = bIsRightHanded ? ".Left" : ".Right";
-
-			FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemAbilityTag.ToString() + ItemAbilityTagSuffix));
-			FGameplayEventData EventData;
-
-			FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
-			CustomTargetData->ItemActor = GetEquipedItemAtSlot(EEquipmentSlot::Secondary);
-			EventData.TargetData.Add(CustomTargetData);
-
-			AbilitySystemComponent->Server_SendGameplayEventToSelf(AbilityTag, EventData);
-		}
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SecondaryHandAction IsValid(SG_PlayerState) == false"));
+		return;
 	}
-	else
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
 	{
-		FGameplayTag HandAbilityTag = bIsRightHanded ? FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Left")) : FGameplayTag::RequestGameplayTag(FName("Combat.Punch.Right"));
-
-		//HasAuthority() ? AbilitySystemComponent->Server_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData()) : AbilitySystemComponent->Client_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData());
-		AbilitySystemComponent->Server_SendGameplayEventToSelf(HandAbilityTag, FGameplayEventData());
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SecondaryHandAction IsValid(ASC) == false"));
+		return;
 	}
+
+	FGameplayEventData EventData;
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		ASC->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), &EventData);
+		return;
+	}
+
+	FString ActionSuffix = IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) ? ".Item" : ".Attack";
+	FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
+	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
+
+	//rework after player state changes
+	ASC->HandleGameplayEvent(AbilityTag, &EventData);
 }
 
-void AHumanCharacter::StartUnequipItem()
+void AHumanCharacter::UnequipItem()
 {
 	if (!IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) && !IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
 	{

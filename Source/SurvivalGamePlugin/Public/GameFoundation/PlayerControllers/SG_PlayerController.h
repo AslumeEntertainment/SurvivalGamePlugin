@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 
+#include "Interfaces/AbilitySystemControllerInterface.h"
 #include "Headers/GeneralDelegates.h"
 
 #include "SG_PlayerController.generated.h"
 
-
+class USG_AbilitySystemComponent;
 class USG_SaveGame;
 
 UENUM(BlueprintType)
@@ -21,10 +22,15 @@ enum class EInputMode : uint8
 };
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
+class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController, public IAbilitySystemControllerInterface
 {
 	GENERATED_BODY()
 	
+private:
+
+	UPROPERTY()
+	USG_AbilitySystemComponent* ASC = nullptr;
+
 protected:
 
 	UPROPERTY()
@@ -46,9 +52,23 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_LeaveSession(bool bWasKicked=false);
 
+	void InitPlayerState() override;
+
+	void OnRep_PlayerState() override;
+
 	void OnNetCleanup(UNetConnection* Connection) override;
 
 	void OnPossess(APawn* InPawn) override;
+
+	virtual void InitASC(AActor* AvatarActor) override;
+
+	virtual FActiveGameplayEffectHandle AddEffect(TSubclassOf<UGameplayEffect> GameplayEffect, uint8 Level = 1) override;
+
+	virtual void RemoveEffect(FActiveGameplayEffectHandle RemovedEffectSpecHandle, int8 StacksToRemove = -1) override;
+
+	virtual FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level = 1) override;
+
+	virtual void RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle) override;
 
 	//Work with save game
 	UFUNCTION()

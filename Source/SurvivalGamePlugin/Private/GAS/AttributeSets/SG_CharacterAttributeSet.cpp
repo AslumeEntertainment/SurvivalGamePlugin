@@ -7,6 +7,7 @@
 #include "Characters/InGameCharacter.h"
 #include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -52,29 +53,28 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(ASC) == false"));
+		return;
+	}
+	AInGameCharacter* AvatarActor = Cast<AInGameCharacter>(ASC->GetAvatarActor());
+	if (IsValid(AvatarActor) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeBaseChange IsValid(AvatarActor) == false"));
+		return;
+	}
+
 	if (Attribute == GetSpeedAttribute())
 	{
-		ASG_Character* AttributeOwner = Cast<ASG_Character>(GetOwningActor());
-		if (!IsValid(AttributeOwner))
-		{
-			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeBaseChange IsValid(AttributeOwner) == false"));
-			return;
-		}
-
-		AttributeOwner->GetCharacterMovement()->MaxWalkSpeed = NewValue;
+		AvatarActor->GetCharacterMovement()->MaxWalkSpeed = NewValue;
 	}
 
 	if (Attribute == GetAttackAttribute())
 	{
-		ASG_Character* AttributeOwner = Cast<ASG_Character>(GetOwningActor());
-		if (!IsValid(AttributeOwner))
-		{
-			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeBaseChange IsValid(AttributeOwner) == false"));
-			return;
-		}
-
 		TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;
-		AttributeOwner->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
+		AvatarActor->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
 
 		for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
 		{
@@ -103,6 +103,13 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 		return;
 	}
 
+	TWeakObjectPtr<UAbilitySystemComponent> ASC = Target->AbilityActorInfo->AbilitySystemComponent;
+	if (ASC.IsValid() == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostGameplayEffectExecute ASC.IsValid() == false"));
+		return;
+	}
+
 	TargetCharacter = Cast<AInGameCharacter>(Data.Target.AbilityActorInfo->AvatarActor.Get());
 	if (!IsValid(TargetCharacter))
 	{
@@ -119,11 +126,11 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 		
 		if (HasMaxHunger())
 		{
-			TargetCharacter->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 		}
 		else
 		{
-			TargetCharacter->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 		}
 	}
 

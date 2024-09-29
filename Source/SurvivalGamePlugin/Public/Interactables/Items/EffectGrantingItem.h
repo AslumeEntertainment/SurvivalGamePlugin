@@ -15,15 +15,10 @@ class SURVIVALGAMEPLUGIN_API AEffectGrantingItem : public AItemBase
 	
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
-	int EffectLevel = 1;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	TArray<TSubclassOf<UGameplayEffect>> Effects;
+	TMap<TSubclassOf<UGameplayEffect>, uint8> Effects;
 
 public:
 
-	FGameplayEffectSpecHandle CreateEffectSpecHandle(int EffectID);
-
-	TArray<TSubclassOf<UGameplayEffect>> GetEffects();
+	TMap<TSubclassOf<UGameplayEffect>, uint8> GetEffects();
 };

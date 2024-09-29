@@ -2,14 +2,17 @@
 
 
 #include "Characters/InGameCharacter.h"
-#include "Components/DamageDealingComponent.h"
+
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Interactables/Items/DamageDealingItem.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GameFoundation/PlayerStates/SG_PlayerState.h"
+#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/DamageDealingComponent.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_CharacterAbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -30,6 +33,11 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AInGameCharacter::UnequipItem);
+
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
@@ -55,9 +63,17 @@ void AInGameCharacter::FinishSprint()
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
 {
+	// Rework when ASCI is properly configured
+	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
+	if (IsValid(SG_PlayerState) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnHit IsValid(SG_PlayerState) == false"));
+		return;
+	}
+
 	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		SG_PlayerState->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
 

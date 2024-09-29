@@ -4,6 +4,7 @@
 #include "Interactables/Items/ItemBase.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/DamageDealingComponent.h"
+#include "Interfaces/AbilitySystemControllerInterface.h"
 #include "Characters/InGameCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -57,33 +58,6 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 	NewActorPhysics ? StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics) : StaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-//void AItemBase::Use(ASG_Character* PlayerOwner)
-//{
-//	AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
-//	if (!IsValid(HumanPlayer))
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("AItemBase::Use IsValid(PlayerOwner) == false"));
-//		return;
-//	}
-//	USG_AbilitySystemComponent* AbilitySystemComponent = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());
-//	if (AbilitySystemComponent == nullptr)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("AItemBase::Use AbilitySystemComponent == nullptr"));
-//		return;
-//	}
-//
-//	FString AbilityTagSuffix = GetAttachParentSocketName() == PlayerOwner->GetRightHandSocket() ? ".Right" : ".Left";
-//
-//	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(ItemData.ItemAbilityTag.ToString() + AbilityTagSuffix));
-//	FGameplayEventData EventData;
-//
-//	FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
-//	CustomTargetData->ItemActor = this;
-//	EventData.TargetData.Add(CustomTargetData);
-//
-//	AbilitySystemComponent->Server_SendGameplayEventToSelf(AbilityTag, EventData);
-//}
-
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 {
 	CurrentDurability -= LostDurability;
@@ -95,13 +69,20 @@ void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(PlayerOwner->GetController());
+	if (ASCI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemEquiped ASCI == nullptr"));
+		return;
+	}
+
 	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
 
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
 	
-	AbilitySpecHandle = PlayerOwner->AddAbility(ItemData.ItemAbility);
+	AbilitySpecHandle = ASCI->AddAbility(ItemData.ItemAbility);
 	bIsAttached = true;
 }
 
@@ -113,6 +94,12 @@ void AItemBase::OnItemUnequiped()
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(PlayerOwner) == false"));
 		return;
 	}
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(PlayerOwner->GetController());
+	if (ASCI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped ASCI == nullptr"));
+		return;
+	}
 
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
@@ -120,7 +107,7 @@ void AItemBase::OnItemUnequiped()
 
 	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
 
-	PlayerOwner->RemoveAbility(AbilitySpecHandle);
+	ASCI->RemoveAbility(AbilitySpecHandle);
 	bIsAttached = false;
 }
 
@@ -152,17 +139,17 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
+		return;
 	}
-	else if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)) == false)
+	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)) == false)
 	{
 		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Item could not be equiped"));
-	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Item could not be equiped"));
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)

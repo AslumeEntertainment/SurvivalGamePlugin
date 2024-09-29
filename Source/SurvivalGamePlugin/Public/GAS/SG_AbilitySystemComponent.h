@@ -7,25 +7,28 @@
 #include "SG_AbilitySystemComponent.generated.h"
 
 class UGameplayEffect;
+class USG_GameplayAbility;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 
-protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = "DefaultGameplayEffects")
-	TSubclassOf<UGameplayEffect> OnSpawnInvincibilityEffectClass;
-
 public:
 
+	// we need this for unequiping, will be removed later 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
 
-	virtual void ApplyDefaultEffectsToSelf();
+	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, uint8 Level = 1);
+
+	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
+
+	FGameplayAbilitySpecHandle AddAbilityFromClass(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level = 1);
+
+	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
 
 };

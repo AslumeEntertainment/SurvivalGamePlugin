@@ -2,6 +2,7 @@
 
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
 #include "Characters/InGameCharacter.h"
@@ -35,40 +36,41 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 
 void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
 {
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeChange IsValid(ASC) == false"));
+		return;
+	}
+
 	if (Attribute == GetHealthAttribute())
 	{
-		IHittableInterface* AttributeOwner = Cast<IHittableInterface>(GetOwningActor());
-		if (AttributeOwner == nullptr)
+		IHittableInterface* HittableAvatarActor = Cast<IHittableInterface>(GetOwningActor());
+		if (HittableAvatarActor == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange AttributeOwner == nullptr"));
-			return;
-		}
-		UAbilitySystemComponent* OwnerAbilitySystemComponent = GetOwningAbilitySystemComponent();
-		if (!IsValid(OwnerAbilitySystemComponent))
-		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(OwnerAbilitySystemComponent) == false"));
 			return;
 		}
 
 		if (HasMaxHealth())
 		{
-			OwnerAbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 		else
 		{
-			OwnerAbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 
 		if (GetHealth() == 0.f)
 		{
-			OwnerAbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
-			AttributeOwner->OnHittableDestroyed();
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
+			HittableAvatarActor->OnHittableDestroyed();
 		}
 
-		AInGameCharacter* AttributeOwnerCharacter = Cast<AInGameCharacter>(GetOwningActor());
-		if (IsValid(AttributeOwnerCharacter))
+		AInGameCharacter* AvatarActor = Cast<AInGameCharacter>(ASC->GetAvatarActor());
+		if (IsValid(AvatarActor))
 		{
-			AttributeOwnerCharacter->Client_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
+			AvatarActor->Client_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
 		}
 	}
 }
