@@ -235,6 +235,21 @@ void ASG_Character::Look(const FInputActionValue& Value)
 
 void ASG_Character::AttemptInteraction()
 {
+	AController* Cont = GetController();
+	if (IsValid(Cont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction IsValid(Cont) == false"));
+		return;
+	}
+
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(Cont);
+	if (ASCI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction ASCI == nullptr"));
+		return;
+	}
+	UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction Cont and ASC == true"));
+
 	if (FocusedInteractableObject == nullptr)
 	{
 		if (bShouldDrawDebug == true)
@@ -295,7 +310,7 @@ void ASG_Character::GiveAbilities()
 	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
 	if (ASCI == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::GiveAbilities ASCI == nullptr"));
 		return;
 	}
 
@@ -317,13 +332,13 @@ void ASG_Character::PossessedBy(AController* NewController)
 	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
 	if (ASCI == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PossessedBy ASCI == nullptr"));
 		return;
 	}
 
 	ASCI->InitASC(this);
-	InitializeAttributes();
 	GiveAbilities();
+
 	/*UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
 	if (ASC && InputComponent)
 	{
@@ -336,10 +351,29 @@ void ASG_Character::PossessedBy(AController* NewController)
 	ASC->InitAbilityActorInfo(ASCI->GetAbilitySystemComponentOwner(), this);*/
 }
 
-void ASG_Character::UnPossessed()
-{
-	Super::UnPossessed();
-}
+//void ASG_Character::Client_PossessedBy_Implementation(AController* NewController)
+//{
+//	if (HasAuthority())
+//	{
+//		return;
+//	}
+//
+//	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::Client_PossessedBy_Implementation"));
+//
+//	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+//	if (ASCI == nullptr)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("ASG_Character::Client_PossessedBy_Implementation ASCI == nullptr"));
+//		return;
+//	}
+//
+//	ASCI->InitASC(this);
+//}
+
+//void ASG_Character::UnPossessed()
+//{
+//	Super::UnPossessed();
+//}
 
 void ASG_Character::OnRep_PlayerState()
 {
@@ -347,15 +381,30 @@ void ASG_Character::OnRep_PlayerState()
 
 	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
 
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
+	if (GetPlayerState() == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState GetPlayerState() == nullptr, ebi si maikata"));
+		return;
+	}
+
+	AController* Cont = GetController();
+	if (IsValid(Cont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState IsValid(Cont) == false"));
+
+		FTimerHandle FunctionResetTimer;
+		return;
+	}
+
+	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(Cont);
 	if (ASCI == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState ASCI == nullptr"));
 		return;
 	}
 
 	ASCI->InitASC(this);
-	InitializeAttributes();
+	//InitializeAttributes();
 }
 
 void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)

@@ -4,6 +4,7 @@
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 
 #include "Kismet/GameplayStatics.h" 
+#include "Net/UnrealNetwork.h"
 
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/GameInstance/UserCloudSubsystem.h"
@@ -11,6 +12,13 @@
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
 #include "GameFoundation/PlayerStates/SG_PlayerState.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+
+void ASG_PlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(ASG_PlayerController, ASC, COND_None, REPNOTIFY_OnChanged);
+}
 
 void ASG_PlayerController::BeginPlay()
 {
@@ -52,6 +60,19 @@ void ASG_PlayerController::OnPossess(APawn* InPawn)
 
 void ASG_PlayerController::InitASC(AActor* AvatarActor)
 {
+	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
+	if (IsValid(SG_PlayerState) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitASC IsValid(SG_PlayerState) == false"));
+		return;
+	}
+	ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitASC IsValid(ASC) == false"));
+		return;
+	}
+	
 	ASC->InitAbilityActorInfo(PlayerState, AvatarActor);
 }
 
@@ -139,45 +160,25 @@ USG_SaveGame* ASG_PlayerController::GetSave()
 }
 
 
-void ASG_PlayerController::InitPlayerState()
-{
-	Super::InitPlayerState();
+//void ASG_PlayerController::InitPlayerState()
+//{
+//	Super::InitPlayerState();
+//
+//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::InitPlayerState"));
+//
+//}
 
-	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::InitPlayerState"));
+//void ASG_PlayerController::OnRep_ASC()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::OnRep_ASC"));
+//}
 
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitPlayerState IsValid(SG_PlayerState) == false"));
-		return;
-	}
-	ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitPlayerState IsValid(ASC) == false"));
-		return;
-	}
-}
-
-void ASG_PlayerController::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::OnRep_PlayerState"));
-
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::OnRep_PlayerState IsValid(SG_PlayerState) == false"));
-		return;
-	}
-	ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::OnRep_PlayerState IsValid(ASC) == false"));
-		return;
-	}
-}
+//void ASG_PlayerController::OnRep_PlayerState()
+//{
+//	Super::OnRep_PlayerState();
+//
+//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::OnRep_PlayerState"));
+//}
 
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {

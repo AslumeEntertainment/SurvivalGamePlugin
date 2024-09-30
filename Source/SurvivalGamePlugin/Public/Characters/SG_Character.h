@@ -96,7 +96,12 @@ protected:
 	void Server_SetRepControlRotation(FRotator InControlRotation);
 
 	virtual void PossessedBy(AController* NewController) override;
-	virtual void UnPossessed() override;
+
+	/*UFUNCTION(Client, Reliable)
+	void Client_PossessedBy(AController* NewController);
+
+	virtual void UnPossessed() override;*/
+
 	void OnRep_PlayerState() override;
 
 

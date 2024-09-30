@@ -62,7 +62,7 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 	AInGameCharacter* AvatarActor = Cast<AInGameCharacter>(ASC->GetAvatarActor());
 	if (IsValid(AvatarActor) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeBaseChange IsValid(AvatarActor) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(AvatarActor) == false"));
 		return;
 	}
 

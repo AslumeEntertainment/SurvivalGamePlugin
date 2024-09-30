@@ -28,7 +28,7 @@ class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController, pu
 	
 private:
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	USG_AbilitySystemComponent* ASC = nullptr;
 
 protected:
@@ -52,9 +52,12 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_LeaveSession(bool bWasKicked=false);
 
-	void InitPlayerState() override;
+	/*void InitPlayerState() override;*/
 
-	void OnRep_PlayerState() override;
+	/*UFUNCTION()
+	void OnRep_ASC();*/
+
+	//void OnRep_PlayerState() override;
 
 	void OnNetCleanup(UNetConnection* Connection) override;
 
