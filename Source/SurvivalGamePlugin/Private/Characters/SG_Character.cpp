@@ -54,6 +54,12 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
+
+	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -147,13 +153,15 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
 
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!IsLocallyControlled())
+	if (IsLocallyControlled() == false)
 	{
 		return;
 	}
@@ -235,31 +243,43 @@ void ASG_Character::Look(const FInputActionValue& Value)
 
 void ASG_Character::AttemptInteraction()
 {
-	AController* Cont = GetController();
-	if (IsValid(Cont) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction IsValid(Cont) == false"));
-		return;
-	}
-
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(Cont);
-	if (ASCI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction ASCI == nullptr"));
-		return;
-	}
-	UE_LOG(LogTemp, Error, TEXT("ASG_Character::AttemptInteraction Cont and ASC == true"));
-
-	if (FocusedInteractableObject == nullptr)
-	{
-		if (bShouldDrawDebug == true)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
-		}
-		return;
-	}
-
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+}
+
+void ASG_Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::PossessedBy"));
+
+	InitCharacterDefaults();
+
+	if (AbilitySystemComponent && InputComponent)
+	{
+		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+}
+
+void ASG_Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
+
+}
+
+void ASG_Character::InitCharacterDefaults()
+{
+	AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilities, this);
+	AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilities, this);
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+}
+
+UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 UObject* ASG_Character::GetFocusedInteractableObject()
@@ -277,139 +297,9 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
-void ASG_Character::InitializeAttributes()
-{
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
-	if (ASCI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitializeAttributes ASCI == nullptr"));
-		return;
-	}
-
-	ASCI->AddEffect(DefaultAttributeEffect);
-	//UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
-
-	//if (ASC && DefaultAttributeEffect)
-	//{
-	//	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
-	//	EffectContext.AddSourceObject(this);
-
-	//	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
-
-	//	if (SpecHandle.IsValid())
-	//	{
-	//		FActiveGameplayEffectHandle GEHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	//	}
-
-	//	//ASC->ApplyDefaultEffectsToSelf();
-	//}
-}
-
-void ASG_Character::GiveAbilities()
-{
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
-	if (ASCI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::GiveAbilities ASCI == nullptr"));
-		return;
-	}
-
-	if (HasAuthority())
-	{
-		for (TSubclassOf<USG_GameplayAbility>& StartupAbility : DefaultAbilities)
-		{
-			ASCI->AddAbility(StartupAbility);
-		}
-	}
-}
-
-void ASG_Character::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::PossessedBy"));
-
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
-	if (ASCI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PossessedBy ASCI == nullptr"));
-		return;
-	}
-
-	ASCI->InitASC(this);
-	GiveAbilities();
-
-	/*UAbilitySystemComponent* ASC = ASCI->GetAbilitySystemComponent();
-	if (ASC && InputComponent)
-	{
-		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-		ASC->BindAbilityActivationToInputComponent(InputComponent, Binds);
-	}
-
-
-	ASC->InitAbilityActorInfo(ASCI->GetAbilitySystemComponentOwner(), this);*/
-}
-
-//void ASG_Character::Client_PossessedBy_Implementation(AController* NewController)
-//{
-//	if (HasAuthority())
-//	{
-//		return;
-//	}
-//
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::Client_PossessedBy_Implementation"));
-//
-//	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(GetController());
-//	if (ASCI == nullptr)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("ASG_Character::Client_PossessedBy_Implementation ASCI == nullptr"));
-//		return;
-//	}
-//
-//	ASCI->InitASC(this);
-//}
-
-//void ASG_Character::UnPossessed()
-//{
-//	Super::UnPossessed();
-//}
-
-void ASG_Character::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
-
-	if (GetPlayerState() == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState GetPlayerState() == nullptr, ebi si maikata"));
-		return;
-	}
-
-	AController* Cont = GetController();
-	if (IsValid(Cont) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState IsValid(Cont) == false"));
-
-		FTimerHandle FunctionResetTimer;
-		return;
-	}
-
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(Cont);
-	if (ASCI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::OnRep_PlayerState ASCI == nullptr"));
-		return;
-	}
-
-	ASCI->InitASC(this);
-	//InitializeAttributes();
-}
-
 void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
 {
-	/*if (!IsValid(AbilitySystemComponent))
+	if (!IsValid(AbilitySystemComponent))
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
 		return;
@@ -422,6 +312,6 @@ void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, cons
 	else
 	{
 		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
-	}*/
+	}
 }
 

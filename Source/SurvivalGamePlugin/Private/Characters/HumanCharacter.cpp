@@ -53,24 +53,11 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AHumanCharacter::MainHandAction()
 {
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::MainHandAction IsValid(SG_PlayerState) == false"));
-		return;
-	}
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::MainHandAction IsValid(ASC) == false"));
-		return;
-	}
-
 	FGameplayEventData EventData;
 
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		ASC->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), &EventData);
+		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), &EventData);
 		return;
 	}
 
@@ -79,29 +66,16 @@ void AHumanCharacter::MainHandAction()
 	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
 
 	//rework after player state changes
-	ASC->HandleGameplayEvent(AbilityTag, &EventData);
+	AbilitySystemComponent->HandleGameplayEvent(AbilityTag, &EventData);
 }
  
 void AHumanCharacter::SecondaryHandAction()
 {
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SecondaryHandAction IsValid(SG_PlayerState) == false"));
-		return;
-	}
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::SecondaryHandAction IsValid(ASC) == false"));
-		return;
-	}
-
 	FGameplayEventData EventData;
 
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		ASC->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), &EventData);
+		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), &EventData);
 		return;
 	}
 
@@ -110,7 +84,7 @@ void AHumanCharacter::SecondaryHandAction()
 	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
 
 	//rework after player state changes
-	ASC->HandleGameplayEvent(AbilityTag, &EventData);
+	AbilitySystemComponent->HandleGameplayEvent(AbilityTag, &EventData);
 }
 
 void AHumanCharacter::UnequipItem()

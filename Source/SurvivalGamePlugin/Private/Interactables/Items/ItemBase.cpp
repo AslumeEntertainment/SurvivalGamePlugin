@@ -69,10 +69,10 @@ void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(PlayerOwner->GetController());
-	if (ASCI == nullptr)
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemEquiped ASCI == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemEquiped IsValid(ASC) == false"));
 		return;
 	}
 
@@ -81,8 +81,8 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
-	
-	AbilitySpecHandle = ASCI->AddAbility(ItemData.ItemAbility);
+	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, static_cast<int32>((ItemData.ItemAbility).GetDefaultObject()->AbilityInputID), PlayerOwner);
+	AbilitySpecHandle = ASC->GiveAbility(Spec);
 	bIsAttached = true;
 }
 
@@ -94,10 +94,11 @@ void AItemBase::OnItemUnequiped()
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(PlayerOwner) == false"));
 		return;
 	}
-	IAbilitySystemControllerInterface* ASCI = Cast<IAbilitySystemControllerInterface>(PlayerOwner->GetController());
-	if (ASCI == nullptr)
+
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped ASCI == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(ASC) == false"));
 		return;
 	}
 
@@ -107,7 +108,7 @@ void AItemBase::OnItemUnequiped()
 
 	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
 
-	ASCI->RemoveAbility(AbilitySpecHandle);
+	ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
 	bIsAttached = false;
 }
 

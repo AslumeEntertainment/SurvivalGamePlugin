@@ -81,9 +81,9 @@ void USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved(FGameplayEventData Payloa
 	}
 
 	TMap<TSubclassOf<UGameplayEffect>, uint8> EffectsToGive = EffectGrantingItem->GetEffects();
-	for (auto& Effect : EffectsToGive)
+	for (TPair<TSubclassOf<UGameplayEffect>, int> Effect : EffectsToGive)
 	{
-		ASC->AddEffectFromClass(Effect.Key, Effect.Value);
+		ASC->AddEffectFromClass(Effect.Key, Player, Effect.Value);
 	}
 
 	EffectGrantingItem->Server_LoseDurability(1.f);

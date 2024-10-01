@@ -23,11 +23,13 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
 
-	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, uint8 Level = 1);
+	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, UObject* Instigator, uint8 Level = 1);
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
-	FGameplayAbilitySpecHandle AddAbilityFromClass(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level = 1);
+	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
+
+	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
 
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
 

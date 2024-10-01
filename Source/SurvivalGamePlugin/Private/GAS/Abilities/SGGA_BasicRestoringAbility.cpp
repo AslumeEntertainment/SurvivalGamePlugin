@@ -80,7 +80,7 @@ void USGGA_BasicRestoringAbility::OnEventRecieved(FGameplayEventData Payload)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 	
-	ASC->AddEffectFromClass(GameplayEffectClass);
+	ASC->AddEffectFromClass(GameplayEffectClass, Player);
 
 	RegeneratingItem->Server_LoseDurability(1.f);
 }

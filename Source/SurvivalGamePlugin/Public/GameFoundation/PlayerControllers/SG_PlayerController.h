@@ -52,13 +52,6 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_LeaveSession(bool bWasKicked=false);
 
-	/*void InitPlayerState() override;*/
-
-	/*UFUNCTION()
-	void OnRep_ASC();*/
-
-	//void OnRep_PlayerState() override;
-
 	void OnNetCleanup(UNetConnection* Connection) override;
 
 	void OnPossess(APawn* InPawn) override;

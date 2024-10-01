@@ -20,7 +20,7 @@ void USG_AbilitySystemComponent::Client_SendGameplayEventToSelf_Implementation(F
 	Server_SendGameplayEventToSelf(EventTag, Payload);
 }
 
-FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, uint8 Level)
+FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, UObject* Instigator, uint8 Level)
 {
 	FActiveGameplayEffectHandle GEHandle;
 	
@@ -31,7 +31,7 @@ FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubc
 	}
 
 	FGameplayEffectContextHandle EffectContext = MakeEffectContext();
-	EffectContext.AddSourceObject(this);
+	EffectContext.AddSourceObject(Instigator);
 
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpec(GameplayEffectClass, Level, EffectContext);
 
@@ -48,19 +48,22 @@ void USG_AbilitySystemComponent::RemoveEffectFromSpec(FActiveGameplayEffectHandl
 	RemoveActiveGameplayEffect(GameplayEffectSpecHandle, StacksToRemove);
 }
 
-FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbilityFromClass(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level)
+void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator)
 {
-	FGameplayAbilitySpecHandle AbilitySpecHandle;
-
-	if (IsValid(AbilityClass) == false)
+	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::AddAbilityFromClass IsValid(AbilityClass) == false"));
-		return AbilitySpecHandle;
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, static_cast<int32>((Ability.Key).GetDefaultObject()->AbilityInputID), Instigator);
+		GiveAbility(Spec);
 	}
+}
 
-	AbilitySpecHandle = GiveAbility(FGameplayAbilitySpec(AbilityClass, Level, static_cast<int32>(AbilityClass.GetDefaultObject()->AbilityInputID), this));
-	
-	return AbilitySpecHandle;
+void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator)
+{
+	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, static_cast<int32>((Ability.Key).GetDefaultObject()->AbilityInputID), Instigator);
+		GiveAbilityAndActivateOnce(Spec);
+	}
 }
 
 void USG_AbilitySystemComponent::RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)

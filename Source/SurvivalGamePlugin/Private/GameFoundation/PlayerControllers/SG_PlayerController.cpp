@@ -60,7 +60,7 @@ void ASG_PlayerController::OnPossess(APawn* InPawn)
 
 void ASG_PlayerController::InitASC(AActor* AvatarActor)
 {
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
+	/*ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
 	if (IsValid(SG_PlayerState) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitASC IsValid(SG_PlayerState) == false"));
@@ -73,12 +73,12 @@ void ASG_PlayerController::InitASC(AActor* AvatarActor)
 		return;
 	}
 	
-	ASC->InitAbilityActorInfo(PlayerState, AvatarActor);
+	ASC->InitAbilityActorInfo(PlayerState, AvatarActor);*/
 }
 
 FActiveGameplayEffectHandle ASG_PlayerController::AddEffect(TSubclassOf<UGameplayEffect> GameplayEffect, uint8 Level)
 {
-	return ASC->AddEffectFromClass(GameplayEffect, Level);
+	return FActiveGameplayEffectHandle()/*ASC->AddEffectFromClass(GameplayEffect, Level)*/;
 }
 
 void ASG_PlayerController::RemoveEffect(FActiveGameplayEffectHandle RemovedEffectSpecHandle, int8 StacksToRemove)
@@ -88,7 +88,7 @@ void ASG_PlayerController::RemoveEffect(FActiveGameplayEffectHandle RemovedEffec
 
 FGameplayAbilitySpecHandle ASG_PlayerController::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level)
 {
-	return ASC->AddAbilityFromClass(AbilityClass, Level);
+	return FGameplayAbilitySpecHandle()/*ASC->AddAbilityFromClass(AbilityClass, Level)*/;
 }
 
 void ASG_PlayerController::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)

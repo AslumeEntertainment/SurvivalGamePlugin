@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "Headers/GameplayAbilityInputID.h"
@@ -16,14 +17,14 @@ class UCameraComponent;
 class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
-class UAbilitySystemComponent;
+class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -58,6 +59,21 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultPassiveAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	USG_AbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(Transient)
+	USG_CharacterAttributeSet* AttributeSet;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -97,12 +113,9 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	/*UFUNCTION(Client, Reliable)
-	void Client_PossessedBy(AController* NewController);
-
-	virtual void UnPossessed() override;*/
-
 	void OnRep_PlayerState() override;
+
+	void InitCharacterDefaults();
 
 
 public:
@@ -110,13 +123,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldDrawDebug = true;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
-
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
@@ -126,9 +134,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
-	
-	virtual void InitializeAttributes();
-	virtual void GiveAbilities();
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 

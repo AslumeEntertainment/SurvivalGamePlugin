@@ -63,17 +63,9 @@ void AInGameCharacter::FinishSprint()
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
 {
-	// Rework when ASCI is properly configured
-	ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnHit IsValid(SG_PlayerState) == false"));
-		return;
-	}
-
 	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
-		SG_PlayerState->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
 
