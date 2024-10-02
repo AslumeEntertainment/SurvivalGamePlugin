@@ -2,14 +2,15 @@
 
 
 #include "GAS/Abilities/SGGA_ApplyEffectsFromItemToSelf.h"
-#include "Characters/InGameCharacter.h"
-#include "Interactables/Items/EffectGrantingItem.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "Animation/SG_AnimInstance.h"
+
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include "Interactables/Items/EffectGrantingItem.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/InGameCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

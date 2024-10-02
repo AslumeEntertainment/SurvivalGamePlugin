@@ -3,13 +3,27 @@
 
 #include "GAS/GameplayEffectCalculations/MagnitudeModifier/MMC_RegenerationAmount.h"
 
+#include "Interactables/Items/RegeneratingItem.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "Characters/InGameCharacter.h"
+
+
 UMMC_RegenerationAmount::UMMC_RegenerationAmount()
 {
 }
 
-float UMMC_RegenerationAmount::CalculateBaseMagnitude(const FGameplayEffectSpec& Spec) const
+float UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
-	UE_LOG(LogTemp, Error, TEXT("BALLS?!?!?!?!?!?"));
-	return 0.0f;
+	ARegeneratingItem* RegeneratingItem = Cast<ARegeneratingItem>(Spec.GetContext().Get()->GetSourceObject());
+	if (IsValid(RegeneratingItem) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation IsValid(RegeneratingItem) == false"));
+		return 0.0f;
+	}
+
+	float RegenerationValue = RegeneratingItem->GetRegenerationAmount();
+	UE_LOG(LogTemp, Warning, TEXT("UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation %f BALLS?!?!?!"), RegenerationValue);
+	return RegenerationValue;
 }
+
 

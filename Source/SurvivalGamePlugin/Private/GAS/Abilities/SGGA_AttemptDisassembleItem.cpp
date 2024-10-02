@@ -2,17 +2,17 @@
 
 
 #include "GAS/Abilities/SGGA_AttemptDisassembleItem.h"
-#include "Characters/HumanCharacter.h"
-#include "Interactables/Items/ItemBase.h"
-#include "Animation/SG_AnimInstance.h"
+
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Net/UnrealNetwork.h"
+
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GameplayEffectTypes.h"
-#include "GameplayEffect.h"
-#include "Net/UnrealNetwork.h"
+#include "Interactables/Items/ItemBase.h"
+#include "Characters/HumanCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_AttemptDisassembleItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

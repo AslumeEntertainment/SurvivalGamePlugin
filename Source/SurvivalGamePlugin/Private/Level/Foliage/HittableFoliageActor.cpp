@@ -2,11 +2,13 @@
 
 
 #include "Level/Foliage/HittableFoliageActor.h"
+
 #include "Components/StaticMeshComponent.h"
-#include "GAS/AttributeSets/SG_AttributeSet.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 AHittableFoliageActor::AHittableFoliageActor()

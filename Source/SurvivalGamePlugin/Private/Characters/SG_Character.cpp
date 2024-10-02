@@ -2,26 +2,22 @@
 
 
 #include "Characters/SG_Character.h"
+
 #include "Engine/LocalPlayer.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Interfaces/InteractableInterface.h"
-#include "Interfaces/AbilitySystemControllerInterface.h"
 #include "Net/UnrealNetwork.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include "Interfaces/InteractableInterface.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
-#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -243,7 +239,10 @@ void ASG_Character::Look(const FInputActionValue& Value)
 
 void ASG_Character::AttemptInteraction()
 {
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+	if (IsValid(FocusedInteractableObject))
+	{
+		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+	}
 }
 
 void ASG_Character::PossessedBy(AController* NewController)

@@ -2,10 +2,12 @@
 
 
 #include "GAS/Abilities/SGGA_Sprint.h"
-#include "Characters/SG_Character.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
+
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/SG_Character.h"
 
 
 void USGGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

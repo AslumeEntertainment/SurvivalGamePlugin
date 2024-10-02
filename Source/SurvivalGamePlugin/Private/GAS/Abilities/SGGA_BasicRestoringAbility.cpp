@@ -2,14 +2,15 @@
 
 
 #include "GAS/Abilities/SGGA_BasicRestoringAbility.h"
-#include "Characters/InGameCharacter.h"
-#include "Interactables/Items/RegeneratingItem.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "Animation/SG_AnimInstance.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "AbilitySystemBlueprintLibrary.h"
+
+#include "Characters/InGameCharacter.h"
+#include "Interactables/Items/RegeneratingItem.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -80,7 +81,7 @@ void USGGA_BasicRestoringAbility::OnEventRecieved(FGameplayEventData Payload)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 	
-	ASC->AddEffectFromClass(GameplayEffectClass, Player);
+	ASC->AddEffectFromClass(GameplayEffectClass, RegeneratingItem);
 
 	RegeneratingItem->Server_LoseDurability(1.f);
 }

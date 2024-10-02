@@ -2,17 +2,15 @@
 
 
 #include "Interactables/Items/ItemBase.h"
+
 #include "Components/StaticMeshComponent.h"
-#include "Components/DamageDealingComponent.h"
-#include "Interfaces/AbilitySystemControllerInterface.h"
-#include "Characters/InGameCharacter.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Components/DamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
+#include "Characters/InGameCharacter.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -81,8 +79,12 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
-	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, static_cast<int32>((ItemData.ItemAbility).GetDefaultObject()->AbilityInputID), PlayerOwner);
-	AbilitySpecHandle = ASC->GiveAbility(Spec);
+	if (HasAuthority())
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, static_cast<int32>((ItemData.ItemAbility).GetDefaultObject()->AbilityInputID), PlayerOwner);
+		AbilitySpecHandle = ASC->GiveAbility(Spec);
+	}
+	
 	bIsAttached = true;
 }
 
@@ -108,7 +110,11 @@ void AItemBase::OnItemUnequiped()
 
 	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
 
-	ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
+	if (HasAuthority())
+	{
+		ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
+	}
+	
 	bIsAttached = false;
 }
 

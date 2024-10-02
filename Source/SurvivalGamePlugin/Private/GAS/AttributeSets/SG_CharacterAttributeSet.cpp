@@ -2,14 +2,15 @@
 
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
-#include "Characters/InGameCharacter.h"
 #include "Components/DamageDealingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
 
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/InGameCharacter.h"
 
 USG_CharacterAttributeSet::USG_CharacterAttributeSet()
 {
@@ -124,13 +125,19 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 			TargetCharacter->Client_OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
 		}
 		
-		if (HasMaxHunger())
+		if (GetHunger() >= GetMaxHunger() * 0.99)
 		{
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 		}
 		else
 		{
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			
+			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CurrentlyHealing")) == false)
+			{
+				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
+			}
 		}
 	}
 

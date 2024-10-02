@@ -2,9 +2,10 @@
 
 
 #include "UI/HUD/InGameHUD.h"
-#include "Kismet/GameplayStatics.h"
-#include "Characters/HumanCharacter.h"
 
+#include "Kismet/GameplayStatics.h"
+
+#include "Characters/HumanCharacter.h"
 #include "UI/Widgets/InGameOverlayWidget.h"
 #include "UI/Widgets/ItemIconWidget.h"
 #include "UI/Widgets/CraftingWindowWidget.h"

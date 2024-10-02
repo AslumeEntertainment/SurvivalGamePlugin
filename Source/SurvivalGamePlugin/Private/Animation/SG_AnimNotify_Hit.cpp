@@ -2,9 +2,10 @@
 
 
 #include "Animation/SG_AnimNotify_Hit.h"
-#include "Animation/SG_AnimInstance.h"
-#include "Characters/InGameCharacter.h"
+
 #include "Components/DamageDealingComponent.h"
+#include "Characters/InGameCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)

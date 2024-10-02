@@ -2,12 +2,14 @@
 
 
 #include "GAS/Abilities/SGGA_UnequipItem.h"
-#include "Interactables/Items/ItemBase.h"
-#include "Characters/HumanCharacter.h"
 
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
+
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interactables/Items/ItemBase.h"
+#include "Characters/HumanCharacter.h"
+
 
 void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {

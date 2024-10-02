@@ -10,15 +10,7 @@
 #include "GameFoundation/GameInstance/UserCloudSubsystem.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
-#include "GameFoundation/PlayerStates/SG_PlayerState.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 
-void ASG_PlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION_NOTIFY(ASG_PlayerController, ASC, COND_None, REPNOTIFY_OnChanged);
-}
 
 void ASG_PlayerController::BeginPlay()
 {
@@ -56,44 +48,6 @@ void ASG_PlayerController::OnPossess(APawn* InPawn)
 		PlayerCameraManager->ViewPitchMax = 55.f;
 	}
 
-}
-
-void ASG_PlayerController::InitASC(AActor* AvatarActor)
-{
-	/*ASG_PlayerState* SG_PlayerState = GetPlayerState<ASG_PlayerState>();
-	if (IsValid(SG_PlayerState) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitASC IsValid(SG_PlayerState) == false"));
-		return;
-	}
-	ASC = Cast<USG_AbilitySystemComponent>(SG_PlayerState->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::InitASC IsValid(ASC) == false"));
-		return;
-	}
-	
-	ASC->InitAbilityActorInfo(PlayerState, AvatarActor);*/
-}
-
-FActiveGameplayEffectHandle ASG_PlayerController::AddEffect(TSubclassOf<UGameplayEffect> GameplayEffect, uint8 Level)
-{
-	return FActiveGameplayEffectHandle()/*ASC->AddEffectFromClass(GameplayEffect, Level)*/;
-}
-
-void ASG_PlayerController::RemoveEffect(FActiveGameplayEffectHandle RemovedEffectSpecHandle, int8 StacksToRemove)
-{
-	ASC->RemoveEffectFromSpec(RemovedEffectSpecHandle, StacksToRemove);
-}
-
-FGameplayAbilitySpecHandle ASG_PlayerController::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, uint8 Level)
-{
-	return FGameplayAbilitySpecHandle()/*ASC->AddAbilityFromClass(AbilityClass, Level)*/;
-}
-
-void ASG_PlayerController::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)
-{
-	ASC->RemoveAbilityFromSpec(RemovedAbilitySpecHandle);
 }
 
 void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMode)
@@ -158,27 +112,6 @@ USG_SaveGame* ASG_PlayerController::GetSave()
 {
 	return Save;
 }
-
-
-//void ASG_PlayerController::InitPlayerState()
-//{
-//	Super::InitPlayerState();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::InitPlayerState"));
-//
-//}
-
-//void ASG_PlayerController::OnRep_ASC()
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::OnRep_ASC"));
-//}
-
-//void ASG_PlayerController::OnRep_PlayerState()
-//{
-//	Super::OnRep_PlayerState();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_PlayerController::OnRep_PlayerState"));
-//}
 
 void ASG_PlayerController::OnNetCleanup(UNetConnection* Connection)
 {

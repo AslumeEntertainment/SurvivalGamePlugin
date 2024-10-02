@@ -2,9 +2,10 @@
 
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Characters/HumanCharacter.h"
-#include "GAS/SG_AbilitySystemComponent.h"
+
 #include "Components/DamageDealingComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/HumanCharacter.h"
 
 
 ADamageDealingItem::ADamageDealingItem()

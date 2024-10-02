@@ -2,6 +2,7 @@
 
 
 #include "GAS/Abilities/SGGA_Interact.h"
+
 #include "Characters/SG_Character.h"
 #include "Interfaces/InteractableInterface.h"
 
@@ -18,17 +19,21 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	IInteractableInterface* FocusedInteractable = Cast<IInteractableInterface>(Player->GetFocusedInteractableObject());
 	if (FocusedInteractable == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility FocusedInteractable == nullptr"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	if (FocusedInteractable->bCanInteract(Player->GetController()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot interact!"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	FocusedInteractable->InteractRequest(Player->GetController());
 

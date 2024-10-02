@@ -2,19 +2,18 @@
 
 
 #include "Characters/HumanCharacter.h"
-#include "Interfaces/InteractableInterface.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Net/UnrealNetwork.h"
+
+#include "Interfaces/InteractableInterface.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Interactables/Items/ItemBase.h"
 #include "UI/HUD/InGameHUD.h"
-#include "Net/UnrealNetwork.h"
-#include "GameFoundation/PlayerStates/SG_PlayerState.h"
-
-#include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
 
 
 void AHumanCharacter::BeginPlay()

@@ -3,19 +3,14 @@
 
 #include "Characters/InGameCharacter.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Net/UnrealNetwork.h"
 
-#include "GameFoundation/PlayerStates/SG_PlayerState.h"
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/DamageDealingComponent.h"
-
-#include "AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
-#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 
 AInGameCharacter::AInGameCharacter()

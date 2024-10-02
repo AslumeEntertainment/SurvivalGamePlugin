@@ -16,5 +16,6 @@ public:
 
 	UMMC_RegenerationAmount();
 
-	virtual float CalculateBaseMagnitude(const FGameplayEffectSpec& Spec) const;
+	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
+
 };

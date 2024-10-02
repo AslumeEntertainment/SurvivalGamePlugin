@@ -2,14 +2,13 @@
 
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "GameplayEffect.h"
-#include "GameplayEffectExtension.h"
-#include "Characters/InGameCharacter.h"
-#include "Components/DamageDealingComponent.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Interfaces/HittableInterface.h"
 #include "Net/UnrealNetwork.h"
+
+#include "Characters/InGameCharacter.h"
+#include "Interfaces/HittableInterface.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 USG_AttributeSet::USG_AttributeSet()

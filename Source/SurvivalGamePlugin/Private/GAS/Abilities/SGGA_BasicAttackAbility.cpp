@@ -2,15 +2,17 @@
 
 
 #include "GAS/Abilities/SGGA_BasicAttackAbility.h"
-#include "Characters/HumanCharacter.h"
-#include "Interactables/Items/DamageDealingItem.h"
-#include "Animation/SG_AnimInstance.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_AbilitySystemComponent.h"
+
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "Components/DamageDealingComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/DamageDealingComponent.h"
+#include "GAS/SG_GameplayAbilityTargetData.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Animation/SG_AnimInstance.h"
+#include "Characters/HumanCharacter.h"
 
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
