@@ -6,8 +6,11 @@
 #include "Characters/SG_Character.h"
 #include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
+#include "Headers/ItemDataStruct.h"
 #include "InGameCharacter.generated.h"
 
+class AItemBase;
+class ADamageDealingItem;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -24,11 +27,26 @@ private:
 
 protected:
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	TMap<EEquipmentSlot, AItemBase*> EquipmentSlots;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	TMap<EEquipmentSlot, FName> EquipmentSockets;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* RightHandDamageDealingComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* UseMainHandItemAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* UseSecondaryHandItemAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* UnequipAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
@@ -38,10 +56,14 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
+	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
+
+	virtual void UnequipItem() PURE_VIRTUAL(AInGameCharacter::UnequipItem, );
+
 	void StartSprint();
 	void FinishSprint();
 
-	//void Die() override;
 
 public:
 
@@ -73,6 +95,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
+	UFUNCTION(BlueprintCallable)
+	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType) const;
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
+
+	UFUNCTION(BlueprintCallable)
+	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType) const;
+
+	UFUNCTION(BlueprintCallable)
+	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
+
+	UFUNCTION(BlueprintCallable)
+	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

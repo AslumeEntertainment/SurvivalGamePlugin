@@ -2,23 +2,16 @@
 
 
 #include "Characters/InGameCharacter.h"
-#include "Components/DamageDealingComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_CharacterAbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
-#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "Net/UnrealNetwork.h"
 
-//void AInGameCharacter::Die()
-//{
-//	Super::Die();
-//
-//	OnCharacterDeath.Broadcast();
-//
-//}
+#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/DamageDealingComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+
 
 AInGameCharacter::AInGameCharacter()
 {
@@ -35,6 +28,11 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+
+		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AInGameCharacter::UnequipItem);
+
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
@@ -96,6 +94,58 @@ void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentH
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+}
+
+bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const
+{
+	return EquipmentSlots.Contains(SlotType);
+}
+
+void AInGameCharacter::SetEquipedItemAtSlot_Implementation(EEquipmentSlot SlotType, AItemBase* Item)
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player cannot equip item because they don't have the slot for it!"));
+		return;
+	}
+
+	EquipmentSlots[SlotType] = Item;
+	return;
+}
+
+AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType) const
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player does not have an equipment slot of such type!"));
+		return nullptr;
+	}
+
+	return EquipmentSlots[SlotType];
+}
+
+TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
+{
+	TArray<ADamageDealingItem*> EquipedWeapons;
+	for (auto& EquipmentSlot : EquipmentSlots)
+	{
+		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
+		if (IsValid(EquipedWeapon))
+		{
+			EquipedWeapons.Add(EquipedWeapon);
+		}
+	}
+	return EquipedWeapons;
+}
+
+FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType) const
+{
+	if (HasEquipmentSlotOfType(SlotType) == false)
+	{
+		return FName();
+	}
+
+	return EquipmentSockets[SlotType];
 }
 
 bool AInGameCharacter::IsAlive()

@@ -6,7 +6,7 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "SGGA_BasicRestoringAbility.generated.h"
 
-class ASG_Character;
+class AInGameCharacter;
 class ARegeneratingItem;
 class USG_AnimInstance;
 
@@ -36,7 +36,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "OnNotifyRecieved")
 	float EffectPeriod;
 
-	ASG_Character* Player;
+	AInGameCharacter* Player;
 	ARegeneratingItem* RegeneratingItem;
 	USG_AnimInstance* AnimInst;
 

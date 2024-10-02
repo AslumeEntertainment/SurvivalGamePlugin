@@ -21,9 +21,6 @@ protected:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName MouthSocket;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* MouthDamageDealingComponent;
 
@@ -36,8 +33,4 @@ protected:
 	void AttemptBite();
 	void AttemptScratch();
 
-public:
-
-	UFUNCTION(BlueprintCallable)
-	FName GetMouthSocket();
 };

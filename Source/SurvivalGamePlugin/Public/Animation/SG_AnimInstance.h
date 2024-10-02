@@ -6,9 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "SG_AnimInstance.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AnimInstance : public UAnimInstance
 {
@@ -16,7 +14,7 @@ class SURVIVALGAMEPLUGIN_API USG_AnimInstance : public UAnimInstance
 	
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsMirrored = false;
 
 };

@@ -2,13 +2,12 @@
 
 
 #include "GAS/GameplayEffectCalculations/GEEC_CalculateFireDamage.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
-#include "AbilitySystemBlueprintLibrary.h"
-#include "Characters/HumanCharacter.h"
-#include "Characters/AnimalCharacter.h"
-#include "Animation/SG_AnimInstance.h"
 
 
 struct FSG_DamageStatics

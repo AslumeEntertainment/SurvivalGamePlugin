@@ -24,9 +24,6 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Equipment")
-	bool bUsesItem = false;
-
 	UPROPERTY(EditAnywhere, Category = "Animation", meta = (ToolTip = "Should this ability's animation be mirrored when used by a different hand"))
 	bool bCanBeMirrored = false;
 

@@ -3,6 +3,7 @@
 
 #include "Interactables/Items/RegeneratingItem.h"
 
+
 float ARegeneratingItem::GetRegenerationAmount()
 {
 	return RegenerationAmount;

@@ -8,7 +8,6 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayAbilitySpecHandle.h"
-#include "Interfaces/HittableInterface.h"
 #include "Headers/GameplayAbilityInputID.h"
 #include "Headers/GeneralDelegates.h"
 #include "SG_Character.generated.h"
@@ -18,14 +17,14 @@ class UCameraComponent;
 class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
-class USG_CharacterAbilitySystemComponent;
+class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface/*, public IHittableInterface*/
+class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -52,7 +51,7 @@ protected:
 
 	//---remove that when you clean the movement: line 135--
 	UPROPERTY(EditAnywhere, Category = "Developer")
-	bool bIsCamersMovementConstrained = false;
+	bool bIsCameraMovementConstrained = false;
 	//-----------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
@@ -61,11 +60,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName LeftHandSocket;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultAbilities;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character")
-	FName RightHandSocket;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultPassiveAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
+	USG_AbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(Transient)
+	USG_CharacterAttributeSet* AttributeSet;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -73,17 +81,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCamera;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* LeftHandDamageDealingComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* RightHandDamageDealingComponent;*/
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
@@ -94,22 +93,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* SprintAction;*/
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
-	USG_CharacterAbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY()
-	USG_CharacterAttributeSet* AttributeSet;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
 	void AttemptInteraction();
-
-	/*void StartSprint();
-	void FinishSprint();*/
 
 
 protected:
@@ -123,76 +111,29 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
 
+	virtual void PossessedBy(AController* NewController) override;
+
+	void OnRep_PlayerState() override;
+
+	void InitCharacterDefaults();
+
 
 public:
-
-	/*TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;*/
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldDrawDebug = true;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
-
-	/*UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHealthPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnHungerPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FHealthUpdateSignature OnEnergyPercentUpdated;*/
-
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-
-	/*virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-	virtual bool bCanBeHit() override;
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;*/
-
-	/*UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);*/
-
-	//that must go in InGameCharacter
-	/*UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	virtual void Die();*/
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
-
-	UFUNCTION(BlueprintCallable)
-	FName GetLeftHandSocket();
-
-	UFUNCTION(BlueprintCallable)
-	FName GetRightHandSocket();
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetPlayerLookAtLocation(float DistanceFromPlayer);
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
-
-	/*UFUNCTION(BlueprintCallable)
-	bool IsAlive();*/
-	
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	virtual void InitializeAttributes();
-	virtual void GiveAbilities();
-
-	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass);
-	void RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
-
-	virtual void PossessedBy(AController* NewController) override;
-	virtual void OnRep_PlayerState() override;
 
 	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 

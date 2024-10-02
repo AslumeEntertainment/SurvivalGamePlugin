@@ -2,25 +2,22 @@
 
 
 #include "Characters/SG_Character.h"
+
 #include "Engine/LocalPlayer.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "Interfaces/InteractableInterface.h"
 #include "Net/UnrealNetwork.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/SG_CharacterAbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
-#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+
+#include "Interfaces/InteractableInterface.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -54,15 +51,9 @@ ASG_Character::ASG_Character()
 	FirstPersonCamera->SetupAttachment(CameraBoom);
 	FirstPersonCamera->bUsePawnControlRotation = false;
 
-	/*LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
-	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
-	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));*/
-
-	AbilitySystemComponent = CreateDefaultSubobject<USG_CharacterAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
 }
@@ -158,23 +149,21 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	InitializeAttributes();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
 
-// Called every frame
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!IsLocallyControlled())
+	if (IsLocallyControlled() == false)
 	{
 		return;
 	}
 	EmitInteractionChecker();
 }
 
-// Called to bind functionality to input
 void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -189,24 +178,11 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
 	{
-		/*EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);*/
-
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASG_Character::Move);
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASG_Character::AttemptInteraction);
-
-		/*EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASG_Character::StartSprint);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASG_Character::FinishSprint);*/
-
-		if (AbilitySystemComponent && InputComponent)
-		{
-			FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-			const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-			AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
-		}
 	}
 	else
 	{
@@ -230,7 +206,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 	//--------------------------------this must not be here-----------------------------
-	if (bIsCamersMovementConstrained)
+	if (bIsCameraMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (!IsValid(PlayerController))
@@ -249,7 +225,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 
 void ASG_Character::Look(const FInputActionValue& Value)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	FVector2D LookAxisVector = Value.Get<FVector2D>(); 
 
 	if (Controller == nullptr)
 	{
@@ -263,91 +239,51 @@ void ASG_Character::Look(const FInputActionValue& Value)
 
 void ASG_Character::AttemptInteraction()
 {
-	if (FocusedInteractableObject == nullptr)
+	if (IsValid(FocusedInteractableObject))
 	{
-		if (bShouldDrawDebug == true)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("COULD NOT INTERACT WITH EMPTY FOCUS"));
-		}
-		return;
+		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
 	}
-
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
 }
 
-//void ASG_Character::StartSprint()
-//{
-//	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Sprint);
-//}
+void ASG_Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
 
-//void ASG_Character::FinishSprint()
-//{
-//	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Sprint);
-//}
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::PossessedBy"));
 
-//void ASG_Character::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Actor was hit"));
-//	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnHit Damage effect is applied"));
-//		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-//	}
-//}
+	InitCharacterDefaults();
 
-//bool ASG_Character::bCanBeHit()
-//{
-//	return IsAlive();
-//}
+	if (AbilitySystemComponent && InputComponent)
+	{
+		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
+		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
+	}
+}
 
-//void ASG_Character::OnHittableDestroyed_Implementation()
-//{
-//	bIsAlive = false;
-//
-//	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-//	GetMesh()->SetSimulatePhysics(true);
-//
-//	UnPossessed();
-//}
-//
-//void ASG_Character::OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
-//{
-//	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
-//}
-//
-//void ASG_Character::OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
-//{
-//	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
-//}
-//
-//void ASG_Character::OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
-//{
-//	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
-//}
+void ASG_Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
 
-//void ASG_Character::Die_Implementation()
-//{
-//	bIsAlive = false;
-//
-//	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-//	GetMesh()->SetSimulatePhysics(true);
-//
-//	UnPossessed();
-//}
+	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
+
+}
+
+void ASG_Character::InitCharacterDefaults()
+{
+	AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilities, this);
+	AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilities, this);
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+}
+
+UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
 
 UObject* ASG_Character::GetFocusedInteractableObject()
 {
 	return FocusedInteractableObject;
-}
-
-FName ASG_Character::GetLeftHandSocket()
-{
-	return LeftHandSocket;
-}
-
-FName ASG_Character::GetRightHandSocket()
-{
-	return RightHandSocket;
 }
 
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
@@ -358,97 +294,6 @@ FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 FRotator ASG_Character::GetRepControlRotation()
 {
 	return ControlRotation;
-}
-
-//bool ASG_Character::IsAlive()
-//{
-//	return bIsAlive;
-//}
-
-UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
-void ASG_Character::InitializeAttributes()
-{
-	if (AbilitySystemComponent && DefaultAttributeEffect)
-	{
-		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-		EffectContext.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContext);
-
-		if (SpecHandle.IsValid())
-		{
-			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-		}
-
-		AbilitySystemComponent->ApplyDefaultEffectsToSelf();
-	}
-}
-
-void ASG_Character::GiveAbilities()
-{
-	if (HasAuthority() && AbilitySystemComponent)
-	{
-		for (TSubclassOf<USG_GameplayAbility>& StartupAbility : DefaultAbilities)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
-		}
-	}
-}
-
-FGameplayAbilitySpecHandle ASG_Character::AddAbility(TSubclassOf<class USG_GameplayAbility> AbilityClass)
-{
-	if (!HasAuthority())
-	{
-		return FGameplayAbilitySpecHandle();
-	}
-
-	if (!IsValid(AbilityClass))
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::AddAbility_Implementation IsValid(AbilityClass) == false"));
-		return FGameplayAbilitySpecHandle();
-	}
-
-	FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1, static_cast<int32>(AbilityClass.GetDefaultObject()->AbilityInputID), this));
-	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability given!"));
-	return AbilitySpecHandle;
-}
-
-void ASG_Character::RemoveAbility(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle)
-{
-	if (!HasAuthority())
-	{
-		return;
-	}
-
-	AbilitySystemComponent->ClearAbility(RemovedAbilitySpecHandle);
-	//UE_LOG(LogTemplateCharacter, Warning, TEXT("Ability Removed!"));
-}
-
-void ASG_Character::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
-
-	GiveAbilities();
-}
-
-void ASG_Character::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
-
-	if (AbilitySystemComponent && InputComponent)
-	{
-		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
-	}
 }
 
 void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)

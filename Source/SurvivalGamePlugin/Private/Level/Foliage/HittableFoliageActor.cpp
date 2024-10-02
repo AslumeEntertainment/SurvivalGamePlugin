@@ -2,11 +2,13 @@
 
 
 #include "Level/Foliage/HittableFoliageActor.h"
+
 #include "Components/StaticMeshComponent.h"
-#include "GAS/AttributeSets/SG_AttributeSet.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 AHittableFoliageActor::AHittableFoliageActor()
@@ -27,8 +29,6 @@ AHittableFoliageActor::AHittableFoliageActor()
 void AHittableFoliageActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AbilitySystemComponent->ApplyDefaultEffectsToSelf();
 }
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
@@ -96,7 +96,7 @@ void AHittableFoliageActor::OnHittableDestroyed_Implementation()
 				NewActorLocation.X += FMath::RandRange(MinLocalBounds.X, MaxLocalBounds.X) * Spread;
 				NewActorLocation.Y += FMath::RandRange(MinLocalBounds.Y, MaxLocalBounds.Y) * Spread;
 
-				DroppedActor->SetActorLocation(NewActorLocation);
+				DroppedActor->SetActorLocation(NewActorLocation, false, nullptr, ETeleportType::ResetPhysics);
 			}
 		}
 	}

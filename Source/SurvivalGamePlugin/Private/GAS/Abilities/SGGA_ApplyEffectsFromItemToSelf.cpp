@@ -2,14 +2,15 @@
 
 
 #include "GAS/Abilities/SGGA_ApplyEffectsFromItemToSelf.h"
-#include "Characters/SG_Character.h"
-#include "Interactables/Items/EffectGrantingItem.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "Animation/SG_AnimInstance.h"
+
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include "Interactables/Items/EffectGrantingItem.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/InGameCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -19,7 +20,7 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = Cast<ASG_Character>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility IsValid(Player) == false"));
@@ -32,23 +33,10 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	if (!TriggerEventData->TargetData.Data[0].IsValid())
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility TriggerEventData->TargetData.Data[0].IsValid() == nullptr"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}
-
-	FSG_GameplayAbilityTargetData* CustomTargetData = static_cast<FSG_GameplayAbilityTargetData*>(TriggerEventData->TargetData.Data[0].Get());
-	if (CustomTargetData == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility CustomTargetData == nullptr"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}
-
-	EffectGrantingItem = Cast<AEffectGrantingItem>(CustomTargetData->ItemActor);
+	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary));
 	if (!IsValid(EffectGrantingItem))
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility RegeneratingItem == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility EffectGrantingItem == nullptr"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
@@ -86,10 +74,17 @@ void USGGA_ApplyEffectsFromItemToSelf::OnAnimMontageCanceled()
 
 void USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved(FGameplayEventData Payload)
 {
-	for (int i = 0; i < EffectGrantingItem->GetEffects().Num(); i++)
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
+	if (IsValid(ASC) == false)
 	{
-		FGameplayEffectSpecHandle GrantedEffectSpecHandle = EffectGrantingItem->CreateEffectSpecHandle(i);
-		Player->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*GrantedEffectSpecHandle.Data.Get());
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved IsValid(ASC) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	}
+
+	TMap<TSubclassOf<UGameplayEffect>, uint8> EffectsToGive = EffectGrantingItem->GetEffects();
+	for (TPair<TSubclassOf<UGameplayEffect>, int> Effect : EffectsToGive)
+	{
+		ASC->AddEffectFromClass(Effect.Key, Player, Effect.Value);
 	}
 
 	EffectGrantingItem->Server_LoseDurability(1.f);

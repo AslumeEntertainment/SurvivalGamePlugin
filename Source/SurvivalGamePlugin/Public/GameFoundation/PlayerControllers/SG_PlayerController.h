@@ -9,7 +9,6 @@
 
 #include "SG_PlayerController.generated.h"
 
-
 class USG_SaveGame;
 
 UENUM(BlueprintType)
@@ -24,7 +23,7 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API ASG_PlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 protected:
 
 	UPROPERTY()

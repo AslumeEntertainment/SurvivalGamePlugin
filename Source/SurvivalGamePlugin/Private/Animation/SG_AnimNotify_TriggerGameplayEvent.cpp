@@ -2,8 +2,10 @@
 
 
 #include "Animation/SG_AnimNotify_TriggerGameplayEvent.h"
-#include "Characters/SG_Character.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
+
+#include "Characters/SG_Character.h"
 
 
 void USG_AnimNotify_TriggerGameplayEvent::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)

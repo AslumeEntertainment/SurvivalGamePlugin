@@ -18,6 +18,14 @@ enum class EItemDisassembleRequirement : uint8
 	EmptyHand,
 };
 
+UENUM(BlueprintType)
+enum class EEquipmentSlot : uint8
+{
+	Main,
+	Secondary,
+	Mixed
+};
+
 USTRUCT(BlueprintType)
 struct FItemCraftingDataStruct : public FTableRowBase
 {
@@ -45,6 +53,7 @@ struct FItemDataStruct : public FTableRowBase
 		ItemImage = nullptr;
 		ItemMaxDurability = 0.f;
 		ItemAbility = nullptr;
+		EquipmentSlot = EEquipmentSlot::Main;
 	}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -60,7 +69,7 @@ struct FItemDataStruct : public FTableRowBase
 	TSubclassOf<USG_GameplayAbility> ItemAbility;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FGameplayTag ItemAbilityTag;
+	EEquipmentSlot EquipmentSlot;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;

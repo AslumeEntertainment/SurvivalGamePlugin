@@ -2,12 +2,13 @@
 
 
 #include "Components/DamageDealingComponent.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Interfaces/HittableInterface.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+
+#include "Interfaces/HittableInterface.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
-#include "GameplayEffect.h"
 
 
 UDamageDealingComponent::UDamageDealingComponent()

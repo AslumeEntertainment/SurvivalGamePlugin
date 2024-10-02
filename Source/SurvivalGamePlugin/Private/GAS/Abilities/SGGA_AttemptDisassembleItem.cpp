@@ -2,17 +2,17 @@
 
 
 #include "GAS/Abilities/SGGA_AttemptDisassembleItem.h"
-#include "Characters/HumanCharacter.h"
-#include "Interactables/Items/ItemBase.h"
-#include "Animation/SG_AnimInstance.h"
+
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Net/UnrealNetwork.h"
+
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GameplayEffectTypes.h"
-#include "GameplayEffect.h"
-#include "Net/UnrealNetwork.h"
+#include "Interactables/Items/ItemBase.h"
+#include "Characters/HumanCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_AttemptDisassembleItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -20,8 +20,6 @@ void USGGA_AttemptDisassembleItem::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USGGA_AttemptDisassembleItem, MainItemActor);
 	DOREPLIFETIME(USGGA_AttemptDisassembleItem, IngredientItemActor);
-	DOREPLIFETIME(USGGA_AttemptDisassembleItem, MainItemSocket);
-	DOREPLIFETIME(USGGA_AttemptDisassembleItem, IngredientItemSocket);
 }
 
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -47,28 +45,43 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	if (bCanDisassembleItem(Player->MainHandItem, Player->SecondaryHandItem))
+	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(EEquipmentSlot::Main);
+	if (IsValid(ItemForDisassembly) == false)
 	{
-		ItemForDisassembly = &Player->MainHandItem;
-		OtherItem = &Player->SecondaryHandItem;
-		MainItemSocket = Player->GetMainHandSocket();
-		IngredientItemSocket = Player->GetSecondaryHandSocket();
-	}
-	else if (bCanDisassembleItem(Player->SecondaryHandItem, Player->MainHandItem))
-	{
-		ItemForDisassembly = &Player->SecondaryHandItem;
-		OtherItem = &Player->MainHandItem;
-		MainItemSocket = Player->GetSecondaryHandSocket();
-		IngredientItemSocket = Player->GetMainHandSocket();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Disassembling: No item can be disassembled!"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(ItemForDisassembly) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
 	}
 
-	if (MainItemSocket == Player->GetLeftHandSocket())
+	ItemForDisassemblyData = DisassemlyInfoTable->FindRow<FDisassemblyProcessDataStruct>(ItemForDisassembly->GetItemDataRowName(), "");
+	if (ItemForDisassemblyData == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility ItemForDisassemblyData == nullptr"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+
+	switch (ItemForDisassemblyData->DisassembleRequirement)
+	{
+		case EItemDisassembleRequirement::Unable:
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
+			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		}
+		case EItemDisassembleRequirement::Always:
+		{
+			break;
+		}
+		case EItemDisassembleRequirement::EmptyHand:
+		{
+			if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
+				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			}
+			break;
+		}
+	}
+
+	if (Player->bIsRightHanded == false)
 	{
 		AnimInst->bIsMirrored = true;
 	}
@@ -96,47 +109,6 @@ void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle H
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-}
-
-bool USGGA_AttemptDisassembleItem::bCanDisassembleItem(AItemBase* MainItemForDisassembly, AItemBase* OtherEquipedItem)
-{
-	if (!IsValid(MainItemForDisassembly))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item is not valid!"));
-		return false;
-	}
-
-	FDisassemblyProcessDataStruct* ItemData = DisassemlyInfoTable->FindRow<FDisassemblyProcessDataStruct>(MainItemForDisassembly->GetItemDataRowName(), "");
-	if (!ItemData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::AttemptDisassembleItem ItemData == nullptr"));
-		return false;
-	}
-
-	switch (ItemData->DisassembleRequirement)
-	{
-		case EItemDisassembleRequirement::Unable:
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
-			return false;
-		}
-		case EItemDisassembleRequirement::Always:
-		{
-			break;
-		}
-		case EItemDisassembleRequirement::EmptyHand:
-		{
-			if (IsValid(OtherEquipedItem))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
-				return false;
-			}
-			break;
-		}
-	}
-
-	ItemForDisassemblyData = ItemData;
-	return true;
 }
 
 void USGGA_AttemptDisassembleItem::SpawnNewItems()
@@ -181,19 +153,19 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
-	(*ItemForDisassembly)->DestroyItem();
+	Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->DestroyItem();
 
 	if (IsValid(MainItemActor))
 	{
-		MainItemActor->OnItemEquiped(Player, MainItemSocket);
-		(*ItemForDisassembly) = MainItemActor;
+		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Main));
+		Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, MainItemActor);
 	}
-	if (!IsValid(*OtherItem) && IsValid(IngredientItemActor))
+	if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) == false && IsValid(IngredientItemActor))
 	{
-		IngredientItemActor->OnItemEquiped(Player, IngredientItemSocket);
-		*OtherItem = IngredientItemActor;
+		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary));
+		Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, IngredientItemActor);
 	}
-	else if (IsValid(*OtherItem) && IsValid(IngredientItemActor))
+	else if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());

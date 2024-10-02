@@ -2,15 +2,15 @@
 
 
 #include "Interactables/Items/ItemBase.h"
+
 #include "Components/StaticMeshComponent.h"
-#include "Components/DamageDealingComponent.h"
-#include "Characters/HumanCharacter.h"
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
-#include "GAS/SG_GameplayAbilityTargetData.h"
+#include "Components/DamageDealingComponent.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/InGameCharacter.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -56,36 +56,6 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 	NewActorPhysics ? StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics) : StaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-void AItemBase::Use(ASG_Character* PlayerOwner)
-{
-	AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
-	if (!IsValid(HumanPlayer))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::Use IsValid(PlayerOwner) == false"));
-		return;
-	}
-
-	FString AbilityTagSuffix;
-	if (GetAttachParentSocketName() == PlayerOwner->GetRightHandSocket())
-	{
-		AbilityTagSuffix = ".Right";
-	}
-	else
-	{
-		AbilityTagSuffix = ".Left";
-	}
-
-	FGameplayTag AbilityTag = FGameplayTag::RequestGameplayTag(FName(ItemData.ItemAbilityTag.ToString() + AbilityTagSuffix));
-	FGameplayEventData EventData;
-
-	FSG_GameplayAbilityTargetData* CustomTargetData = new FSG_GameplayAbilityTargetData();
-	CustomTargetData->ItemActor = this;
-	EventData.TargetData.Add(CustomTargetData);
-
-	UE_LOG(LogTemp, Warning, TEXT("AItemBase::Use Sending GameplayEvent with tag %s to player..."), *AbilityTag.ToString());
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(PlayerOwner, AbilityTag, EventData);
-}
-
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 {
 	CurrentDurability -= LostDurability;
@@ -95,16 +65,27 @@ void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 	}
 }
 
-void AItemBase::OnItemEquiped(ASG_Character* PlayerOwner, FName SocketName)
+void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemEquiped IsValid(ASC) == false"));
+		return;
+	}
+
 	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
 
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
+
+	if (HasAuthority())
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, static_cast<int32>((ItemData.ItemAbility).GetDefaultObject()->AbilityInputID), PlayerOwner);
+		AbilitySpecHandle = ASC->GiveAbility(Spec);
+	}
 	
-	AbilitySpecHandle = PlayerOwner->AddAbility(ItemData.ItemAbility);
 	bIsAttached = true;
-	//SetOwner(PlayerOwner);
 }
 
 void AItemBase::OnItemUnequiped()
@@ -116,15 +97,25 @@ void AItemBase::OnItemUnequiped()
 		return;
 	}
 
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(ASC) == false"));
+		return;
+	}
+
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
 	SetActorRotation(PlayerOwner->GetActorRotation());
 
 	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
 
-	PlayerOwner->RemoveAbility(AbilitySpecHandle);
+	if (HasAuthority())
+	{
+		ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
+	}
+	
 	bIsAttached = false;
-	//SetOwner(nullptr);
 }
 
 void AItemBase::DestroyItem()
@@ -143,27 +134,29 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
-	AHumanCharacter* InteractingPlayer = Cast<AHumanCharacter>(InteractingCharacter->GetPawn());
+	AInGameCharacter* InteractingPlayer = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
 	if (!IsValid(InteractingPlayer))
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == nullptr"));
 		return;
 	}
 
-	if (!IsValid(InteractingPlayer->MainHandItem) && IsValid(GetComponentByClass(UDamageDealingComponent::StaticClass())))
+	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)) == false)
 	{
-		InteractingPlayer->MainHandItem = this;
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetMainHandSocket());
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in main slot"));
+		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
 		return;
 	}
-	if (!IsValid(InteractingPlayer->SecondaryHandItem) && !IsValid(GetComponentByClass(UDamageDealingComponent::StaticClass())))
+	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)) == false)
 	{
-		InteractingPlayer->SecondaryHandItem = this;
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetSecondaryHandSocket());
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping in secondary slot"));
+		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
+		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 		return;
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Item could not be equiped"));
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)

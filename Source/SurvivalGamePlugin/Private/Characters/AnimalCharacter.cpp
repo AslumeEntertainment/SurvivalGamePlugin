@@ -2,9 +2,11 @@
 
 
 #include "Characters/AnimalCharacter.h"
-#include "Components/DamageDealingComponent.h"
+
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+#include "Components/DamageDealingComponent.h"
 
 
 AAnimalCharacter::AAnimalCharacter()
@@ -16,14 +18,6 @@ AAnimalCharacter::AAnimalCharacter()
 void AAnimalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -46,7 +40,3 @@ void AAnimalCharacter::AttemptScratch()
 	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::AnimalScratch);
 }
 
-FName AAnimalCharacter::GetMouthSocket()
-{
-	return MouthSocket;
-}
