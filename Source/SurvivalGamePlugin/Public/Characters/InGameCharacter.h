@@ -59,11 +59,6 @@ protected:
 	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
 	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
 
-	virtual void UnequipItem() PURE_VIRTUAL(AInGameCharacter::UnequipItem, );
-
-	void StartSprint();
-	void FinishSprint();
-
 
 public:
 

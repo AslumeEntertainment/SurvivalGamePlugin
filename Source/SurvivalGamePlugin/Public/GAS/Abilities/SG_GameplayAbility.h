@@ -4,12 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "Headers/GameplayAbilityInputID.h"
 #include "SG_GameplayAbility.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_GameplayAbility : public UGameplayAbility
 {
@@ -20,5 +17,6 @@ public:
 	USG_GameplayAbility();
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
-	EGameplayAbilityInputID AbilityInputID = EGameplayAbilityInputID::None;
+	FGameplayTag InputTag;
+
 };

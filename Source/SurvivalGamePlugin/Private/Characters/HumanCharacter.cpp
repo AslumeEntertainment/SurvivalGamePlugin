@@ -34,14 +34,8 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Completed, this, &AHumanCharacter::CancelUnequipItem);
-		
-		EnhancedInputComponent->BindAction(AbilityAction, ETriggerEvent::Triggered, this, &AHumanCharacter::UseDebugAbility);
-
 		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Started, this, &AHumanCharacter::OpenCraftingWindow);
 		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Completed, this, &AHumanCharacter::CloseCraftingWindow);
-
-		EnhancedInputComponent->BindAction(DisassembleAction, ETriggerEvent::Triggered, this, &AHumanCharacter::AttemptDisassembleItem);
 	}
 
 	else
@@ -56,7 +50,7 @@ void AHumanCharacter::MainHandAction()
 
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), &EventData);
+		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipMain"), &EventData);
 		return;
 	}
 
@@ -74,7 +68,7 @@ void AHumanCharacter::SecondaryHandAction()
 
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), &EventData);
+		AbilitySystemComponent->Server_SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary"), EventData);//HandleGameplayEvent(FGameplayTag::RequestGameplayTag("PlayerAction.UnequipSecondary"), &EventData);
 		return;
 	}
 
@@ -84,26 +78,6 @@ void AHumanCharacter::SecondaryHandAction()
 
 	//rework after player state changes
 	AbilitySystemComponent->HandleGameplayEvent(AbilityTag, &EventData);
-}
-
-void AHumanCharacter::UnequipItem()
-{
-	if (!IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) && !IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No items to unequip"));
-		return;
-	}
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Unequip);
-}
-
-void AHumanCharacter::CancelUnequipItem()
-{
-	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Unequip);
-}
-
-void AHumanCharacter::UseDebugAbility()
-{
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Action);
 }
 
 void AHumanCharacter::OpenCraftingWindow()
@@ -126,17 +100,6 @@ void AHumanCharacter::OpenCraftingWindow()
 void AHumanCharacter::CloseCraftingWindow()
 {
 	CraftingWindowCloseDelegate.Broadcast();
-}
-
-void AHumanCharacter::AttemptDisassembleItem()
-{
-	if (!IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) && !IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Disassembing: Player is not holding any items!"));
-		return;
-	}
-
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Disassemble);
 }
 
 void AHumanCharacter::CraftItem(FText ProductItemName)

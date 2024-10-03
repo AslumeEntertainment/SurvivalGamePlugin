@@ -81,7 +81,8 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 
 	if (HasAuthority())
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, static_cast<int32>((ItemData.ItemAbility).GetDefaultObject()->AbilityInputID), PlayerOwner);
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
+		Spec.DynamicAbilityTags.AddTag(ItemData.ItemAbility.GetDefaultObject()->InputTag);
 		AbilitySpecHandle = ASC->GiveAbility(Spec);
 	}
 	

@@ -30,7 +30,4 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* AnimalScratchAction;
 
-	void AttemptBite();
-	void AttemptScratch();
-
 };
