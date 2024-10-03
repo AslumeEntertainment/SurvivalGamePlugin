@@ -3,18 +3,18 @@
 
 #include "Characters/SG_Character.h"
 
-#include "Engine/LocalPlayer.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputActionValue.h"
-#include "Net/UnrealNetwork.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "EnhancedInputSubsystems.h"
+#include "Camera/CameraComponent.h"
+#include "Engine/LocalPlayer.h"
+#include "Net/UnrealNetwork.h"
+#include "InputActionValue.h"
 
+#include "Components/SG_EnhancedInputComponent.h"
 #include "Interfaces/InteractableInterface.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
@@ -176,13 +176,13 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		}
 	}
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
+	if (USG_EnhancedInputComponent* SG_EnhancedInputComponent = Cast<USG_EnhancedInputComponent>(PlayerInputComponent)) 
 	{
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASG_Character::Move);
+		SG_EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASG_Character::Move);
 
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
+		SG_EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASG_Character::AttemptInteraction);
+		SG_EnhancedInputComponent->BindAbilityActions(AbilityInputConfig, this, &ASG_Character::AbilityInputPressed, &ASG_Character::AbilityInputReleased);
 	}
 	else
 	{
@@ -237,42 +237,53 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	Server_SetRepControlRotation(GetControlRotation());
 }
 
-void ASG_Character::AttemptInteraction()
+void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
 {
-	if (IsValid(FocusedInteractableObject))
+	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
-		SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Interact);
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AbilityInputPressed IsValid(GetAbilitySystemComponent()) == false"));
 	}
+	AbilitySystemComponent->AbilityInputPressed(InputTag);
+}
+
+void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
+{
+	if (IsValid(GetAbilitySystemComponent()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AbilityInputReleased IsValid(GetAbilitySystemComponent()) == false"));
+	}
+	AbilitySystemComponent->AbilityInputReleased(InputTag);
 }
 
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::PossessedBy"));
-
 	InitCharacterDefaults();
-
-	if (AbilitySystemComponent && InputComponent)
-	{
-		FTopLevelAssetPath InputEnumPath = FTopLevelAssetPath(TEXT("/Script/SurvivalGamePlugin"), TEXT("EGameplayAbilityInputID"));
-		const FGameplayAbilityInputBinds Binds(FString("Confirm"), FString("Cancel"), InputEnumPath, static_cast<int32>(EGameplayAbilityInputID::Confirm), static_cast<int32>(EGameplayAbilityInputID::Cancel));
-		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
-	}
 }
 
 void ASG_Character::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
-	UE_LOG(LogTemp, Warning, TEXT("ASG_Character::OnRep_PlayerState"));
-
 }
 
 void ASG_Character::InitCharacterDefaults()
 {
-	AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilities, this);
-	AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilities, this);
+	/* There might be a better way to do this */
+	TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultAbilitiesMap;
+	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultAbilities)
+	{
+		DefaultAbilitiesMap.Add(Ability, 1);
+	}
+	
+	TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultPassiveAbilitiesMap;
+	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultPassiveAbilities)
+	{
+		DefaultPassiveAbilitiesMap.Add(Ability, 1);
+	}
+
+	AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilitiesMap, this);
+	AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilitiesMap, this);
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
 }
 
@@ -294,23 +305,5 @@ FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 FRotator ASG_Character::GetRepControlRotation()
 {
 	return ControlRotation;
-}
-
-void ASG_Character::SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID)
-{
-	if (!IsValid(AbilitySystemComponent))
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SendLocalInputToAbilitySystemComponent IsValid(AbilitySystemComponent) == false"));
-		return;
-	}
-
-	if (bIsPressed)
-	{
-		AbilitySystemComponent->AbilityLocalInputPressed(static_cast<int32>(AbilityInputID));
-	}
-	else
-	{
-		AbilitySystemComponent->AbilityLocalInputReleased(static_cast<int32>(AbilityInputID));
-	}
 }
 

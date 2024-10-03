@@ -31,29 +31,14 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
 		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
 
-		EnhancedInputComponent->BindAction(UnequipAction, ETriggerEvent::Started, this, &AInGameCharacter::UnequipItem);
-
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AInGameCharacter::StartSprint);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AInGameCharacter::FinishSprint);
 	}
 
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
-}
-
-void AInGameCharacter::StartSprint()
-{
-	SendLocalInputToAbilitySystemComponent(true, EGameplayAbilityInputID::Sprint);
-}
-
-void AInGameCharacter::FinishSprint()
-{
-	SendLocalInputToAbilitySystemComponent(false, EGameplayAbilityInputID::Sprint);
 }
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)

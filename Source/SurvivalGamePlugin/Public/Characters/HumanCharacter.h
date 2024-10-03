@@ -45,15 +45,8 @@ protected:
 	void MainHandAction() override;
 	void SecondaryHandAction() override;
 
-	void UnequipItem() override;
-	void CancelUnequipItem();
-
-	void UseDebugAbility();
-
 	void OpenCraftingWindow();
 	void CloseCraftingWindow();
-
-	void AttemptDisassembleItem();
 
 public:
 

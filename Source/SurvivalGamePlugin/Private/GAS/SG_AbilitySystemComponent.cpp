@@ -8,6 +8,7 @@
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
 
+
 void USG_AbilitySystemComponent::Server_SendGameplayEventToSelf_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Server_SendGameplayEventToSelf - %s"), *EventTag.ToString());
@@ -18,6 +19,55 @@ void USG_AbilitySystemComponent::Client_SendGameplayEventToSelf_Implementation(F
 {
 	UE_LOG(LogTemp, Warning, TEXT("Client_SendGameplayEventToSelf - %s"), *EventTag.ToString());
 	Server_SendGameplayEventToSelf(EventTag, Payload);
+}
+
+void USG_AbilitySystemComponent::AbilityInputPressed(const FGameplayTag& InputTag)
+{
+	if (InputTag.IsValid() == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::AbilityInputPressed InputTag.IsValid() == false"));
+		return;
+	}
+
+	ABILITYLIST_SCOPE_LOCK();
+
+	for (const FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+	{
+		if (Spec.DynamicAbilityTags.HasTag(InputTag) == false)
+		{
+			continue;
+		}
+
+		if (Spec.IsActive() == false)
+		{
+			TryActivateAbility(Spec.Handle);
+		}
+		else
+		{
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
+		}
+	}
+}
+
+void USG_AbilitySystemComponent::AbilityInputReleased(const FGameplayTag& InputTag)
+{
+	if (InputTag.IsValid() == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::AbilityInputPressed InputTag.IsValid() == false"));
+		return;
+	}
+
+	ABILITYLIST_SCOPE_LOCK();
+
+	for (const FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+	{
+		if (Spec.DynamicAbilityTags.HasTag(InputTag) == false)
+		{
+			continue;
+		}
+
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
+	}
 }
 
 FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, UObject* Instigator, uint8 Level)
@@ -50,10 +100,15 @@ void USG_AbilitySystemComponent::RemoveEffectFromSpec(FActiveGameplayEffectHandl
 
 void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator)
 {
-	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
+	for (const TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, static_cast<int32>((Ability.Key).GetDefaultObject()->AbilityInputID), Instigator);
-		GiveAbility(Spec);
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, INDEX_NONE, Instigator);
+		
+		if (const USG_GameplayAbility* SG_Ability = Cast<USG_GameplayAbility>(Spec.Ability))
+		{
+			Spec.DynamicAbilityTags.AddTag(SG_Ability->InputTag);
+			GiveAbility(Spec);
+		}
 	}
 }
 
@@ -61,7 +116,7 @@ void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG
 {
 	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, static_cast<int32>((Ability.Key).GetDefaultObject()->AbilityInputID), Instigator);
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(Ability.Key, Ability.Value, INDEX_NONE, Instigator);
 		GiveAbilityAndActivateOnce(Spec);
 	}
 }

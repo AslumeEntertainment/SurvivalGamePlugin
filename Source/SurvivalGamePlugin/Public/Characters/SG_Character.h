@@ -6,10 +6,10 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
-#include "GameplayEffectTypes.h"
-#include "GameplayAbilitySpecHandle.h"
-#include "Headers/GameplayAbilityInputID.h"
+#include "GameplayTagContainer.h"
+
 #include "Headers/GeneralDelegates.h"
+
 #include "SG_Character.generated.h"
 
 class USpringArmComponent;
@@ -17,6 +17,7 @@ class UCameraComponent;
 class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
+class UAbilityInputConfig;
 class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
 struct FInputActionValue;
@@ -60,14 +61,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultAbilities;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
+	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TMap<TSubclassOf<class USG_GameplayAbility>, int> DefaultPassiveAbilities;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
+	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultPassiveAbilities;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|Input")
+	UAbilityInputConfig* AbilityInputConfig;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
@@ -97,7 +101,8 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
-	void AttemptInteraction();
+	void AbilityInputPressed(FGameplayTag InputTag);
+	void AbilityInputReleased(FGameplayTag InputTag);
 
 
 protected:
@@ -134,7 +139,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
-
-	void SendLocalInputToAbilitySystemComponent(bool bIsPressed, const EGameplayAbilityInputID AbilityInputID);
 
 };
