@@ -14,6 +14,9 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 
     FSG_GameplayAbilityTargetData() {}
 
+    UPROPERTY()
+    FName OptionalNameProperty;
+
     virtual UScriptStruct* GetScriptStruct() const override
     {
         return FSG_GameplayAbilityTargetData::StaticStruct();
@@ -21,6 +24,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
 
     bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
     {
+        Ar << OptionalNameProperty;
         bOutSuccess = true;
         return true;
     }

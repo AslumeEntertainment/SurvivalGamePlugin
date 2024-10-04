@@ -21,6 +21,12 @@ void USG_AbilitySystemComponent::Client_SendGameplayEventToSelf_Implementation(F
 	Server_SendGameplayEventToSelf(EventTag, Payload);
 }
 
+void USG_AbilitySystemComponent::NetMulticast_SendGameplayEventToSelf_Implementation(FGameplayTag EventTag, FGameplayEventData Payload)
+{
+	UE_LOG(LogTemp, Warning, TEXT("NetMulticast_SendGameplayEventToSelf - %s"), *EventTag.ToString());
+	Server_SendGameplayEventToSelf(EventTag, Payload);
+}
+
 void USG_AbilitySystemComponent::AbilityInputPressed(const FGameplayTag& InputTag)
 {
 	if (InputTag.IsValid() == false)

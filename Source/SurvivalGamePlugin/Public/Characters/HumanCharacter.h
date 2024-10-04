@@ -8,9 +8,8 @@
 #include "HumanCharacter.generated.h"
 
 class AItemBase;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCraftingNotifySignature, FItemDataStruct, MainItemData, FName, IngredientItemName);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUINotifySignature);
+class UItemIconWidget;
+class UCraftingWindowWidget;
 
 UENUM(BlueprintType)
 enum class EInputMappingContextState : uint8
@@ -29,6 +28,15 @@ protected:
 	virtual void BeginPlay();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;
+
+	UPROPERTY()
+	UCraftingWindowWidget* CraftingWindowWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* CraftingWindowOnlyMappingContext;
@@ -55,12 +63,10 @@ public:
 
 	UFUNCTION()
 	void CraftItem(FText ProductItemName);
+
 	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();
-
-	FCraftingNotifySignature CraftingWindowOpenDelegate;
-	FUINotifySignature CraftingWindowCloseDelegate;
 
 };

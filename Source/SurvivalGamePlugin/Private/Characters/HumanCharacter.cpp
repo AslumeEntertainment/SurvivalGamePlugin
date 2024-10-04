@@ -4,15 +4,18 @@
 #include "Characters/HumanCharacter.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "EnhancedInputSubsystems.h"
+#include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputActionValue.h"
 #include "Net/UnrealNetwork.h"
+#include "InputActionValue.h"
 
 #include "Interfaces/InteractableInterface.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Interactables/Items/ItemBase.h"
+#include "UI/Widgets/CraftingWindowWidget.h"
+#include "UI/Widgets/ItemIconWidget.h"
 #include "UI/HUD/InGameHUD.h"
 
 
@@ -26,6 +29,18 @@ void AHumanCharacter::BeginPlay()
 		EquipmentSockets[EEquipmentSlot::Main] == EquipmentSockets[EEquipmentSlot::Secondary];
 		EquipmentSockets[EEquipmentSlot::Secondary] = Temp;
 	}
+
+	if (IsLocallyControlled())
+	{
+		UWorld* World = GetWorld();
+		if (!IsValid(World))
+		{
+			UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::BeginPlay IsValid(World) == false"));
+			return;
+		}
+
+		CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
+	}
 }
 
 void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -34,8 +49,8 @@ void AHumanCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Started, this, &AHumanCharacter::OpenCraftingWindow);
-		EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Completed, this, &AHumanCharacter::CloseCraftingWindow);
+		//EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Started, this, &AHumanCharacter::OpenCraftingWindow);
+		//EnhancedInputComponent->BindAction(CraftingAction, ETriggerEvent::Completed, this, &AHumanCharacter::CloseCraftingWindow);
 	}
 
 	else
@@ -82,7 +97,7 @@ void AHumanCharacter::SecondaryHandAction()
 
 void AHumanCharacter::OpenCraftingWindow()
 {
-	if (!IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) || !IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+	/*if (!IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) || !IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player needs to have an item in both hands!"));
 		return;
@@ -93,13 +108,60 @@ void AHumanCharacter::OpenCraftingWindow()
 		UE_LOG(LogTemp, Warning, TEXT("Crafting: Player cannot craft anything with their current items!"));
 		return;
 	}
-	
-	CraftingWindowOpenDelegate.Broadcast(GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData, GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName());
+
+	if (IsValid(CraftingWindowWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(CraftingWindowWidget) == false"));
+		return;
+	}
+
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(PlayerCont) == false"));
+		return;
+	}
+
+	for (FItemCraftingDataStruct CraftingRecipe : GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.CraftableItems)
+	{
+		if (CraftingRecipe.IngredientItemID == GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName())
+		{
+			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
+			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
+			ItemIcon->SetItemName(CraftingRecipe.ProductItemName);
+			ItemIcon->IconClicked.AddDynamic(this, &AHumanCharacter::CraftItem);
+			CraftingWindowWidget->AddCraftingRecipe(ItemIcon);
+		}
+	}
+
+	SwitchInputMappingContext(EInputMappingContextState::Crafting);
+	CraftingWindowWidget->AddToViewport();
+	PlayerCont->SetInputMode(FInputModeGameAndUI());
+	PlayerCont->bShowMouseCursor = true;
+	*/
 }
 
 void AHumanCharacter::CloseCraftingWindow()
 {
-	CraftingWindowCloseDelegate.Broadcast();
+	if (IsValid(CraftingWindowWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::CloseCraftingWindow IsValid(CraftingWindowWidget) == false"));
+		return;
+	}
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::CloseCraftingWindow IsValid(PlayerCont) == false"));
+		return;
+	}
+
+	CraftingWindowWidget->RemoveFromParent();
+	CraftingWindowWidget->ClearRecipes();
+
+	SwitchInputMappingContext(EInputMappingContextState::Default);
+
+	PlayerCont->SetInputMode(FInputModeGameOnly());
+	PlayerCont->bShowMouseCursor = false;
 }
 
 void AHumanCharacter::CraftItem(FText ProductItemName)

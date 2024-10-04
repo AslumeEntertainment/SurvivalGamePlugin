@@ -59,10 +59,12 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		}
+
 		case EItemDisassembleRequirement::Always:
 		{
 			break;
 		}
+
 		case EItemDisassembleRequirement::EmptyHand:
 		{
 			if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
@@ -125,6 +127,7 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 	{
 		MainItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
 	}
+
 	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(IngredientItemActor))
 	{
@@ -160,11 +163,13 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payl
 		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Main));
 		Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, MainItemActor);
 	}
+
 	if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) == false && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary));
 		Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, IngredientItemActor);
 	}
+
 	else if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));

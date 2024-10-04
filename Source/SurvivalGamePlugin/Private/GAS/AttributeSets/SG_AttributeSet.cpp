@@ -38,7 +38,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeChange IsValid(ASC) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
 		return;
 	}
 
