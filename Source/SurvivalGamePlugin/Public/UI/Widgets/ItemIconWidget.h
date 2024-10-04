@@ -41,4 +41,5 @@ public:
 	void SetItemImage(UTexture2D* ItemImage);
 
 	FTextTransferSignature IconClicked;
+
 };

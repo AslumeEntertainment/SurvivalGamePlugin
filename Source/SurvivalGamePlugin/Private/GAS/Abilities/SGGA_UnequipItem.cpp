@@ -72,8 +72,6 @@ void USGGA_UnequipItem::UnequipMain(FGameplayEventData Payload)
 	Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, nullptr);
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Dropping main item confirmed!"));
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 
@@ -87,8 +85,6 @@ void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
 	Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, nullptr);
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Dropping secondary item confirmed!"));
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_UnequipItem::OnUnequipCanceled(float TimeHeld)

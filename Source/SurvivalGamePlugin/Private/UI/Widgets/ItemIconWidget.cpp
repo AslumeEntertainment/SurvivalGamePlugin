@@ -3,9 +3,13 @@
 
 #include "UI/Widgets/ItemIconWidget.h"
 
+#include "GameplayTagContainer.h"
+#include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
-#include "Components/TextBlock.h"
+
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/SG_Character.h"
 
 void UItemIconWidget::OnIconClicked()
 {

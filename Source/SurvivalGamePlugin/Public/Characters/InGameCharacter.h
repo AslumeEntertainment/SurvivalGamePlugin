@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
+
 #include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
+
 #include "InGameCharacter.generated.h"
 
 class AItemBase;

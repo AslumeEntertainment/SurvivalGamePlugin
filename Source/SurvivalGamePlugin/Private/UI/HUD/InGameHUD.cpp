@@ -5,10 +5,11 @@
 
 #include "Kismet/GameplayStatics.h"
 
-#include "Characters/HumanCharacter.h"
+#include "UI/Widgets/CraftingWindowWidget.h"
 #include "UI/Widgets/InGameOverlayWidget.h"
 #include "UI/Widgets/ItemIconWidget.h"
-#include "UI/Widgets/CraftingWindowWidget.h"
+#include "Characters/InGameCharacter.h"
+
 
 void AInGameHUD::BeginPlay()
 {
@@ -35,79 +36,19 @@ void AInGameHUD::BeginPlay()
 	}
 
 	GameplayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayWidgetClass);
-	CraftingWindowWidget = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
 
 	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
 	Player->OnHungerPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
 	Player->OnEnergyPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
-	
-	if (Cast<AHumanCharacter>(Player))
-	{
-		Cast<AHumanCharacter>(Player)->CraftingWindowOpenDelegate.AddDynamic(this, &AInGameHUD::OpenCraftingWindow);
-		Cast<AHumanCharacter>(Player)->CraftingWindowCloseDelegate.AddDynamic(this, &AInGameHUD::CloseCraftingWindow);
-	}
 
 	ShowGameplayWidget();
 }
 
 void AInGameHUD::ShowGameplayWidget()
 {
-	if (!PlayerOwner || !GameplayWidget)
+	if (PlayerOwner && GameplayWidget)
 	{
-		return;
+		GameplayWidget->AddToViewport();
 	}
-
-	GameplayWidget->AddToViewport();
 }
 
-void AInGameHUD::OpenCraftingWindow(FItemDataStruct MainItemData, FName IngredientItemName)
-{
-	if (!PlayerOwner || !CraftingWindowWidget)
-	{
-		return;
-	}
-
-	AHumanCharacter* Player = Cast<AHumanCharacter>(PlayerOwner->GetPawn());
-	if (!IsValid(Player))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ToggleCraftingWindow IsValid(Player) == false"));
-		return;
-	}
-
-	for (FItemCraftingDataStruct CraftingRecipe : MainItemData.CraftableItems)
-	{
-		if (CraftingRecipe.IngredientItemID == IngredientItemName)
-		{
-			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
-			ItemIcon->SetItemName(CraftingRecipe.ProductItemName);
-			ItemIcon->IconClicked.AddDynamic(Player, &AHumanCharacter::CraftItem);
-			CraftingWindowWidget->AddCraftingRecipe(ItemIcon);
-		}
-	}
-
-	Player->SwitchInputMappingContext(EInputMappingContextState::Crafting);
-	CraftingWindowWidget->AddToViewport();
-	PlayerOwner->SetInputMode(FInputModeGameAndUI());
-	PlayerOwner->bShowMouseCursor = true;
-}
-
-void AInGameHUD::CloseCraftingWindow()
-{
-	if (!PlayerOwner || !CraftingWindowWidget)
-	{
-		return;
-	}
-	AHumanCharacter* Player = Cast<AHumanCharacter>(PlayerOwner->GetPawn());
-	if (!IsValid(Player))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::CloseCraftingWindow IsValid(Player) == false"));
-		return;
-	}
-
-	Player->SwitchInputMappingContext(EInputMappingContextState::Default);
-	CraftingWindowWidget->RemoveFromParent();
-	CraftingWindowWidget->ClearRecipes();
-	PlayerOwner->SetInputMode(FInputModeGameOnly());
-	PlayerOwner->bShowMouseCursor = false;
-}

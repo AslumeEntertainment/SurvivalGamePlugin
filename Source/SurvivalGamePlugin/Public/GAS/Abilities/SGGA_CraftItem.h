@@ -7,7 +7,11 @@
 #include "Headers/ItemDataStruct.h"
 #include "SGGA_CraftItem.generated.h"
 
+class UItemIconWidget;
+class UCraftingWindowWidget;
+class UAbilityTask_WaitInputRelease;
 class AHumanCharacter;
+class APlayerController;
 class USG_AnimInstance;
 
 UCLASS()
@@ -17,6 +21,7 @@ class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 
 public:
 
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
@@ -25,8 +30,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
+	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;
+
+	UPROPERTY()
+	UCraftingWindowWidget* CraftingWindow;
+
+	UPROPERTY()
+	UAbilityTask_WaitInputRelease* WaitInputReleaseTask;
+
 	AHumanCharacter* Player;
+
+	APlayerController* PlayerCont;
+
 	USG_AnimInstance* AnimInst;
+
 	float OldSpeed;
 
 	UPROPERTY(Replicated)
@@ -35,6 +56,18 @@ protected:
 	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;
+
+	UFUNCTION()
+	void OpenCraftingWindow();
+
+	UFUNCTION()
+	void CloseCraftingWindow();
+
+	UFUNCTION()
+	void CancelCrafting(float TimeHeld);
+
+	UFUNCTION()
+	void StartCrafting(FText ItemName);
 
 	UFUNCTION()
 	void SpawnProductItem();
