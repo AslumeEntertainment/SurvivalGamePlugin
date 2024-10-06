@@ -8,15 +8,6 @@
 #include "HumanCharacter.generated.h"
 
 class AItemBase;
-class UItemIconWidget;
-class UCraftingWindowWidget;
-
-UENUM(BlueprintType)
-enum class EInputMappingContextState : uint8
-{
-	Default,
-	Crafting
-};
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AHumanCharacter : public AInGameCharacter
@@ -28,18 +19,6 @@ protected:
 	virtual void BeginPlay();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
-	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
-	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;
-
-	UPROPERTY()
-	UCraftingWindowWidget* CraftingWindowWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* CraftingWindowOnlyMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* AbilityAction;
@@ -53,18 +32,10 @@ protected:
 	void MainHandAction() override;
 	void SecondaryHandAction() override;
 
-	void OpenCraftingWindow();
-	void CloseCraftingWindow();
-
 public:
 
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
-
-	UFUNCTION()
-	void CraftItem(FText ProductItemName);
-
-	void SwitchInputMappingContext(EInputMappingContextState InputContextState);
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();

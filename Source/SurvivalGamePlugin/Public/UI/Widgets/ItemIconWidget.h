@@ -15,7 +15,7 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API UItemIconWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 protected:
 
 	UFUNCTION()

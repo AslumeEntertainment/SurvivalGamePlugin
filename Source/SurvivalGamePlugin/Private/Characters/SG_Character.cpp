@@ -307,3 +307,19 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
+void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SendGameplayEventToSelf(EventTag, EventData);
+		if(bServerOnly) return;
+	}
+
+	AbilitySystemComponent->HandleGameplayEvent(EventTag, &EventData);
+}
+
+void ASG_Character::Server_SendGameplayEventToSelf_Implementation(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
+{
+	SendGameplayEventToSelf(EventTag, EventData);
+}
+

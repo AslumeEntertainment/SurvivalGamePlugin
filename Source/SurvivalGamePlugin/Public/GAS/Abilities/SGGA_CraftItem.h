@@ -67,7 +67,10 @@ protected:
 	void CancelCrafting(float TimeHeld);
 
 	UFUNCTION()
-	void StartCrafting(FText ItemName);
+	void OnItemToCraftSelected(FText itemName);
+
+	UFUNCTION()
+	void StartCrafting(FGameplayEventData Payload);
 
 	UFUNCTION()
 	void SpawnProductItem();
