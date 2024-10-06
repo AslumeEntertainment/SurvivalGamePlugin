@@ -140,4 +140,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 
+	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
+
+private:
+
+	UFUNCTION(Server, Reliable)
+	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
+
 };

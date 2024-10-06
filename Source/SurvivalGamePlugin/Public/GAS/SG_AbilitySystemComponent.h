@@ -16,16 +16,6 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 
 public:
 
-	/* we need this for unequiping, will be removed later */
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void NetMulticast_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData Payload);
-
 	void AbilityInputPressed(const FGameplayTag& InputTag);
 
 	void AbilityInputReleased(const FGameplayTag& InputTag);

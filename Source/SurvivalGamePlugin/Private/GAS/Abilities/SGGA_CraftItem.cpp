@@ -22,8 +22,8 @@
 void USGGA_CraftItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(USGGA_CraftItem, ProductItem);
-	DOREPLIFETIME(USGGA_CraftItem, ProductItemSocketName);
+	//DOREPLIFETIME(USGGA_CraftItem, ProductItem);
+	//DOREPLIFETIME(USGGA_CraftItem, ProductItemSocketName);
 }
 
 bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
@@ -49,7 +49,6 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 		return false;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Ability can be activated!"));
 	return true;
 }
 
@@ -69,12 +68,15 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 	OldSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute());
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Opening crafting window!"));
 	OpenCraftingWindow();
 
 	WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_CraftItem::CancelCrafting);
 	WaitInputReleaseTask->ReadyForActivation();
+
+	UAbilityTask_WaitGameplayEvent* WaitStartCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Craft"), nullptr, true, false);
+	WaitStartCraftingTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::StartCrafting);
+	WaitStartCraftingTask->ReadyForActivation();
 }
 
 void USGGA_CraftItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -115,7 +117,7 @@ void USGGA_CraftItem::OpenCraftingWindow()
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
 			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
 			ItemIcon->SetItemName(CraftingRecipe.ProductItemName);
-			ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::StartCrafting);
+			ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
 			CraftingWindow->AddCraftingRecipe(ItemIcon);
 		}
 	}
@@ -123,8 +125,6 @@ void USGGA_CraftItem::OpenCraftingWindow()
 	CraftingWindow->AddToViewport();
 	PlayerCont->SetInputMode(FInputModeGameAndUI());
 	PlayerCont->bShowMouseCursor = true;
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Crafting window opened!"));
 }
 
 void USGGA_CraftItem::CloseCraftingWindow()
@@ -139,23 +139,29 @@ void USGGA_CraftItem::CloseCraftingWindow()
 
 	PlayerCont->SetInputMode(FInputModeGameOnly());
 	PlayerCont->bShowMouseCursor = false;
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Crafting window closed!"));
 }
 
 void USGGA_CraftItem::CancelCrafting(float TimeHeld)
 {
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Canceling crafting!"));
-
 	CloseCraftingWindow();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USGGA_CraftItem::StartCrafting(FText ItemName)
+void USGGA_CraftItem::OnItemToCraftSelected(FText itemName)
+{
+	CloseCraftingWindow();
+
+	FString GameplayTagString = FString(TEXT("Craft.")) + itemName.ToString();
+	GameplayTagString.RemoveSpacesInline();
+	FGameplayTag ProductNameTag = FGameplayTag::RequestGameplayTag(FName(GameplayTagString));
+
+	Player->SendGameplayEventToSelf(ProductNameTag, FGameplayEventData());
+}
+
+void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Starting to craft!"));
 
-	CloseCraftingWindow();
 	WaitInputReleaseTask->EndTask();
 
 	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
@@ -164,16 +170,17 @@ void USGGA_CraftItem::StartCrafting(FText ItemName)
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(AnimInst) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
+	if (Player->bIsRightHanded == false)
+	{
+		AnimInst->bIsMirrored = true;
+	}
 	if (!IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)) || !IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	//FName ProductItemName = FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
-	FString ItemNameString = ItemName.ToString();
-	ItemNameString.RemoveSpacesInline();
-	FName ProductItemName = FName(ItemNameString);
+	FName ProductItemName = FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
 
 	ProductItemData = CraftingInfoTable->FindRow<FCraftingProcessDataStruct>(ProductItemName, "");
 	if (ProductItemData == nullptr)
@@ -182,10 +189,7 @@ void USGGA_CraftItem::StartCrafting(FText ItemName)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	if (HasAuthority(&CurrentActivationInfo))
-	{
-		SpawnProductItem();
-	}
+	SpawnProductItem();
 
 	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed * ProductItemData->MovementSpeedMultiplier);
 
@@ -194,13 +198,18 @@ void USGGA_CraftItem::StartCrafting(FText ItemName)
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCanceled);
 	PlayMontageTask->ReadyForActivation();
 
-	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"), nullptr, true, true);
-	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
-	WaitGameplayEventTask->ReadyForActivation();
+	UAbilityTask_WaitGameplayEvent* WaitFinishCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"), nullptr, true, true);
+	WaitFinishCraftingTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
+	WaitFinishCraftingTask->ReadyForActivation();
 }
 
 void USGGA_CraftItem::SpawnProductItem()
 {
+	if (HasAuthority(&CurrentActivationInfo) == false)
+	{
+		return;
+	}
+
 	UWorld* World = GetWorld();
 	if (!IsValid(World))
 	{
@@ -215,11 +224,6 @@ void USGGA_CraftItem::SpawnProductItem()
 	else if (Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
 	{
 		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary);
-	}
-
-	if (Player->bIsRightHanded == false)
-	{
-		AnimInst->bIsMirrored = true;
 	}
 
 	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
@@ -249,8 +253,6 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 
 void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Gameplay Event recieved"));
-
 	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()))
 	{
 		Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->DestroyItem();
