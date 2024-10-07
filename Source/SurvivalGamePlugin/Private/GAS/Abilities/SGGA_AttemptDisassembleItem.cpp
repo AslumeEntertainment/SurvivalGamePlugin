@@ -122,16 +122,20 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
+	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability;
+
 	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(MainItemActor))
 	{
 		MainItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
+		MainItemActor->SetDurability(MainItemActor->GetDurability() * ItemDurabilityPercent);
 	}
 
 	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
+		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems - New items have been spawned and kept hidden until ability has finished"));

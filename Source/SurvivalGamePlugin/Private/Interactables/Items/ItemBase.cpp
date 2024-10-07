@@ -65,6 +65,16 @@ void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 	}
 }
 
+float AItemBase::GetDurability() const
+{
+	return CurrentDurability;
+}
+
+void AItemBase::SetDurability(float InDurability)
+{
+	CurrentDurability = InDurability;
+}
+
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(PlayerOwner->GetAbilitySystemComponent());

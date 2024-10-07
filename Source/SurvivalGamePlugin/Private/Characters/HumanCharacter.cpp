@@ -127,17 +127,10 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
-		if (GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetActorEnableCollision())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem has collisions enabled"), *Prefix);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem does not have collisions enabled"), *Prefix);
-		}
-
 
 		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability(),
+			GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability , GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability);
 	}
 	else
 	{
@@ -156,16 +149,10 @@ void AHumanCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
-		if (GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetActorEnableCollision())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem has collisions enabled"), *Prefix);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem does not have collisions enabled"), *Prefix);
-		}
 
 		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability(),
+			GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability, GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability() / GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability);
 	}
 	else
 	{
