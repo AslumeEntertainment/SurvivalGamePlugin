@@ -217,19 +217,26 @@ void USGGA_CraftItem::SpawnProductItem()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 	
-	if (Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
-	{
-		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Main);
-	}
-	else if (Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName() == ProductItemData->ItemsToDestroy[0])
+	float ProductItemDurabilityPercent = 0.f;
+
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()))
 	{
 		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary);
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability;
+	}
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName()))
+	{
+		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Main);
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability;
+		ProductItemDurabilityPercent /= 2;
 	}
 
 	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(ProductItem))
 	{
 		ProductItem->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
+
+		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::SpawnProductItem - Product item has been spawned and kept hidden until ability has finished"));

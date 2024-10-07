@@ -31,6 +31,10 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHealth());
 	}
+	if (Attribute == GetMaxHealthAttribute())
+	{
+		//ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
+	}
 }
 
 void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
@@ -77,6 +81,27 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+}
+
+void USG_AttributeSet::ClampAttributeOnMaxValueChanged(const FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const
+{
+	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+	const float CurrentMaxValue = MaxAttribute.GetCurrentValue();
+
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::ClampAttributeOnMaxValueChanged IsValid(ASC) == false"));
+		return;
+	}
+	
+	float CurrentValue = AffectedAttribute.GetCurrentValue();
+	if (CurrentValue <= 0)
+	{
+		return;
+	}
+	
+	FMath::Clamp<float>(CurrentValue, 0, CurrentMaxValue);
+	ASC->SetNumericAttributeBase(AffectedAttributeProperty, CurrentValue);
 }
 
 bool USG_AttributeSet::HasMaxHealth() const

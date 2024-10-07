@@ -44,9 +44,17 @@ void USG_CharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute&
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHunger());
 	}
+	if (Attribute == GetMaxHungerAttribute())
+	{
+		//ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
+	}
 	if (Attribute == GetEnergyAttribute())
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxEnergy());
+	}
+	if (Attribute == GetMaxEnergyAttribute())
+	{
+		//ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
 	}
 }
 

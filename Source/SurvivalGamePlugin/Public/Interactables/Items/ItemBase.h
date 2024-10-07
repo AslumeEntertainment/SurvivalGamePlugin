@@ -56,6 +56,12 @@ public:
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_LoseDurability(float LostDurability);
 
+	UFUNCTION()
+	float GetDurability() const;
+
+	UFUNCTION()
+	void SetDurability(float InDurability);
+
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName);
 
