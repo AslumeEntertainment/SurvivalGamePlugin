@@ -17,6 +17,7 @@
 #include "Components/SG_EnhancedInputComponent.h"
 #include "Interfaces/InteractableInterface.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -150,7 +151,12 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	if (IsValid(GetAbilitySystemComponent()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(GetAbilitySystemComponent()) == false"))
+		return;
+	}
+	GetAbilitySystemComponent()->InitAbilityActorInfo(this, this);
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -242,6 +248,7 @@ void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AbilityInputPressed IsValid(GetAbilitySystemComponent()) == false"));
+		return;
 	}
 	AbilitySystemComponent->AbilityInputPressed(InputTag);
 }
@@ -251,6 +258,7 @@ void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::AbilityInputReleased IsValid(GetAbilitySystemComponent()) == false"));
+		return;
 	}
 	AbilitySystemComponent->AbilityInputReleased(InputTag);
 }
@@ -260,6 +268,7 @@ void ASG_Character::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitCharacterDefaults();
+	BindCallbacksToDependencies();
 }
 
 void ASG_Character::OnRep_PlayerState()
@@ -269,6 +278,11 @@ void ASG_Character::OnRep_PlayerState()
 
 void ASG_Character::InitCharacterDefaults()
 {
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitCharacterDefaults IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
 	/* There might be a better way to do this */
 	TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultAbilitiesMap;
 	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultAbilities)
@@ -299,7 +313,7 @@ UObject* ASG_Character::GetFocusedInteractableObject()
 
 FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 {
-	return GetActorLocation() + GetFirstPersonCamera()->GetForwardVector() * DistanceFromPlayer;
+	return (GetActorLocation() + GetFirstPersonCamera()->GetRelativeLocation()) + GetFirstPersonCamera()->GetForwardVector() * DistanceFromPlayer;
 }
 
 FRotator ASG_Character::GetRepControlRotation()

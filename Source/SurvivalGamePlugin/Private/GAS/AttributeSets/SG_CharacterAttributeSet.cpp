@@ -128,11 +128,6 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 
 	if (Data.EvaluatedData.Attribute == GetHungerAttribute())
 	{
-		if (GetHunger() <= GetMaxHunger() / 2)
-		{
-			TargetCharacter->Client_OnUpdatePlayerHunger(GetHunger(), GetMaxHunger());
-		}
-		
 		if (GetHunger() >= GetMaxHunger() * 0.99)
 		{
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
@@ -147,11 +142,6 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 			}
 		}
-	}
-
-	if (Data.EvaluatedData.Attribute == GetEnergyAttribute() && GetEnergy() < GetMaxEnergy() / 2)
-	{
-		TargetCharacter->Client_OnUpdatePlayerEnergy(GetEnergy(), GetMaxEnergy() / 2);
 	}
 }
 

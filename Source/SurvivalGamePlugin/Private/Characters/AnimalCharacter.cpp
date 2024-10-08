@@ -15,18 +15,4 @@ AAnimalCharacter::AAnimalCharacter()
 	MouthDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("head"));
 }
 
-void AAnimalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	/*if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		
-	}
-	else
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("AAnimalCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
-	}*/
-}
-
 
