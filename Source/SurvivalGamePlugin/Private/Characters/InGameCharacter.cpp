@@ -11,6 +11,7 @@
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/DamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 
 AInGameCharacter::AInGameCharacter()
@@ -39,6 +40,46 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AInGameCharacter::BindCallbacksToDependencies()
+{
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BindCallbacksToDependencies IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	if (IsValid(AttributeSet) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BindCallbacksToDependencies IsValid(AttributeSet) == false"));
+		return;
+	}
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerHunger(Data.NewValue, AttributeSet->GetMaxHunger());
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
+		}
+	);
+}
+
+void AInGameCharacter::BroadcastInitialValues()
+{
+	// empty for now
 }
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
@@ -73,12 +114,18 @@ void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentH
 
 void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
 {
-	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
+	if (CurrentHunger <= MaxHunger / 2)
+	{
+		OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
+	}
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
-	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+	if (CurrentEnergy <= MaxEnergy / 2)
+	{
+		OnEnergyPercentUpdated.Broadcast(CurrentEnergy / (MaxEnergy / 2));
+	}
 }
 
 bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const

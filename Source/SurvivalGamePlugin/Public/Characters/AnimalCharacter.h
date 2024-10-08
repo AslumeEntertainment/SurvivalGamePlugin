@@ -19,15 +19,8 @@ public:
 
 protected:
 
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* MouthDamageDealingComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* AnimalBiteAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* AnimalScratchAction;
 
 };

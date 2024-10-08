@@ -122,6 +122,9 @@ protected:
 
 	void InitCharacterDefaults();
 
+	virtual void BindCallbacksToDependencies() PURE_VIRTUAL(ASG_Character::BindCallbacksToDependencies, );
+	virtual void BroadcastInitialValues() PURE_VIRTUAL(ASG_Character::BroadcastInitialValues, );
+
 
 public:
 

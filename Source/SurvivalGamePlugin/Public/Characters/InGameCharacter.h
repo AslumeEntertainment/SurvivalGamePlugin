@@ -61,21 +61,13 @@ protected:
 	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
 	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
 
+	virtual void BindCallbacksToDependencies() override;
+	virtual void BroadcastInitialValues() override;
+
 
 public:
 
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
-
-	FVoidDataTransferSignature OnCharacterDeath;
-
-	UPROPERTY(BlueprintCallable)
-	FFloatTransferSignature OnHealthPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FFloatTransferSignature OnHungerPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
-	FFloatTransferSignature OnEnergyPercentUpdated;
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 
@@ -110,5 +102,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
+
+	FVoidDataTransferSignature OnCharacterDeath;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnHealthPercentUpdated;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnHungerPercentUpdated;
+
+	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnEnergyPercentUpdated;
 
 };

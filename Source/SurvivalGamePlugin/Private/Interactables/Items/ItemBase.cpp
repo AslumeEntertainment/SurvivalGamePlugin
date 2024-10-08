@@ -152,15 +152,25 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)) == false)
+	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed))  
 	{
+		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)))
+		{
+			InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)->OnItemUnequiped();
+		}
+		
 		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
 		return;
 	}
-	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot) && IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)) == false)
+	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot))
 	{
+		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)))
+		{
+			InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)->OnItemUnequiped();
+		}
+
 		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));

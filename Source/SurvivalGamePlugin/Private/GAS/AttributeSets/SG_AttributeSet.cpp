@@ -69,12 +69,6 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			HittableAvatarActor->OnHittableDestroyed();
 		}
-
-		AInGameCharacter* AvatarActor = Cast<AInGameCharacter>(ASC->GetAvatarActor());
-		if (IsValid(AvatarActor))
-		{
-			AvatarActor->Client_OnUpdatePlayerHealth(GetHealth(), GetMaxHealth());
-		}
 	}
 }
 

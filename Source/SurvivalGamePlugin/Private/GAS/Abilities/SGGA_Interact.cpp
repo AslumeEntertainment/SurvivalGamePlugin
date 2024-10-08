@@ -36,13 +36,6 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		return;
 	}
 	FocusedInteractable->InteractRequest(Player->GetController());
-
-	if (HasAuthority(&ActivationInfo)) {
-		UE_LOG(LogTemp, Warning, TEXT("Server: Interact Successful!"))
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("Client: Interact Successful!"))
-	}
 	
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
