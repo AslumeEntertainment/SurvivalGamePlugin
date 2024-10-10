@@ -234,14 +234,30 @@ void ALobbyManager::SendCampaign()
 
 void ALobbyManager::InteractRequest(AController* InteractingCharacter)
 {
+	if (InteractingCharacter->IsLocalPlayerController() == false)
+	{
+		return;
+	}
+	if (HasAuthority() == true)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Lobby Interacting on the server"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Lobby Interacting on the CLIENT"));
+	}
 	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
 	if (IsValid(InteractingPlayer) == false)
 	{
 		return;
 	}
+
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
-	
-	SetupSelectorWidget();
+
+	if (HasAuthority() == true)
+	{
+		SetupSelectorWidget();
+	}
 
 	LobbyManagingWidget->Show();
 }
