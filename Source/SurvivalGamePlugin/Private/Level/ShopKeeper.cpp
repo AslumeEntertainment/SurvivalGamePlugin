@@ -54,6 +54,20 @@ void AShopKeeper::BeginPlay()
 
 void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 {
+	if (InteractingCharacter->IsLocalPlayerController() == false)
+	{
+		return;
+	}
+
+	if (HasAuthority() == true)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Shop Interacting on the server"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Shop Interacting on the CLIENT"));
+	}
+
 	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
 	if (IsValid(InteractingPlayer) == false)
 	{
