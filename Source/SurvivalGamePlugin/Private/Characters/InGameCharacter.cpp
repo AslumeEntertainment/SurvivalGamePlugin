@@ -3,6 +3,7 @@
 
 #include "Characters/InGameCharacter.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -11,6 +12,7 @@
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/DamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 
@@ -21,6 +23,29 @@ AInGameCharacter::AInGameCharacter()
 
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactRecieved);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
+{
+	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
+{
+	if (CurrentHunger <= MaxHunger / 2)
+	{
+		OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
+	}
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
+{
+	if (CurrentEnergy <= MaxEnergy / 2)
+	{
+		OnEnergyPercentUpdated.Broadcast(CurrentEnergy / (MaxEnergy / 2));
+	}
 }
 
 void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -40,6 +65,23 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AInGameCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if(AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.FallDamageImmunity")) == false)
+	{
+		USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, FMath::Abs(GetVelocity().Z));
+	}
+	
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Player has fallen! Their velocity was %f"), GetVelocity().Z));
+}
+
+void AInGameCharacter::OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Size(), OtherActor->GetVelocity().Size()));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -75,6 +117,27 @@ void AInGameCharacter::BindCallbacksToDependencies()
 			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
 		}
 	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetSpeedAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetJumpVelocityAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			GetCharacterMovement()->JumpZVelocity = Data.NewValue;
+		}
+	);
 }
 
 void AInGameCharacter::BroadcastInitialValues()
@@ -99,33 +162,14 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 {
 	bIsAlive = false;
 
+	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
+
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
 	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 
 	UnPossessed();
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
-{
-	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
-{
-	if (CurrentHunger <= MaxHunger / 2)
-	{
-		OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
-	}
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
-{
-	if (CurrentEnergy <= MaxEnergy / 2)
-	{
-		OnEnergyPercentUpdated.Broadcast(CurrentEnergy / (MaxEnergy / 2));
-	}
 }
 
 bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const

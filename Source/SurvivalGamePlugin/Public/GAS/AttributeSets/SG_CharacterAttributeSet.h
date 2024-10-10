@@ -69,6 +69,10 @@ public:
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Speed);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_JumpVelocity)
+	FGameplayAttributeData JumpVelocity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, JumpVelocity);
+
 	bool HasMaxHunger() const;
 	bool HasMaxEnergy() const;
 
@@ -103,5 +107,8 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Speed(const FGameplayAttributeData& OldSpeed);
+
+	UFUNCTION()
+	virtual void OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity);
 
 };

@@ -34,6 +34,7 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, EnergyDrainRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Speed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, JumpVelocity, COND_None, REPNOTIFY_Always);
 }
 
 void USG_CharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -73,11 +74,6 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(AvatarActor) == false"));
 		return;
-	}
-
-	if (Attribute == GetSpeedAttribute())
-	{
-		AvatarActor->GetCharacterMovement()->MaxWalkSpeed = NewValue;
 	}
 
 	if (Attribute == GetAttackAttribute())
@@ -203,5 +199,10 @@ void USG_CharacterAttributeSet::OnRep_EnergyDrainRate(const FGameplayAttributeDa
 void USG_CharacterAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldSpeed)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Speed, OldSpeed);
+}
+
+void USG_CharacterAttributeSet::OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, JumpVelocity, OldJumpVelocity);
 }
 

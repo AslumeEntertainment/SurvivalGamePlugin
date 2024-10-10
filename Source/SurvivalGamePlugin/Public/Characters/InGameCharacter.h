@@ -27,6 +27,15 @@ private:
 
 	bool bIsAlive = true;
 
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
@@ -58,6 +67,11 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void Landed(const FHitResult& Hit) override;
+
+	UFUNCTION()
+	virtual void OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
 	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
 	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
 
@@ -75,15 +89,6 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
 
 	UFUNCTION(BlueprintCallable)
 	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType) const;

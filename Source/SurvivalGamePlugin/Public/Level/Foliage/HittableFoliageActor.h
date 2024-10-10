@@ -47,9 +47,6 @@ protected:
 		meta = (ToolTip = "Defines the limit to how much a dropped actor can be rotated when spawned"))
 	float RotationLimit = 0.5f;
 
-	UPROPERTY(EditAnywhere, Category = "ActorTick")
-	float InvincibilityTime = 2.f;
-
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
 
@@ -58,6 +55,10 @@ protected:
 
 	UPROPERTY()
 	USG_AttributeSet* AttributeSet;
+
+	UFUNCTION()
+	virtual void OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
 
 public:	
 	
