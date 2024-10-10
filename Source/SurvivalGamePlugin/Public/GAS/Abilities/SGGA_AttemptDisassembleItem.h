@@ -25,18 +25,23 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	UPROPERTY(EditDefaultsOnly, Category = "DisassemblyInfo")
 	UDataTable* DisassemlyInfoTable;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
 	AHumanCharacter* Player;
+
 	USG_AnimInstance* AnimInst;
-	float OldSpeed;
+
+	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* MainItemActor;
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* IngredientItemActor;
 
 	UFUNCTION()

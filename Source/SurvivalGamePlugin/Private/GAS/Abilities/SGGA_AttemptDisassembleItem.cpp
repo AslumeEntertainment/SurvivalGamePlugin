@@ -15,13 +15,6 @@
 #include "Animation/SG_AnimInstance.h"
 
 
-void USGGA_AttemptDisassembleItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(USGGA_AttemptDisassembleItem, MainItemActor);
-	DOREPLIFETIME(USGGA_AttemptDisassembleItem, IngredientItemActor);
-}
-
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
@@ -36,9 +29,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	OldSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute());
-
-	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(EEquipmentSlot::Main);
+	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"));
 	if (IsValid(ItemForDisassembly) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(ItemForDisassembly) == false"));
@@ -64,10 +55,9 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		{
 			break;
 		}
-
 		case EItemDisassembleRequirement::EmptyHand:
 		{
-			if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+			if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
 				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -93,7 +83,10 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		SpawnNewItems();
 	}
 
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed * ItemForDisassemblyData->MovementSpeedMultiplier);
+	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
+	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
+	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ItemForDisassemblyData->MovementSpeedMultiplier);
+	SpeedReductionEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpec);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCompleted);
@@ -107,7 +100,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed);
+	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -122,7 +115,7 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability;
+	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability;
 
 	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(MainItemActor))
@@ -160,21 +153,21 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
-	Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->DestroyItem();
+	Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->DestroyItem();
 
 	if (IsValid(MainItemActor))
 	{
-		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Main));
-		Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, MainItemActor);
+		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")));
+		Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"), MainItemActor);
 	}
 
-	if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) == false && IsValid(IngredientItemActor))
+	if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) == false && IsValid(IngredientItemActor))
 	{
-		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary));
-		Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, IngredientItemActor);
+		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")));
+		Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"), IngredientItemActor);
 	}
 
-	else if (IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) && IsValid(IngredientItemActor))
+	else if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());

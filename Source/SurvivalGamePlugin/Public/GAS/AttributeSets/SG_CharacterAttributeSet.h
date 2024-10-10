@@ -19,8 +19,6 @@ class SURVIVALGAMEPLUGIN_API USG_CharacterAttributeSet : public USG_AttributeSet
 	
 public:
 
-	USG_CharacterAttributeSet();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;

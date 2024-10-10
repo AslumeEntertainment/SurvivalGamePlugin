@@ -31,7 +31,7 @@ void AHittableFoliageActor::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AHittableFoliageActor::OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AHittableFoliageActor::OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor)
 {
 }
 

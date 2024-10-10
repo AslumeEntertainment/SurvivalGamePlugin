@@ -30,6 +30,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
 
@@ -48,11 +51,11 @@ protected:
 
 	USG_AnimInstance* AnimInst;
 
-	float OldSpeed;
+	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* ProductItem;
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;

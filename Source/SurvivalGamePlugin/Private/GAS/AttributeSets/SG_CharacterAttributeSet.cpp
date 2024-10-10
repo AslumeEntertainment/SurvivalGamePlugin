@@ -12,9 +12,6 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
-USG_CharacterAttributeSet::USG_CharacterAttributeSet()
-{
-}
 
 void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -45,17 +42,9 @@ void USG_CharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute&
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHunger());
 	}
-	if (Attribute == GetMaxHungerAttribute())
-	{
-		//ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
-	}
 	if (Attribute == GetEnergyAttribute())
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxEnergy());
-	}
-	if (Attribute == GetMaxEnergyAttribute())
-	{
-		//ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
 	}
 }
 
@@ -85,6 +74,14 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		{
 			DamageDealingComponent->SetDefaultDamageValue(NewValue);
 		}
+	}
+	if (Attribute == GetMaxHungerAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
+	}
+	if (Attribute == GetMaxEnergyAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
 	}
 }
 

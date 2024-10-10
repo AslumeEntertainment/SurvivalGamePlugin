@@ -11,10 +11,6 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 
 
-USG_AttributeSet::USG_AttributeSet()
-{
-}
-
 void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -30,10 +26,6 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 	if (Attribute == GetHealthAttribute())
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHealth());
-	}
-	if (Attribute == GetMaxHealthAttribute())
-	{
-		//ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
 	}
 }
 
@@ -72,9 +64,12 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 	}
 }
 
-void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
-	Super::PostGameplayEffectExecute(Data);
+	if (Attribute == GetMaxHealthAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
+	}
 }
 
 void USG_AttributeSet::ClampAttributeOnMaxValueChanged(const FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const
@@ -94,7 +89,7 @@ void USG_AttributeSet::ClampAttributeOnMaxValueChanged(const FGameplayAttributeD
 		return;
 	}
 	
-	FMath::Clamp<float>(CurrentValue, 0, CurrentMaxValue);
+	CurrentValue = FMath::Clamp<float>(CurrentValue, 0, CurrentMaxValue);
 	ASC->SetNumericAttributeBase(AffectedAttributeProperty, CurrentValue);
 }
 

@@ -24,7 +24,12 @@ AInGameCharacter::AInGameCharacter()
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
-	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactRecieved);
+	OnActorBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
+}
+
+void AInGameCharacter::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -79,7 +84,7 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Player has fallen! Their velocity was %f"), GetVelocity().Z));
 }
 
-void AInGameCharacter::OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AInGameCharacter::OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Size(), OtherActor->GetVelocity().Size()));
 }
@@ -172,32 +177,45 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 	UnPossessed();
 }
 
-bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const
+bool AInGameCharacter::HasEquipmentSlotWithTag(FGameplayTag SlotTag) const
 {
-	return EquipmentSlots.Contains(SlotType);
+	return EquipmentSlots.Contains(SlotTag);
 }
 
-void AInGameCharacter::SetEquipedItemAtSlot_Implementation(EEquipmentSlot SlotType, AItemBase* Item)
+void AInGameCharacter::SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item)
 {
-	if (HasEquipmentSlotOfType(SlotType) == false)
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player cannot equip item because they don't have the slot for it!"));
 		return;
 	}
 
-	EquipmentSlots[SlotType] = Item;
+	EquipmentSlots[SlotTag] = Item;
 	return;
 }
 
-AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType) const
+AItemBase* AInGameCharacter::GetEquipedItemAtSlot(FGameplayTag SlotTag) const
 {
-	if (HasEquipmentSlotOfType(SlotType) == false)
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player does not have an equipment slot of such type!"));
 		return nullptr;
 	}
 
-	return EquipmentSlots[SlotType];
+	return EquipmentSlots[SlotTag];
+}
+
+TArray<AItemBase*> AInGameCharacter::GetAllEquipedItems() const
+{
+	TArray<AItemBase*> EquipedItems;
+	for (auto& EquipmentSlot : EquipmentSlots)
+	{
+		if (IsValid(EquipmentSlot.Value))
+		{
+			EquipedItems.Add(EquipmentSlot.Value);
+		}
+	}
+	return EquipedItems;
 }
 
 TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
@@ -214,14 +232,14 @@ TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
 	return EquipedWeapons;
 }
 
-FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType) const
+FName AInGameCharacter::GetEquipmentSocketWithTag(FGameplayTag SlotTag) const
 {
-	if (HasEquipmentSlotOfType(SlotType) == false)
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
 	{
 		return FName();
 	}
 
-	return EquipmentSockets[SlotType];
+	return EquipmentSockets[SlotTag];
 }
 
 bool AInGameCharacter::IsAlive()

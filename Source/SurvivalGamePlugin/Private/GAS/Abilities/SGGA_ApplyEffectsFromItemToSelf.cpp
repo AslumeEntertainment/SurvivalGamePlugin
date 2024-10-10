@@ -33,7 +33,7 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary));
+	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")));
 	if (!IsValid(EffectGrantingItem))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility EffectGrantingItem == nullptr"));
@@ -87,5 +87,5 @@ void USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved(FGameplayEventData Payloa
 		ASC->AddEffectFromClass(Effect.Key, Player, Effect.Value);
 	}
 
-	EffectGrantingItem->Server_LoseDurability(1.f);
+	EffectGrantingItem->LoseDurability(1.f);
 }

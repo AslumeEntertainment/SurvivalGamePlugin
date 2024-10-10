@@ -23,11 +23,11 @@ void AHumanCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (bIsRightHanded == false && EquipmentSlots.Contains(EEquipmentSlot::Main) && EquipmentSlots.Contains(EEquipmentSlot::Secondary))
+	if (bIsRightHanded == false && EquipmentSlots.Contains(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")) && EquipmentSlots.Contains(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")))
 	{
-		FName Temp = EquipmentSockets[EEquipmentSlot::Main];
-		EquipmentSockets[EEquipmentSlot::Main] == EquipmentSockets[EEquipmentSlot::Secondary];
-		EquipmentSockets[EEquipmentSlot::Secondary] = Temp;
+		FName Temp = EquipmentSockets[FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")];
+		EquipmentSockets[FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")] == EquipmentSockets[FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")];
+		EquipmentSockets[FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")] = Temp;
 	}
 }
 
@@ -47,7 +47,7 @@ void AHumanCharacter::MainHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
 	}
@@ -66,7 +66,7 @@ void AHumanCharacter::SecondaryHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
 	}
@@ -115,11 +115,11 @@ void AHumanCharacter::ShowPlayerInfo()
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
 	}
 
-	if (IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Main)))
+	if (IsValid(GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a valid pointer"), *Prefix);
 
-		if (GetEquipedItemAtSlot(EEquipmentSlot::Main)->bCanInteract(GetController()))
+		if (GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->bCanInteract(GetController()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
@@ -128,20 +128,21 @@ void AHumanCharacter::ShowPlayerInfo()
 			UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemName.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability(),
-			GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability , GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability);
+		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability(),
+			GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability , 
+			GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability() / GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability);
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s MainHandItem == nullptr"), *Prefix);
 	}
 
-	if (IsValid(GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+	if (IsValid(GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a valid pointer"), *Prefix);
 
-		if (GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->bCanInteract(GetController()))
+		if (GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->bCanInteract(GetController()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix);
 		}
@@ -150,9 +151,10 @@ void AHumanCharacter::ShowPlayerInfo()
 			UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem cannot be interacted with as it is currently equiped by the player"), *Prefix);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemName.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability(),
-			GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability, GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability() / GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability);
+		UE_LOG(LogTemp, Warning, TEXT("%s SecondaryHandItem is a %s"), *Prefix, *GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->ItemData.ItemName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("%s Durability is %f out of %f - %f percent"), *Prefix, GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetDurability(),
+			GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->ItemData.ItemMaxDurability, 
+			GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetDurability() / GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->ItemData.ItemMaxDurability);
 	}
 	else
 	{

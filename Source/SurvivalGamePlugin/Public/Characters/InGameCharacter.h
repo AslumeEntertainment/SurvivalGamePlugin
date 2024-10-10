@@ -38,11 +38,13 @@ private:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<EEquipmentSlot, AItemBase*> EquipmentSlots;
+	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<EEquipmentSlot, FName> EquipmentSockets;
+	TMap<FGameplayTag, AItemBase*> EquipmentSlots;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	TMap<FGameplayTag, FName> EquipmentSockets;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
@@ -70,7 +72,7 @@ protected:
 	virtual void Landed(const FHitResult& Hit) override;
 
 	UFUNCTION()
-	virtual void OnImpactRecieved(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	virtual void OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor) override;
 
 	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
 	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
@@ -91,19 +93,22 @@ public:
 	virtual void OnHittableDestroyed() override;
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType) const;
+	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
+	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType) const;
+	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
+
+	UFUNCTION(BlueprintCallable)
+	TArray<AItemBase*> GetAllEquipedItems() const;
 
 	UFUNCTION(BlueprintCallable)
 	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
 
 	UFUNCTION(BlueprintCallable)
-	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType) const;
+	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

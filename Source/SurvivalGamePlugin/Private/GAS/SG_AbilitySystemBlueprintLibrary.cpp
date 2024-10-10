@@ -17,12 +17,9 @@ void USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(AActor* Ac
 
 	float Damage = Velocity * 0.08 - 60;
 	// Damage *= Actor.Vulnerability
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Pure damage - %f"), Damage));
-
 	Damage = FMath::Clamp<float>(Damage, 0, ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Clamped damage - %f"), Damage));
-
 	Damage = FMath::CeilToFloat(Damage);
+
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact damage - %f"), Damage));
 
 	ASC->ApplyModToAttribute(USG_AttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, -Damage);

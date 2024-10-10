@@ -33,7 +33,7 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	RegeneratingItem = Cast<ARegeneratingItem>(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary));
+	RegeneratingItem = Cast<ARegeneratingItem>(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")));
 	if (IsValid(RegeneratingItem) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility RegeneratingItem == nullptr"));
@@ -83,5 +83,5 @@ void USGGA_BasicRestoringAbility::OnEventRecieved(FGameplayEventData Payload)
 	
 	ASC->AddEffectFromClass(GameplayEffectClass, RegeneratingItem);
 
-	RegeneratingItem->Server_LoseDurability(1.f);
+	RegeneratingItem->LoseDurability(1.f);
 }

@@ -19,13 +19,6 @@
 #include "Animation/SG_AnimInstance.h"
 
 
-void USGGA_CraftItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//DOREPLIFETIME(USGGA_CraftItem, ProductItem);
-	//DOREPLIFETIME(USGGA_CraftItem, ProductItemSocketName);
-}
-
 bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
@@ -37,13 +30,13 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 		return false;
 	}
 	
-	if (IsValid(HumanPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Main)) == false || IsValid(HumanPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)) == false)
+	if (IsValid(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) == false || IsValid(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player needs to have an item in both hands!"));
 		return false;
 	}
 
-	if (HumanPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.bCanCraftWithItem(HumanPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()) == false)
+	if (HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.bCanCraftWithItem(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player cannot craft anything with their current items!"));
 		return false;
@@ -66,8 +59,6 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	OldSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute());
-
 	OpenCraftingWindow();
 
 	WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
@@ -81,7 +72,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 void USGGA_CraftItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed);
+	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: EndAbility - Speed has been reset"));
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -110,9 +101,9 @@ void USGGA_CraftItem::OpenCraftingWindow()
 		return;
 	}
 
-	for (FItemCraftingDataStruct CraftingRecipe : Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.CraftableItems)
+	for (FItemCraftingDataStruct CraftingRecipe : Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.CraftableItems)
 	{
-		if (CraftingRecipe.IngredientItemID == Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName())
+		if (CraftingRecipe.IngredientItemID == Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName())
 		{
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
 			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
@@ -174,7 +165,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		AnimInst->bIsMirrored = true;
 	}
-	if (!IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)) || !IsValid(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)))
+	if (!IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) || !IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
@@ -191,7 +182,10 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 
 	SpawnProductItem();
 
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed * ProductItemData->MovementSpeedMultiplier);
+	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
+	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
+	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ProductItemData->MovementSpeedMultiplier);
+	SpeedReductionEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpec);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ProductItemData->Animation);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
@@ -219,15 +213,15 @@ void USGGA_CraftItem::SpawnProductItem()
 	
 	float ProductItemDurabilityPercent = 0.f;
 
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()))
 	{
-		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary);
-		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->ItemData.ItemMaxDurability;
+		ProductItemSocketName = Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"));
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->ItemData.ItemMaxDurability;
 	}
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetItemDataRowName()))
 	{
-		ProductItemSocketName = Player->GetEquipmentSocketOfType(EEquipmentSlot::Main);
-		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetDurability() / Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->ItemData.ItemMaxDurability;
+		ProductItemSocketName = Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"));
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability;
 		ProductItemDurabilityPercent /= 2;
 	}
 
@@ -260,24 +254,24 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 
 void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()))
 	{
-		Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary)->DestroyItem();
+		Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->DestroyItem();
 	}
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetItemDataRowName()))
 	{
-		Player->GetEquipedItemAtSlot(EEquipmentSlot::Main)->DestroyItem();
+		Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->DestroyItem();
 	}
 
 	if (IsValid(ProductItem)) 
 	{
-		if (ProductItemSocketName == Player->GetEquipmentSocketOfType(EEquipmentSlot::Main))
+		if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")))
 		{
-			Player->SetEquipedItemAtSlot(EEquipmentSlot::Main, ProductItem);
+			Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"), ProductItem);
 		}
-		else if (ProductItemSocketName == Player->GetEquipmentSocketOfType(EEquipmentSlot::Secondary))
+		else if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")))
 		{
-			Player->SetEquipedItemAtSlot(EEquipmentSlot::Secondary, ProductItem);
+			Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"), ProductItem);
 		}
 		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
 	}

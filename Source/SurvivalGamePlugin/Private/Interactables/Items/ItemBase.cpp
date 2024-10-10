@@ -58,6 +58,17 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 {
+	LoseDurability(LostDurability);
+}
+
+void AItemBase::LoseDurability(float LostDurability)
+{
+	if (HasAuthority() == false)
+	{
+		Server_LoseDurability(LostDurability);
+		return;
+	}
+
 	CurrentDurability -= LostDurability;
 	if (CurrentDurability <= 0)
 	{
@@ -152,27 +163,42 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed))  
+	if (InteractingPlayer->HasEquipmentSlotWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed")))
 	{
-		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)))
+		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed"))))
 		{
-			InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)->OnItemUnequiped();
+			InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed"))->OnItemUnequiped();
 		}
 		
-		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
+		InteractingPlayer->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed"), this);
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed")));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
 		return;
 	}
-	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot))
+	if (InteractingPlayer->HasEquipmentSlotWithTag(ItemData.EquipmentSlotTag))
 	{
-		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)))
+		if (ItemData.EquipmentSlotTag == FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))
 		{
-			InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)->OnItemUnequiped();
+			TArray<AItemBase*> EquipedItems = InteractingPlayer->GetAllEquipedItems();
+			for (AItemBase* EquipedItem : EquipedItems)
+			{
+				EquipedItem->OnItemUnequiped();
+			}
+		}
+		else
+		{
+			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))))
+			{
+				InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))->OnItemUnequiped();
+			}
+			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlotTag)))
+			{
+				InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlotTag)->OnItemUnequiped();
+			}
 		}
 
-		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
+		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlotTag, this);
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(ItemData.EquipmentSlotTag));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 		return;
 	}

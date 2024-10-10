@@ -19,7 +19,7 @@ void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
 {
     float DurabilityLost = 20;
     //calculating...
-    Server_LoseDurability(DurabilityLost);
+    LoseDurability(DurabilityLost);
 }
 
 void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
@@ -32,13 +32,13 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
         return;
     }
 
-    if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded == false)
+    if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")) && HumanPlayer->bIsRightHanded
+        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")) && HumanPlayer->bIsRightHanded == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
     }
-    else if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded == false)
+    else if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")) && HumanPlayer->bIsRightHanded
+        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")) && HumanPlayer->bIsRightHanded == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
     }
