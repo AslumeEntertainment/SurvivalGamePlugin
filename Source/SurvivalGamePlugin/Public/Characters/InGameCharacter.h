@@ -27,6 +27,21 @@ private:
 
 	bool bIsAlive = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag MainEquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag SecondaryEquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag MixedEquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag CombinedMainEquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag CombinedSecondaryEquipmentSlotTag;
+
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
@@ -59,13 +74,7 @@ protected:
 	UInputAction* UseSecondaryHandItemAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* UnequipAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* SprintAction;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -83,6 +92,12 @@ protected:
 
 public:
 
+	FGameplayTag GetMainEquipmentSlotTag()                { return MainEquipmentSlotTag; }
+	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
+	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
+	FGameplayTag GetCombinedMainEquipmentSlotTag()        { return CombinedMainEquipmentSlotTag; }
+	FGameplayTag GetCombinedSecondaryEquipmentSlotTag()   { return CombinedSecondaryEquipmentSlotTag; }
+
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
@@ -93,25 +108,34 @@ public:
 	virtual void OnHittableDestroyed() override;
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;
+	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
 
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
+	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag = true);
 
 	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
+	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag = true) const;
 
 	UFUNCTION(BlueprintCallable)
 	TArray<AItemBase*> GetAllEquipedItems() const;
 
 	UFUNCTION(BlueprintCallable)
+	void UnequipAllItems();
+
+	UFUNCTION(BlueprintCallable)
 	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
 
 	UFUNCTION(BlueprintCallable)
-	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag) const;
+	bool HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
+
+	UFUNCTION(BlueprintCallable)
+	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
+
+	UFUNCTION(BlueprintCallable)
+	void ShowPlayerInfo();
 
 	FVoidDataTransferSignature OnCharacterDeath;
 

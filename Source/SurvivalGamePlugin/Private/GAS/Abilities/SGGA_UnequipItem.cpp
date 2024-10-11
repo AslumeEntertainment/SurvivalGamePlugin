@@ -24,7 +24,7 @@ void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) == false && IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) == false)
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())) == false && IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility No items to unequip!"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -37,21 +37,17 @@ void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_UnequipItem::OnUnequipCanceled);
 	WaitInputReleaseTask->ReadyForActivation();
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Unequip start!"));
-
-	if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))))
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())))
 	{
 		UAbilityTask_WaitGameplayEvent* WaitMainGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main"), nullptr, true, true);
 		WaitMainGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipMain);
 		WaitMainGameplayEventTask->ReadyForActivation();
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Waiting to confirm main item drop..."));
 	}
-	if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())))
 	{
 		UAbilityTask_WaitGameplayEvent* WaitSecondaryGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary"), nullptr, true, true);
 		WaitSecondaryGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipSecondary);
 		WaitSecondaryGameplayEventTask->ReadyForActivation();
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Waiting to confirm secondary item drop..."));
 	}
 }
 
@@ -68,10 +64,8 @@ void USGGA_UnequipItem::UnequipMain(FGameplayEventData Payload)
 	{
 		return;
 	}
-	Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->OnItemUnequiped();
-	Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"), nullptr);
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Dropping main item confirmed!"));
+	Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->OnItemUnequiped();
+	Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), nullptr);
 }
 
 
@@ -81,14 +75,11 @@ void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
 	{
 		return;
 	}
-	Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->OnItemUnequiped();
-	Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"), nullptr);
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Dropping secondary item confirmed!"));
+	Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
+	Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::OnUnequipCanceled(float TimeHeld)
 {
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_UnequipItem::ActivateAbility Unequip canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

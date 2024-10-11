@@ -33,7 +33,7 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")));
+	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag()));
 	if (!IsValid(EffectGrantingItem))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility EffectGrantingItem == nullptr"));

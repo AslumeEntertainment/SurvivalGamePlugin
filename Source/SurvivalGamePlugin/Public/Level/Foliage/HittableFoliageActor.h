@@ -53,7 +53,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
 
 	UFUNCTION()
@@ -64,7 +64,7 @@ public:
 	
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 
-	UFUNCTION(NetMulticast, Reliable)
+	//UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
 
 	virtual bool bCanBeHit() override;

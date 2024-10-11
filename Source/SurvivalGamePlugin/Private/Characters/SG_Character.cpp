@@ -19,13 +19,10 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
-
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-// Sets default values
 ASG_Character::ASG_Character()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -69,6 +66,16 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
 {
+	SetFocusedInteractable(InFocusedInteractable);
+}
+
+void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetFocusedInteractable(InFocusedInteractable);
+		return;
+	}
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
@@ -196,11 +203,6 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
-void ASG_Character::Server_SetRepControlRotation_Implementation(FRotator InControlRotation)
-{
-	ControlRotation = InControlRotation;
-}
-
 void ASG_Character::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -240,7 +242,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);
 	AddControllerPitchInput(LookAxisVector.Y);
 
-	Server_SetRepControlRotation(GetControlRotation());
+	SetRepControlRotation(GetControlRotation());
 }
 
 void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
@@ -263,9 +265,35 @@ void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
 	AbilitySystemComponent->AbilityInputReleased(InputTag);
 }
 
+void ASG_Character::Server_SetRepControlRotation_Implementation(FRotator InControlRotation)
+{
+	SetRepControlRotation(InControlRotation);
+}
+
+void ASG_Character::SetRepControlRotation(FRotator InControlRotation)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetRepControlRotation(InControlRotation);
+	}
+	ControlRotation = InControlRotation;
+}
+
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (bIsCameraMovementConstrained)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (!IsValid(PlayerController))
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::Move IsValid(PlayerController) == false"));
+			return;
+		}
+		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
+		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
+	}
 
 	InitCharacterDefaults();
 	BindCallbacksToDependencies();

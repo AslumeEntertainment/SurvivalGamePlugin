@@ -41,6 +41,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
 
+	void SetFocusedInteractable(UObject* InFocusedInteractable);
+
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
 
@@ -76,7 +78,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, Category = "GAS")
 	USG_CharacterAttributeSet* AttributeSet;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -93,10 +95,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* InteractAction;
-
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -115,6 +113,8 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
+
+	void SetRepControlRotation(FRotator InControlRotation);
 
 	virtual void PossessedBy(AController* NewController) override;
 

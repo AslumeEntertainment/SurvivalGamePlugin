@@ -30,13 +30,13 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 		return false;
 	}
 	
-	if (IsValid(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) == false || IsValid(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) == false)
+	if (IsValid(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetMainEquipmentSlotTag())) == false || IsValid(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetSecondaryEquipmentSlotTag())) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player needs to have an item in both hands!"));
 		return false;
 	}
 
-	if (HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.bCanCraftWithItem(HumanPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()) == false)
+	if (HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetMainEquipmentSlotTag())->ItemData.bCanCraftWithItem(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player cannot craft anything with their current items!"));
 		return false;
@@ -101,9 +101,9 @@ void USGGA_CraftItem::OpenCraftingWindow()
 		return;
 	}
 
-	for (FItemCraftingDataStruct CraftingRecipe : Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.CraftableItems)
+	for (FItemCraftingDataStruct CraftingRecipe : Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->ItemData.CraftableItems)
 	{
-		if (CraftingRecipe.IngredientItemID == Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName())
+		if (CraftingRecipe.IngredientItemID == Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->GetItemDataRowName())
 		{
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
 			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
@@ -165,7 +165,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		AnimInst->bIsMirrored = true;
 	}
-	if (!IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))) || !IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
+	if (!IsValid(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())) || !IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
@@ -213,15 +213,15 @@ void USGGA_CraftItem::SpawnProductItem()
 	
 	float ProductItemDurabilityPercent = 0.f;
 
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		ProductItemSocketName = Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"));
-		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->ItemData.ItemMaxDurability;
+		ProductItemSocketName = Player->GetEquipmentSocketWithTag(Player->GetSecondaryEquipmentSlotTag());
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->GetDurability() / Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->ItemData.ItemMaxDurability;
 	}
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		ProductItemSocketName = Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"));
-		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability;
+		ProductItemSocketName = Player->GetEquipmentSocketWithTag(Player->GetMainEquipmentSlotTag());
+		ProductItemDurabilityPercent += Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->GetDurability() / Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
 		ProductItemDurabilityPercent /= 2;
 	}
 
@@ -254,24 +254,24 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 
 void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))->DestroyItem();
+		Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->DestroyItem();
 	}
-	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetItemDataRowName()))
+	if (ProductItemData->ItemsToDestroy.Contains(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->DestroyItem();
+		Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->DestroyItem();
 	}
 
 	if (IsValid(ProductItem)) 
 	{
-		if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")))
+		if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(Player->GetMainEquipmentSlotTag()))
 		{
-			Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"), ProductItem);
+			Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), ProductItem);
 		}
-		else if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")))
+		else if (ProductItemSocketName == Player->GetEquipmentSocketWithTag(Player->GetSecondaryEquipmentSlotTag()))
 		{
-			Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"), ProductItem);
+			Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), ProductItem);
 		}
 		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
 	}

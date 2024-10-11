@@ -18,17 +18,6 @@ protected:
 
 	virtual void BeginPlay();
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* AbilityAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* CraftingAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* DisassembleAction;
-
 	void MainHandAction() override;
 	void SecondaryHandAction() override;
 
@@ -36,8 +25,5 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
-
-	UFUNCTION(BlueprintCallable)
-	void ShowPlayerInfo();
 
 };

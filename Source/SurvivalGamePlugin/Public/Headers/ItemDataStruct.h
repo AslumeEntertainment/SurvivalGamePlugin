@@ -18,15 +18,6 @@ enum class EItemDisassembleRequirement : uint8
 	EmptyHand,
 };
 
-//UENUM(BlueprintType)
-//enum class EEquipmentSlot : uint8
-//{
-//	Main,
-//	Secondary,
-//	Mixed,
-//	Combined
-//};
-
 USTRUCT(BlueprintType)
 struct FItemCraftingDataStruct : public FTableRowBase
 {

@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -37,23 +38,20 @@ void AHittableFoliageActor::OnImpactReceived(AActor* OverlappedActor, AActor* Ot
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AHittableFoliageActor::OnHit Actor was hit"));
 	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AHittableFoliageActor::OnHit Damage effect is applied"));
 		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
 
-void AHittableFoliageActor::OnHittableDestroyed_Implementation()
+void AHittableFoliageActor::OnHittableDestroyed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("AHittableFoliageActor::OnHittableDestroyed_Implementation Actor was destroyed"));
 	if (HasAuthority())
 	{
 		UWorld* World = GetWorld();
 		if (!IsValid(World))
 		{
-			UE_LOG(LogTemp, Error, TEXT("AHittableFoliageActor::OnHittableDestroyed_Implementation IsValid(World) == false"));
+			UE_LOG(LogTemp, Error, TEXT("AHittableFoliageActor::OnHittableDestroyed IsValid(World) == false"));
 			return;
 		}
 

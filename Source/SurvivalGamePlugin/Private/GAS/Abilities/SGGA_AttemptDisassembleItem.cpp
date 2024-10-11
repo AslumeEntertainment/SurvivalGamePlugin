@@ -29,7 +29,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"));
+	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag());
 	if (IsValid(ItemForDisassembly) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(ItemForDisassembly) == false"));
@@ -57,7 +57,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		}
 		case EItemDisassembleRequirement::EmptyHand:
 		{
-			if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))))
+			if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
 				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -115,7 +115,7 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->GetDurability() / Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->ItemData.ItemMaxDurability;
+	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->GetDurability() / Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
 
 	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(MainItemActor))
@@ -153,21 +153,21 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
-	Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"))->DestroyItem();
+	Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->DestroyItem();
 
 	if (IsValid(MainItemActor))
 	{
-		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main")));
-		Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Main"), MainItemActor);
+		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(Player->GetMainEquipmentSlotTag()));
+		Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), MainItemActor);
 	}
 
-	if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) == false && IsValid(IngredientItemActor))
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())) == false && IsValid(IngredientItemActor))
 	{
-		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary")));
-		Player->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"), IngredientItemActor);
+		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(Player->GetSecondaryEquipmentSlotTag()));
+		Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
 	}
 
-	else if (IsValid(Player->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary"))) && IsValid(IngredientItemActor))
+	else if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());

@@ -18,6 +18,12 @@
 
 AInGameCharacter::AInGameCharacter()
 {
+	MainEquipmentSlotTag =                 FGameplayTag::RequestGameplayTag("EquipmentSlot.Main");
+	SecondaryEquipmentSlotTag =            FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary");
+	MixedEquipmentSlotTag =                FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed");
+	CombinedMainEquipmentSlotTag =         FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Main");
+	CombinedSecondaryEquipmentSlotTag =    FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Secondary");
+
 	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
 	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
 
@@ -174,35 +180,55 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 
 	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 
+	AbilitySystemComponent->CancelAllAbilities();
+
 	UnPossessed();
 }
 
-bool AInGameCharacter::HasEquipmentSlotWithTag(FGameplayTag SlotTag) const
+bool AInGameCharacter::HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
 {
+	if (CheckParentTag)
+	{
+		return EquipmentSlots.Contains(SlotTag) || EquipmentSlots.Contains(SlotTag.RequestDirectParent());
+	}
+	
 	return EquipmentSlots.Contains(SlotTag);
 }
 
-void AInGameCharacter::SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item)
+void AInGameCharacter::SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag)
 {
-	if (HasEquipmentSlotWithTag(SlotTag) == false)
+	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player cannot equip item because they don't have the slot for it!"));
 		return;
 	}
 
-	EquipmentSlots[SlotTag] = Item;
+	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
+	{
+		EquipmentSlots[SlotTag.RequestDirectParent()] = Item;
+	}
+	else
+	{
+		EquipmentSlots[SlotTag] = Item;
+	}
+	
 	return;
 }
 
-AItemBase* AInGameCharacter::GetEquipedItemAtSlot(FGameplayTag SlotTag) const
+AItemBase* AInGameCharacter::GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag) const
 {
-	if (HasEquipmentSlotWithTag(SlotTag) == false)
+	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player does not have an equipment slot of such type!"));
 		return nullptr;
 	}
 
-	return EquipmentSlots[SlotTag];
+	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
+	{
+		return EquipmentSlots[SlotTag.RequestDirectParent()];
+	}
+	else
+	{
+		return EquipmentSlots[SlotTag];
+	}
 }
 
 TArray<AItemBase*> AInGameCharacter::GetAllEquipedItems() const
@@ -216,6 +242,18 @@ TArray<AItemBase*> AInGameCharacter::GetAllEquipedItems() const
 		}
 	}
 	return EquipedItems;
+}
+
+void AInGameCharacter::UnequipAllItems()
+{
+	for (auto& EquipmentSlot : EquipmentSlots)
+	{
+		if (IsValid(EquipmentSlot.Value))
+		{
+			EquipmentSlot.Value->OnItemUnequiped();
+			EquipmentSlot.Value = nullptr;
+		}
+	}
 }
 
 TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
@@ -232,17 +270,113 @@ TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
 	return EquipedWeapons;
 }
 
-FName AInGameCharacter::GetEquipmentSocketWithTag(FGameplayTag SlotTag) const
+bool AInGameCharacter::HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
 {
-	if (HasEquipmentSlotWithTag(SlotTag) == false)
+	if (CheckParentTag)
+	{
+		return EquipmentSockets.Contains(SlotTag) || EquipmentSockets.Contains(SlotTag.RequestDirectParent());
+	}
+
+	return EquipmentSockets.Contains(SlotTag);
+}
+
+FName AInGameCharacter::GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
+{
+	if (HasEquipmentSocketWithTag(SlotTag, CheckParentTag) == false)
 	{
 		return FName();
 	}
 
-	return EquipmentSockets[SlotTag];
+	if (HasEquipmentSocketWithTag(SlotTag, false) == false)
+	{
+		return EquipmentSockets[SlotTag.RequestDirectParent()];
+	}
+	else
+	{
+		return EquipmentSockets[SlotTag];
+	}
 }
 
 bool AInGameCharacter::IsAlive()
 {
 	return bIsAlive;
+}
+
+void AInGameCharacter::ShowPlayerInfo()
+{
+	FString Prefix;
+	if (HasAuthority())
+	{
+		Prefix = "Server:";
+	}
+	else if (IsLocallyControlled())
+	{
+		Prefix = "Owning Client:";
+	}
+	else
+	{
+		Prefix = "Client:";
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s ===== Character stats ====="), *Prefix);
+
+	if (GetFocusedInteractableObject() != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject is a valid pointer"), *Prefix);
+
+		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(GetFocusedInteractableObject());
+		if (InteractableActor)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);
+			if (InteractableActor->bCanInteract(GetController()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject can be interacted with"), *Prefix);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject cannot be interacted with"), *Prefix);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentSlots.Num());
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentSockets.Num());
+
+	int i = 0;
+	for (TPair<FGameplayTag, AItemBase*> Slot : EquipmentSlots)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s Slot #%d - %s"), *Prefix, i, *(Slot.Key.ToString()));
+		if (IsValid(Slot.Value))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s has a valid item equiped"), *Prefix, *(Slot.Key.ToString()));
+			if (Slot.Value->bCanInteract(GetController()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s %s can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix, *(Slot.Key.ToString()));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s %s cannot be interacted with as it is equiped by the player"), *Prefix, *(Slot.Key.ToString()));
+			}
+			UE_LOG(LogTemp, Warning, TEXT("%s %s is a %s"), *Prefix, *(Slot.Key.ToString()), *(Slot.Value->ItemData.ItemName.ToString()));
+			UE_LOG(LogTemp, Warning, TEXT("%s %s Durability is %f out of %f - %f percent"), *Prefix, *(Slot.Key.ToString()), Slot.Value->GetDurability(), 
+				Slot.Value->ItemData.ItemMaxDurability, Slot.Value->GetDurability() / Slot.Value->ItemData.ItemMaxDurability * 100);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s is nullptr"), *Prefix, *(Slot.Key.ToString()));
+		}
+		if (HasEquipmentSocketWithTag(Slot.Key))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s has equipment socket with name %s"), *Prefix, *(Slot.Key.ToString()), *(GetEquipmentSocketWithTag(Slot.Key).ToString()));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s does not have an associated equipment socket!"), *Prefix, *(Slot.Key.ToString()));
+		}
+
+		i++;
+	}
 }
