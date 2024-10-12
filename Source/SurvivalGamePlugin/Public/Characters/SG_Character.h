@@ -78,7 +78,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS", meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY(Transient, Category = "GAS")
+	UPROPERTY(Transient)
 	USG_CharacterAttributeSet* AttributeSet;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
