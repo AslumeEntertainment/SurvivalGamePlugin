@@ -23,6 +23,11 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
 
@@ -37,6 +42,8 @@ protected:
 
 
 public:
+
+	virtual void LoseDurability(float LostDurability) override;
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 

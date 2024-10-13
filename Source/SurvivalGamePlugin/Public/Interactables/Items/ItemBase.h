@@ -58,7 +58,7 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	void LoseDurability(float LostDurability);
+	virtual void LoseDurability(float LostDurability);
 
 	UFUNCTION()
 	float GetDurability() const;

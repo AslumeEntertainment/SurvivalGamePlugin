@@ -42,7 +42,7 @@ void AHumanCharacter::MainHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetMainEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetMainEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedMainEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
 	}
@@ -61,7 +61,7 @@ void AHumanCharacter::SecondaryHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetSecondaryEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
 	}

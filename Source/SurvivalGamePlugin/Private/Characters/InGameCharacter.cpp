@@ -21,6 +21,7 @@ AInGameCharacter::AInGameCharacter()
 	MainEquipmentSlotTag =                 FGameplayTag::RequestGameplayTag("EquipmentSlot.Main");
 	SecondaryEquipmentSlotTag =            FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary");
 	MixedEquipmentSlotTag =                FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed");
+	CombinedEquipmentSlotTag =             FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined");
 	CombinedMainEquipmentSlotTag =         FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Main");
 	CombinedSecondaryEquipmentSlotTag =    FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Secondary");
 
@@ -86,8 +87,6 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	{
 		USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, FMath::Abs(GetVelocity().Z));
 	}
-	
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Player has fallen! Their velocity was %f"), GetVelocity().Z));
 }
 
 void AInGameCharacter::OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor)

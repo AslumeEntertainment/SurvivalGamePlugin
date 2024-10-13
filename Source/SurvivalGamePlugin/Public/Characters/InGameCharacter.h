@@ -37,6 +37,9 @@ private:
 	FGameplayTag MixedEquipmentSlotTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	FGameplayTag CombinedEquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
 	FGameplayTag CombinedMainEquipmentSlotTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
@@ -95,6 +98,7 @@ public:
 	FGameplayTag GetMainEquipmentSlotTag()                { return MainEquipmentSlotTag; }
 	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
 	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
+	FGameplayTag GetCombinedEquipmentSlotTag()            { return CombinedEquipmentSlotTag; }
 	FGameplayTag GetCombinedMainEquipmentSlotTag()        { return CombinedMainEquipmentSlotTag; }
 	FGameplayTag GetCombinedSecondaryEquipmentSlotTag()   { return CombinedSecondaryEquipmentSlotTag; }
 

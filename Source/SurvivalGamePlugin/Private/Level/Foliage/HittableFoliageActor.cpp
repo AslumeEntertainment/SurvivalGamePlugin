@@ -33,6 +33,13 @@ AHittableFoliageActor::AHittableFoliageActor()
 void AHittableFoliageActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
 }
 
 void AHittableFoliageActor::OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor)
