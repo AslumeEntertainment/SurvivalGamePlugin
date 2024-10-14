@@ -72,6 +72,10 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 
 void USGGA_CraftItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if (bWasCancelled && IsValid(ProductItem) && ProductItem->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
+	{
+		ProductItem->Destroy();
+	}
 	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: EndAbility - Speed has been reset"));
 

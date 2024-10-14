@@ -35,6 +35,10 @@ public:
 	FGameplayAttributeData Attack;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Attack);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeed)
+	FGameplayAttributeData AttackSpeed;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeed);
+
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Hunger)
 	FGameplayAttributeData Hunger;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Hunger);
@@ -81,6 +85,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Attack(const FGameplayAttributeData& OldAttack);
+
+	UFUNCTION()
+	virtual void OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed);
 
 	UFUNCTION()
 	virtual void OnRep_Hunger(const FGameplayAttributeData& OldHunger);

@@ -18,8 +18,11 @@ void USGGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	float NewSpeed = ActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) * SpeedMultiplier;
-	ActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), NewSpeed);
+	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedIncreaseEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
+	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
+	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), SpeedMultiplier);
+	SpeedIncreaseEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpec);
+
 	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsRunning")));
 
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
@@ -29,8 +32,7 @@ void USGGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 void USGGA_Sprint::OnSprintButtonReleased(float TimeHeld)
 {
-	float OldSpeed = CurrentActorInfo->AbilitySystemComponent->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) / SpeedMultiplier;
-	CurrentActorInfo->AbilitySystemComponent->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), OldSpeed);
+	CurrentActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedIncreaseEffectSpecHandle);
 	CurrentActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsRunning")));
 	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

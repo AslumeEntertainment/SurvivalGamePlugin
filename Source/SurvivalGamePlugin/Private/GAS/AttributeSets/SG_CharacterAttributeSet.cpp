@@ -158,6 +158,11 @@ void USG_CharacterAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAt
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Attack, OldAttack);
 }
 
+void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeed, OldAttackSpeed);
+}
+
 void USG_CharacterAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldHunger)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Hunger, OldHunger);

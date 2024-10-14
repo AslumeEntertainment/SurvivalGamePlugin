@@ -170,16 +170,15 @@ bool AInGameCharacter::bCanBeHit()
 
 void AInGameCharacter::OnHittableDestroyed_Implementation()
 {
-	bIsAlive = false;
-
 	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
+	AbilitySystemComponent->CancelAllAbilities();
 
+	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
-	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
-
-	AbilitySystemComponent->CancelAllAbilities();
+	UnequipAllItems();
+	bIsAlive = false;
 
 	UnPossessed();
 }

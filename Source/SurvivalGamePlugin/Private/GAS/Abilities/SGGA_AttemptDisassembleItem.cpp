@@ -100,6 +100,14 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if (bWasCancelled && IsValid(MainItemActor) && MainItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
+	{
+		MainItemActor->Destroy();
+	}
+	if (bWasCancelled && IsValid(IngredientItemActor) && IngredientItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
+	{
+		IngredientItemActor->Destroy();
+	}
 	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
 

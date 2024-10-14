@@ -56,7 +56,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 
-		if (GetHealth() == 0.f)
+		if (GetHealth() == 0.f && HittableAvatarActor->bCanBeHit())
 		{
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			HittableAvatarActor->OnHittableDestroyed();

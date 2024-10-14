@@ -18,6 +18,11 @@ public:
 
 protected:
 
+	FActiveGameplayEffectHandle SpeedIncreaseEffectSpecHandle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	TSubclassOf<UGameplayEffect> SpeedIncreaseEffect;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	float SpeedMultiplier;
 
