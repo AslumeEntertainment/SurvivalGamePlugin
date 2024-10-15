@@ -59,15 +59,6 @@ void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
-	if (HasAuthority() == true)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Shop Interacting on the server"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Shop Interacting on the CLIENT"));
-	}
-
 	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
 	if (IsValid(InteractingPlayer) == false)
 	{
