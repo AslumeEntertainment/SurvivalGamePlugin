@@ -44,11 +44,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_ToggleReady();
 
-	UFUNCTION(Server, Reliable)
-	void Server_InteractRequest(ASG_PlayerController* PC);
-
 	UFUNCTION()
-	void Server_InGameCharacterDead();
+	void InGameCharacterDead();
 
 protected:
 
@@ -66,17 +63,17 @@ public:
 	UFUNCTION()
 	void Server_SetIsActive(bool State);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SpawnHero(FVector Location, FRotator Rotation);
+	UFUNCTION()
+	void SpawnHero(FVector Location, FRotator Rotation);
 
-	UFUNCTION(Server, Reliable)
-	void Server_DespawnHero();
+	UFUNCTION()
+	void DespawnHero();
 
-	UFUNCTION(Server, Reliable)
-	void Server_PossessMainPawn();
+	UFUNCTION()
+	void PossessMainPawn();
 
-	UFUNCTION(Server, Reliable)
-	void Server_PossessGamePawn();
+	UFUNCTION()
+	void PossessGamePawn();
 
 	FPlayerCustomiserTransferSignature OnPlayerStartInteracting;
 	FPlayerCustomiserTransferSignature OnPlayerStopInteracting;

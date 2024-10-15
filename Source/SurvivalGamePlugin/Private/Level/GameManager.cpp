@@ -77,12 +77,13 @@ void AGameManager::BeginPlay()
 
 		OnStateChanged.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_SetIsActive);
 		OnGameClosing.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_StopInteracting);
-		OnGameStart.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_PossessGamePawn);
-		OnGameEnd.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_PossessMainPawn);
+		OnGameStart.AddDynamic(PlayerCustomiser, &APlayerCustomiser::PossessGamePawn);
+		OnGameEnd.AddDynamic(PlayerCustomiser, &APlayerCustomiser::PossessMainPawn);
 		
 		PlayerCustomiser->OnPlayerStartInteracting.AddDynamic(this, &AGameManager::AddPlayer);
 		PlayerCustomiser->OnPlayerStopInteracting.AddDynamic(this, &AGameManager::RemovePlayer);
 		PlayerCustomiser->OnPlayerReadinessChanged.AddDynamic(this, &AGameManager::ChangePlayerReadiness);
+		PlayerCustomiser->OnInGameCharacterDeath.AddDynamic(this, &AGameManager::CheckGameFinishingRules);
 	}
 }
 
@@ -124,20 +125,14 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 	bool NewState = !*State;
 	Players.Emplace(Player, NewState);
 
-	if (NewState == false)
-	{
-		Player->Server_DespawnHero();
-		return;
-	}
-
-	Player->Server_SpawnHero(DefaultSpawnLocation, DefaultSpawnRotation);
+	NewState ? Player->SpawnHero(DefaultSpawnLocation, DefaultSpawnRotation) : Player->DespawnHero();
 
 	CheckAllPlayerReadiness();
 }
 
 void AGameManager::PrepareGame()
 {
-	//some terrain generation
+	//some terrain generation and animal/Enemy spawning
 	bIsGameReady = true;
 }
 

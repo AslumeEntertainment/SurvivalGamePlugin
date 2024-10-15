@@ -43,28 +43,32 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	
 	//SetOwner(PC);
 	//UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest OWNR nam: %s"), *GetOwner()->GetName());
-	Server_InteractRequest(PC);
+	//Server_InteractRequest(PC);
+
+	if (PC->IsLocalPlayerController() == true)
+	{
+		PC->Client_SetInputMode(EInputMode::UIOnly);
+	}
+
+	if (HasAuthority() == true)
+	{
+		InteractingPlayer = PC;
+
+		OnPlayerStartInteracting.Broadcast(this);
+		MainPawn = PC->GetPawn();
+
+
+		bIsTaken = true;
+	}
+
+	//FOR TESTING ONLY REMOVBE LATER
+	Server_ToggleReady_Implementation();
+
 }
 
 bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 {
 	return bIsActive && !bIsTaken;
-}
-
-void APlayerCustomiser::Server_InteractRequest_Implementation(ASG_PlayerController* PC)
-{
-	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_InteractRequest_Implementation "));
-	InteractingPlayer = PC;
-
-	OnPlayerStartInteracting.Broadcast(this);
-	MainPawn = PC->GetPawn();
-
-	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
-
-	bIsTaken = true;
-
-	//FOR TESTING ONLY REMOVBE LATER
-	Server_ToggleReady_Implementation();
 }
 
 void APlayerCustomiser::Server_StopInteracting()
@@ -93,7 +97,7 @@ void APlayerCustomiser::Server_SetIsActive(bool State)
 	bIsActive = State;
 }
 
-void APlayerCustomiser::Server_SpawnHero_Implementation(FVector Location, FRotator Rotation)
+void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)
 {
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
@@ -111,15 +115,15 @@ void APlayerCustomiser::Server_SpawnHero_Implementation(FVector Location, FRotat
 		return;
 	}
 
-	GamePawn->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::Server_InGameCharacterDead);
+	GamePawn->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::InGameCharacterDead);
 }
 
-void APlayerCustomiser::Server_InGameCharacterDead()
+void APlayerCustomiser::InGameCharacterDead()
 {
 	OnInGameCharacterDeath.Broadcast(this);
 }
 
-void APlayerCustomiser::Server_DespawnHero_Implementation()
+void APlayerCustomiser::DespawnHero()
 {
 	if (IsValid(GamePawn) == false)
 	{
@@ -130,15 +134,20 @@ void APlayerCustomiser::Server_DespawnHero_Implementation()
 	GamePawn = nullptr;
 }
 
-void APlayerCustomiser::Server_PossessMainPawn_Implementation()
+void APlayerCustomiser::PossessMainPawn()
 {
+	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(MainPawn);
+	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	DespawnHero();
 }
 
-void APlayerCustomiser::Server_PossessGamePawn_Implementation()
+void APlayerCustomiser::PossessGamePawn()
 {
+	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(GamePawn);
-	Server_DespawnHero_Implementation();
+	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	
 }
 
 
