@@ -110,8 +110,10 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 			}
 		}
 	}
-	
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage, ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetAttackSpeedAttribute()));
+
+	float AttackSpeed = Player->GetAttackSpeed();
+
+	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage, AttackSpeed);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);

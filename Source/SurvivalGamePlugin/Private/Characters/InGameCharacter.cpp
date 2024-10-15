@@ -34,6 +34,13 @@ AInGameCharacter::AInGameCharacter()
 	OnActorBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
 }
 
+void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, AttackSpeed, COND_None, REPNOTIFY_Always);
+}
+
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -114,6 +121,13 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		}
 	);
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetAttackSpeedAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			AttackSpeed = Data.NewValue;
+		}
+	);
+
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
@@ -153,6 +167,11 @@ void AInGameCharacter::BindCallbacksToDependencies()
 void AInGameCharacter::BroadcastInitialValues()
 {
 	// empty for now
+}
+
+float AInGameCharacter::GetAttackSpeed() const
+{
+	return AttackSpeed;
 }
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)

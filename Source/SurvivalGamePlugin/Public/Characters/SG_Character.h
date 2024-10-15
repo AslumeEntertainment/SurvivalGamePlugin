@@ -143,6 +143,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 
+	UFUNCTION(BlueprintCallable)
+	void DisablePlayerInput(float Duration = 0.f);
+
+	UFUNCTION(BlueprintCallable)
+	void EnablePlayerInput();
+
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
 
 private:

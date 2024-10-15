@@ -56,7 +56,12 @@ private:
 
 protected:
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
 	virtual void BeginPlay() override;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
+	float AttackSpeed = 1;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
 	TMap<FGameplayTag, AItemBase*> EquipmentSlots;
@@ -103,6 +108,9 @@ public:
 	FGameplayTag GetCombinedSecondaryEquipmentSlotTag()   { return CombinedSecondaryEquipmentSlotTag; }
 
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackSpeed() const;
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 

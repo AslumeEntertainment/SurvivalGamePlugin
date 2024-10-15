@@ -156,47 +156,70 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 	{
 		return;
 	}
-
 	AInGameCharacter* InteractingPlayer = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
-	if (!IsValid(InteractingPlayer))
+	if (IsValid(InteractingPlayer) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	UAbilitySystemComponent* ASC = InteractingPlayer->GetAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(ASC) == false"));
 		return;
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotWithTag(InteractingPlayer->GetMixedEquipmentSlotTag()))
+	FGameplayTag SlotToEquipAtTag = ItemData.EquipmentSlotTag;
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) && SlotToEquipAtTag.ToString().Contains(".Combined"))
+	{
+		if (ItemData.EquipmentSlotTag == InteractingPlayer->GetCombinedMainEquipmentSlotTag())
+		{
+			SlotToEquipAtTag = InteractingPlayer->GetMainEquipmentSlotTag();
+		}
+		else if (ItemData.EquipmentSlotTag == InteractingPlayer->GetCombinedSecondaryEquipmentSlotTag())
+		{
+			SlotToEquipAtTag = InteractingPlayer->GetSecondaryEquipmentSlotTag();
+		}
+	}
+
+	if (InteractingPlayer->HasEquipmentSlotWithTag(InteractingPlayer->GetMixedEquipmentSlotTag()) && 
+		SlotToEquipAtTag.RequestDirectParent() != InteractingPlayer->GetCombinedEquipmentSlotTag())
 	{
 		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag())))
 		{
 			InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+			InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag(), nullptr);
 		}
 		
+		SlotToEquipAtTag = InteractingPlayer->GetMixedEquipmentSlotTag();
 		InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag(), this);
 		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(InteractingPlayer->GetMixedEquipmentSlotTag()));
 		
 		return;
 	}
-	if (InteractingPlayer->HasEquipmentSlotWithTag(ItemData.EquipmentSlotTag))
+	
+	if (InteractingPlayer->HasEquipmentSlotWithTag(SlotToEquipAtTag))
 	{
-		if (ItemData.EquipmentSlotTag.RequestDirectParent() == FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))
+		if (SlotToEquipAtTag.RequestDirectParent() == InteractingPlayer->GetCombinedEquipmentSlotTag())
 		{
 			InteractingPlayer->UnequipAllItems();
 		}
 		else
 		{
-			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))))
+			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag())))
 			{
-				InteractingPlayer->GetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"))->OnItemUnequiped();
-				InteractingPlayer->SetEquipedItemAtSlot(FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined"), nullptr);
+				InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
+				InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag(), nullptr);
 			}
-			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlotTag)))
+			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(SlotToEquipAtTag)))
 			{
-				InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlotTag)->OnItemUnequiped();
+				InteractingPlayer->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
 			}
 		}
-
-		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlotTag, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(ItemData.EquipmentSlotTag));
+		
+		InteractingPlayer->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
+		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(SlotToEquipAtTag));
 
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 		return;

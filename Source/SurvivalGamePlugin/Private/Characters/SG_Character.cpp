@@ -349,6 +349,47 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
+void ASG_Character::DisablePlayerInput(float Duration)
+{
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
+	if (IsValid(InputSystem) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
+		return;
+	}
+
+	InputSystem->ClearAllMappings();
+	if (Duration > 0.f)
+	{
+		FTimerHandle EnableInputTimer;
+		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false, 0);
+	}
+}
+
+void ASG_Character::EnablePlayerInput()
+{
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
+	if (IsValid(InputSystem) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
+		return;
+	}
+
+	InputSystem->AddMappingContext(DefaultMappingContext, 0);
+}
+
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
 {
 	if (HasAuthority() == false)
