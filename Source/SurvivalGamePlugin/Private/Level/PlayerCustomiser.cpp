@@ -138,7 +138,7 @@ void APlayerCustomiser::PossessMainPawn()
 {
 	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(MainPawn);
-	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 	DespawnHero();
 }
 
