@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
+#include "Components/PassiveDamageDealingComponent.h"
 #include "Components/DamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
@@ -31,7 +32,10 @@ AInGameCharacter::AInGameCharacter()
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
-	OnActorBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
+	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
+	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+
+	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -86,19 +90,62 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
+void AInGameCharacter::GrantTemporalInvinsibility(float Duration)
+{
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GrantTemporalInvinsibility IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")))
+	{
+		return;
+	}
+
+	AbilitySystemComponent->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+	
+	FTimerHandle InvincibilityTimerHandle;
+	GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &AInGameCharacter::RemoveInvincibility, Duration, false, 0);
+
+}
+
+void AInGameCharacter::RemoveInvincibility()
+{
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::RemoveInvincibility IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+
+	AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+}
+
 void AInGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
-	if(AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.FallDamageImmunity")) == false)
+	if (HasAuthority() == false)
 	{
-		USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, FMath::Abs(GetVelocity().Z));
+		return;
+	}
+	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyFallDamage(this, AbilitySystemComponent))
+	{
+		GrantTemporalInvinsibility(1.f);
 	}
 }
 
-void AInGameCharacter::OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor)
+void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Size(), OtherActor->GetVelocity().Size()));
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, AbilitySystemComponent))
+	{
+		GrantTemporalInvinsibility(1.f);
+	}
+	
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()

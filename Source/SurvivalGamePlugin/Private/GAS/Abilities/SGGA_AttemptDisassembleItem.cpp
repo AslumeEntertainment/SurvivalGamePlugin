@@ -75,7 +75,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 	if (Player->bIsRightHanded == false)
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 
 	if (HasAuthority(&CurrentActivationInfo))
@@ -146,7 +146,7 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been completed, resetting speed"));
 
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -154,7 +154,7 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been canceled, resetting speed"));
 
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

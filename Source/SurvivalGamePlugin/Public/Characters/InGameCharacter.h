@@ -13,6 +13,7 @@
 
 class AItemBase;
 class ADamageDealingItem;
+class UPassiveDamageDealingComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -75,6 +76,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* RightHandDamageDealingComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
 
@@ -86,10 +90,14 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void GrantTemporalInvinsibility(float Duration);
+
+	void RemoveInvincibility();
+
 	virtual void Landed(const FHitResult& Hit) override;
 
 	UFUNCTION()
-	virtual void OnImpactReceived(AActor* OverlappedActor, AActor* OtherActor) override;
+	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
 	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
@@ -113,7 +121,7 @@ public:
 	float GetAttackSpeed() const;
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-
+	
 	virtual bool bCanBeHit() override;
 
 	UFUNCTION(NetMulticast, Reliable)

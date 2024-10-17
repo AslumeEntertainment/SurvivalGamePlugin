@@ -3,25 +3,100 @@
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 
-#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
-void USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(AActor* Actor, const float Velocity)
+
+bool USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC)
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent(Actor);
 	if (ASC == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"))
-		return;
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
+		return false;
 	}
 
-	float Damage = Velocity * 0.08 - 60;
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")) ||
+		ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasImmunity.ImpactDamage")))
+	{
+		return false;
+	}
+
+	FVector Velocity = Actor->GetVelocity();
+	float Damage = Velocity.Length() * 0.065 - 98;
 	// Damage *= Actor.Vulnerability
 	Damage = FMath::Clamp<float>(Damage, 0, ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
 	Damage = FMath::CeilToFloat(Damage);
 
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact damage - %f"), Damage));
 
-	ASC->ApplyModToAttribute(USG_AttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, -Damage);
-	return;
+	if (Damage > 0.f)
+	{
+		ASC->ApplyModToAttribute(USG_AttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, -Damage);
+		return true;
+	}
+	return false;
 }
+
+bool USG_AbilitySystemBlueprintLibrary::CalculateAndApplyFallDamage(AActor* Actor, UAbilitySystemComponent* ASC)
+{
+	if (ASC == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
+		return false;
+	}
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")) || 
+		ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasImmunity.FallDamage")))
+	{
+		return false;
+	}
+
+	FVector Velocity = Actor->GetVelocity();
+	float Damage = FMath::Abs(Velocity.Z) * 0.08 - 60;
+	// Damage *= Actor.Vulnerability
+	Damage = FMath::Clamp<float>(Damage, 0, ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
+	Damage = FMath::CeilToFloat(Damage);
+
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Fall damage - %f"), Damage));
+
+	if (Damage > 0.f)
+	{
+		ASC->ApplyModToAttribute(USG_AttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, -Damage);
+		return true;
+	}
+	return false;
+}
+
+//void USG_AbilitySystemBlueprintLibrary::GrantTemporalInvincibility(AActor* Actor, UAbilitySystemComponent* ASC)
+//{
+//	if (ASC == nullptr)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
+//		return;
+//	}
+//
+//	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")))
+//	{
+//		return;
+//	}
+//
+//	ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+//}
+//
+//void USG_AbilitySystemBlueprintLibrary::ClearInvincibility(AActor* Actor, UAbilitySystemComponent* ASC)
+//{
+//	if (ASC == nullptr)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
+//		return;
+//	}
+//
+//	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")) == false)
+//	{
+//		return;
+//	}
+//
+//	ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+//}

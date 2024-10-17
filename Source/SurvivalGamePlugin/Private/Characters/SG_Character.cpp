@@ -16,8 +16,10 @@
 
 #include "Components/SG_EnhancedInputComponent.h"
 #include "Interfaces/InteractableInterface.h"
-#include "GAS/SG_AbilitySystemComponent.h"
+#include "Animation/SG_AnimInstance.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -61,6 +63,7 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bIsMirrored, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
 }
 
@@ -388,6 +391,34 @@ void ASG_Character::EnablePlayerInput()
 	}
 
 	InputSystem->AddMappingContext(DefaultMappingContext, 0);
+}
+
+bool ASG_Character::IsMirrored()
+{
+	return bIsMirrored;
+}
+
+void ASG_Character::SetIsMirrored(bool NewValue)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetIsMirrored(NewValue);
+		return;
+	}
+
+	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(GetMesh()->GetAnimInstance());
+	if (IsValid(AnimInst) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::SetIsMirrored IsValid(AnimInst) == false"))
+		return;
+	}
+	AnimInst->bIsMirrored = NewValue;
+	bIsMirrored = NewValue;
+}
+
+void ASG_Character::Server_SetIsMirrored_Implementation(bool NewValue)
+{
+	SetIsMirrored(NewValue);
 }
 
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)

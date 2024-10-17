@@ -42,11 +42,11 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 
 	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, UseAnimationMontage);
@@ -61,14 +61,14 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 
 void USGGA_ApplyEffectsFromItemToSelf::OnAnimMontageCompleted()
 {
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_ApplyEffectsFromItemToSelf::OnAnimMontageCanceled()
 {
-	AnimInst->bIsMirrored = false;
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
+	Player->SetIsMirrored(false);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("USGGA_ApplyEffectsFromItemToSelf: Ability canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

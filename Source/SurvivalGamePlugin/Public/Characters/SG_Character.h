@@ -38,6 +38,9 @@ private:
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
+	UPROPERTY(Replicated)
+	bool bIsMirrored = false;
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
 
@@ -148,6 +151,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EnablePlayerInput();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsMirrored();
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsMirrored(bool NewValue);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetIsMirrored(bool NewValue);
 
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
 

@@ -42,11 +42,11 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 
 	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage);
@@ -61,13 +61,13 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 
 void USGGA_BasicRestoringAbility::OnAnimMontageCompleted()
 {
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_BasicRestoringAbility::OnAnimMontageCanceled()
 {
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

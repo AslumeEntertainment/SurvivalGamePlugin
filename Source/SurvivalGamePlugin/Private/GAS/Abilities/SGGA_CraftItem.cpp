@@ -167,7 +167,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	}
 	if (Player->bIsRightHanded == false)
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 	if (!IsValid(Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())) || !IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())))
 	{
@@ -244,7 +244,7 @@ void USGGA_CraftItem::OnAnimMontageCompleted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been completed"));
 	
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -252,7 +252,7 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been canceled"));
 
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

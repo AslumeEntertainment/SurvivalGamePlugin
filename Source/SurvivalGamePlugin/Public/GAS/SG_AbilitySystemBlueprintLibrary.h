@@ -11,10 +11,19 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemBlueprintLibrary : public UAbilitySystemBlueprintLibrary
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Damage")
-	static void CalculateAndApplyImpactDamage(AActor* Actor, const float Velocity);
+	static bool CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+	static bool CalculateAndApplyFallDamage(AActor* Actor, UAbilitySystemComponent* ASC);
+
+	/*UFUNCTION(BlueprintCallable, Category = "Damage")
+	static void GrantTemporalInvincibility(AActor* Actor, UAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+	void ClearInvincibility(AActor* Actor, UAbilitySystemComponent* ASC);*/
 
 };

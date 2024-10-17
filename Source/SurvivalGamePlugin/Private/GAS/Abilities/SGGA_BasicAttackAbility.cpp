@@ -38,11 +38,11 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 	if (bCanBeMirrored && TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 
 	/* Getting every damage dealing component that the user has */
@@ -89,7 +89,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	
 	/* Mirroring the tags from the list of damage dealing components that are to be used for this ability */
 	FGameplayTagContainer FinalActiveDamageComponentTags = ActiveDamageComponentTags;
-	if (AnimInst->bIsMirrored)
+	if (Player->IsMirrored())
 	{
 		FinalActiveDamageComponentTags = GetMirroredAbilityDamageComponentTags();
 	}
@@ -158,9 +158,9 @@ FGameplayTagContainer USGGA_BasicAttackAbility::GetMirroredAbilityDamageComponen
 
 void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 {
-	if (AnimInst->bIsMirrored)
+	if (Player->IsMirrored())
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 	
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage complete!"));
@@ -174,9 +174,9 @@ void USGGA_BasicAttackAbility::OnAnimMontageBlendOut()
 
 void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 {
-	if (AnimInst->bIsMirrored)
+	if (Player->IsMirrored())
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage canceled!"));
