@@ -99,6 +99,8 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 {
 	bIsAlive = false;
 
+	OnCharacterDeath.Broadcast();
+
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 

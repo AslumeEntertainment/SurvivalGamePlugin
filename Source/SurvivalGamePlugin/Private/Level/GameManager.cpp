@@ -177,7 +177,7 @@ void AGameManager::StartGame()
 void AGameManager::CheckGameFinishingRules(APlayerCustomiser* Player)
 {
 	//some logic here
-	FinishGame();
+	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, 3);
 }
 
 void AGameManager::FinishGame()
