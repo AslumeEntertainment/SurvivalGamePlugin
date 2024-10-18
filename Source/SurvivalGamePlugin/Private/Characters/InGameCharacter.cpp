@@ -48,6 +48,20 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	if (HasAuthority())
+	{
+		BroadcastInitialValues();
+	}
+	else
+	{
+		FTimerHandle BroadcastInitialValuesTimerHandle;
+		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 1, false);
+	}
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -57,18 +71,12 @@ void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentH
 
 void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
 {
-	if (CurrentHunger <= MaxHunger / 2)
-	{
-		OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
-	}
+	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
-	if (CurrentEnergy <= MaxEnergy / 2)
-	{
-		OnEnergyPercentUpdated.Broadcast(CurrentEnergy / (MaxEnergy / 2));
-	}
+	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }
 
 void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -102,11 +110,12 @@ void AInGameCharacter::GrantTemporalInvinsibility(float Duration)
 		return;
 	}
 
+	AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
 	AbilitySystemComponent->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
 	
 	FTimerHandle InvincibilityTimerHandle;
-	GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &AInGameCharacter::RemoveInvincibility, Duration, false, 0);
-
+	GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &AInGameCharacter::RemoveInvincibility, Duration, false, 0.1f);
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Player is now [TITLE CARD]"));
 }
 
 void AInGameCharacter::RemoveInvincibility()
@@ -118,6 +127,8 @@ void AInGameCharacter::RemoveInvincibility()
 	}
 
 	AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+	AbilitySystemComponent->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Player is no longer [TITLE CARD]"));
 }
 
 void AInGameCharacter::Landed(const FHitResult& Hit)
@@ -130,7 +141,7 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	}
 	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyFallDamage(this, AbilitySystemComponent))
 	{
-		GrantTemporalInvinsibility(1.f);
+		GrantTemporalInvinsibility(5.f);
 	}
 }
 
@@ -140,9 +151,15 @@ void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent
 	{
 		return;
 	}
+
+	if (SweepResult.Component != nullptr && SweepResult.Component->GetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn) == ECollisionResponse::ECR_Ignore)
+	{
+		return;
+	}
+
 	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, AbilitySystemComponent))
 	{
-		GrantTemporalInvinsibility(1.f);
+		GrantTemporalInvinsibility(5.f);
 	}
 	
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
@@ -213,7 +230,20 @@ void AInGameCharacter::BindCallbacksToDependencies()
 
 void AInGameCharacter::BroadcastInitialValues()
 {
-	// empty for now
+	if (IsValid(AttributeSet) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BroadcastInitialValues IsValid(AttributeSet) == false"));
+		return;
+	}
+
+	Client_OnUpdatePlayerHealth(AttributeSet->GetHealth(), AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerHunger(AttributeSet->GetHunger(), AttributeSet->GetMaxHunger());
+	Client_OnUpdatePlayerEnergy(AttributeSet->GetEnergy(), AttributeSet->GetMaxEnergy());
+}
+
+void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
+{
+	BroadcastInitialValues();
 }
 
 float AInGameCharacter::GetAttackSpeed() const

@@ -17,7 +17,7 @@
 
 void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -28,7 +28,6 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-
 	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag());
 	if (IsValid(ItemForDisassembly) == false)
 	{
@@ -64,13 +63,6 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 			}
 			break;
 		}
-	}
-
-	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
-	if (!IsValid(AnimInst))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(AnimInst) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
 	if (Player->bIsRightHanded == false)

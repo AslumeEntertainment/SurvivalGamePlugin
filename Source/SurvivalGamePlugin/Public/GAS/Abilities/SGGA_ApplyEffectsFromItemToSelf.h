@@ -28,8 +28,8 @@ protected:
 	FGameplayTag OnNotifyRecievedGameplayEventTag;
 
 	AInGameCharacter* Player;
+
 	AEffectGrantingItem* EffectGrantingItem;
-	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();

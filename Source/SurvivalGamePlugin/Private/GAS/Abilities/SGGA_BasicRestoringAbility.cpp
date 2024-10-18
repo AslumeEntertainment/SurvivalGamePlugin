@@ -26,13 +26,6 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
-	if (IsValid(AnimInst) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(AnimInst) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}
-
 	RegeneratingItem = Cast<ARegeneratingItem>(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag()));
 	if (IsValid(RegeneratingItem) == false)
 	{

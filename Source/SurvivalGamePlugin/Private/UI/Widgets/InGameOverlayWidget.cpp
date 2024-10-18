@@ -2,11 +2,15 @@
 
 
 #include "UI/Widgets/InGameOverlayWidget.h"
+
 #include "Components/BackgroundBlur.h"
+#include "Components/ProgressBar.h"
 #include "Components/Border.h"
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 {
+	HealthBar->SetPercent(CurrentHealthPercent);
+
 	UMaterialInstanceDynamic* HealthPercentOverlayMaterial = HealthPercentOverlay->GetDynamicMaterial();
 	if (!HealthPercentOverlayMaterial)
 	{
@@ -18,10 +22,13 @@ void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 
 void UInGameOverlayWidget::UpdateHungerPercent(float CurrentHungerPercent)
 {
+	HungerBar->SetPercent(CurrentHungerPercent);
 	HungerPercentOverlay->SetBrushColor(FLinearColor(0, 0, 0, 0.5 - CurrentHungerPercent));
 }
 
-void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEneryPercent)
+void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEnergyPercent)
 {
-	BackgroundBlur->SetBlurStrength(MaxBlurValue * (1 - CurrentEneryPercent));
+	EnergyBar->SetPercent(CurrentEnergyPercent);
+	
+	BackgroundBlur->SetBlurStrength(FMath::Clamp<float>(MaxBlurValue * (CurrentEnergyPercent * -2 + 1), 0, MaxBlurValue));
 }

@@ -406,13 +406,13 @@ void ASG_Character::SetIsMirrored(bool NewValue)
 		return;
 	}
 
-	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(GetMesh()->GetAnimInstance());
+	/*USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(GetMesh()->GetAnimInstance());
 	if (IsValid(AnimInst) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::SetIsMirrored IsValid(AnimInst) == false"))
 		return;
 	}
-	AnimInst->bIsMirrored = NewValue;
+	AnimInst->bIsMirrored = NewValue;*/
 	bIsMirrored = NewValue;
 }
 

@@ -7,6 +7,7 @@
 #include "InGameOverlayWidget.generated.h"
 
 class UBorder;
+class UProgressBar;
 class UBackgroundBlur;
 
 UCLASS()
@@ -25,6 +26,15 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBackgroundBlur* BackgroundBlur;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* HealthBar;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* HungerBar;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* EnergyBar;
+
 	UPROPERTY(EditAnywhere)
 	int MaxBlurValue = 15;
 
@@ -37,6 +47,6 @@ public:
 	void UpdateHungerPercent(float CurrentHungerPercent);
 
 	UFUNCTION()
-	void UpdateEnergyPercent(float CurrentEneryPercent);
+	void UpdateEnergyPercent(float CurrentEnergyPercent);
 
 };

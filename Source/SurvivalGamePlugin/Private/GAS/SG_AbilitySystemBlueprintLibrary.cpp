@@ -68,35 +68,3 @@ bool USG_AbilitySystemBlueprintLibrary::CalculateAndApplyFallDamage(AActor* Acto
 	}
 	return false;
 }
-
-//void USG_AbilitySystemBlueprintLibrary::GrantTemporalInvincibility(AActor* Actor, UAbilitySystemComponent* ASC)
-//{
-//	if (ASC == nullptr)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
-//		return;
-//	}
-//
-//	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")))
-//	{
-//		return;
-//	}
-//
-//	ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-//}
-//
-//void USG_AbilitySystemBlueprintLibrary::ClearInvincibility(AActor* Actor, UAbilitySystemComponent* ASC)
-//{
-//	if (ASC == nullptr)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
-//		return;
-//	}
-//
-//	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")) == false)
-//	{
-//		return;
-//	}
-//
-//	ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-//}

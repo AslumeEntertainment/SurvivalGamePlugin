@@ -49,15 +49,18 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 
 		if (HasMaxHealth())
 		{
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
-		else
+		else if(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth"))))
 		{
+			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 
 		if (GetHealth() == 0.f && HittableAvatarActor->bCanBeHit())
 		{
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			HittableAvatarActor->OnHittableDestroyed();
 		}

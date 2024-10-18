@@ -26,13 +26,6 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
-	if (!IsValid(AnimInst))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility IsValid(AnimInst) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}
-
 	EffectGrantingItem = Cast<AEffectGrantingItem>(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag()));
 	if (!IsValid(EffectGrantingItem))
 	{

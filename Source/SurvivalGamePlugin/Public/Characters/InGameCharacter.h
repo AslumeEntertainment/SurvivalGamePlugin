@@ -104,6 +104,8 @@ protected:
 
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
+	UFUNCTION(Client, Reliable)
+	virtual void Client_BroadcastInitialValues() override;
 
 
 public:

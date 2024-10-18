@@ -37,8 +37,8 @@ protected:
 	float EffectPeriod;
 
 	AInGameCharacter* Player;
+
 	ARegeneratingItem* RegeneratingItem;
-	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();

@@ -20,10 +20,4 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	static bool CalculateAndApplyFallDamage(AActor* Actor, UAbilitySystemComponent* ASC);
 
-	/*UFUNCTION(BlueprintCallable, Category = "Damage")
-	static void GrantTemporalInvincibility(AActor* Actor, UAbilitySystemComponent* ASC);
-
-	UFUNCTION(BlueprintCallable, Category = "Damage")
-	void ClearInvincibility(AActor* Actor, UAbilitySystemComponent* ASC);*/
-
 };

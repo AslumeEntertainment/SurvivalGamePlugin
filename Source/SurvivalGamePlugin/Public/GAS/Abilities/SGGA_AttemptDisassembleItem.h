@@ -33,8 +33,6 @@ protected:
 
 	AHumanCharacter* Player;
 
-	USG_AnimInstance* AnimInst;
-
 	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;

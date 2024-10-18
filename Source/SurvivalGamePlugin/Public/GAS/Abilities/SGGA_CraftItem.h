@@ -49,8 +49,6 @@ protected:
 
 	APlayerController* PlayerCont;
 
-	USG_AnimInstance* AnimInst;
-
 	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
 	UPROPERTY()

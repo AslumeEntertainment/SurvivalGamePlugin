@@ -29,13 +29,11 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CanActivateAbility IsValid(HumanPlayer) == false"));
 		return false;
 	}
-	
 	if (IsValid(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetMainEquipmentSlotTag())) == false || IsValid(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetSecondaryEquipmentSlotTag())) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player needs to have an item in both hands!"));
 		return false;
 	}
-
 	if (HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetMainEquipmentSlotTag())->ItemData.bCanCraftWithItem(HumanPlayer->GetEquipedItemAtSlot(HumanPlayer->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player cannot craft anything with their current items!"));
@@ -159,12 +157,6 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 
 	WaitInputReleaseTask->EndTask();
 
-	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
-	if (!IsValid(AnimInst))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(AnimInst) == false"));
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-	}
 	if (Player->bIsRightHanded == false)
 	{
 		Player->SetIsMirrored(true);
