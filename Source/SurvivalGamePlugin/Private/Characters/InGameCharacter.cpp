@@ -139,7 +139,7 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	{
 		return;
 	}
-	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyFallDamage(this, AbilitySystemComponent))
+	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, AbilitySystemComponent))
 	{
 		GrantTemporalInvinsibility(5.f);
 	}

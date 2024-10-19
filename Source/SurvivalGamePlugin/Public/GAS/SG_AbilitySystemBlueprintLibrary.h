@@ -17,7 +17,5 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	static bool CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC);
 
-	UFUNCTION(BlueprintCallable, Category = "Damage")
-	static bool CalculateAndApplyFallDamage(AActor* Actor, UAbilitySystemComponent* ASC);
 
 };

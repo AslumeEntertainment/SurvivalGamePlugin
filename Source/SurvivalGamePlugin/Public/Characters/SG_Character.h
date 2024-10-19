@@ -35,6 +35,10 @@ public:
 
 private:
 
+	bool bIsFirstPerson = true;
+
+	float CurrentInteractionRange;
+
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
@@ -84,6 +88,9 @@ protected:
 	UPROPERTY(Transient)
 	USG_CharacterAttributeSet* AttributeSet;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	float CameraDistanceFromPlayer = 200;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
@@ -99,6 +106,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CameraModeToggleAction;
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
@@ -113,6 +123,8 @@ protected:
 	virtual void Tick(float DeltaTime);
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void ToggleFirstPerson();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);

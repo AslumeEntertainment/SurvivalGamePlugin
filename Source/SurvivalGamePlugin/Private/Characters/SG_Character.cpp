@@ -85,7 +85,7 @@ void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
 void ASG_Character::EmitInteractionChecker()
 {
 	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
-	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
+	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * CurrentInteractionRange + StartTrace;
 
 	const FName TraceTag("InteractableTraceTag");
 
@@ -161,6 +161,8 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CurrentInteractionRange = InteractionRange;
+	
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(GetAbilitySystemComponent()) == false"))
@@ -198,11 +200,33 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
+		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
+
 		SG_EnhancedInputComponent->BindAbilityActions(AbilityInputConfig, this, &ASG_Character::AbilityInputPressed, &ASG_Character::AbilityInputReleased);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ASG_Character::ToggleFirstPerson()
+{
+	bIsFirstPerson = !bIsFirstPerson;
+
+	if (bIsFirstPerson)
+	{
+		CameraBoom->TargetArmLength = 0.f;
+		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("head"));
+		FirstPersonCamera->SetRelativeLocation(FVector::Zero());
+		CurrentInteractionRange = InteractionRange;
+	}
+	else
+	{
+		CameraBoom->TargetArmLength = CameraDistanceFromPlayer;
+		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("ThirdPersonCameraSocket"));
+		FirstPersonCamera->SetRelativeLocation(FVector(0, 30, 0));
+		CurrentInteractionRange = InteractionRange + CameraDistanceFromPlayer;
 	}
 }
 
