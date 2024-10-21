@@ -49,4 +49,13 @@ public:
 	UFUNCTION()
 	void UpdateEnergyPercent(float CurrentEnergyPercent);
 
+	UFUNCTION()
+	void SetHealthBarLength(float PlayerMaxHealth);
+
+	UFUNCTION()
+	void SetHungerBarLength(float PlayerMaxHunger);
+
+	UFUNCTION()
+	void SetEnergyBarLength(float PlayerMaxEnergy);
+
 };

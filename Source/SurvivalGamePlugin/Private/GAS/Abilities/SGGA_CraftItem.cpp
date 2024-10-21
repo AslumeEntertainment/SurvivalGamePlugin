@@ -157,7 +157,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 
 	WaitInputReleaseTask->EndTask();
 
-	if (Player->bIsRightHanded == false)
+	if (Player->IsRightHanded() == false)
 	{
 		Player->SetIsMirrored(true);
 	}

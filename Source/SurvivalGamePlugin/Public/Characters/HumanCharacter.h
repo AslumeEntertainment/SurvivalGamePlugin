@@ -14,16 +14,4 @@ class SURVIVALGAMEPLUGIN_API AHumanCharacter : public AInGameCharacter
 {
 	GENERATED_BODY()
 
-protected:
-
-	virtual void BeginPlay();
-
-	void MainHandAction() override;
-	void SecondaryHandAction() override;
-
-public:
-
-	UPROPERTY(EditAnywhere, Category = "Equipment")
-	bool bIsRightHanded = true;
-
 };

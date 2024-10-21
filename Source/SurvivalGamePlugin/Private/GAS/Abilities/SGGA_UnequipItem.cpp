@@ -8,7 +8,7 @@
 
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Interactables/Items/ItemBase.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/InGameCharacter.h"
 
 
 void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -18,7 +18,7 @@ void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (!IsValid(Player))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(Player) == false"));
@@ -50,6 +50,12 @@ void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		WaitSecondaryGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipSecondary);
 		WaitSecondaryGameplayEventTask->ReadyForActivation();
 	}
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetMixedEquipmentSlotTag())) || IsValid(Player->GetEquipedItemAtSlot(Player->GetCombinedEquipmentSlotTag())))
+	{
+		UAbilityTask_WaitGameplayEvent* WaitMixedGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed"), nullptr, true, true);
+		WaitMixedGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipMixed);
+		WaitMixedGameplayEventTask->ReadyForActivation();
+	}
 }
 
 void USGGA_UnequipItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -65,17 +71,16 @@ void USGGA_UnequipItem::UnequipMain(FGameplayEventData Payload)
 	{
 		return;
 	}
-
+	
 	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetCombinedMainEquipmentSlotTag())))
 	{
 		Player->GetEquipedItemAtSlot(Player->GetCombinedMainEquipmentSlotTag())->OnItemUnequiped();
 		Player->SetEquipedItemAtSlot(Player->GetCombinedMainEquipmentSlotTag(), nullptr);
+		return;
 	}
-	else
-	{
-		Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->OnItemUnequiped();
-		Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), nullptr);
-	}
+	
+	Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->OnItemUnequiped();
+	Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), nullptr);
 }
 
 
@@ -85,16 +90,34 @@ void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
 	{
 		return;
 	}
+
 	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetCombinedSecondaryEquipmentSlotTag())))
 	{
 		Player->GetEquipedItemAtSlot(Player->GetCombinedSecondaryEquipmentSlotTag())->OnItemUnequiped();
 		Player->SetEquipedItemAtSlot(Player->GetCombinedSecondaryEquipmentSlotTag(), nullptr);
+		return;
 	}
-	else
+	
+	Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
+	Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), nullptr);
+}
+
+void USGGA_UnequipItem::UnequipMixed(FGameplayEventData Payload)
+{
+	if (HasAuthority(&CurrentActivationInfo) == false)
 	{
-		Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
-		Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), nullptr);
+		return;
 	}
+
+	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetCombinedEquipmentSlotTag(), false)))
+	{
+		Player->GetEquipedItemAtSlot(Player->GetCombinedEquipmentSlotTag(), false)->OnItemUnequiped();
+		Player->SetEquipedItemAtSlot(Player->GetCombinedEquipmentSlotTag(), nullptr, false);
+		return;
+	}
+
+	Player->GetEquipedItemAtSlot(Player->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+	Player->SetEquipedItemAtSlot(Player->GetMixedEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::OnUnequipCanceled(float TimeHeld)

@@ -3,6 +3,8 @@
 
 #include "UI/Widgets/InGameOverlayWidget.h"
 
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/BackgroundBlur.h"
 #include "Components/ProgressBar.h"
 #include "Components/Border.h"
@@ -31,4 +33,37 @@ void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEnergyPercent)
 	EnergyBar->SetPercent(CurrentEnergyPercent);
 	
 	BackgroundBlur->SetBlurStrength(FMath::Clamp<float>(MaxBlurValue * (CurrentEnergyPercent * -2 + 1), 0, MaxBlurValue));
+}
+
+void UInGameOverlayWidget::SetHealthBarLength(float PlayerMaxHealth)
+{
+	UCanvasPanelSlot* HealthBarAsSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(HealthBar);
+	if (IsValid(HealthBarAsSlot) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameOverlayWidget::SetHealthBarLength IsValid(HealthBarAsSlot) == false"));
+		return;
+	}
+	HealthBarAsSlot->SetSize(FVector2D(PlayerMaxHealth * 5, 25));
+}
+
+void UInGameOverlayWidget::SetHungerBarLength(float PlayerMaxHunger)
+{
+	UCanvasPanelSlot* HungerBarAsSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(HungerBar);
+	if (IsValid(HungerBarAsSlot) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameOverlayWidget::SetHungerBarLength IsValid(HungerBarAsSlot) == false"));
+		return;
+	}
+	HungerBarAsSlot->SetSize(FVector2D(PlayerMaxHunger * 5, 25));
+}
+
+void UInGameOverlayWidget::SetEnergyBarLength(float PlayerMaxEnergy)
+{
+	UCanvasPanelSlot* EnergyBarAsSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(EnergyBar);
+	if (IsValid(EnergyBarAsSlot) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameOverlayWidget::SetEnergyBarLength IsValid(EnergyBarAsSlot) == false"));
+		return;
+	}
+	EnergyBarAsSlot->SetSize(FVector2D(PlayerMaxEnergy * 5, 25));
 }

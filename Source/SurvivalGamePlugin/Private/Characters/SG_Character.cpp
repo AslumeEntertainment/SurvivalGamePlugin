@@ -378,6 +378,10 @@ FRotator ASG_Character::GetRepControlRotation()
 
 void ASG_Character::DisablePlayerInput(float Duration)
 {
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{

@@ -65,7 +65,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		}
 	}
 
-	if (Player->bIsRightHanded == false)
+	if (Player->IsRightHanded() == false)
 	{
 		Player->SetIsMirrored(true);
 	}

@@ -46,14 +46,25 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
 	FGameplayTag CombinedSecondaryEquipmentSlotTag;
 
+	void SwapMainAndSecondaryEquipmentSlots();
+
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxHealth(float MaxHealth);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxHunger(float MaxHunger);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxEnergy(float MaxEnergy);
 
 protected:
 
@@ -63,6 +74,9 @@ protected:
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment")
+	bool bIsRightHanded = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
 	TMap<FGameplayTag, AItemBase*> EquipmentSlots;
@@ -99,8 +113,8 @@ protected:
 	UFUNCTION()
 	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
-	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
-	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
+	virtual void MainHandAction();
+	virtual void SecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
@@ -128,6 +142,12 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsRightHanded();
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsRightHanded(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
@@ -161,13 +181,11 @@ public:
 
 	FVoidDataTransferSignature OnCharacterDeath;
 
-	UPROPERTY(BlueprintCallable)
 	FFloatTransferSignature OnHealthPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnMaxHealthUpdated;
 	FFloatTransferSignature OnHungerPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnMaxHungerUpdated;
 	FFloatTransferSignature OnEnergyPercentUpdated;
+	FFloatTransferSignature OnMaxEnergyUpdated;
 
 };

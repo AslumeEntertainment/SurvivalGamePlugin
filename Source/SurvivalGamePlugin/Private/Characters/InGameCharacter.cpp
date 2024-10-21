@@ -38,6 +38,16 @@ AInGameCharacter::AInGameCharacter()
 	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
 }
 
+void AInGameCharacter::SwapMainAndSecondaryEquipmentSlots()
+{
+	if (EquipmentSlots.Contains(GetMainEquipmentSlotTag()) && EquipmentSlots.Contains(GetSecondaryEquipmentSlotTag()))
+	{
+		FName Temp = EquipmentSockets[GetMainEquipmentSlotTag()];
+		EquipmentSockets[GetMainEquipmentSlotTag()] = EquipmentSockets[GetSecondaryEquipmentSlotTag()];
+		EquipmentSockets[GetSecondaryEquipmentSlotTag()] = Temp;
+	}
+}
+
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -48,6 +58,11 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (bIsRightHanded == false)
+	{
+		SwapMainAndSecondaryEquipmentSlots();
+	}
 
 	if (IsLocallyControlled() == false)
 	{
@@ -69,14 +84,29 @@ void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentH
 	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
 }
 
+void AInGameCharacter::Client_OnUpdatePlayerMaxHealth_Implementation(float MaxHealth)
+{
+	OnMaxHealthUpdated.Broadcast(MaxHealth);
+}
+
 void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
 {
 	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
 }
 
+void AInGameCharacter::Client_OnUpdatePlayerMaxHunger_Implementation(float MaxHunger)
+{
+	OnMaxHungerUpdated.Broadcast(MaxHunger);
+}
+
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerMaxEnergy_Implementation(float MaxEnergy)
+{
+	OnMaxEnergyUpdated.Broadcast(MaxEnergy);
 }
 
 void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -165,6 +195,60 @@ void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }
 
+void AInGameCharacter::MainHandAction()
+{
+	FGameplayTag EventTag;
+	FGameplayEventData EventData;
+
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		if (HasEquipmentSlotWithTag(GetMixedEquipmentSlotTag()))
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
+		}
+		else
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main");
+		}
+	}
+	else
+	{
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetMainEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedMainEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
+		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("MainHandAction - %s"), *EventTag.ToString());
+
+	SendGameplayEventToSelf(EventTag, EventData);
+}
+
+void AInGameCharacter::SecondaryHandAction()
+{
+	FGameplayTag EventTag;
+	FGameplayEventData EventData;
+
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		if (HasEquipmentSlotWithTag(GetMixedEquipmentSlotTag()))
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
+		}
+		else
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary");
+		}
+	}
+	else
+	{
+		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetSecondaryEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
+		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("SecondaryHandAction - %s"), *EventTag.ToString());
+
+	SendGameplayEventToSelf(EventTag, EventData);
+}
+
 void AInGameCharacter::BindCallbacksToDependencies()
 {
 	if (IsValid(AbilitySystemComponent) == false)
@@ -185,6 +269,13 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		}
 	);
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerMaxHealth(Data.NewValue);
+		}
+	);
+
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetAttackSpeedAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
@@ -199,10 +290,10 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		}
 	);
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
+			Client_OnUpdatePlayerMaxHunger(Data.NewValue);
 		}
 	);
 
@@ -210,6 +301,13 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxEnergyAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerMaxEnergy(Data.NewValue);
 		}
 	);
 
@@ -237,8 +335,11 @@ void AInGameCharacter::BroadcastInitialValues()
 	}
 
 	Client_OnUpdatePlayerHealth(AttributeSet->GetHealth(), AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerMaxHealth(AttributeSet->GetMaxHealth());
 	Client_OnUpdatePlayerHunger(AttributeSet->GetHunger(), AttributeSet->GetMaxHunger());
+	Client_OnUpdatePlayerMaxHunger(AttributeSet->GetMaxHunger());
 	Client_OnUpdatePlayerEnergy(AttributeSet->GetEnergy(), AttributeSet->GetMaxEnergy());
+	Client_OnUpdatePlayerMaxEnergy(AttributeSet->GetMaxEnergy());
 }
 
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
@@ -262,6 +363,18 @@ void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpe
 bool AInGameCharacter::bCanBeHit()
 {
 	return IsAlive();
+}
+
+bool AInGameCharacter::IsRightHanded()
+{
+	return bIsRightHanded;
+}
+
+void AInGameCharacter::SetIsRightHanded(bool NewValue)
+{
+	bIsRightHanded = NewValue;
+
+	SwapMainAndSecondaryEquipmentSlots();
 }
 
 void AInGameCharacter::OnHittableDestroyed_Implementation()

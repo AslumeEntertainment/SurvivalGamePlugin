@@ -32,13 +32,13 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
         return;
     }
 
-    if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetMainEquipmentSlotTag()) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetSecondaryEquipmentSlotTag()) && HumanPlayer->bIsRightHanded == false)
+    if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetMainEquipmentSlotTag()) && HumanPlayer->IsRightHanded()
+        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetSecondaryEquipmentSlotTag()) && HumanPlayer->IsRightHanded() == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
     }
-    else if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetSecondaryEquipmentSlotTag()) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetMainEquipmentSlotTag()) && HumanPlayer->bIsRightHanded == false)
+    else if (SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetSecondaryEquipmentSlotTag()) && HumanPlayer->IsRightHanded()
+        || SocketName == HumanPlayer->GetEquipmentSocketWithTag(HumanPlayer->GetMainEquipmentSlotTag()) && HumanPlayer->IsRightHanded() == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
     }
