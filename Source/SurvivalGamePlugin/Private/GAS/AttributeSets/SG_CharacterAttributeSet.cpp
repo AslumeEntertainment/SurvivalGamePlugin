@@ -83,6 +83,26 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 	{
 		ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
 	}
+	if (Attribute == GetSpeedAttribute())
+	{
+		UCharacterMovementComponent* MovementComp = AvatarActor->GetCharacterMovement();
+		if (IsValid(MovementComp) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(MovementComp) == false"));
+			return;
+		}
+		MovementComp->MaxWalkSpeed = NewValue;
+	}
+	if (Attribute == GetJumpVelocityAttribute())
+	{
+		UCharacterMovementComponent* MovementComp = AvatarActor->GetCharacterMovement();
+		if (IsValid(MovementComp) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(MovementComp) == false"));
+			return;
+		}
+		MovementComp->JumpZVelocity = NewValue;
+	}
 }
 
 void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)

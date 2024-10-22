@@ -9,7 +9,7 @@
 
 class AHumanCharacter;
 class AItemBase;
-class USG_AnimInstance;
+class UEquipmentComponent;
 class UGameplayEffect;
 
 UCLASS()
@@ -32,6 +32,7 @@ protected:
 	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
 
 	AHumanCharacter* Player;
+	UEquipmentComponent* EquipmentComp;
 
 	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 

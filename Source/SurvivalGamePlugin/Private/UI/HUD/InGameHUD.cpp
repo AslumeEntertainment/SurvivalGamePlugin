@@ -45,6 +45,8 @@ void AInGameHUD::BeginPlay()
 	Player->OnMaxHungerUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetHungerBarLength);
 	Player->OnMaxEnergyUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
 
+	Player->OnCurrentSpeedUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
+
 	ShowGameplayWidget();
 }
 

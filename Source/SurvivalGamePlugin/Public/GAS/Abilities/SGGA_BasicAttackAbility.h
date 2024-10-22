@@ -8,7 +8,6 @@
 #include "SGGA_BasicAttackAbility.generated.h"
 
 class AInGameCharacter;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_BasicAttackAbility : public USG_GameplayAbility

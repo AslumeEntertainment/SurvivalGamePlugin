@@ -202,6 +202,11 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
 
+		if (IsValid(AbilityInputConfig) == false)
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SetupPlayerInputComponent IsValid(AbilityInputConfig) == false"))
+			return;
+		}
 		SG_EnhancedInputComponent->BindAbilityActions(AbilityInputConfig, this, &ASG_Character::AbilityInputPressed, &ASG_Character::AbilityInputReleased);
 	}
 	else
@@ -376,6 +381,21 @@ FRotator ASG_Character::GetRepControlRotation()
 	return ControlRotation;
 }
 
+void ASG_Character::ResetCameraView()
+{
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		return;
+	}
+	PlayerCont->SetControlRotation(GetActorRotation());
+}
+
 void ASG_Character::DisablePlayerInput(float Duration)
 {
 	if (IsLocallyControlled() == false)
@@ -399,12 +419,18 @@ void ASG_Character::DisablePlayerInput(float Duration)
 	if (Duration > 0.f)
 	{
 		FTimerHandle EnableInputTimer;
-		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false, 0);
+		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("Movement disabled"));
 }
 
 void ASG_Character::EnablePlayerInput()
 {
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{
@@ -419,6 +445,7 @@ void ASG_Character::EnablePlayerInput()
 	}
 
 	InputSystem->AddMappingContext(DefaultMappingContext, 0);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Turquoise, TEXT("Movement enabled"));
 }
 
 bool ASG_Character::IsMirrored()

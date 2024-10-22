@@ -8,7 +8,6 @@
 
 class AInGameCharacter;
 class ARegeneratingItem;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_BasicRestoringAbility : public USG_GameplayAbility

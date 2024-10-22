@@ -9,6 +9,7 @@
 
 #include "Characters/InGameCharacter.h"
 #include "Interactables/Items/RegeneratingItem.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Animation/SG_AnimInstance.h"
 
@@ -26,7 +27,13 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	RegeneratingItem = Cast<ARegeneratingItem>(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag()));
+	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
 	if (IsValid(RegeneratingItem) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility RegeneratingItem == nullptr"));

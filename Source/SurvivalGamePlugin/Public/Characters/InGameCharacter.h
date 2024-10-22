@@ -11,9 +11,11 @@
 
 #include "InGameCharacter.generated.h"
 
-class AItemBase;
-class ADamageDealingItem;
+//class AItemBase;
+//class ADamageDealingItem;
+class UEquipmentComponent;
 class UPassiveDamageDealingComponent;
+
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -27,26 +29,6 @@ public:
 private:
 
 	bool bIsAlive = true;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag MainEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag SecondaryEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag MixedEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedMainEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedSecondaryEquipmentSlotTag;
-
-	void SwapMainAndSecondaryEquipmentSlots();
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
@@ -66,11 +48,16 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerMaxEnergy(float MaxEnergy);
 
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
+
 protected:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
@@ -78,11 +65,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<FGameplayTag, AItemBase*> EquipmentSlots;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<FGameplayTag, FName> EquipmentSockets;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
+	UEquipmentComponent* EquipmentComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
@@ -118,20 +102,17 @@ protected:
 
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
+
 	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues() override;
 
 
 public:
 
-	FGameplayTag GetMainEquipmentSlotTag()                { return MainEquipmentSlotTag; }
-	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
-	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
-	FGameplayTag GetCombinedEquipmentSlotTag()            { return CombinedEquipmentSlotTag; }
-	FGameplayTag GetCombinedMainEquipmentSlotTag()        { return CombinedMainEquipmentSlotTag; }
-	FGameplayTag GetCombinedSecondaryEquipmentSlotTag()   { return CombinedSecondaryEquipmentSlotTag; }
-
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }
 
 	UFUNCTION(BlueprintCallable)
 	float GetAttackSpeed() const;
@@ -150,30 +131,6 @@ public:
 	void SetIsRightHanded(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag = true);
-
-	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag = true) const;
-
-	UFUNCTION(BlueprintCallable)
-	TArray<AItemBase*> GetAllEquipedItems() const;
-
-	UFUNCTION(BlueprintCallable)
-	void UnequipAllItems();
-
-	UFUNCTION(BlueprintCallable)
-	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
-
-	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
-
-	UFUNCTION(BlueprintCallable)
-	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
-
-	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
 
 	UFUNCTION(BlueprintCallable)
@@ -187,5 +144,7 @@ public:
 	FFloatTransferSignature OnMaxHungerUpdated;
 	FFloatTransferSignature OnEnergyPercentUpdated;
 	FFloatTransferSignature OnMaxEnergyUpdated;
+
+	FFloatTransferSignature OnCurrentSpeedUpdated;
 
 };

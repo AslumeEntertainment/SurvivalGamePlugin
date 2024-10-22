@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
@@ -162,6 +163,12 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == false"));
 		return;
 	}
+	UEquipmentComponent* EquipmentComp = InteractingPlayer->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
+		return;
+	}
 	UAbilitySystemComponent* ASC = InteractingPlayer->GetAbilitySystemComponent();
 	if (IsValid(ASC) == false)
 	{
@@ -173,53 +180,53 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 
 	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) && SlotToEquipAtTag.ToString().Contains(".Combined"))
 	{
-		if (ItemData.EquipmentSlotTag == InteractingPlayer->GetCombinedMainEquipmentSlotTag())
+		if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedMainEquipmentSlotTag())
 		{
-			SlotToEquipAtTag = InteractingPlayer->GetMainEquipmentSlotTag();
+			SlotToEquipAtTag = EquipmentComp->GetMainEquipmentSlotTag();
 		}
-		else if (ItemData.EquipmentSlotTag == InteractingPlayer->GetCombinedSecondaryEquipmentSlotTag())
+		else if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())
 		{
-			SlotToEquipAtTag = InteractingPlayer->GetSecondaryEquipmentSlotTag();
+			SlotToEquipAtTag = EquipmentComp->GetSecondaryEquipmentSlotTag();
 		}
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotWithTag(InteractingPlayer->GetMixedEquipmentSlotTag()) && 
-		SlotToEquipAtTag.RequestDirectParent() != InteractingPlayer->GetCombinedEquipmentSlotTag())
+	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) &&
+		SlotToEquipAtTag.RequestDirectParent() != EquipmentComp->GetCombinedEquipmentSlotTag())
 	{
-		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag())))
+		if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())))
 		{
-			InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag())->OnItemUnequiped();
-			InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag(), nullptr);
+			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
 		}
 		
-		SlotToEquipAtTag = InteractingPlayer->GetMixedEquipmentSlotTag();
-		InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetMixedEquipmentSlotTag(), this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(InteractingPlayer->GetMixedEquipmentSlotTag()));
+		SlotToEquipAtTag = EquipmentComp->GetMixedEquipmentSlotTag();
+		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), this);
+		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMixedEquipmentSlotTag()));
 		
 		return;
 	}
 	
-	if (InteractingPlayer->HasEquipmentSlotWithTag(SlotToEquipAtTag))
+	if (EquipmentComp->HasEquipmentSlotWithTag(SlotToEquipAtTag))
 	{
-		if (SlotToEquipAtTag.RequestDirectParent() == InteractingPlayer->GetCombinedEquipmentSlotTag())
+		if (SlotToEquipAtTag.RequestDirectParent() == EquipmentComp->GetCombinedEquipmentSlotTag())
 		{
-			InteractingPlayer->UnequipAllItems();
+			EquipmentComp->UnequipAllItems();
 		}
 		else
 		{
-			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag())))
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())))
 			{
-				InteractingPlayer->GetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
-				InteractingPlayer->SetEquipedItemAtSlot(InteractingPlayer->GetCombinedEquipmentSlotTag(), nullptr);
+				EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
+				EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), nullptr);
 			}
-			if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(SlotToEquipAtTag)))
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)))
 			{
-				InteractingPlayer->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
+				EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
 			}
 		}
 		
-		InteractingPlayer->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketWithTag(SlotToEquipAtTag));
+		EquipmentComp->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
+		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(SlotToEquipAtTag));
 
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 		return;

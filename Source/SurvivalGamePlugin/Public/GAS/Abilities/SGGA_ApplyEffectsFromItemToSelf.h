@@ -8,7 +8,6 @@
 
 class AInGameCharacter;
 class AEffectGrantingItem;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectsFromItemToSelf : public USG_GameplayAbility

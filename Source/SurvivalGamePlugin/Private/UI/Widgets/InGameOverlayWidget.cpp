@@ -7,7 +7,13 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/BackgroundBlur.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Components/Border.h"
+
+void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
+{
+	TXT_CurrentSpeed->SetText(FText::FromString(FString::SanitizeFloat(FMath::CeilToFloat(NewValue)) + " m/s"));
+}
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 {

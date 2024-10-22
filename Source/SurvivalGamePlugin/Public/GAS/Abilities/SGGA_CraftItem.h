@@ -11,8 +11,8 @@ class UItemIconWidget;
 class UCraftingWindowWidget;
 class UAbilityTask_WaitInputRelease;
 class AHumanCharacter;
+class UEquipmentComponent;
 class APlayerController;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
@@ -46,8 +46,8 @@ protected:
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask;
 
 	AHumanCharacter* Player;
-
 	APlayerController* PlayerCont;
+	UEquipmentComponent* EquipmentComp;
 
 	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 

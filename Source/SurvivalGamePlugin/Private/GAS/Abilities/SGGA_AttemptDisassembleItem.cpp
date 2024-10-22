@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Interactables/Items/ItemBase.h"
@@ -23,12 +24,18 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 	Player = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
-	if (!IsValid(Player))
+	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	AItemBase* ItemForDisassembly = Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag());
+	EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	AItemBase* ItemForDisassembly = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag());
 	if (IsValid(ItemForDisassembly) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(ItemForDisassembly) == false"));
@@ -56,7 +63,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		}
 		case EItemDisassembleRequirement::EmptyHand:
 		{
-			if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())))
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
 				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -115,7 +122,8 @@ void USGGA_AttemptDisassembleItem::SpawnNewItems()
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	float ItemDurabilityPercent = Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->GetDurability() / Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
+	float ItemDurabilityPercent = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() / 
+		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
 
 	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(MainItemActor))
@@ -153,21 +161,21 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
-	Player->GetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag())->DestroyItem();
+	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyItem();
 
 	if (IsValid(MainItemActor))
 	{
-		MainItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(Player->GetMainEquipmentSlotTag()));
-		Player->SetEquipedItemAtSlot(Player->GetMainEquipmentSlotTag(), MainItemActor);
+		MainItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()));
+		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), MainItemActor);
 	}
 
-	if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())) == false && IsValid(IngredientItemActor))
+	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) == false && IsValid(IngredientItemActor))
 	{
-		IngredientItemActor->OnItemEquiped(Player, Player->GetEquipmentSocketWithTag(Player->GetSecondaryEquipmentSlotTag()));
-		Player->SetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
+		IngredientItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
 	}
 
-	else if (IsValid(Player->GetEquipedItemAtSlot(Player->GetSecondaryEquipmentSlotTag())) && IsValid(IngredientItemActor))
+	else if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) && IsValid(IngredientItemActor))
 	{
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());

@@ -160,6 +160,9 @@ public:
 	FRotator GetRepControlRotation();
 
 	UFUNCTION(BlueprintCallable)
+	void ResetCameraView();
+
+	UFUNCTION(BlueprintCallable)
 	void DisablePlayerInput(float Duration = 0.f);
 
 	UFUNCTION(BlueprintCallable)

@@ -12,6 +12,7 @@
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/PassiveDamageDealingComponent.h"
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -19,12 +20,7 @@
 
 AInGameCharacter::AInGameCharacter()
 {
-	MainEquipmentSlotTag =                 FGameplayTag::RequestGameplayTag("EquipmentSlot.Main");
-	SecondaryEquipmentSlotTag =            FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary");
-	MixedEquipmentSlotTag =                FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed");
-	CombinedEquipmentSlotTag =             FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined");
-	CombinedMainEquipmentSlotTag =         FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Main");
-	CombinedSecondaryEquipmentSlotTag =    FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Secondary");
+	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
 	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
 	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -36,16 +32,6 @@ AInGameCharacter::AInGameCharacter()
 	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
 
 	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
-}
-
-void AInGameCharacter::SwapMainAndSecondaryEquipmentSlots()
-{
-	if (EquipmentSlots.Contains(GetMainEquipmentSlotTag()) && EquipmentSlots.Contains(GetSecondaryEquipmentSlotTag()))
-	{
-		FName Temp = EquipmentSockets[GetMainEquipmentSlotTag()];
-		EquipmentSockets[GetMainEquipmentSlotTag()] = EquipmentSockets[GetSecondaryEquipmentSlotTag()];
-		EquipmentSockets[GetSecondaryEquipmentSlotTag()] = Temp;
-	}
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -61,7 +47,7 @@ void AInGameCharacter::BeginPlay()
 
 	if (bIsRightHanded == false)
 	{
-		SwapMainAndSecondaryEquipmentSlots();
+		EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 	}
 
 	if (IsLocallyControlled() == false)
@@ -75,7 +61,17 @@ void AInGameCharacter::BeginPlay()
 	else
 	{
 		FTimerHandle BroadcastInitialValuesTimerHandle;
-		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 1, false);
+		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
+	}
+}
+
+void AInGameCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (HasAuthority())
+	{
+		Client_OnUpdatePlayerCurrentSpeed(GetVelocity().Length());
 	}
 }
 
@@ -107,6 +103,11 @@ void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentE
 void AInGameCharacter::Client_OnUpdatePlayerMaxEnergy_Implementation(float MaxEnergy)
 {
 	OnMaxEnergyUpdated.Broadcast(MaxEnergy);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerCurrentSpeed_Implementation(float Velocity)
+{
+	OnCurrentSpeedUpdated.Broadcast(Velocity);
 }
 
 void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -202,7 +203,7 @@ void AInGameCharacter::MainHandAction()
 
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		if (HasEquipmentSlotWithTag(GetMixedEquipmentSlotTag()))
+		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
 		}
@@ -213,7 +214,8 @@ void AInGameCharacter::MainHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetMainEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedMainEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedMainEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
 	}
@@ -229,7 +231,7 @@ void AInGameCharacter::SecondaryHandAction()
 
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
-		if (HasEquipmentSlotWithTag(GetMixedEquipmentSlotTag()))
+		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
 		}
@@ -240,7 +242,8 @@ void AInGameCharacter::SecondaryHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(GetEquipedItemAtSlot(GetSecondaryEquipmentSlotTag())) || IsValid(GetEquipedItemAtSlot(GetCombinedSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) || 
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
 	}
@@ -310,20 +313,6 @@ void AInGameCharacter::BindCallbacksToDependencies()
 			Client_OnUpdatePlayerMaxEnergy(Data.NewValue);
 		}
 	);
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetSpeedAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			GetCharacterMovement()->MaxWalkSpeed = Data.NewValue;
-		}
-	);
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetJumpVelocityAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			GetCharacterMovement()->JumpZVelocity = Data.NewValue;
-		}
-	);
 }
 
 void AInGameCharacter::BroadcastInitialValues()
@@ -374,7 +363,7 @@ void AInGameCharacter::SetIsRightHanded(bool NewValue)
 {
 	bIsRightHanded = NewValue;
 
-	SwapMainAndSecondaryEquipmentSlots();
+	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 }
 
 void AInGameCharacter::OnHittableDestroyed_Implementation()
@@ -386,122 +375,10 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
-	UnequipAllItems();
+	EquipmentComponent->UnequipAllItems();
 	bIsAlive = false;
 
 	UnPossessed();
-}
-
-bool AInGameCharacter::HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
-{
-	if (CheckParentTag)
-	{
-		return EquipmentSlots.Contains(SlotTag) || EquipmentSlots.Contains(SlotTag.RequestDirectParent());
-	}
-	
-	return EquipmentSlots.Contains(SlotTag);
-}
-
-void AInGameCharacter::SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag)
-{
-	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
-	{
-		return;
-	}
-
-	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
-	{
-		EquipmentSlots[SlotTag.RequestDirectParent()] = Item;
-	}
-	else
-	{
-		EquipmentSlots[SlotTag] = Item;
-	}
-	
-	return;
-}
-
-AItemBase* AInGameCharacter::GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag) const
-{
-	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
-	{
-		return nullptr;
-	}
-
-	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
-	{
-		return EquipmentSlots[SlotTag.RequestDirectParent()];
-	}
-	else
-	{
-		return EquipmentSlots[SlotTag];
-	}
-}
-
-TArray<AItemBase*> AInGameCharacter::GetAllEquipedItems() const
-{
-	TArray<AItemBase*> EquipedItems;
-	for (auto& EquipmentSlot : EquipmentSlots)
-	{
-		if (IsValid(EquipmentSlot.Value))
-		{
-			EquipedItems.Add(EquipmentSlot.Value);
-		}
-	}
-	return EquipedItems;
-}
-
-void AInGameCharacter::UnequipAllItems()
-{
-	for (auto& EquipmentSlot : EquipmentSlots)
-	{
-		if (IsValid(EquipmentSlot.Value))
-		{
-			EquipmentSlot.Value->OnItemUnequiped();
-			EquipmentSlot.Value = nullptr;
-		}
-	}
-}
-
-TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
-{
-	TArray<ADamageDealingItem*> EquipedWeapons;
-	for (auto& EquipmentSlot : EquipmentSlots)
-	{
-		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
-		if (IsValid(EquipedWeapon))
-		{
-			EquipedWeapons.Add(EquipedWeapon);
-		}
-	}
-	return EquipedWeapons;
-}
-
-bool AInGameCharacter::HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
-{
-	if (CheckParentTag)
-	{
-		return EquipmentSockets.Contains(SlotTag) || EquipmentSockets.Contains(SlotTag.RequestDirectParent());
-	}
-
-	return EquipmentSockets.Contains(SlotTag);
-}
-
-FName AInGameCharacter::GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
-{
-	if (HasEquipmentSocketWithTag(SlotTag, CheckParentTag) == false)
-	{
-		return FName();
-	}
-
-	if (HasEquipmentSocketWithTag(SlotTag, false) == false)
-	{
-		return EquipmentSockets[SlotTag.RequestDirectParent()];
-	}
-	else
-	{
-		return EquipmentSockets[SlotTag];
-	}
 }
 
 bool AInGameCharacter::IsAlive()
@@ -549,11 +426,11 @@ void AInGameCharacter::ShowPlayerInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentSlots.Num());
-	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentSockets.Num());
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentComponent->GetEquipmentSlots().Num());
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentComponent->GetEquipmentSockets().Num());
 
 	int i = 0;
-	for (TPair<FGameplayTag, AItemBase*> Slot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> Slot : EquipmentComponent->GetEquipmentSlots())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s Slot #%d - %s"), *Prefix, i, *(Slot.Key.ToString()));
 		if (IsValid(Slot.Value))
@@ -575,9 +452,9 @@ void AInGameCharacter::ShowPlayerInfo()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s %s is nullptr"), *Prefix, *(Slot.Key.ToString()));
 		}
-		if (HasEquipmentSocketWithTag(Slot.Key))
+		if (EquipmentComponent->HasEquipmentSocketWithTag(Slot.Key))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s %s has equipment socket with name %s"), *Prefix, *(Slot.Key.ToString()), *(GetEquipmentSocketWithTag(Slot.Key).ToString()));
+			UE_LOG(LogTemp, Warning, TEXT("%s %s has equipment socket with name %s"), *Prefix, *(Slot.Key.ToString()), *(EquipmentComponent->GetEquipmentSocketWithTag(Slot.Key).ToString()));
 		}
 		else
 		{
@@ -587,3 +464,5 @@ void AInGameCharacter::ShowPlayerInfo()
 		i++;
 	}
 }
+
+

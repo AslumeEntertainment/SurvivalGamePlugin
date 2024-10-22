@@ -9,6 +9,7 @@
 
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -18,15 +19,21 @@
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
-	if (!IsValid(Player))
+	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(Player) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}
+	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
@@ -74,7 +81,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	/* Does the ability use an item */
 	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains("Item"))
 	{
-		TArray<ADamageDealingItem*> EquipedWeapons = Player->GetAllEquipedWeapons();
+		TArray<ADamageDealingItem*> EquipedWeapons = EquipmentComp->GetAllEquipedWeapons();
 		for (ADamageDealingItem* Weapon : EquipedWeapons)
 		{
 			PlayerDamageDealingComponents.Add(Weapon->GetDamageDealingComponent());

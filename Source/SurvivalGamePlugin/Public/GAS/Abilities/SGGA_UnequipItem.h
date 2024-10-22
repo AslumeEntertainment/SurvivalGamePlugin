@@ -7,6 +7,7 @@
 #include "SGGA_UnequipItem.generated.h"
 
 class AInGameCharacter;
+class UEquipmentComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_UnequipItem : public USG_GameplayAbility
@@ -21,6 +22,7 @@ public:
 protected:
 
 	AInGameCharacter* Player;
+	UEquipmentComponent* EquipmentComp;
 
 	UFUNCTION()
 	void UnequipMain(FGameplayEventData Payload);
