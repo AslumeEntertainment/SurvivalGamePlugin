@@ -5,26 +5,11 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 
+#include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
 
-
-struct FSG_DamageStatics
-{
-	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
-
-	FSG_DamageStatics()
-	{
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, Health, Target, false);
-	}
-};
-
-static const FSG_DamageStatics& DamageStatics()
-{
-	static FSG_DamageStatics DStatics;
-	return DStatics;
-}
 
 UGEEC_CalculateFireDamage::UGEEC_CalculateFireDamage()
 {

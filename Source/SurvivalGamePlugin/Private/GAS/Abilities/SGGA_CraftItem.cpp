@@ -30,7 +30,7 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CanActivateAbility IsValid(HumanPlayer) == false"));
 		return false;
 	}
-	UEquipmentComponent* EquipmentComponent = Player->GetEquipmentComponent();
+	UEquipmentComponent* EquipmentComponent = HumanPlayer->GetEquipmentComponent();
 	if (IsValid(EquipmentComponent) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(EquipmentComp) == false"));

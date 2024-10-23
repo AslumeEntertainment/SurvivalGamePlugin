@@ -56,6 +56,7 @@ ASG_Character::ASG_Character()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
+
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -65,6 +66,19 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bIsMirrored, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
+}
+
+void ASG_Character::UpdateCamera(float Alpha)
+{
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::UpdateCamera IsValid(PlayerCont) == false"));
+		return;
+	}
+	FQuat NewControlRotation = FQuat::Slerp(PlayerCont->GetControlRotation().Quaternion(), GetActorQuat(), Alpha);
+	PlayerCont->SetControlRotation(FRotator(NewControlRotation));
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Camera Updated"));
 }
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
@@ -169,6 +183,14 @@ void ASG_Character::BeginPlay()
 		return;
 	}
 	GetAbilitySystemComponent()->InitAbilityActorInfo(this, this);
+
+	if (IsValid(CameraViewResetCurve))
+	{
+		FOnTimelineFloat ProgressUpdate;
+		ProgressUpdate.BindUFunction(this, FName("UpdateCamera"));
+
+		CameraViewResetTimeline.AddInterpFloat(CameraViewResetCurve, ProgressUpdate);
+	}
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -387,13 +409,7 @@ void ASG_Character::ResetCameraView()
 	{
 		return;
 	}
-	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
-	if (IsValid(PlayerCont) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
-		return;
-	}
-	PlayerCont->SetControlRotation(GetActorRotation());
+	CameraViewResetTimeline.Play();
 }
 
 void ASG_Character::DisablePlayerInput(float Duration)

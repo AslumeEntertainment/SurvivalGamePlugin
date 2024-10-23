@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
+#include "Components/TimelineComponent.h"
 #include "GameplayTagContainer.h"
 
 #include "Headers/GeneralDelegates.h"
@@ -14,13 +16,16 @@
 
 class USpringArmComponent;
 class UCameraComponent;
-class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
+class UCurveFloat;
+struct FInputActionValue;
+
 class UAbilityInputConfig;
+class UDamageDealingComponent;
 class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
-struct FInputActionValue;
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -39,11 +44,16 @@ private:
 
 	float CurrentInteractionRange;
 
+	FTimeline CameraViewResetTimeline;
+
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
 	UPROPERTY(Replicated)
 	bool bIsMirrored = false;
+
+	UFUNCTION()
+	void UpdateCamera(float Alpha);
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
@@ -90,6 +100,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraDistanceFromPlayer = 200;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	UCurveFloat* CameraViewResetCurve = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;

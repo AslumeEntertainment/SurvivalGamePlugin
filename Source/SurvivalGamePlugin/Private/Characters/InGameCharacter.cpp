@@ -129,39 +129,6 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
-void AInGameCharacter::GrantTemporalInvinsibility(float Duration)
-{
-	if (IsValid(AbilitySystemComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GrantTemporalInvinsibility IsValid(AbilitySystemComponent) == false"));
-		return;
-	}
-	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")))
-	{
-		return;
-	}
-
-	AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-	AbilitySystemComponent->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-	
-	FTimerHandle InvincibilityTimerHandle;
-	GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &AInGameCharacter::RemoveInvincibility, Duration, false, 0.1f);
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Player is now [TITLE CARD]"));
-}
-
-void AInGameCharacter::RemoveInvincibility()
-{
-	if (IsValid(AbilitySystemComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::RemoveInvincibility IsValid(AbilitySystemComponent) == false"));
-		return;
-	}
-
-	AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-	AbilitySystemComponent->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility"));
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, TEXT("Player is no longer [TITLE CARD]"));
-}
-
 void AInGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
@@ -170,10 +137,9 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	{
 		return;
 	}
-	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, AbilitySystemComponent))
-	{
-		GrantTemporalInvinsibility(5.f);
-	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
+	SendGameplayEventToSelf(EventTag, FGameplayEventData());
 }
 
 void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -188,10 +154,11 @@ void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent
 		return;
 	}
 
-	if (USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(this, AbilitySystemComponent))
-	{
-		GrantTemporalInvinsibility(5.f);
-	}
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.Instigator = OtherActor;
+
+	SendGameplayEventToSelf(EventTag, EventData);
 	
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }

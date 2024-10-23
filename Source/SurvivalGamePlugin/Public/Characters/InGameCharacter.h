@@ -11,8 +11,6 @@
 
 #include "InGameCharacter.generated.h"
 
-//class AItemBase;
-//class ADamageDealingItem;
 class UEquipmentComponent;
 class UPassiveDamageDealingComponent;
 
@@ -87,10 +85,6 @@ protected:
 	UInputAction* JumpAction;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	void GrantTemporalInvinsibility(float Duration);
-
-	void RemoveInvincibility();
 
 	virtual void Landed(const FHitResult& Hit) override;
 

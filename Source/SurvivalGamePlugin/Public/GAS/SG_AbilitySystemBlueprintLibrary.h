@@ -14,8 +14,8 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemBlueprintLibrary : public UAbility
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = "Damage")
-	static bool CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC);
+	/*UFUNCTION(BlueprintCallable, Category = "Damage")
+	static bool CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC);*/
 
 
 };
