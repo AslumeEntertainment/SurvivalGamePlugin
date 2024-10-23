@@ -45,7 +45,7 @@ private:
 	ULobbyManagingWidgetBase* LobbyManagingWidget;
 
 	UPROPERTY()
-	TArray<FName> CampaignIDs;
+	TArray<uint16> CampaignIDs;
 	UPROPERTY()
 	TArray<FText> CampaignNames;
 	UPROPERTY()
@@ -57,7 +57,7 @@ private:
 	UPROPERTY()
 	TArray<uint8> CampaignProgressions;
 
-	FName CurrentCampaignID;
+	uint16 CurrentCampaignID;
 	FText CurrentCampaignName;
 	uint8 NumPlayers = 0;
 	bool bIsSupervised = false;

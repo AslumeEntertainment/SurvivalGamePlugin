@@ -10,7 +10,7 @@ struct FProgressiveDataHelperStruct
     GENERATED_USTRUCT_BODY()
 
     UPROPERTY()
-    FName ID;
+    uint16 ID = 0;
 
     UPROPERTY()
     uint8 Level = 0;
@@ -22,7 +22,7 @@ struct FPersistentDataUnit : public FTableRowBase
     GENERATED_USTRUCT_BODY()
 
     UPROPERTY(EditAnywhere)
-    FName ID;
+    uint16 ID = 0;
 
     UPROPERTY(EditAnywhere)
     FText UnitName;

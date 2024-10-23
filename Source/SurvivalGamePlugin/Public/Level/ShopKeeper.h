@@ -31,7 +31,7 @@ private:
 	UShopNotificationWidgetBase* NotificationWidget = nullptr;
 
 	UPROPERTY()
-	TArray<FName> BoosterIDs;
+	TArray<uint16> BoosterIDs;
 	UPROPERTY()
 	TArray<FText> BoosterNames;
 	UPROPERTY()
