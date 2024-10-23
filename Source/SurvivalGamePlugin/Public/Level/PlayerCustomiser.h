@@ -12,6 +12,7 @@
 
 class ASG_PlayerController;
 class AInGameCharacter;
+class UPlayerCustomisingWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
@@ -26,8 +27,14 @@ public:
 
 private:
 
+	UPROPERTY()
+	UPlayerCustomisingWidget* PlayerCustomisingWidget = nullptr;
+
 	UPROPERTY(Replicated)
 	bool bIsActive = false;
+
+	UPROPERTY(Replicated, ReplicatedUsing = OnRepIsPlayerReady)
+	bool bIsPlayerReady = false;
 
 	UPROPERTY(Replicated)
 	bool bIsTaken = false;
@@ -45,6 +52,12 @@ private:
 	void Server_ToggleReady();
 
 	UFUNCTION()
+	void ToggleReady();
+
+	UFUNCTION(Server, Reliable)
+	void Server_StopInteracting();
+
+	UFUNCTION()
 	void InGameCharacterDead();
 
 protected:
@@ -52,16 +65,23 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AInGameCharacter> DefaultHeroClass;
 
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UPlayerCustomisingWidget> PlayerCustomisingWidgetClass;
+
+	UFUNCTION()
+	void OnRepIsPlayerReady();
+
 public:	
 
+	virtual void BeginPlay() override;
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 
 	UFUNCTION()
-	void Server_StopInteracting();
+	void SetIsActive_Server(bool State);
 
 	UFUNCTION()
-	void Server_SetIsActive(bool State);
+	void UpdatePlayerReadiness(bool State);
 
 	UFUNCTION()
 	void SpawnHero(FVector Location, FRotator Rotation);
@@ -74,6 +94,15 @@ public:
 
 	UFUNCTION()
 	void PossessGamePawn();
+
+	UFUNCTION(Client, Reliable)
+	void Client_HideUI();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ShowUI();
+
+	UFUNCTION(Client, Reliable)
+	void Client_StopInteracting();
 
 	FPlayerCustomiserTransferSignature OnPlayerStartInteracting;
 	FPlayerCustomiserTransferSignature OnPlayerStopInteracting;

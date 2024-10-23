@@ -112,7 +112,22 @@ void AShopKeeper::BoosterPackSelected(int Index)
 
 void AShopKeeper::BuyBoosterPack()
 {
-	FBoosterPackPersistentData* Pack = BoosterPackTable->FindRow<FBoosterPackPersistentData>(BoosterIDs[ActiveIndex], "Buying Pack");
+	FBoosterPackPersistentData* Pack = nullptr;
+
+	TArray<FBoosterPackPersistentData*> PackDataRows;
+	BoosterPackTable->GetAllRows<FBoosterPackPersistentData>("Buying Pack", PackDataRows);
+
+	for (FBoosterPackPersistentData* PackRow : PackDataRows)
+	{
+		if (PackRow->ID != BoosterIDs[ActiveIndex]) continue;
+		Pack = PackRow;
+	}
+
+	if (Pack == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AShopKeeper::BuyBoosterPack (Pack == nullptr Could not find pack with id - %d which is at index - %d"), BoosterIDs[ActiveIndex], ActiveIndex);
+		return;
+	}
 
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 
@@ -139,7 +154,7 @@ void AShopKeeper::BuyBoosterPack()
 			{
 				Drops.Add(Entry.RepresentedUnit);
 				FProgressiveDataHelperStruct Data;
-				Data.ID = Entry.RepresentedUnit.RowName;
+				Data.ID = Entry.RepresentedUnit.GetRow<FHeroCardPersistentData>("Winning Hero")->ID;
 				Data.Level = 0;
 				Save->HeroCards.Add(Data);
 				break;
@@ -156,7 +171,10 @@ void AShopKeeper::BuyBoosterPack()
 			if (RNG <= Entry.Chance)
 			{
 				Drops.Add(Entry.RepresentedUnit);
-				Save->ResourceCards.Add(Entry.RepresentedUnit.RowName);
+				FProgressiveDataHelperStruct Data;
+				Data.ID = Entry.RepresentedUnit.GetRow<FResourseCardPersistentData>("Winning Hero")->ID;
+				Data.Level = 100;
+				Save->ResourceCards.Add(Data);
 				break;
 			}
 		}
@@ -172,7 +190,7 @@ void AShopKeeper::BuyBoosterPack()
 			{
 				Drops.Add(Entry.RepresentedUnit);
 				FProgressiveDataHelperStruct Data;
-				Data.ID = Entry.RepresentedUnit.RowName;
+				Data.ID = Entry.RepresentedUnit.GetRow<FCampaignPersistentData>("Campaign Hero")->ID;
 				Data.Level = 0;
 				Save->Campaigns.Add(Data);
 				break;
@@ -322,29 +340,50 @@ void AShopKeeper::FillShopWidget()
 
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 
-	for (FProgressiveDataHelperStruct Hero : Save->HeroCards)
+	TArray<FHeroCardPersistentData*> HeroDataRows;
+
+	HeroTable->GetAllRows<FHeroCardPersistentData>("Filling Heroes", HeroDataRows);
+
+	for (FProgressiveDataHelperStruct SavedHero : Save->HeroCards)
 	{
-		FHeroCardPersistentData* HeroCard = HeroTable->FindRow<FHeroCardPersistentData>(Hero.ID, "Filling Heroes");
 
-		uint16* HeroCostPtr = HeroCard->ValuePerLevel.Find(Hero.Level);
-		if (HeroCostPtr == nullptr)
+		for (FHeroCardPersistentData* HeroRow : HeroDataRows)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Hero[%s] doesn't have value for level %d"), *Hero.ID.ToString(), Hero.Level);
-			return;
-		}
 
-		HeroNames.Add(HeroCard->UnitName);
-		HeroIcons.Add(HeroCard->UnitImage);
-		HeroCosts.Add(*HeroCostPtr);
+			if (SavedHero.ID != HeroRow->ID) continue;
+
+			uint16* HeroCostPtr = HeroRow->ValuePerLevel.Find(SavedHero.Level);
+			if (HeroCostPtr == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Hero[%d] doesn't have value for level %d"), SavedHero.ID, SavedHero.Level);
+				return;
+			}
+
+			HeroNames.Add(HeroRow->UnitName);
+			HeroIcons.Add(HeroRow->UnitImage);
+			HeroCosts.Add(*HeroCostPtr);
+
+		}
 	}
 
-	for (FName Resource : Save->ResourceCards)
-	{
-		FResourseCardPersistentData* ResourceCard = ResourceTable->FindRow<FResourseCardPersistentData>(Resource, "Filling Resources");
 
-		ResourceNames.Add(ResourceCard->UnitName);
-		ResourceIcons.Add(ResourceCard->UnitImage);
-		ResourceCosts.Add(ResourceCard->Value);
+	TArray<FResourseCardPersistentData*> ResourceDataRows;
+
+	ResourceTable->GetAllRows<FResourseCardPersistentData>("Filling Resource", ResourceDataRows);
+
+	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	{
+
+		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
+		{
+
+			if (SavedResource.ID != ResourceRow->ID) continue;
+
+			ResourceNames.Add(ResourceRow->UnitName);
+			ResourceIcons.Add(ResourceRow->UnitImage);
+			ResourceCosts.Add(ResourceRow->Value);
+
+		}
 	}
 
 	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterCosts);

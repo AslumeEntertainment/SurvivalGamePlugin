@@ -309,16 +309,26 @@ void ALobbyManager::SetupSelectorWidget()
 {
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 
-	for (FProgressiveDataHelperStruct Campaign : Save->Campaigns)
-	{
-		FCampaignPersistentData* CampaignCard = CampaignTable->FindRow<FCampaignPersistentData>(Campaign.ID, "Filling Campaign");
+	TArray<FCampaignPersistentData*> CampaignDataRows;
 
-		CampaignIDs.Add(Campaign.ID);
-		CampaignNames.Add(CampaignCard->UnitName);
-		CampaignIcons.Add(CampaignCard->UnitImage);
-		CampaignCodes.Add(CampaignCard->Code);
-		CampaignPlayerNums.Add(CampaignCard->DevPlayerNum);
-		CampaignProgressions.Add(Campaign.Level);
+	CampaignTable->GetAllRows<FCampaignPersistentData>("Filling Campaign", CampaignDataRows);
+
+	for (FProgressiveDataHelperStruct SavedCampaign : Save->Campaigns)
+	{
+		
+		for (FCampaignPersistentData* CampaignRow : CampaignDataRows)
+		{
+
+			if (CampaignRow->ID != SavedCampaign.ID) continue;
+
+			CampaignIDs.Add(CampaignRow->ID);
+			CampaignNames.Add(CampaignRow->UnitName);
+			CampaignIcons.Add(CampaignRow->UnitImage);
+			CampaignCodes.Add(CampaignRow->Code);
+			CampaignPlayerNums.Add(CampaignRow->DevPlayerNum);
+			CampaignProgressions.Add(SavedCampaign.Level);
+		}
+
 	}
 
 	UWorld* World = GetWorld();
