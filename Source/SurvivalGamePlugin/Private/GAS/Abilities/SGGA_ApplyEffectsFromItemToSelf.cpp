@@ -33,7 +33,15 @@ void USGGA_ApplyEffectsFromItemToSelf::ActivateAbility(const FGameplayAbilitySpe
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	EffectGrantingItem = Cast<AEffectGrantingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+
+	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()))
+	{
+		EffectGrantingItem = Cast<AEffectGrantingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag()));
+	}
+	else
+	{
+		EffectGrantingItem = Cast<AEffectGrantingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+	}
 	if (IsValid(EffectGrantingItem) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::ActivateAbility EffectGrantingItem == nullptr"));

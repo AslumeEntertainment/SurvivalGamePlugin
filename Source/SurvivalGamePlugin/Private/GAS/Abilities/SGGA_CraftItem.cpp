@@ -16,7 +16,7 @@
 #include "UI/Widgets/CraftingWindowWidget.h"
 #include "UI/Widgets/ItemIconWidget.h"
 #include "Interactables/Items/ItemBase.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/InGameCharacter.h"
 #include "Animation/SG_AnimInstance.h"
 
 
@@ -24,13 +24,13 @@ bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 	
-	AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
-	if (IsValid(HumanPlayer) == false)
+	AInGameCharacter* PlayerRef = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
+	if (IsValid(PlayerRef) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CanActivateAbility IsValid(HumanPlayer) == false"));
 		return false;
 	}
-	UEquipmentComponent* EquipmentComponent = HumanPlayer->GetEquipmentComponent();
+	UEquipmentComponent* EquipmentComponent = PlayerRef->GetEquipmentComponent();
 	if (IsValid(EquipmentComponent) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(EquipmentComp) == false"));
@@ -59,7 +59,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));

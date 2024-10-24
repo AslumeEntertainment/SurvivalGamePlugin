@@ -14,7 +14,7 @@
 #include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Animation/SG_AnimInstance.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/InGameCharacter.h"
 
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

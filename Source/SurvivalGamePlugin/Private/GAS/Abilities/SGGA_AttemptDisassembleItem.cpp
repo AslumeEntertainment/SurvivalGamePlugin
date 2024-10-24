@@ -12,7 +12,7 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Interactables/Items/ItemBase.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/InGameCharacter.h"
 #include "Animation/SG_AnimInstance.h"
 
 
@@ -23,7 +23,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	Player = Cast<AHumanCharacter>(ActorInfo->AvatarActor.Get());
+	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));

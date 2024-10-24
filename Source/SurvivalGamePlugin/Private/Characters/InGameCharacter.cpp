@@ -182,7 +182,8 @@ void AInGameCharacter::MainHandAction()
 	else
 	{
 		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedMainEquipmentSlotTag())) ? ".Item" : ".Attack";
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedMainEquipmentSlotTag())) || 
+				IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
 	}
@@ -210,7 +211,8 @@ void AInGameCharacter::SecondaryHandAction()
 	else
 	{
 		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) || 
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedSecondaryEquipmentSlotTag())) ? ".Item" : ".Attack";
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedSecondaryEquipmentSlotTag())) ||
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
 	}
@@ -243,13 +245,6 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerMaxHealth(Data.NewValue);
-		}
-	);
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetAttackSpeedAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			AttackSpeed = Data.NewValue;
 		}
 	);
 
@@ -301,6 +296,11 @@ void AInGameCharacter::BroadcastInitialValues()
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 {
 	BroadcastInitialValues();
+}
+
+void AInGameCharacter::SetAttackSpeed(float NewValue)
+{
+	AttackSpeed = NewValue;
 }
 
 float AInGameCharacter::GetAttackSpeed() const

@@ -192,6 +192,8 @@ public:
 
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
 
+	FTextTransferSignature InteractIndicationTextDelegate;
+
 private:
 
 	UFUNCTION(Server, Reliable)

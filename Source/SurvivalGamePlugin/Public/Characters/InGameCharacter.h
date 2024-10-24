@@ -108,6 +108,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }
 
+	UFUNCTION()
+	void SetAttackSpeed(float NewValue);
+
 	UFUNCTION(BlueprintCallable)
 	float GetAttackSpeed() const;
 

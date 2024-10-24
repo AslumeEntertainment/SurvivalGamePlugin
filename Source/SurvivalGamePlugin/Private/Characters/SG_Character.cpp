@@ -78,7 +78,7 @@ void ASG_Character::UpdateCamera(float Alpha)
 	}
 	FQuat NewControlRotation = FQuat::Slerp(PlayerCont->GetControlRotation().Quaternion(), GetActorQuat(), Alpha);
 	PlayerCont->SetControlRotation(FRotator(NewControlRotation));
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Camera Updated"));
+	SetRepControlRotation(GetControlRotation());
 }
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
@@ -146,6 +146,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 
+		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 		Server_SetFocusedInteractable(nullptr);
 		return;
 	}
@@ -168,6 +169,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
+	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + HitActor->GetName()));
 	Server_SetFocusedInteractable(HitActor);
 }
 
@@ -190,12 +192,14 @@ void ASG_Character::BeginPlay()
 		ProgressUpdate.BindUFunction(this, FName("UpdateCamera"));
 
 		CameraViewResetTimeline.AddInterpFloat(CameraViewResetCurve, ProgressUpdate);
+		CameraViewResetTimeline.SetLooping(false);
 	}
 }
 
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CameraViewResetTimeline.TickTimeline(DeltaTime);
 
 	if (IsLocallyControlled() == false)
 	{
@@ -409,7 +413,7 @@ void ASG_Character::ResetCameraView()
 	{
 		return;
 	}
-	CameraViewResetTimeline.Play();
+	CameraViewResetTimeline.PlayFromStart();
 }
 
 void ASG_Character::DisablePlayerInput(float Duration)

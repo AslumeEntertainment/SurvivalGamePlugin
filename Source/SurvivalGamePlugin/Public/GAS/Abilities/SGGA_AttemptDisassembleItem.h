@@ -7,7 +7,7 @@
 #include "Headers/ItemDataStruct.h"
 #include "SGGA_AttemptDisassembleItem.generated.h"
 
-class AHumanCharacter;
+class AInGameCharacter;
 class AItemBase;
 class UEquipmentComponent;
 class UGameplayEffect;
@@ -31,7 +31,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
 
-	AHumanCharacter* Player;
+	AInGameCharacter* Player;
 	UEquipmentComponent* EquipmentComp;
 
 	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;

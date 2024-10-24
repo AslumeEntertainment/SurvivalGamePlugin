@@ -33,7 +33,14 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()))
+	{
+		RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag()));
+	}
+	else
+	{
+		RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+	}
 	if (IsValid(RegeneratingItem) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility RegeneratingItem == nullptr"));

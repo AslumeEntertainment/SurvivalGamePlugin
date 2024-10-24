@@ -75,6 +75,10 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 			DamageDealingComponent->SetDefaultDamageValue(NewValue);
 		}
 	}
+	if (Attribute == GetAttackSpeedAttribute())
+	{
+		AvatarActor->SetAttackSpeed(NewValue);
+	}
 	if (Attribute == GetMaxHungerAttribute())
 	{
 		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());

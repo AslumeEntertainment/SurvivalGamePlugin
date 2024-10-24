@@ -10,7 +10,7 @@
 class UItemIconWidget;
 class UCraftingWindowWidget;
 class UAbilityTask_WaitInputRelease;
-class AHumanCharacter;
+class AInGameCharacter;
 class UEquipmentComponent;
 class APlayerController;
 
@@ -45,7 +45,7 @@ protected:
 	UPROPERTY()
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask;
 
-	AHumanCharacter* Player;
+	AInGameCharacter* Player;
 	APlayerController* PlayerCont;
 	UEquipmentComponent* EquipmentComp;
 
