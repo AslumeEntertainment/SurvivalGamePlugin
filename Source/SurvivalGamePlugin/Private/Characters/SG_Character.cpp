@@ -387,6 +387,14 @@ void ASG_Character::InitCharacterDefaults()
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
 }
 
+void ASG_Character::BindCallbacksToDependencies()
+{
+}
+
+void ASG_Character::BroadcastInitialValues()
+{
+}
+
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;

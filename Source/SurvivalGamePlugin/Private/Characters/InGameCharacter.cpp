@@ -338,13 +338,15 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
 	AbilitySystemComponent->CancelAllAbilities();
 
-	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
+  GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
 	EquipmentComponent->UnequipAllItems();
 	bIsAlive = false;
 
+  OnCharacterDeath.Broadcast();
+  
 	UnPossessed();
 }
 

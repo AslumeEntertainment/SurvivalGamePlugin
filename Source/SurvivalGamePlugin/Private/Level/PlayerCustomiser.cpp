@@ -8,6 +8,7 @@
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "Characters/InGameCharacter.h"
+#include "UI/Widgets/PlayerCustomisingWidget.h"
 
 
 
@@ -26,9 +27,37 @@ void APlayerCustomiser::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsActive, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsTaken, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsPlayerReady, COND_None, REPNOTIFY_Always);
 
 }
 
+
+void APlayerCustomiser::BeginPlay()
+{
+
+	Super::BeginPlay();
+
+	UWorld* World = GetWorld();
+	if (!IsValid(World))
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::BeginPlay IsValid(World) == false"));
+		return;
+	}
+
+	//RIGHT NOW THAT MAKES ALL PLAYR CUSTOMISR CRAT A WIDGT IN BEGIN PLAY. THAT MEANS THE ARE LIKE 25 WIDGHTS AT ALL TIME
+	//WHICH IS VERY CRINGW AND W MAY NED TO MOVE THAT CREATION IN INTERACT
+
+	PlayerCustomisingWidget = CreateWidget<UPlayerCustomisingWidget>(World, PlayerCustomisingWidgetClass);
+
+	if (IsValid(PlayerCustomisingWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::BeginPlay IsValid(PlayerCustomisingWidget) == false"));
+		return;
+	}
+
+	PlayerCustomisingWidget->OnLeaveButton.AddDynamic(this, &APlayerCustomiser::Client_StopInteracting);
+	PlayerCustomisingWidget->OnReadyButton.AddDynamic(this, &APlayerCustomiser::ToggleReady);
+}
 
 void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 {
@@ -40,10 +69,26 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest IsValid(InteractingPlayer) == false"));
 		return;
 	}
-	
-	//SetOwner(PC);
-	//UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest OWNR nam: %s"), *GetOwner()->GetName());
-	Server_InteractRequest(PC);
+
+	SetOwner(InteractingCharacter);
+
+	if (PC->IsLocalPlayerController() == true)
+	{
+		PC->Client_SetInputMode(EInputMode::UIOnly);
+		Client_ShowUI();
+	}
+
+	if (HasAuthority() == true)
+	{
+		InteractingPlayer = PC;
+
+		OnPlayerStartInteracting.Broadcast(this);
+		MainPawn = PC->GetPawn();
+
+		//this makes it possible to tell the server you are changing states aka to use rpcs
+
+		bIsTaken = true;
+	}
 }
 
 bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
@@ -51,35 +96,32 @@ bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 	return bIsActive && !bIsTaken;
 }
 
-void APlayerCustomiser::Server_InteractRequest_Implementation(ASG_PlayerController* PC)
+void APlayerCustomiser::Client_StopInteracting_Implementation()
 {
-	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_InteractRequest_Implementation "));
-	InteractingPlayer = PC;
-
-	OnPlayerStartInteracting.Broadcast(this);
-	MainPawn = PC->GetPawn();
-
-	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
-
-	bIsTaken = true;
-
-	//FOR TESTING ONLY REMOVBE LATER
-	Server_ToggleReady_Implementation();
+	Client_HideUI();
+	Server_StopInteracting();
 }
 
-void APlayerCustomiser::Server_StopInteracting()
+void APlayerCustomiser::Server_StopInteracting_Implementation()
 {
 	OnPlayerStopInteracting.Broadcast(this);
 	MainPawn = nullptr;
 	GamePawn = nullptr;
-	 
-	if (IsValid(InteractingPlayer)  ==  true)
+
+	if (IsValid(InteractingPlayer) == true)
 	{
-	    InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-	    InteractingPlayer = nullptr;
+		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+		InteractingPlayer = nullptr;
 	}
 
 	bIsTaken = false;
+}
+
+void APlayerCustomiser::ToggleReady()
+{
+	PlayerCustomisingWidget->Config(EPlayerReadinessUIStatus::UpdatingStatus);
+
+	Server_ToggleReady();
 }
 
 void APlayerCustomiser::Server_ToggleReady_Implementation()
@@ -87,13 +129,26 @@ void APlayerCustomiser::Server_ToggleReady_Implementation()
 	OnPlayerReadinessChanged.Broadcast(this);
 }
 
+void APlayerCustomiser::OnRepIsPlayerReady()
+{
+	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
+}
 
-void APlayerCustomiser::Server_SetIsActive(bool State)
+void APlayerCustomiser::UpdatePlayerReadiness(bool State)
+{
+	bIsPlayerReady = State;
+
+	if (IsValid(PlayerCustomisingWidget) == false) return;
+
+	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
+}
+
+void APlayerCustomiser::SetIsActive_Server(bool State)
 {
 	bIsActive = State;
 }
 
-void APlayerCustomiser::Server_SpawnHero_Implementation(FVector Location, FRotator Rotation)
+void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)
 {
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
@@ -111,34 +166,50 @@ void APlayerCustomiser::Server_SpawnHero_Implementation(FVector Location, FRotat
 		return;
 	}
 
-	GamePawn->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::Server_InGameCharacterDead);
+	GamePawn->OnCharacterDeath.AddDynamic(this, &APlayerCustomiser::InGameCharacterDead);
 }
 
-void APlayerCustomiser::Server_InGameCharacterDead()
+void APlayerCustomiser::InGameCharacterDead()
 {
 	OnInGameCharacterDeath.Broadcast(this);
 }
 
-void APlayerCustomiser::Server_DespawnHero_Implementation()
+void APlayerCustomiser::DespawnHero()
 {
 	if (IsValid(GamePawn) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Server_DespawnHero IsValid(GamePawn) == false"));
 		return;
 	}
 	GamePawn->Destroy();
 	GamePawn = nullptr;
 }
 
-void APlayerCustomiser::Server_PossessMainPawn_Implementation()
+void APlayerCustomiser::PossessMainPawn()
 {
+	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(MainPawn);
+	Client_ShowUI();
+	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	DespawnHero();
 }
 
-void APlayerCustomiser::Server_PossessGamePawn_Implementation()
+void APlayerCustomiser::PossessGamePawn()
 {
+	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(GamePawn);
-	Server_DespawnHero_Implementation();
+	Client_HideUI();
+	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	
+}
+
+void APlayerCustomiser::Client_HideUI_Implementation()
+{
+	PlayerCustomisingWidget->RemoveFromParent();
+}
+
+void APlayerCustomiser::Client_ShowUI_Implementation()
+{
+	PlayerCustomisingWidget->AddToViewport();
 }
 
 

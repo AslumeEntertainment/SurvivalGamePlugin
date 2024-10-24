@@ -75,14 +75,15 @@ void AGameManager::BeginPlay()
 			continue;
 		}
 
-		OnStateChanged.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_SetIsActive);
-		OnGameClosing.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_StopInteracting);
-		OnGameStart.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_PossessGamePawn);
-		OnGameEnd.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Server_PossessMainPawn);
+		OnStateChanged.AddDynamic(PlayerCustomiser, &APlayerCustomiser::SetIsActive_Server);
+		OnGameClosing.AddDynamic(PlayerCustomiser, &APlayerCustomiser::Client_StopInteracting);
+		OnGameStart.AddDynamic(PlayerCustomiser, &APlayerCustomiser::PossessGamePawn);
+		OnGameEnd.AddDynamic(PlayerCustomiser, &APlayerCustomiser::PossessMainPawn);
 		
 		PlayerCustomiser->OnPlayerStartInteracting.AddDynamic(this, &AGameManager::AddPlayer);
 		PlayerCustomiser->OnPlayerStopInteracting.AddDynamic(this, &AGameManager::RemovePlayer);
 		PlayerCustomiser->OnPlayerReadinessChanged.AddDynamic(this, &AGameManager::ChangePlayerReadiness);
+		PlayerCustomiser->OnInGameCharacterDeath.AddDynamic(this, &AGameManager::CheckGameFinishingRules);
 	}
 }
 
@@ -106,12 +107,14 @@ void AGameManager::UpdateSkeletalMesh()
 
 void AGameManager::AddPlayer(APlayerCustomiser* Player)
 {
+	Player->UpdatePlayerReadiness(false);
 	Players.Add(Player, false);
 }
 
 void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 {
 	Players.Remove(Player);
+	Player->DespawnHero();
 }
 
 void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
@@ -124,20 +127,16 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 	bool NewState = !*State;
 	Players.Emplace(Player, NewState);
 
-	if (NewState == false)
-	{
-		Player->Server_DespawnHero();
-		return;
-	}
+	NewState ? Player->SpawnHero(DefaultSpawnLocation, DefaultSpawnRotation) : Player->DespawnHero();
 
-	Player->Server_SpawnHero(DefaultSpawnLocation, DefaultSpawnRotation);
+	Player->UpdatePlayerReadiness(NewState);
 
 	CheckAllPlayerReadiness();
 }
 
 void AGameManager::PrepareGame()
 {
-	//some terrain generation
+	//some terrain generation and animal/Enemy spawning
 	bIsGameReady = true;
 }
 
@@ -146,7 +145,7 @@ void AGameManager::CheckAllPlayerReadiness()
 	bool ArePlayersReady = true;
 	for (TPair<APlayerCustomiser*, bool> Player : Players)
 	{
-		ArePlayersReady |= Player.Value;
+		ArePlayersReady &= Player.Value;
 		
 	}
 
@@ -182,11 +181,24 @@ void AGameManager::StartGame()
 void AGameManager::CheckGameFinishingRules(APlayerCustomiser* Player)
 {
 	//some logic here
-	FinishGame();
+	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, 3);
 }
 
 void AGameManager::FinishGame()
 {
+	TArray<APlayerCustomiser*> PlayersToUpdate;
+
+	for (TPair<APlayerCustomiser*, bool> Player : Players)
+	{
+		PlayersToUpdate.Add(Player.Key);
+		Player.Key->UpdatePlayerReadiness(false);
+	}
+
+	for (APlayerCustomiser* PlayerToUpdate : PlayersToUpdate)
+	{
+		Players.Emplace(PlayerToUpdate, false);
+	}
+
 	OnGameEnd.Broadcast();
 }
 
@@ -194,6 +206,8 @@ void AGameManager::Open(bool InSupervisionState, uint8 InNumPlayers)
 {
 	NumPlayers = InNumPlayers;
 	SetActiveSkeletalMesh(InSupervisionState ? ESupervisionState::Supervised : ESupervisionState::Unsupervised);
+
+	Players.Empty();
 
 	OnStateChanged.Broadcast(true);
 }
@@ -209,7 +223,9 @@ void AGameManager::Update(FString GameCode)
 void AGameManager::Close()
 {
 	SetActiveSkeletalMesh(ESupervisionState::Closed);
-	
+
+	Players.Empty();
+
 	OnGameClosing.Broadcast();
 	OnStateChanged.Broadcast(false);
 }
