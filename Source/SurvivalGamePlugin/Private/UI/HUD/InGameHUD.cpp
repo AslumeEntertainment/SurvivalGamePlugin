@@ -21,13 +21,6 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->bShowMouseCursor = false;
 	}
 
-	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
-	if (!IsValid(Player))
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
-		return;
-	}
-
 	UWorld* World = GetWorld();
 	if (!IsValid(World))
 	{
@@ -35,27 +28,41 @@ void AInGameHUD::BeginPlay()
 		return;
 	}
 
-	GameplayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayWidgetClass);
-
-	Player->OnHealthPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
-	Player->OnHungerPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
-	Player->OnEnergyPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
-
-	Player->OnMaxHealthUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetHealthBarLength);
-	Player->OnMaxHungerUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetHungerBarLength);
-	Player->OnMaxEnergyUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
-
-	Player->InteractIndicationTextDelegate.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetInteractIndicationText);
-	Player->OnCurrentSpeedUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
-
-	ShowGameplayWidget();
+	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
 }
 
-void AInGameHUD::ShowGameplayWidget()
+void AInGameHUD::ShowGameplayOverlayWidget()
 {
-	if (PlayerOwner && GameplayWidget)
+	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
+	if (IsValid(Player) == false)
 	{
-		GameplayWidget->AddToViewport();
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
+		return;
+	}
+
+	if (PlayerOwner && GameplayOverlayWidget)
+	{
+		Player->OnHealthPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
+		Player->OnHungerPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
+		Player->OnEnergyPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
+
+		Player->OnMaxHealthUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHealthBarLength);
+		Player->OnMaxHungerUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHungerBarLength);
+		Player->OnMaxEnergyUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
+
+		Player->InteractIndicationTextDelegate.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetInteractIndicationText);
+		Player->OnCurrentSpeedUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
+
+		GameplayOverlayWidget->AddToViewport();
 	}
 }
+
+void AInGameHUD::RemoveGameplayOverlayWidget(AActor* OwningPawn)
+{
+	if (GameplayOverlayWidget && GameplayOverlayWidget->IsInViewport())
+	{
+		GameplayOverlayWidget->RemoveFromParent();
+	}
+}
+
 

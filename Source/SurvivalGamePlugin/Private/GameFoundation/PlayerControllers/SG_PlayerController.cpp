@@ -40,13 +40,13 @@ void ASG_PlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (bIsCameraMovementConstrained)
+	/*if (bIsCameraMovementConstrained)
 	{
 		PlayerCameraManager->ViewYawMin = -80.f;
 		PlayerCameraManager->ViewYawMax = 80.f;
 		PlayerCameraManager->ViewPitchMin = -55.f;
 		PlayerCameraManager->ViewPitchMax = 55.f;
-	}
+	}*/
 
 }
 

@@ -19,13 +19,15 @@ protected:
 	virtual void BeginPlay()override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WidgetClasses")
-	TSubclassOf<UInGameOverlayWidget> GameplayWidgetClass;
+	TSubclassOf<UInGameOverlayWidget> GameplayOverlayWidgetClass;
 
 	UPROPERTY()
-	UInGameOverlayWidget* GameplayWidget;
+	UInGameOverlayWidget* GameplayOverlayWidget;
 
 public:
 	
-	void ShowGameplayWidget();
+	void ShowGameplayOverlayWidget();
+
+	void RemoveGameplayOverlayWidget(AActor* OwningPawn);
 
 };

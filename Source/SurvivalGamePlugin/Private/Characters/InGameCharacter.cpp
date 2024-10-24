@@ -16,6 +16,7 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 AInGameCharacter::AInGameCharacter()
@@ -63,6 +64,22 @@ void AInGameCharacter::BeginPlay()
 		FTimerHandle BroadcastInitialValuesTimerHandle;
 		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
 	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (IsValid(PC) == false)
+	{
+		return;
+	}
+
+	AInGameHUD* HUD = Cast<AInGameHUD>(PC->GetHUD());
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::PossessedBy IsValid(HUD) == false"));
+		return;
+	}
+
+	HUD->ShowGameplayOverlayWidget();
+	OnDestroyed.AddDynamic(HUD, &AInGameHUD::RemoveGameplayOverlayWidget);
 }
 
 void AInGameCharacter::Tick(float DeltaTime)
@@ -73,6 +90,13 @@ void AInGameCharacter::Tick(float DeltaTime)
 	{
 		Client_OnUpdatePlayerCurrentSpeed(GetVelocity().Length());
 	}
+}
+
+void AInGameCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	BindCallbacksToDependencies();
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)

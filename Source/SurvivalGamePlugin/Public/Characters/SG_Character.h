@@ -146,13 +146,7 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	void OnRep_PlayerState() override;
-
 	void InitCharacterDefaults();
-
-	virtual void BindCallbacksToDependencies() PURE_VIRTUAL(ASG_Character::BindCallbacksToDependencies, );
-	virtual void BroadcastInitialValues() PURE_VIRTUAL(ASG_Character::BroadcastInitialValues, );
-	virtual void Client_BroadcastInitialValues() PURE_VIRTUAL(ASG_Character::Client_BroadcastInitialValues, );
 
 
 public:

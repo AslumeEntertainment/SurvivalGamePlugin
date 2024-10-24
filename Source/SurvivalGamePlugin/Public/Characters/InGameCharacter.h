@@ -57,6 +57,8 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
+	void PossessedBy(AController* NewController) override;
+
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
 
@@ -94,11 +96,11 @@ protected:
 	virtual void MainHandAction();
 	virtual void SecondaryHandAction();
 
-	virtual void BindCallbacksToDependencies() override;
-	virtual void BroadcastInitialValues() override;
+	virtual void BindCallbacksToDependencies();
+	virtual void BroadcastInitialValues();
 
 	UFUNCTION(Client, Reliable)
-	virtual void Client_BroadcastInitialValues() override;
+	virtual void Client_BroadcastInitialValues();
 
 
 public:

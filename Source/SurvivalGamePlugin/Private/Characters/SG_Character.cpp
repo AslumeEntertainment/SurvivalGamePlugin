@@ -354,12 +354,6 @@ void ASG_Character::PossessedBy(AController* NewController)
 	}
 
 	InitCharacterDefaults();
-	BindCallbacksToDependencies();
-}
-
-void ASG_Character::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
 }
 
 void ASG_Character::InitCharacterDefaults()
