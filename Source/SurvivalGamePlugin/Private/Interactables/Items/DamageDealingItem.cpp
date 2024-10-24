@@ -4,8 +4,9 @@
 #include "Interactables/Items/DamageDealingItem.h"
 
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Characters/HumanCharacter.h"
+#include "Characters/InGameCharacter.h"
 
 
 ADamageDealingItem::ADamageDealingItem()
@@ -19,26 +20,32 @@ void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
 {
     float DurabilityLost = 20;
     //calculating...
-    Server_LoseDurability(DurabilityLost);
+    LoseDurability(DurabilityLost);
 }
 
 void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 {
     Super::OnItemEquiped(PlayerOwner, SocketName);
 
-    AHumanCharacter* HumanPlayer = Cast<AHumanCharacter>(PlayerOwner);
-    if (IsValid(HumanPlayer) == false)
+    AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner);
+    if (IsValid(Player) == false)
     {
         return;
     }
+    UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+    if (IsValid(EquipmentComp) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ADamageDealingItem::OnItemEquiped IsValid(EquipmentComp) == false"));
+        return;
+    }
 
-    if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded == false)
+    if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded()
+        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded() == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
     }
-    else if (SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Secondary) && HumanPlayer->bIsRightHanded
-        || SocketName == HumanPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Main) && HumanPlayer->bIsRightHanded == false)
+    else if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded()
+        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded() == false)
     {
         DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
     }
@@ -47,7 +54,7 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
 
 void ADamageDealingItem::OnItemUnequiped()
 {
-    AHumanCharacter* PlayerOwner = Cast<AHumanCharacter>(GetAttachParentActor());
+    AInGameCharacter* PlayerOwner = Cast<AInGameCharacter>(GetAttachParentActor());
     if (IsValid(PlayerOwner) == false)
     {
         return;

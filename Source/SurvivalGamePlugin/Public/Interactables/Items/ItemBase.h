@@ -23,6 +23,11 @@ public:
 	
 	AItemBase();
 
+private:
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_LoseDurability(float LostDurability);
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -53,8 +58,7 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_LoseDurability(float LostDurability);
+	virtual void LoseDurability(float LostDurability);
 
 	UFUNCTION()
 	float GetDurability() const;

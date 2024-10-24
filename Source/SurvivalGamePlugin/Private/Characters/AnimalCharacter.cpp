@@ -3,9 +3,6 @@
 
 #include "Characters/AnimalCharacter.h"
 
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-
 #include "Components/DamageDealingComponent.h"
 
 

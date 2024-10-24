@@ -9,6 +9,7 @@
 
 #include "Characters/InGameCharacter.h"
 #include "Interactables/Items/RegeneratingItem.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Animation/SG_AnimInstance.h"
 
@@ -26,14 +27,20 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	AnimInst = Cast<USG_AnimInstance>(Player->GetMesh()->GetAnimInstance());
-	if (IsValid(AnimInst) == false)
+	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(AnimInst) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-
-	RegeneratingItem = Cast<ARegeneratingItem>(Player->GetEquipedItemAtSlot(EEquipmentSlot::Secondary));
+	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()))
+	{
+		RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag()));
+	}
+	else
+	{
+		RegeneratingItem = Cast<ARegeneratingItem>(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+	}
 	if (IsValid(RegeneratingItem) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility RegeneratingItem == nullptr"));
@@ -42,11 +49,11 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 
 	if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
 	{
-		AnimInst->bIsMirrored = true;
+		Player->SetIsMirrored(true);
 	}
 	else if (TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Right"))
 	{
-		AnimInst->bIsMirrored = false;
+		Player->SetIsMirrored(false);
 	}
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage);
@@ -61,13 +68,13 @@ void USGGA_BasicRestoringAbility::ActivateAbility(const FGameplayAbilitySpecHand
 
 void USGGA_BasicRestoringAbility::OnAnimMontageCompleted()
 {
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_BasicRestoringAbility::OnAnimMontageCanceled()
 {
-	AnimInst->bIsMirrored = false;
+	Player->SetIsMirrored(false);
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Ability canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
@@ -83,5 +90,5 @@ void USGGA_BasicRestoringAbility::OnEventRecieved(FGameplayEventData Payload)
 	
 	ASC->AddEffectFromClass(GameplayEffectClass, RegeneratingItem);
 
-	RegeneratingItem->Server_LoseDurability(1.f);
+	RegeneratingItem->LoseDurability(1.f);
 }

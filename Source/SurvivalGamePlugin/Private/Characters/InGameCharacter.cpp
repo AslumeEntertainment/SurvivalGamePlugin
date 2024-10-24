@@ -3,24 +3,111 @@
 
 #include "Characters/InGameCharacter.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
+#include "Components/PassiveDamageDealingComponent.h"
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 
 
 AInGameCharacter::AInGameCharacter()
 {
+	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
+
 	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
 	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
 
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
+
+	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
+	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+
+	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
+}
+
+void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, AttackSpeed, COND_None, REPNOTIFY_Always);
+}
+
+void AInGameCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (bIsRightHanded == false)
+	{
+		EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
+	}
+
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	if (HasAuthority())
+	{
+		BroadcastInitialValues();
+	}
+	else
+	{
+		FTimerHandle BroadcastInitialValuesTimerHandle;
+		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
+	}
+}
+
+void AInGameCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (HasAuthority())
+	{
+		Client_OnUpdatePlayerCurrentSpeed(GetVelocity().Length());
+	}
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
+{
+	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerMaxHealth_Implementation(float MaxHealth)
+{
+	OnMaxHealthUpdated.Broadcast(MaxHealth);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
+{
+	OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerMaxHunger_Implementation(float MaxHunger)
+{
+	OnMaxHungerUpdated.Broadcast(MaxHunger);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
+{
+	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerMaxEnergy_Implementation(float MaxEnergy)
+{
+	OnMaxEnergyUpdated.Broadcast(MaxEnergy);
+}
+
+void AInGameCharacter::Client_OnUpdatePlayerCurrentSpeed_Implementation(float Velocity)
+{
+	OnCurrentSpeedUpdated.Broadcast(Velocity);
 }
 
 void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -40,6 +127,98 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AInGameCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
+	SendGameplayEventToSelf(EventTag, FGameplayEventData());
+}
+
+void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	if (SweepResult.Component != nullptr && SweepResult.Component->GetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn) == ECollisionResponse::ECR_Ignore)
+	{
+		return;
+	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.Instigator = OtherActor;
+
+	SendGameplayEventToSelf(EventTag, EventData);
+	
+	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
+}
+
+void AInGameCharacter::MainHandAction()
+{
+	FGameplayTag EventTag;
+	FGameplayEventData EventData;
+
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
+		}
+		else
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main");
+		}
+	}
+	else
+	{
+		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedMainEquipmentSlotTag())) || 
+				IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
+		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("MainHandAction - %s"), *EventTag.ToString());
+
+	SendGameplayEventToSelf(EventTag, EventData);
+}
+
+void AInGameCharacter::SecondaryHandAction()
+{
+	FGameplayTag EventTag;
+	FGameplayEventData EventData;
+
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
+	{
+		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
+		}
+		else
+		{
+			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary");
+		}
+	}
+	else
+	{
+		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) || 
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedSecondaryEquipmentSlotTag())) ||
+			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
+		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
+		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
+	}
+	UE_LOG(LogTemp, Warning, TEXT("SecondaryHandAction - %s"), *EventTag.ToString());
+
+	SendGameplayEventToSelf(EventTag, EventData);
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -62,10 +241,24 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		}
 	);
 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerMaxHealth(Data.NewValue);
+		}
+	);
+
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerHunger(Data.NewValue, AttributeSet->GetMaxHunger());
+		}
+	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHungerAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerMaxHunger(Data.NewValue);
 		}
 	);
 
@@ -75,11 +268,44 @@ void AInGameCharacter::BindCallbacksToDependencies()
 			Client_OnUpdatePlayerEnergy(Data.NewValue, AttributeSet->GetMaxEnergy());
 		}
 	);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxEnergyAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			Client_OnUpdatePlayerMaxEnergy(Data.NewValue);
+		}
+	);
 }
 
 void AInGameCharacter::BroadcastInitialValues()
 {
-	// empty for now
+	if (IsValid(AttributeSet) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BroadcastInitialValues IsValid(AttributeSet) == false"));
+		return;
+	}
+
+	Client_OnUpdatePlayerHealth(AttributeSet->GetHealth(), AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerMaxHealth(AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerHunger(AttributeSet->GetHunger(), AttributeSet->GetMaxHunger());
+	Client_OnUpdatePlayerMaxHunger(AttributeSet->GetMaxHunger());
+	Client_OnUpdatePlayerEnergy(AttributeSet->GetEnergy(), AttributeSet->GetMaxEnergy());
+	Client_OnUpdatePlayerMaxEnergy(AttributeSet->GetMaxEnergy());
+}
+
+void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
+{
+	BroadcastInitialValues();
+}
+
+void AInGameCharacter::SetAttackSpeed(float NewValue)
+{
+	AttackSpeed = NewValue;
+}
+
+float AInGameCharacter::GetAttackSpeed() const
+{
+	return AttackSpeed;
 }
 
 void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
@@ -95,94 +321,117 @@ bool AInGameCharacter::bCanBeHit()
 	return IsAlive();
 }
 
+bool AInGameCharacter::IsRightHanded()
+{
+	return bIsRightHanded;
+}
+
+void AInGameCharacter::SetIsRightHanded(bool NewValue)
+{
+	bIsRightHanded = NewValue;
+
+	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
+}
+
 void AInGameCharacter::OnHittableDestroyed_Implementation()
 {
-	bIsAlive = false;
+	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
+	AbilitySystemComponent->CancelAllAbilities();
 
-	OnCharacterDeath.Broadcast();
-
+  GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
-	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
+	EquipmentComponent->UnequipAllItems();
+	bIsAlive = false;
 
+  OnCharacterDeath.Broadcast();
+  
 	UnPossessed();
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
-{
-	OnHealthPercentUpdated.Broadcast(CurrentHealth / MaxHealth);
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerHunger_Implementation(float CurrentHunger, float MaxHunger)
-{
-	if (CurrentHunger <= MaxHunger / 2)
-	{
-		OnHungerPercentUpdated.Broadcast(CurrentHunger / MaxHunger);
-	}
-}
-
-void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
-{
-	if (CurrentEnergy <= MaxEnergy / 2)
-	{
-		OnEnergyPercentUpdated.Broadcast(CurrentEnergy / (MaxEnergy / 2));
-	}
-}
-
-bool AInGameCharacter::HasEquipmentSlotOfType(EEquipmentSlot SlotType) const
-{
-	return EquipmentSlots.Contains(SlotType);
-}
-
-void AInGameCharacter::SetEquipedItemAtSlot_Implementation(EEquipmentSlot SlotType, AItemBase* Item)
-{
-	if (HasEquipmentSlotOfType(SlotType) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player cannot equip item because they don't have the slot for it!"));
-		return;
-	}
-
-	EquipmentSlots[SlotType] = Item;
-	return;
-}
-
-AItemBase* AInGameCharacter::GetEquipedItemAtSlot(EEquipmentSlot SlotType) const
-{
-	if (HasEquipmentSlotOfType(SlotType) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("InGameCharacter: Player does not have an equipment slot of such type!"));
-		return nullptr;
-	}
-
-	return EquipmentSlots[SlotType];
-}
-
-TArray<ADamageDealingItem*> AInGameCharacter::GetAllEquipedWeapons() const
-{
-	TArray<ADamageDealingItem*> EquipedWeapons;
-	for (auto& EquipmentSlot : EquipmentSlots)
-	{
-		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
-		if (IsValid(EquipedWeapon))
-		{
-			EquipedWeapons.Add(EquipedWeapon);
-		}
-	}
-	return EquipedWeapons;
-}
-
-FName AInGameCharacter::GetEquipmentSocketOfType(EEquipmentSlot SlotType) const
-{
-	if (HasEquipmentSlotOfType(SlotType) == false)
-	{
-		return FName();
-	}
-
-	return EquipmentSockets[SlotType];
 }
 
 bool AInGameCharacter::IsAlive()
 {
 	return bIsAlive;
 }
+
+void AInGameCharacter::ShowPlayerInfo()
+{
+	FString Prefix;
+	if (HasAuthority())
+	{
+		Prefix = "Server:";
+	}
+	else if (IsLocallyControlled())
+	{
+		Prefix = "Owning Client:";
+	}
+	else
+	{
+		Prefix = "Client:";
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s ===== Character stats ====="), *Prefix);
+
+	if (GetFocusedInteractableObject() != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject is a valid pointer"), *Prefix);
+
+		IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(GetFocusedInteractableObject());
+		if (InteractableActor)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject implements IInteractableInterface"), *Prefix);
+			if (InteractableActor->bCanInteract(GetController()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject can be interacted with"), *Prefix);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject cannot be interacted with"), *Prefix);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentComponent->GetEquipmentSlots().Num());
+	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentComponent->GetEquipmentSockets().Num());
+
+	int i = 0;
+	for (TPair<FGameplayTag, AItemBase*> Slot : EquipmentComponent->GetEquipmentSlots())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s Slot #%d - %s"), *Prefix, i, *(Slot.Key.ToString()));
+		if (IsValid(Slot.Value))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s has a valid item equiped"), *Prefix, *(Slot.Key.ToString()));
+			if (Slot.Value->bCanInteract(GetController()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s %s can be interacted with, THIS SHOULD NOT BE POSSIBLE"), *Prefix, *(Slot.Key.ToString()));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s %s cannot be interacted with as it is equiped by the player"), *Prefix, *(Slot.Key.ToString()));
+			}
+			UE_LOG(LogTemp, Warning, TEXT("%s %s is a %s"), *Prefix, *(Slot.Key.ToString()), *(Slot.Value->ItemData.ItemName.ToString()));
+			UE_LOG(LogTemp, Warning, TEXT("%s %s Durability is %f out of %f - %f percent"), *Prefix, *(Slot.Key.ToString()), Slot.Value->GetDurability(), 
+				Slot.Value->ItemData.ItemMaxDurability, Slot.Value->GetDurability() / Slot.Value->ItemData.ItemMaxDurability * 100);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s is nullptr"), *Prefix, *(Slot.Key.ToString()));
+		}
+		if (EquipmentComponent->HasEquipmentSocketWithTag(Slot.Key))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s has equipment socket with name %s"), *Prefix, *(Slot.Key.ToString()), *(EquipmentComponent->GetEquipmentSocketWithTag(Slot.Key).ToString()));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s %s does not have an associated equipment socket!"), *Prefix, *(Slot.Key.ToString()));
+		}
+
+		i++;
+	}
+}
+
+

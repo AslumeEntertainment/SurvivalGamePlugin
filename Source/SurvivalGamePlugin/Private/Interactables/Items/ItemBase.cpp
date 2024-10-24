@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Components/DamageDealingComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
@@ -39,7 +40,8 @@ void AItemBase::BeginPlay()
 	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
 	if (TempItemData == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"))
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay Item actor doesn't have valid item data!"));
+		return;
 	}
 	ItemData = *TempItemData;
 	CurrentDurability = ItemData.ItemMaxDurability;
@@ -58,6 +60,17 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
 {
+	LoseDurability(LostDurability);
+}
+
+void AItemBase::LoseDurability(float LostDurability)
+{
+	if (HasAuthority() == false)
+	{
+		Server_LoseDurability(LostDurability);
+		return;
+	}
+
 	CurrentDurability -= LostDurability;
 	if (CurrentDurability <= 0)
 	{
@@ -89,7 +102,7 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
-	if (HasAuthority())
+	if (HasAuthority() && IsValid(ItemData.ItemAbility))
 	{
 		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
 		Spec.DynamicAbilityTags.AddTag(ItemData.ItemAbility.GetDefaultObject()->InputTag);
@@ -144,35 +157,77 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 	{
 		return;
 	}
-
 	AInGameCharacter* InteractingPlayer = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
-	if (!IsValid(InteractingPlayer))
+	if (IsValid(InteractingPlayer) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	UEquipmentComponent* EquipmentComp = InteractingPlayer->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
+		return;
+	}
+	UAbilitySystemComponent* ASC = InteractingPlayer->GetAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(ASC) == false"));
 		return;
 	}
 
-	if (InteractingPlayer->HasEquipmentSlotOfType(EEquipmentSlot::Mixed))  
+	FGameplayTag SlotToEquipAtTag = ItemData.EquipmentSlotTag;
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) && SlotToEquipAtTag.ToString().Contains(".Combined"))
 	{
-		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)))
+		if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedMainEquipmentSlotTag())
 		{
-			InteractingPlayer->GetEquipedItemAtSlot(EEquipmentSlot::Mixed)->OnItemUnequiped();
+			SlotToEquipAtTag = EquipmentComp->GetMainEquipmentSlotTag();
+		}
+		else if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())
+		{
+			SlotToEquipAtTag = EquipmentComp->GetSecondaryEquipmentSlotTag();
+		}
+	}
+
+	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) &&
+		SlotToEquipAtTag.RequestDirectParent() != EquipmentComp->GetCombinedEquipmentSlotTag())
+	{
+		if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())))
+		{
+			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
 		}
 		
-		InteractingPlayer->SetEquipedItemAtSlot(EEquipmentSlot::Mixed, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(EEquipmentSlot::Mixed));
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in mixed slot"));
+		SlotToEquipAtTag = EquipmentComp->GetMixedEquipmentSlotTag();
+		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), this);
+		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMixedEquipmentSlotTag()));
+		
 		return;
 	}
-	if (InteractingPlayer->HasEquipmentSlotOfType(ItemData.EquipmentSlot))
+	
+	if (EquipmentComp->HasEquipmentSlotWithTag(SlotToEquipAtTag))
 	{
-		if (IsValid(InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)))
+		if (SlotToEquipAtTag.RequestDirectParent() == EquipmentComp->GetCombinedEquipmentSlotTag())
 		{
-			InteractingPlayer->GetEquipedItemAtSlot(ItemData.EquipmentSlot)->OnItemUnequiped();
+			EquipmentComp->UnequipAllItems();
 		}
+		else
+		{
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())))
+			{
+				EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
+				EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), nullptr);
+			}
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)))
+			{
+				EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
+			}
+		}
+		
+		EquipmentComp->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
+		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(SlotToEquipAtTag));
 
-		InteractingPlayer->SetEquipedItemAtSlot(ItemData.EquipmentSlot, this);
-		OnItemEquiped(InteractingPlayer, InteractingPlayer->GetEquipmentSocketOfType(ItemData.EquipmentSlot));
 		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
 		return;
 	}

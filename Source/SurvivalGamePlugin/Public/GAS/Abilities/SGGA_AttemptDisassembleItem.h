@@ -7,9 +7,9 @@
 #include "Headers/ItemDataStruct.h"
 #include "SGGA_AttemptDisassembleItem.generated.h"
 
-class AHumanCharacter;
+class AInGameCharacter;
 class AItemBase;
-class USG_AnimInstance;
+class UEquipmentComponent;
 class UGameplayEffect;
 
 UCLASS()
@@ -25,18 +25,22 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	UPROPERTY(EditDefaultsOnly, Category = "DisassemblyInfo")
 	UDataTable* DisassemlyInfoTable;
 
-	AHumanCharacter* Player;
-	USG_AnimInstance* AnimInst;
-	float OldSpeed;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
+	AInGameCharacter* Player;
+	UEquipmentComponent* EquipmentComp;
+
+	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
 	FDisassemblyProcessDataStruct* ItemForDisassemblyData = nullptr;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* MainItemActor;
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* IngredientItemActor;
 
 	UFUNCTION()

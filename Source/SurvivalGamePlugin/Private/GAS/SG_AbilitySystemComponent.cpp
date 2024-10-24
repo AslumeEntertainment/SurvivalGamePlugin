@@ -58,7 +58,7 @@ void USG_AbilitySystemComponent::AbilityInputReleased(const FGameplayTag& InputT
 	}
 }
 
-FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, UObject* Instigator, uint8 Level)
+FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const AActor* Instigator, uint8 Level)
 {
 	FActiveGameplayEffectHandle GEHandle;
 	

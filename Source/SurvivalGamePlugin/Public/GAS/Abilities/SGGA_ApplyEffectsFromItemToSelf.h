@@ -8,7 +8,6 @@
 
 class AInGameCharacter;
 class AEffectGrantingItem;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectsFromItemToSelf : public USG_GameplayAbility
@@ -28,8 +27,8 @@ protected:
 	FGameplayTag OnNotifyRecievedGameplayEventTag;
 
 	AInGameCharacter* Player;
+
 	AEffectGrantingItem* EffectGrantingItem;
-	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();

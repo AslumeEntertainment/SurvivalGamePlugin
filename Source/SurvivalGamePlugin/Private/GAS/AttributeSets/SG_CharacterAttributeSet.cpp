@@ -12,9 +12,6 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
-USG_CharacterAttributeSet::USG_CharacterAttributeSet()
-{
-}
 
 void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -34,6 +31,7 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, EnergyDrainRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Speed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, JumpVelocity, COND_None, REPNOTIFY_Always);
 }
 
 void USG_CharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -44,17 +42,9 @@ void USG_CharacterAttributeSet::PreAttributeBaseChange(const FGameplayAttribute&
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHunger());
 	}
-	if (Attribute == GetMaxHungerAttribute())
-	{
-		//ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
-	}
 	if (Attribute == GetEnergyAttribute())
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxEnergy());
-	}
-	if (Attribute == GetMaxEnergyAttribute())
-	{
-		//ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
 	}
 }
 
@@ -75,11 +65,6 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		return;
 	}
 
-	if (Attribute == GetSpeedAttribute())
-	{
-		AvatarActor->GetCharacterMovement()->MaxWalkSpeed = NewValue;
-	}
-
 	if (Attribute == GetAttackAttribute())
 	{
 		TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;
@@ -89,6 +74,38 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		{
 			DamageDealingComponent->SetDefaultDamageValue(NewValue);
 		}
+	}
+	if (Attribute == GetAttackSpeedAttribute())
+	{
+		AvatarActor->SetAttackSpeed(NewValue);
+	}
+	if (Attribute == GetMaxHungerAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
+	}
+	if (Attribute == GetMaxEnergyAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
+	}
+	if (Attribute == GetSpeedAttribute())
+	{
+		UCharacterMovementComponent* MovementComp = AvatarActor->GetCharacterMovement();
+		if (IsValid(MovementComp) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(MovementComp) == false"));
+			return;
+		}
+		MovementComp->MaxWalkSpeed = NewValue;
+	}
+	if (Attribute == GetJumpVelocityAttribute())
+	{
+		UCharacterMovementComponent* MovementComp = AvatarActor->GetCharacterMovement();
+		if (IsValid(MovementComp) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USG_CharacterAttributeSet::PostAttributeChange IsValid(MovementComp) == false"));
+			return;
+		}
+		MovementComp->JumpZVelocity = NewValue;
 	}
 }
 
@@ -130,15 +147,22 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	{
 		if (GetHunger() >= GetMaxHunger() * 0.99)
 		{
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 		}
-		else
+		else 
 		{
-			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
-			
-			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CurrentlyHealing")) == false)
+			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasFullHunger")))
 			{
+				ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			}
+			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CurrentlyHealing")) == false && 
+				ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CanRegenerateHealth")))
+			{
+				ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 			}
 		}
@@ -163,6 +187,11 @@ void USG_CharacterAttributeSet::OnRep_HealthRegenerationRate(const FGameplayAttr
 void USG_CharacterAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Attack, OldAttack);
+}
+
+void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeed, OldAttackSpeed);
 }
 
 void USG_CharacterAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldHunger)
@@ -203,5 +232,10 @@ void USG_CharacterAttributeSet::OnRep_EnergyDrainRate(const FGameplayAttributeDa
 void USG_CharacterAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldSpeed)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Speed, OldSpeed);
+}
+
+void USG_CharacterAttributeSet::OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, JumpVelocity, OldJumpVelocity);
 }
 

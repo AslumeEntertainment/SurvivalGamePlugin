@@ -20,7 +20,7 @@ public:
 
 	void AbilityInputReleased(const FGameplayTag& InputTag);
 
-	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, UObject* Instigator, uint8 Level = 1);
+	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const AActor* Instigator, uint8 Level = 1);
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 

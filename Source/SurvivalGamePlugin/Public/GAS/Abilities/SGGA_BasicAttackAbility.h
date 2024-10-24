@@ -8,7 +8,6 @@
 #include "SGGA_BasicAttackAbility.generated.h"
 
 class AInGameCharacter;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_BasicAttackAbility : public USG_GameplayAbility
@@ -40,7 +39,6 @@ protected:
 	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;
 
 	AInGameCharacter* Player;
-	USG_AnimInstance* AnimInst;
 
 	UFUNCTION()
 	void OnAnimMontageCompleted();

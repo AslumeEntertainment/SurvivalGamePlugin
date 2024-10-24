@@ -11,8 +11,9 @@
 
 #include "InGameCharacter.generated.h"
 
-class AItemBase;
-class ADamageDealingItem;
+class UEquipmentComponent;
+class UPassiveDamageDealingComponent;
+
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
@@ -27,19 +28,52 @@ private:
 
 	bool bIsAlive = true;
 
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxHealth(float MaxHealth);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxHunger(float MaxHunger);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerMaxEnergy(float MaxEnergy);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
+
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<EEquipmentSlot, AItemBase*> EquipmentSlots;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
-	TMap<EEquipmentSlot, FName> EquipmentSockets;
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
+	float AttackSpeed = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment")
+	bool bIsRightHanded = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
+	UEquipmentComponent* EquipmentComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* LeftHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UDamageDealingComponent* RightHandDamageDealingComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -48,70 +82,66 @@ protected:
 	UInputAction* UseSecondaryHandItemAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* UnequipAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* SprintAction;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void MainHandAction() PURE_VIRTUAL(AInGameCharacter::MainHandAction, );
-	virtual void SecondaryHandAction() PURE_VIRTUAL(AInGameCharacter::SecondaryHandAction, );
+	virtual void Landed(const FHitResult& Hit) override;
+
+	UFUNCTION()
+	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
+	virtual void MainHandAction();
+	virtual void SecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
+
+	UFUNCTION(Client, Reliable)
+	virtual void Client_BroadcastInitialValues() override;
 
 
 public:
 
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
 
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }
 
+	UFUNCTION()
+	void SetAttackSpeed(float NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackSpeed() const;
+
+	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
+	
 	virtual bool bCanBeHit() override;
 
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
 
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerHunger(float CurrentHunger, float MaxHunger);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_OnUpdatePlayerEnergy(float CurrentEnergy, float MaxEnergy);
+	UFUNCTION(BlueprintCallable)
+	bool IsRightHanded();
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotOfType(EEquipmentSlot SlotType) const;
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void SetEquipedItemAtSlot(EEquipmentSlot SlotType, AItemBase* Item);
-
-	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(EEquipmentSlot SlotType) const;
-
-	UFUNCTION(BlueprintCallable)
-	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
-
-	UFUNCTION(BlueprintCallable)
-	FName GetEquipmentSocketOfType(EEquipmentSlot SlotType) const;
+	void SetIsRightHanded(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
 
+	UFUNCTION(BlueprintCallable)
+	void ShowPlayerInfo();
+
 	FVoidDataTransferSignature OnCharacterDeath;
 
-	UPROPERTY(BlueprintCallable)
 	FFloatTransferSignature OnHealthPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnMaxHealthUpdated;
 	FFloatTransferSignature OnHungerPercentUpdated;
-
-	UPROPERTY(BlueprintCallable)
+	FFloatTransferSignature OnMaxHungerUpdated;
 	FFloatTransferSignature OnEnergyPercentUpdated;
+	FFloatTransferSignature OnMaxEnergyUpdated;
+
+	FFloatTransferSignature OnCurrentSpeedUpdated;
 
 };

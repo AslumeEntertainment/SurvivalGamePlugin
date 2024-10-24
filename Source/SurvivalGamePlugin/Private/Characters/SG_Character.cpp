@@ -16,16 +16,15 @@
 
 #include "Components/SG_EnhancedInputComponent.h"
 #include "Interfaces/InteractableInterface.h"
-#include "GAS/SG_AbilitySystemComponent.h"
+#include "Animation/SG_AnimInstance.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-// Sets default values
 ASG_Character::ASG_Character()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -37,7 +36,7 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->bOrientRotationToMovement = true; 
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); 
 
-	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->JumpZVelocity = 200.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
@@ -57,6 +56,7 @@ ASG_Character::ASG_Character()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
+
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -64,18 +64,42 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bIsMirrored, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
+}
+
+void ASG_Character::UpdateCamera(float Alpha)
+{
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::UpdateCamera IsValid(PlayerCont) == false"));
+		return;
+	}
+	FQuat NewControlRotation = FQuat::Slerp(PlayerCont->GetControlRotation().Quaternion(), GetActorQuat(), Alpha);
+	PlayerCont->SetControlRotation(FRotator(NewControlRotation));
+	SetRepControlRotation(GetControlRotation());
 }
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
 {
+	SetFocusedInteractable(InFocusedInteractable);
+}
+
+void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetFocusedInteractable(InFocusedInteractable);
+		return;
+	}
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
 void ASG_Character::EmitInteractionChecker()
 {
 	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
-	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
+	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * CurrentInteractionRange + StartTrace;
 
 	const FName TraceTag("InteractableTraceTag");
 
@@ -122,6 +146,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 
+		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 		Server_SetFocusedInteractable(nullptr);
 		return;
 	}
@@ -144,6 +169,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
+	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + HitActor->GetName()));
 	Server_SetFocusedInteractable(HitActor);
 }
 
@@ -151,17 +177,29 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CurrentInteractionRange = InteractionRange;
+	
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(GetAbilitySystemComponent()) == false"))
 		return;
 	}
 	GetAbilitySystemComponent()->InitAbilityActorInfo(this, this);
+
+	if (IsValid(CameraViewResetCurve))
+	{
+		FOnTimelineFloat ProgressUpdate;
+		ProgressUpdate.BindUFunction(this, FName("UpdateCamera"));
+
+		CameraViewResetTimeline.AddInterpFloat(CameraViewResetCurve, ProgressUpdate);
+		CameraViewResetTimeline.SetLooping(false);
+	}
 }
 
 void ASG_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CameraViewResetTimeline.TickTimeline(DeltaTime);
 
 	if (IsLocallyControlled() == false)
 	{
@@ -188,6 +226,13 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
+		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
+
+		if (IsValid(AbilityInputConfig) == false)
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SetupPlayerInputComponent IsValid(AbilityInputConfig) == false"))
+			return;
+		}
 		SG_EnhancedInputComponent->BindAbilityActions(AbilityInputConfig, this, &ASG_Character::AbilityInputPressed, &ASG_Character::AbilityInputReleased);
 	}
 	else
@@ -196,9 +241,24 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	}
 }
 
-void ASG_Character::Server_SetRepControlRotation_Implementation(FRotator InControlRotation)
+void ASG_Character::ToggleFirstPerson()
 {
-	ControlRotation = InControlRotation;
+	bIsFirstPerson = !bIsFirstPerson;
+
+	if (bIsFirstPerson)
+	{
+		CameraBoom->TargetArmLength = 0.f;
+		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("head"));
+		FirstPersonCamera->SetRelativeLocation(FVector::Zero());
+		CurrentInteractionRange = InteractionRange;
+	}
+	else
+	{
+		CameraBoom->TargetArmLength = CameraDistanceFromPlayer;
+		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("ThirdPersonCameraSocket"));
+		FirstPersonCamera->SetRelativeLocation(FVector(0, 30, 0));
+		CurrentInteractionRange = InteractionRange + CameraDistanceFromPlayer;
+	}
 }
 
 void ASG_Character::Move(const FInputActionValue& Value)
@@ -240,7 +300,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerYawInput(LookAxisVector.X);
 	AddControllerPitchInput(LookAxisVector.Y);
 
-	Server_SetRepControlRotation(GetControlRotation());
+	SetRepControlRotation(GetControlRotation());
 }
 
 void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
@@ -263,9 +323,35 @@ void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
 	AbilitySystemComponent->AbilityInputReleased(InputTag);
 }
 
+void ASG_Character::Server_SetRepControlRotation_Implementation(FRotator InControlRotation)
+{
+	SetRepControlRotation(InControlRotation);
+}
+
+void ASG_Character::SetRepControlRotation(FRotator InControlRotation)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetRepControlRotation(InControlRotation);
+	}
+	ControlRotation = InControlRotation;
+}
+
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	if (bIsCameraMovementConstrained)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (!IsValid(PlayerController))
+		{
+			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::Move IsValid(PlayerController) == false"));
+			return;
+		}
+		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
+		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
+	}
 
 	InitCharacterDefaults();
 	BindCallbacksToDependencies();
@@ -327,6 +413,95 @@ FVector ASG_Character::GetPlayerLookAtLocation(float DistanceFromPlayer)
 FRotator ASG_Character::GetRepControlRotation()
 {
 	return ControlRotation;
+}
+
+void ASG_Character::ResetCameraView()
+{
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	CameraViewResetTimeline.PlayFromStart();
+}
+
+void ASG_Character::DisablePlayerInput(float Duration)
+{
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
+	if (IsValid(InputSystem) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
+		return;
+	}
+
+	InputSystem->ClearAllMappings();
+	if (Duration > 0.f)
+	{
+		FTimerHandle EnableInputTimer;
+		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("Movement disabled"));
+}
+
+void ASG_Character::EnablePlayerInput()
+{
+	if (IsLocallyControlled() == false)
+	{
+		return;
+	}
+	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		return;
+	}
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
+	if (IsValid(InputSystem) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
+		return;
+	}
+
+	InputSystem->AddMappingContext(DefaultMappingContext, 0);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Turquoise, TEXT("Movement enabled"));
+}
+
+bool ASG_Character::IsMirrored()
+{
+	return bIsMirrored;
+}
+
+void ASG_Character::SetIsMirrored(bool NewValue)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SetIsMirrored(NewValue);
+		return;
+	}
+
+	/*USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(GetMesh()->GetAnimInstance());
+	if (IsValid(AnimInst) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::SetIsMirrored IsValid(AnimInst) == false"))
+		return;
+	}
+	AnimInst->bIsMirrored = NewValue;*/
+	bIsMirrored = NewValue;
+}
+
+void ASG_Character::Server_SetIsMirrored_Implementation(bool NewValue)
+{
+	SetIsMirrored(NewValue);
 }
 
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)

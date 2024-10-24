@@ -41,6 +41,13 @@ void AInGameHUD::BeginPlay()
 	Player->OnHungerPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
 	Player->OnEnergyPercentUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
 
+	Player->OnMaxHealthUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetHealthBarLength);
+	Player->OnMaxHungerUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetHungerBarLength);
+	Player->OnMaxEnergyUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
+
+	Player->InteractIndicationTextDelegate.AddDynamic(GameplayWidget, &UInGameOverlayWidget::SetInteractIndicationText);
+	Player->OnCurrentSpeedUpdated.AddDynamic(GameplayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
+
 	ShowGameplayWidget();
 }
 

@@ -9,6 +9,7 @@
 #include "HittableFoliageActor.generated.h"
 
 class StaticMeshComponent;
+class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
@@ -25,45 +26,30 @@ protected:
 	
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ToolTip = "Value should follow this format: 000-000\nExample: 009-011"))
-	TMap<TSubclassOf<AActor>, FString> ActorsToDropOnDestroyed;
-
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ToolTip = "Should dropped actors be stacked vertically when spawned (Used for trees)"))
-	bool bShouldStackVertically = false;
-
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
-		meta = (ToolTip = "The lower percent of the foliage actor's height at which dropped actors will spawn"))
-	float LowerHeightPercent = 0.5f;
-
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
-		meta = (ToolTip = "The upper percent of the foliage actor's height at which dropped actors will spawn"))
-	float UpperHeightPercent = 0.5f;
-
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"), 
-		meta = (ToolTip = "How far can the dropped actors spawn from the center of the foliage actor"))
-	float Spread = 0.5f;
-
-	UPROPERTY(EditAnywhere, Category = "DroppedActors", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"),
-		meta = (ToolTip = "Defines the limit to how much a dropped actor can be rotated when spawned"))
-	float RotationLimit = 0.5f;
-
-	UPROPERTY(EditAnywhere, Category = "ActorTick")
-	float InvincibilityTime = 2.f;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* StaticMesh;
+	UStaticMeshComponent* StaticMesh;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	ULootTableComponent* LootTableComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USG_AbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
+
+	UFUNCTION()
+	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
 
 public:	
 	
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 
-	UFUNCTION(NetMulticast, Reliable)
+	//UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
 
 	virtual bool bCanBeHit() override;

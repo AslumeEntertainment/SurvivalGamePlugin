@@ -22,7 +22,6 @@ float UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation(const FGame
 	}
 
 	float RegenerationValue = RegeneratingItem->GetRegenerationAmount();
-	UE_LOG(LogTemp, Warning, TEXT("UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation %f BALLS?!?!?!"), RegenerationValue);
 	return RegenerationValue;
 }
 

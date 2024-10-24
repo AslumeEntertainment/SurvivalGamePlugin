@@ -7,6 +7,8 @@
 #include "InGameOverlayWidget.generated.h"
 
 class UBorder;
+class UTextBlock;
+class UProgressBar;
 class UBackgroundBlur;
 
 UCLASS()
@@ -23,6 +25,21 @@ protected:
 	UBorder* HungerPercentOverlay;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UTextBlock* TXT_CurrentSpeed;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UTextBlock* TXT_InteractIndicationText;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* HealthBar;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* HungerBar;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UProgressBar* EnergyBar;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBackgroundBlur* BackgroundBlur;
 
 	UPROPERTY(EditAnywhere)
@@ -31,12 +48,27 @@ protected:
 public:
 
 	UFUNCTION()
+	void SetInteractIndicationText(FText InteractIndicationText);
+
+	UFUNCTION()
+	void UpdateCurrentSpeed(float NewValue);
+
+	UFUNCTION()
 	void UpdateHealthPercent(float CurrentHealthPercent);
 
 	UFUNCTION()
 	void UpdateHungerPercent(float CurrentHungerPercent);
 
 	UFUNCTION()
-	void UpdateEnergyPercent(float CurrentEneryPercent);
+	void UpdateEnergyPercent(float CurrentEnergyPercent);
+
+	UFUNCTION()
+	void SetHealthBarLength(float PlayerMaxHealth);
+
+	UFUNCTION()
+	void SetHungerBarLength(float PlayerMaxHunger);
+
+	UFUNCTION()
+	void SetEnergyBarLength(float PlayerMaxEnergy);
 
 };

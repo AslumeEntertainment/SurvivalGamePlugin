@@ -10,9 +10,9 @@
 class UItemIconWidget;
 class UCraftingWindowWidget;
 class UAbilityTask_WaitInputRelease;
-class AHumanCharacter;
+class AInGameCharacter;
+class UEquipmentComponent;
 class APlayerController;
-class USG_AnimInstance;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
@@ -30,6 +30,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
 	UDataTable* CraftingInfoTable;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
 
@@ -42,17 +45,15 @@ protected:
 	UPROPERTY()
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask;
 
-	AHumanCharacter* Player;
-
+	AInGameCharacter* Player;
 	APlayerController* PlayerCont;
+	UEquipmentComponent* EquipmentComp;
 
-	USG_AnimInstance* AnimInst;
+	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
-	float OldSpeed;
-
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	AItemBase* ProductItem;
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	FName ProductItemSocketName;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;

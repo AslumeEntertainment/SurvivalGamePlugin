@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
 #include "Logging/LogMacros.h"
 #include "AbilitySystemInterface.h"
+#include "Components/TimelineComponent.h"
 #include "GameplayTagContainer.h"
 
 #include "Headers/GeneralDelegates.h"
@@ -14,13 +16,16 @@
 
 class USpringArmComponent;
 class UCameraComponent;
-class UDamageDealingComponent;
 class UInputMappingContext;
 class UInputAction;
+class UCurveFloat;
+struct FInputActionValue;
+
 class UAbilityInputConfig;
+class UDamageDealingComponent;
 class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
-struct FInputActionValue;
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -35,11 +40,25 @@ public:
 
 private:
 
+	bool bIsFirstPerson = true;
+
+	float CurrentInteractionRange;
+
+	FTimeline CameraViewResetTimeline;
+
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
+	UPROPERTY(Replicated)
+	bool bIsMirrored = false;
+
+	UFUNCTION()
+	void UpdateCamera(float Alpha);
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
+
+	void SetFocusedInteractable(UObject* InFocusedInteractable);
 
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
@@ -79,6 +98,12 @@ protected:
 	UPROPERTY(Transient)
 	USG_CharacterAttributeSet* AttributeSet;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	float CameraDistanceFromPlayer = 200;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	UCurveFloat* CameraViewResetCurve = nullptr;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
@@ -95,8 +120,7 @@ protected:
 	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* InteractAction;
-
+	UInputAction* CameraModeToggleAction;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -113,8 +137,12 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void ToggleFirstPerson();
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
+
+	void SetRepControlRotation(FRotator InControlRotation);
 
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -122,8 +150,9 @@ protected:
 
 	void InitCharacterDefaults();
 
-	virtual void BindCallbacksToDependencies();
-	virtual void BroadcastInitialValues();
+	virtual void BindCallbacksToDependencies() PURE_VIRTUAL(ASG_Character::BindCallbacksToDependencies, );
+	virtual void BroadcastInitialValues() PURE_VIRTUAL(ASG_Character::BroadcastInitialValues, );
+	virtual void Client_BroadcastInitialValues() PURE_VIRTUAL(ASG_Character::Client_BroadcastInitialValues, );
 
 
 public:
@@ -143,7 +172,27 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FRotator GetRepControlRotation();
 
+	UFUNCTION(BlueprintCallable)
+	void ResetCameraView();
+
+	UFUNCTION(BlueprintCallable)
+	void DisablePlayerInput(float Duration = 0.f);
+
+	UFUNCTION(BlueprintCallable)
+	void EnablePlayerInput();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsMirrored();
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsMirrored(bool NewValue);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetIsMirrored(bool NewValue);
+
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
+
+	FTextTransferSignature InteractIndicationTextDelegate;
 
 private:
 

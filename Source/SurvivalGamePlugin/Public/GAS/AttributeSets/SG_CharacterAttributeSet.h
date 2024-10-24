@@ -19,8 +19,6 @@ class SURVIVALGAMEPLUGIN_API USG_CharacterAttributeSet : public USG_AttributeSet
 	
 public:
 
-	USG_CharacterAttributeSet();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
@@ -36,6 +34,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Attack)
 	FGameplayAttributeData Attack;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Attack);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeed)
+	FGameplayAttributeData AttackSpeed;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeed);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Hunger)
 	FGameplayAttributeData Hunger;
@@ -69,6 +71,10 @@ public:
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Speed);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_JumpVelocity)
+	FGameplayAttributeData JumpVelocity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, JumpVelocity);
+
 	bool HasMaxHunger() const;
 	bool HasMaxEnergy() const;
 
@@ -79,6 +85,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Attack(const FGameplayAttributeData& OldAttack);
+
+	UFUNCTION()
+	virtual void OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed);
 
 	UFUNCTION()
 	virtual void OnRep_Hunger(const FGameplayAttributeData& OldHunger);
@@ -103,5 +112,8 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Speed(const FGameplayAttributeData& OldSpeed);
+
+	UFUNCTION()
+	virtual void OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity);
 
 };

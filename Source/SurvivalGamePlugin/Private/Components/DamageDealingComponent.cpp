@@ -7,9 +7,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 #include "Interfaces/HittableInterface.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
-
 
 UDamageDealingComponent::UDamageDealingComponent()
 {
@@ -44,7 +45,6 @@ void UDamageDealingComponent::AttemptHit()
 	}
 
 	TArray<FHitResult> HitResults;
-	//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AttemptHit Number of actors to currently ignore = %d"), ActorsToIgnoreWhenActive.Num());
 
 	if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), DamageCapsuleRadius, DamageCapsuleHeight / 2, UEngineTypes::ConvertToTraceType(ECC_Camera),
 		true, ActorsToIgnoreWhenActive, EDrawDebugTrace::ForOneFrame, HitResults, true) == false)
@@ -66,6 +66,17 @@ void UDamageDealingComponent::AttemptHit()
 		}
 		if (HittableActor != nullptr && HittableActor->bCanBeHit() == true)
 		{
+			UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
+			if (ASC == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit HittableActor->ASC == nullptr"));
+				continue;
+			}
+
+			FGameplayCueParameters CueParams = FGameplayCueParameters();
+			CueParams.Location = HitResult.ImpactPoint;
+			ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
+
 			HittableActor->OnHit(GameplayEffectSpecHandles);
 			OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
 			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());

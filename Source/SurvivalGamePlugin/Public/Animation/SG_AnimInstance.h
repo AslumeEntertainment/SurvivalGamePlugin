@@ -11,10 +11,10 @@ UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
-	
+
 public:
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadWrite)
 	bool bIsMirrored = false;
 
 };

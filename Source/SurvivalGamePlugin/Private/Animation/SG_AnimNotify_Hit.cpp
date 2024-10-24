@@ -24,7 +24,7 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 	}
 
 	FGameplayTag FinalDamageDealingComponentTag = DamageDealingComponentTag;
-	if (AnimInst->bIsMirrored)
+	if (Player->IsMirrored())
 	{
 		FinalDamageDealingComponentTag = GetMirroredNotifyDamageComponentTag();
 	}
