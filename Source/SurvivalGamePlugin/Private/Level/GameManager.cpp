@@ -107,7 +107,6 @@ void AGameManager::UpdateSkeletalMesh()
 
 void AGameManager::AddPlayer(APlayerCustomiser* Player)
 {
-	UE_LOG(LogTemp, Error, TEXT("Adding player - %s"), *Player->GetName());
 	Player->UpdatePlayerReadiness(false);
 	Players.Add(Player, false);
 }

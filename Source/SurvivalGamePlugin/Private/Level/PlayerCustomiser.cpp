@@ -76,12 +76,10 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	{
 		PC->Client_SetInputMode(EInputMode::UIOnly);
 		Client_ShowUI();
-		UE_LOG(LogTemp, Error, TEXT("LocalPlayer side of interact"));
 	}
 
 	if (HasAuthority() == true)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Auth side of interact"));
 		InteractingPlayer = PC;
 
 		OnPlayerStartInteracting.Broadcast(this);
@@ -133,7 +131,6 @@ void APlayerCustomiser::Server_ToggleReady_Implementation()
 
 void APlayerCustomiser::OnRepIsPlayerReady()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRepReady - %s"), *GetName());
 	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
 }
 
@@ -142,8 +139,6 @@ void APlayerCustomiser::UpdatePlayerReadiness(bool State)
 	bIsPlayerReady = State;
 
 	if (IsValid(PlayerCustomisingWidget) == false) return;
-
-	UE_LOG(LogTemp, Warning, TEXT("Updateplayer Readiness"));
 
 	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
 }
