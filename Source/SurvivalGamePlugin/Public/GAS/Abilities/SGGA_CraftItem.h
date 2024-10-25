@@ -74,9 +74,6 @@ protected:
 	void StartCrafting(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void SpawnProductItem();
-
-	UFUNCTION()
 	void OnAnimMontageCompleted();
 
 	UFUNCTION()

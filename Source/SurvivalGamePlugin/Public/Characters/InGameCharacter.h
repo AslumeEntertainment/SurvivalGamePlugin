@@ -97,15 +97,15 @@ protected:
 	virtual void SecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies();
-	virtual void BroadcastInitialValues();
-
-	UFUNCTION(Client, Reliable)
-	virtual void Client_BroadcastInitialValues();
-
 
 public:
 
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
+
+	virtual void BroadcastInitialValues();
+
+	UFUNCTION(Client, Reliable)
+	virtual void Client_BroadcastInitialValues();
 
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }

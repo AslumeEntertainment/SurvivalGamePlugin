@@ -77,11 +77,6 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		Player->SetIsMirrored(true);
 	}
 
-	if (HasAuthority(&CurrentActivationInfo))
-	{
-		SpawnNewItems();
-	}
-
 	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
 	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
 	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ItemForDisassemblyData->MovementSpeedMultiplier);
@@ -99,47 +94,18 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	if (bWasCancelled && IsValid(MainItemActor) && MainItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
+	/*if (bWasCancelled && IsValid(MainItemActor) && MainItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
 	{
 		MainItemActor->Destroy();
 	}
 	if (bWasCancelled && IsValid(IngredientItemActor) && IngredientItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
 	{
 		IngredientItemActor->Destroy();
-	}
+	}*/
 	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-}
-
-void USGGA_AttemptDisassembleItem::SpawnNewItems()
-{
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems IsValid(World) == false"));
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-	}
-
-	float ItemDurabilityPercent = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() / 
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
-
-	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(MainItemActor))
-	{
-		MainItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
-		MainItemActor->SetDurability(MainItemActor->GetDurability() * ItemDurabilityPercent);
-	}
-
-	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(IngredientItemActor))
-	{
-		IngredientItemActor->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
-		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems - New items have been spawned and kept hidden until ability has finished"));
 }
 
 void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted()
@@ -163,20 +129,39 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payl
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
 	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyItem();
 
+	if (HasAuthority(&CurrentActivationInfo) == false)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems IsValid(World) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	}
+
+	float ItemDurabilityPercent = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() /
+		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
+
+	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(MainItemActor))
 	{
+		MainItemActor->SetDurability(MainItemActor->GetDurability() * ItemDurabilityPercent);
 		MainItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()));
 		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), MainItemActor);
 	}
 
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) == false && IsValid(IngredientItemActor))
+	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) == false)
 	{
+		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
 		IngredientItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()));
 		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
 	}
-
-	else if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) && IsValid(IngredientItemActor))
+	else if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())))
 	{
+		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
 		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
 		IngredientItemActor->SetActorRotation(Player->GetActorRotation());
 	}

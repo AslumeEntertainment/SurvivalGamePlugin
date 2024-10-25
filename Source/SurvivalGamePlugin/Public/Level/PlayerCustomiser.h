@@ -96,6 +96,9 @@ public:
 	void PossessGamePawn();
 
 	UFUNCTION(Client, Reliable)
+	void Client_SetInGameOverlayVisibility(bool bShouldAddToViewport);
+
+	UFUNCTION(Client, Reliable)
 	void Client_HideUI();
 
 	UFUNCTION(Client, Reliable)

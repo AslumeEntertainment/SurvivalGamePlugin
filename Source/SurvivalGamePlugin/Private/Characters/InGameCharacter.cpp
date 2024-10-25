@@ -55,17 +55,8 @@ void AInGameCharacter::BeginPlay()
 	{
 		return;
 	}
-	if (HasAuthority())
-	{
-		BroadcastInitialValues();
-	}
-	else
-	{
-		FTimerHandle BroadcastInitialValuesTimerHandle;
-		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
-	}
 
-	APlayerController* PC = Cast<APlayerController>(GetController());
+	/*APlayerController* PC = Cast<APlayerController>(GetController());
 	if (IsValid(PC) == false)
 	{
 		return;
@@ -76,10 +67,10 @@ void AInGameCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::PossessedBy IsValid(HUD) == false"));
 		return;
-	}
+	}*/
 
-	HUD->ShowGameplayOverlayWidget();
-	OnDestroyed.AddDynamic(HUD, &AInGameHUD::RemoveGameplayOverlayWidget);
+	//HUD->ShowGameplayOverlayWidget();
+	//OnDestroyed.AddDynamic(HUD, &AInGameHUD::RemoveGameplayOverlayWidget);
 }
 
 void AInGameCharacter::Tick(float DeltaTime)
@@ -303,6 +294,13 @@ void AInGameCharacter::BindCallbacksToDependencies()
 
 void AInGameCharacter::BroadcastInitialValues()
 {
+	if (HasAuthority() == false)
+	{
+		FTimerHandle BroadcastInitialValuesTimerHandle;
+		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
+		//BroadcastInitialValues();
+	}
+	
 	if (IsValid(AttributeSet) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BroadcastInitialValues IsValid(AttributeSet) == false"));

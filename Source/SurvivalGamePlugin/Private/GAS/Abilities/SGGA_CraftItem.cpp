@@ -191,8 +191,6 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	SpawnProductItem();
-
 	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
 	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
 	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ProductItemData->MovementSpeedMultiplier);
@@ -206,47 +204,6 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	UAbilityTask_WaitGameplayEvent* WaitFinishCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"), nullptr, true, true);
 	WaitFinishCraftingTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
 	WaitFinishCraftingTask->ReadyForActivation();
-}
-
-void USGGA_CraftItem::SpawnProductItem()
-{
-	if (HasAuthority(&CurrentActivationInfo) == false)
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OnCraftingFinished IsValid(World) == false"));
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-	}
-	
-	float ProductItemDurabilityPercent = 0.f;
-
-	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
-	{
-		ProductItemSocketName = EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag());
-		ProductItemDurabilityPercent += EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetDurability() / 
-			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->ItemData.ItemMaxDurability;
-	}
-	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetItemDataRowName()))
-	{
-		ProductItemSocketName = EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag());
-		ProductItemDurabilityPercent += EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() / 
-			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
-		ProductItemDurabilityPercent /= 2;
-	}
-
-	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(ProductItem))
-	{
-		ProductItem->SetActorScale3D(FVector(0.0001, 0.0001, 0.0001));
-
-		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::SpawnProductItem - Product item has been spawned and kept hidden until ability has finished"));
 }
 
 void USGGA_CraftItem::OnAnimMontageCompleted()
@@ -276,7 +233,36 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyItem();
 	}
 
-	if (IsValid(ProductItem)) 
+	if (HasAuthority(&CurrentActivationInfo) == false)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OnCraftingFinished IsValid(World) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	}
+
+	float ProductItemDurabilityPercent = 0.f;
+
+	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
+	{
+		ProductItemSocketName = EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag());
+		ProductItemDurabilityPercent += EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetDurability() /
+			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->ItemData.ItemMaxDurability;
+	}
+	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetItemDataRowName()))
+	{
+		ProductItemSocketName = EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag());
+		ProductItemDurabilityPercent += EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() /
+			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
+		ProductItemDurabilityPercent /= 2;
+	}
+
+	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
+	if (IsValid(ProductItem))
 	{
 		if (ProductItemSocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()))
 		{
@@ -287,6 +273,7 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), ProductItem);
 		}
 		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
+		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));

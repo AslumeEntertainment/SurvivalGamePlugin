@@ -54,10 +54,11 @@ void AInGameHUD::ShowGameplayOverlayWidget()
 		Player->OnCurrentSpeedUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
 
 		GameplayOverlayWidget->AddToViewport();
+		Player->BroadcastInitialValues();
 	}
 }
 
-void AInGameHUD::RemoveGameplayOverlayWidget(AActor* OwningPawn)
+void AInGameHUD::RemoveGameplayOverlayWidget()
 {
 	if (GameplayOverlayWidget && GameplayOverlayWidget->IsInViewport())
 	{

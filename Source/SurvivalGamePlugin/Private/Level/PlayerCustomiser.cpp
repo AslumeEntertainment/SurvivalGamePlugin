@@ -8,6 +8,7 @@
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "Characters/InGameCharacter.h"
+#include "UI/HUD/InGameHUD.h"
 #include "UI/Widgets/PlayerCustomisingWidget.h"
 
 
@@ -71,17 +72,17 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	}
 
 	SetOwner(InteractingCharacter);
+	InteractingPlayer = PC;
 
 	if (PC->IsLocalPlayerController() == true)
 	{
 		PC->Client_SetInputMode(EInputMode::UIOnly);
+		PC->bShowMouseCursor = true;
 		Client_ShowUI();
 	}
 
 	if (HasAuthority() == true)
 	{
-		InteractingPlayer = PC;
-
 		OnPlayerStartInteracting.Broadcast(this);
 		MainPawn = PC->GetPawn();
 
@@ -98,6 +99,12 @@ bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 
 void APlayerCustomiser::Client_StopInteracting_Implementation()
 {
+	if (IsValid(InteractingPlayer) == true)
+	{
+		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+		InteractingPlayer->bShowMouseCursor = false;
+		InteractingPlayer = nullptr;
+	}
 	Client_HideUI();
 	Server_StopInteracting();
 }
@@ -110,7 +117,6 @@ void APlayerCustomiser::Server_StopInteracting_Implementation()
 
 	if (IsValid(InteractingPlayer) == true)
 	{
-		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 		InteractingPlayer = nullptr;
 	}
 
@@ -188,8 +194,9 @@ void APlayerCustomiser::PossessMainPawn()
 {
 	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(MainPawn);
-	Client_ShowUI();
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	Client_ShowUI();
+	Client_SetInGameOverlayVisibility(false);
 	DespawnHero();
 }
 
@@ -197,9 +204,26 @@ void APlayerCustomiser::PossessGamePawn()
 {
 	//InteractingPlayer->UnPossess();
 	InteractingPlayer->Possess(GamePawn);
-	Client_HideUI();
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-	
+	Client_HideUI();
+	Client_SetInGameOverlayVisibility(true);
+}
+
+void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bShouldAddToViewport)
+{
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	AInGameHUD* HUD = InteractingPlayer->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation IsValid(HUD) == false"));
+		return;
+	}
+
+	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget() : HUD->RemoveGameplayOverlayWidget();
 }
 
 void APlayerCustomiser::Client_HideUI_Implementation()

@@ -28,6 +28,6 @@ public:
 	
 	void ShowGameplayOverlayWidget();
 
-	void RemoveGameplayOverlayWidget(AActor* OwningPawn);
+	void RemoveGameplayOverlayWidget();
 
 };

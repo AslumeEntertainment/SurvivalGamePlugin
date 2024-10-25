@@ -44,9 +44,6 @@ protected:
 	AItemBase* IngredientItemActor;
 
 	UFUNCTION()
-	void SpawnNewItems();
-
-	UFUNCTION()
 	void OnAnimMontageCompleted();
 
 	UFUNCTION()

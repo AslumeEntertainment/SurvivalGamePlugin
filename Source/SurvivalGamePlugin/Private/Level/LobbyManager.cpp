@@ -245,6 +245,7 @@ void ALobbyManager::InteractRequest(AController* InteractingCharacter)
 	}
 
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	InteractingPlayer->bShowMouseCursor = true;
 
 	if (HasAuthority() == true)
 	{
@@ -262,6 +263,7 @@ bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
 void ALobbyManager::StopInteracting()
 {
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer->bShowMouseCursor = false;
 	InteractingPlayer = nullptr;
 
 	CampaignChooserWidget->MarkForDestruction();
