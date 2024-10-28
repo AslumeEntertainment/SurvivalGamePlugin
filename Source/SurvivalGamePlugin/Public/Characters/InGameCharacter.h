@@ -49,6 +49,9 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
 
+	UFUNCTION()
+	void OnInGameCharacterDestroyed(AActor* RefToSelf);
+
 protected:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;

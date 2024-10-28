@@ -28,9 +28,6 @@ protected:
 	UTextBlock* TXT_CurrentSpeed;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UTextBlock* TXT_InteractIndicationText;
-
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* HealthBar;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
@@ -46,9 +43,6 @@ protected:
 	int MaxBlurValue = 15;
 
 public:
-
-	UFUNCTION()
-	void SetInteractIndicationText(FText InteractIndicationText);
 
 	UFUNCTION()
 	void UpdateCurrentSpeed(float NewValue);

@@ -10,10 +10,6 @@
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 
-void UInGameOverlayWidget::SetInteractIndicationText(FText InteractIndicationText)
-{
-	TXT_InteractIndicationText->SetText(InteractIndicationText);
-}
 
 void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
 {
