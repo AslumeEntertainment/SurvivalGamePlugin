@@ -23,18 +23,21 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	if (bCanBeMirrored && TriggerEventData != nullptr && TriggerEventData->EventTag.ToString().Contains(".Left"))
@@ -56,6 +59,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(ASC) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	
 	TArray<FDamageGameplayEffect> InstigatedEffects;
@@ -117,6 +121,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AttackAnimationMontage, AttackSpeed);
 	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
 	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
+	PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageInterrupted);
 	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);
 	PlayMontageTask->ReadyForActivation();
 }
@@ -128,6 +133,7 @@ void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handl
 		if (IsValid(DamageDealingComponent))
 		{
 			DamageDealingComponent->ResetDamageEffects();
+			DamageDealingComponent->SetActivation(false);
 		}
 	}
 	Player->ActiveDamageDealingComponents.Empty();
@@ -159,11 +165,7 @@ FGameplayTagContainer USGGA_BasicAttackAbility::GetMirroredAbilityDamageComponen
 
 void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 {
-	if (Player->IsMirrored())
-	{
-		Player->SetIsMirrored(false);
-	}
-	
+	Player->SetIsMirrored(false);
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage complete!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
@@ -171,15 +173,19 @@ void USGGA_BasicAttackAbility::OnAnimMontageCompleted()
 void USGGA_BasicAttackAbility::OnAnimMontageBlendOut()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage blending out..."));
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void USGGA_BasicAttackAbility::OnAnimMontageInterrupted()
+{
+	Player->SetIsMirrored(false);
+	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("Montage interrupted!"));
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void USGGA_BasicAttackAbility::OnAnimMontageCanceled()
 {
-	if (Player->IsMirrored())
-	{
-		Player->SetIsMirrored(false);
-	}
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, TEXT("Montage canceled!"));
+	Player->SetIsMirrored(false);
+	GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Orange, TEXT("Montage canceled!"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }

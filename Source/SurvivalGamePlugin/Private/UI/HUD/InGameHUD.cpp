@@ -26,7 +26,7 @@ void AInGameHUD::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
 		return;
 	}
-	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
+	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));

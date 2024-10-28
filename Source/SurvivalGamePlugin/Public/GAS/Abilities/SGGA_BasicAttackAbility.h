@@ -47,6 +47,9 @@ protected:
 	void OnAnimMontageBlendOut();
 
 	UFUNCTION()
+	void OnAnimMontageInterrupted();
+
+	UFUNCTION()
 	void OnAnimMontageCanceled();
 
 };
