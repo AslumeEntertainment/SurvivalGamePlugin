@@ -22,24 +22,28 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicRestoringAbility::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	AItemBase* ItemForDisassembly = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag());
 	if (IsValid(ItemForDisassembly) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility IsValid(ItemForDisassembly) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	ItemForDisassemblyData = DisassemlyInfoTable->FindRow<FDisassemblyProcessDataStruct>(ItemForDisassembly->GetItemDataRowName(), "");
@@ -47,6 +51,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::ActivateAbility ItemForDisassemblyData == nullptr"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	switch (ItemForDisassemblyData->DisassembleRequirement)
@@ -55,6 +60,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Disassembling: Current item cannot be disassembled!"));
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+			return;
 		}
 
 		case EItemDisassembleRequirement::Always:
@@ -67,6 +73,7 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Disassembling: The player needs an empty hand!"));
 				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+				return;
 			}
 			break;
 		}
@@ -94,14 +101,6 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 
 void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	/*if (bWasCancelled && IsValid(MainItemActor) && MainItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
-	{
-		MainItemActor->Destroy();
-	}
-	if (bWasCancelled && IsValid(IngredientItemActor) && IngredientItemActor->GetActorScale() == FVector(0.0001, 0.0001, 0.0001))
-	{
-		IngredientItemActor->Destroy();
-	}*/
 	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedReductionEffectSpecHandle);
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: EndAbility - Speed has been reset"));
 
@@ -139,6 +138,7 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payl
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems IsValid(World) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
 	float ItemDurabilityPercent = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() /

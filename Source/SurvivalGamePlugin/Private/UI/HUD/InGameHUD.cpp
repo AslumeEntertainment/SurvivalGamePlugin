@@ -5,9 +5,8 @@
 
 #include "Kismet/GameplayStatics.h"
 
-#include "UI/Widgets/CraftingWindowWidget.h"
+#include "UI/Widgets/InteractionOverlayWidget.h"
 #include "UI/Widgets/InGameOverlayWidget.h"
-#include "UI/Widgets/ItemIconWidget.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -22,21 +21,46 @@ void AInGameHUD::BeginPlay()
 	}
 
 	UWorld* World = GetWorld();
-	if (!IsValid(World))
+	if (IsValid(World) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
 		return;
 	}
-
-	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
-}
-
-void AInGameHUD::ShowGameplayOverlayWidget()
-{
 	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
+		return;
+	}
+
+	InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(UGameplayStatics::GetGameInstance(World), InteractionOverlayWidgetClass);
+	Player->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+
+	ShowInteractionOverlayWidget();
+}
+
+void AInGameHUD::ShowInteractionOverlayWidget()
+{
+	if (PlayerOwner && InteractionOverlayWidget)
+	{
+		InteractionOverlayWidget->AddToViewport();
+	}
+}
+
+void AInGameHUD::ShowGameplayOverlayWidget()
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
+		return;
+	}
+	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
+ 
+	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
+	if (IsValid(Player) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(Player) == false"));
 		return;
 	}
 
@@ -50,7 +74,6 @@ void AInGameHUD::ShowGameplayOverlayWidget()
 		Player->OnMaxHungerUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHungerBarLength);
 		Player->OnMaxEnergyUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
 
-		Player->InteractIndicationTextDelegate.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetInteractIndicationText);
 		Player->OnCurrentSpeedUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
 
 		GameplayOverlayWidget->AddToViewport();
@@ -63,6 +86,7 @@ void AInGameHUD::RemoveGameplayOverlayWidget()
 	if (GameplayOverlayWidget && GameplayOverlayWidget->IsInViewport())
 	{
 		GameplayOverlayWidget->RemoveFromParent();
+		GameplayOverlayWidget->Destruct();
 	}
 }
 

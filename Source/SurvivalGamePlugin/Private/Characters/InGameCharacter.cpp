@@ -33,6 +33,17 @@ AInGameCharacter::AInGameCharacter()
 	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
 
 	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
+
+	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
+}
+
+void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
+{
+	TArray<AItemBase*> Equipment = EquipmentComponent->GetAllEquipedItems();
+	for (AItemBase* Item : Equipment)
+	{
+		Item->Destroy();
+	}
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -55,22 +66,6 @@ void AInGameCharacter::BeginPlay()
 	{
 		return;
 	}
-
-	/*APlayerController* PC = Cast<APlayerController>(GetController());
-	if (IsValid(PC) == false)
-	{
-		return;
-	}
-
-	AInGameHUD* HUD = Cast<AInGameHUD>(PC->GetHUD());
-	if (IsValid(HUD) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::PossessedBy IsValid(HUD) == false"));
-		return;
-	}*/
-
-	//HUD->ShowGameplayOverlayWidget();
-	//OnDestroyed.AddDynamic(HUD, &AInGameHUD::RemoveGameplayOverlayWidget);
 }
 
 void AInGameCharacter::Tick(float DeltaTime)
@@ -298,7 +293,6 @@ void AInGameCharacter::BroadcastInitialValues()
 	{
 		FTimerHandle BroadcastInitialValuesTimerHandle;
 		GetWorldTimerManager().SetTimer(BroadcastInitialValuesTimerHandle, this, &AInGameCharacter::Client_BroadcastInitialValues, 0.5f, false);
-		//BroadcastInitialValues();
 	}
 	
 	if (IsValid(AttributeSet) == false)

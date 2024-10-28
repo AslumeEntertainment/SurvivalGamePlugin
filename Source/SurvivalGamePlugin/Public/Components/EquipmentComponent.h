@@ -134,4 +134,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	TMap<FGameplayTag, FName> GetEquipmentSockets() const;
+
 };
