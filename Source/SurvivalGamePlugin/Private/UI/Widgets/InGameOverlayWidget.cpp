@@ -38,7 +38,6 @@ void UInGameOverlayWidget::UpdateHungerPercent(float CurrentHungerPercent)
 void UInGameOverlayWidget::UpdateEnergyPercent(float CurrentEnergyPercent)
 {
 	EnergyBar->SetPercent(CurrentEnergyPercent);
-	
 	BackgroundBlur->SetBlurStrength(FMath::Clamp<float>(MaxBlurValue * (CurrentEnergyPercent * -2 + 1), 0, MaxBlurValue));
 }
 

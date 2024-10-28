@@ -30,10 +30,15 @@ void USGGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	WaitInputReleaseTask->ReadyForActivation();
 }
 
+void USGGA_Sprint::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedIncreaseEffectSpecHandle);
+	ActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsRunning")));
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
 void USGGA_Sprint::OnSprintButtonReleased(float TimeHeld)
 {
-	CurrentActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedIncreaseEffectSpecHandle);
-	CurrentActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsRunning")));
-	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
