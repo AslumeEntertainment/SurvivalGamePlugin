@@ -71,6 +71,7 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 		return;
 	}
 
+	//this makes it possible to tell the server you are changing states aka to use RPCs
 	SetOwner(InteractingCharacter);
 	InteractingPlayer = PC;
 
@@ -86,7 +87,7 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 		OnPlayerStartInteracting.Broadcast(this);
 		MainPawn = PC->GetPawn();
 
-		//this makes it possible to tell the server you are changing states aka to use rpcs
+		PC->OnConnectionCleanUp.AddDynamic(this, &APlayerCustomiser::HandlePlayerLeavingSession);
 
 		bIsTaken = true;
 	}
@@ -103,6 +104,7 @@ void APlayerCustomiser::Client_StopInteracting_Implementation()
 	{
 		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 		InteractingPlayer->bShowMouseCursor = false;
+		InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 		InteractingPlayer = nullptr;
 	}
 	Client_HideUI();
@@ -138,6 +140,11 @@ void APlayerCustomiser::Server_ToggleReady_Implementation()
 void APlayerCustomiser::OnRepIsPlayerReady()
 {
 	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
+}
+
+void APlayerCustomiser::HandlePlayerLeavingSession(APlayerController* LeavingPlayer)
+{
+	Server_StopInteracting();
 }
 
 void APlayerCustomiser::UpdatePlayerReadiness(bool State)

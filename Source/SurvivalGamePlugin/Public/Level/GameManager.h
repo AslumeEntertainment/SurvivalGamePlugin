@@ -44,6 +44,8 @@ private:
 
 	FTimerHandle LoadingPeriodTimer;
 
+	void UpdateActivePlayerCustomisers(bool State);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -55,7 +57,7 @@ protected:
 	TMap<ESupervisionState, USkeletalMesh*> MeshesPerSupervisionState;
 
 	UPROPERTY(VisibleInstanceOnly)
-	TMap<APlayerCustomiser*, bool> Players;
+	TMap<APlayerCustomiser*, bool> PlayerCustomisers;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	FVector DefaultSpawnLocation = FVector(0,0,400);

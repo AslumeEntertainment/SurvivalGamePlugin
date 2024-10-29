@@ -71,6 +71,9 @@ protected:
 	UFUNCTION()
 	void OnRepIsPlayerReady();
 
+	UFUNCTION()
+	void HandlePlayerLeavingSession(APlayerController* LeavingPlayer);
+
 public:	
 
 	virtual void BeginPlay() override;
