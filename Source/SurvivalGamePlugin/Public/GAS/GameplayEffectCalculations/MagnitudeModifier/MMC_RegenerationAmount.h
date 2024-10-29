@@ -14,8 +14,6 @@ class SURVIVALGAMEPLUGIN_API UMMC_RegenerationAmount : public UGameplayModMagnit
 	
 public:
 
-	UMMC_RegenerationAmount();
-
 	virtual float CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const override;
 
 };
