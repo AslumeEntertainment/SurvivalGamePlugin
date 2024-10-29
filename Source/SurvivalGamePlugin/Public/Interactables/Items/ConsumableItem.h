@@ -4,14 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/Items/ItemBase.h"
+
+#include "Objects/ConsumableitemEffectDataObject.h"
+
 #include "ConsumableItem.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase
 {
 	GENERATED_BODY()
+
+protected:
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effects")
+    TArray<UConsumableItemEffectDataObject*> Effects;
+
+public:
+
+    TArray<UConsumableItemEffectDataObject*> GetEffects() { return Effects; };
 	
 };

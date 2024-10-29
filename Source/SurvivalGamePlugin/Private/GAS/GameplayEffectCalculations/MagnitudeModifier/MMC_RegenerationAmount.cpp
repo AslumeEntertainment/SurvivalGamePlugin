@@ -4,25 +4,18 @@
 #include "GAS/GameplayEffectCalculations/MagnitudeModifier/MMC_RegenerationAmount.h"
 
 #include "Interactables/Items/RegeneratingItem.h"
-#include "GAS/AttributeSets/SG_AttributeSet.h"
-#include "Characters/InGameCharacter.h"
-
-
-UMMC_RegenerationAmount::UMMC_RegenerationAmount()
-{
-}
+#include "Objects/ConsumableItemEffectDataObject.h"
 
 float UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const
 {
-	ARegeneratingItem* RegeneratingItem = Cast<ARegeneratingItem>(Spec.GetContext().Get()->GetSourceObject());
-	if (IsValid(RegeneratingItem) == false)
+	UConsumableItemEffectDataObject* ConsumableItemEffectDataObject = Cast<UConsumableItemEffectDataObject>(Spec.GetContext().Get()->GetSourceObject());
+	if (IsValid(ConsumableItemEffectDataObject) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation IsValid(RegeneratingItem) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation IsValid(ConsumableItemEffectDataObject) == false"));
 		return 0.0f;
 	}
 
-	float RegenerationValue = RegeneratingItem->GetRegenerationAmount();
-	return RegenerationValue;
+	return ConsumableItemEffectDataObject->EffectValue;
 }
 
 
