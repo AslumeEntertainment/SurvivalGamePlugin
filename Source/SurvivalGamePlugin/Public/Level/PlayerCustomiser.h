@@ -76,6 +76,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual FText GetInteractableName() override { return FText::FromString("Join Table"); }
 
 	UFUNCTION()
 	void SetIsActive_Server(bool State);

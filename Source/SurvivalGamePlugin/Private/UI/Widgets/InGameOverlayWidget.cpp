@@ -9,6 +9,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
+#include "Components/Image.h"
 
 
 void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
@@ -18,15 +19,21 @@ void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 {
-	HealthBar->SetPercent(CurrentHealthPercent);
-
-	UMaterialInstanceDynamic* HealthPercentOverlayMaterial = HealthPercentOverlay->GetDynamicMaterial();
-	if (!HealthPercentOverlayMaterial)
+	UMaterialInstanceDynamic* HealthPercentOverlayMaterial = IMG_HealthPercentOverlay->GetDynamicMaterial();
+	if (HealthPercentOverlayMaterial)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UInGameOverlayWidget::UpdateHealthPercent HealthPercentOverlayMaterial == nullptr"));
-		return;
+		HealthPercentOverlayMaterial->SetScalarParameterValue("BoxDimensions", 0.2 + CurrentHealthPercent);
+		if (GetOwningPlayer()->HasAuthority())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Server: Health overlay updated - %.2f"), CurrentHealthPercent);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Client: Health overlay updated - %.2f"), CurrentHealthPercent);
+		}
 	}
-	HealthPercentOverlayMaterial->SetScalarParameterValue("BoxDimensions", 0.2 + CurrentHealthPercent);
+	
+	HealthBar->SetPercent(CurrentHealthPercent);
 }
 
 void UInGameOverlayWidget::UpdateHungerPercent(float CurrentHungerPercent)

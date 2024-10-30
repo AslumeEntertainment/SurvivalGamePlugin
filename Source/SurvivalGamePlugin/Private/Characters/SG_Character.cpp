@@ -169,7 +169,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
 
-	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + HitActor->GetName()));
+	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + InteractableActor->GetInteractableName().ToString()));
 	Server_SetFocusedInteractable(HitActor);
 }
 
@@ -475,13 +475,6 @@ void ASG_Character::SetIsMirrored(bool NewValue)
 		return;
 	}
 
-	/*USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(GetMesh()->GetAnimInstance());
-	if (IsValid(AnimInst) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::SetIsMirrored IsValid(AnimInst) == false"))
-		return;
-	}
-	AnimInst->bIsMirrored = NewValue;*/
 	bIsMirrored = NewValue;
 }
 

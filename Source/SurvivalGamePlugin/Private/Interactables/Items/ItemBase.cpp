@@ -240,6 +240,11 @@ bool AItemBase::bCanInteract(AController* InteractingCharacter)
 	return !bIsAttached;
 }
 
+FText AItemBase::GetInteractableName()
+{
+	return ItemData.ItemName;
+}
+
 FName AItemBase::GetItemDataRowName() const
 {
 	return ItemDataRow.RowName;

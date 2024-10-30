@@ -224,6 +224,7 @@ void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bS
 	}
 
 	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget() : HUD->RemoveGameplayOverlayWidget();
+	HUD->ShowInteractionOverlayWidget();
 }
 
 void APlayerCustomiser::Client_HideUI_Implementation()

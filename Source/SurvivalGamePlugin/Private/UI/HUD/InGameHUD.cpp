@@ -26,15 +26,8 @@ void AInGameHUD::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
 		return;
 	}
-	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
-	if (IsValid(Player) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
-		return;
-	}
 
 	InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(UGameplayStatics::GetGameInstance(World), InteractionOverlayWidgetClass);
-	Player->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
 
 	ShowInteractionOverlayWidget();
 }
@@ -43,7 +36,20 @@ void AInGameHUD::ShowInteractionOverlayWidget()
 {
 	if (PlayerOwner && InteractionOverlayWidget)
 	{
-		InteractionOverlayWidget->AddToViewport();
+		ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
+		if (IsValid(Player) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowInteractionOverlayWidget IsValid(Player) == false"));
+			return;
+		}
+
+		Player->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+		Player->InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
+
+		if (InteractionOverlayWidget->IsInViewport() == false)
+		{
+			InteractionOverlayWidget->AddToViewport();
+		}
 	}
 }
 
