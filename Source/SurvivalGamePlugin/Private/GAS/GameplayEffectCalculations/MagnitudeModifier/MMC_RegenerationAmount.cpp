@@ -3,7 +3,6 @@
 
 #include "GAS/GameplayEffectCalculations/MagnitudeModifier/MMC_RegenerationAmount.h"
 
-#include "Interactables/Items/RegeneratingItem.h"
 #include "Objects/ConsumableItemEffectDataObject.h"
 
 float UMMC_RegenerationAmount::CalculateBaseMagnitude_Implementation(const FGameplayEffectSpec& Spec) const

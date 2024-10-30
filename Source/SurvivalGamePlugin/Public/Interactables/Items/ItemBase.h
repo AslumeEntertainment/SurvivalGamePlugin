@@ -77,6 +77,7 @@ public:
 
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual FText GetInteractableName() override;
 
 	FName GetItemDataRowName() const;
 	class UStaticMeshComponent* GetItemMesh();

@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "InGameOverlayWidget.generated.h"
 
+class UImage;
 class UBorder;
 class UTextBlock;
 class UProgressBar;
@@ -19,7 +20,7 @@ class SURVIVALGAMEPLUGIN_API UInGameOverlayWidget : public UUserWidget
 protected:
 	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UBorder* HealthPercentOverlay;
+	UImage* IMG_HealthPercentOverlay;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBorder* HungerPercentOverlay;
