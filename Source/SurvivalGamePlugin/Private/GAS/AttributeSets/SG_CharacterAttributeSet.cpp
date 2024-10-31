@@ -84,6 +84,10 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 	{
 		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
 	}
+	if (Attribute == GetEnergyAttribute() && NewValue == GetMaxEnergy())
+	{
+		AvatarActor->SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("Bool.HasFull.Energy"), FGameplayEventData());
+	}
 	if (Attribute == GetMaxEnergyAttribute())
 	{
 		ClampAttributeOnMaxValueChanged(Energy, MaxEnergy, NewValue, GetEnergyAttribute());
@@ -97,6 +101,7 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 			return;
 		}
 		MovementComp->MaxWalkSpeed = NewValue;
+		MovementComp->MaxWalkSpeedCrouched = NewValue / 2;
 	}
 	if (Attribute == GetJumpVelocityAttribute())
 	{

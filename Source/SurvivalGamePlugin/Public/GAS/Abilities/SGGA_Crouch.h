@@ -22,23 +22,16 @@ public:
 
 protected:
 
-	FActiveGameplayEffectHandle SpeedDecreaseEffectSpecHandle;
 	FActiveGameplayEffectHandle JumpVelocityDecreaseEffectSpecHandle;
 
 	ASG_Character* Player;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")
-	TSubclassOf<UGameplayEffect> SpeedDecreaseEffect;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	TSubclassOf<UGameplayEffect> JumpVelocityDecreaseEffect;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Speed")
-	float SpeedMultiplier;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Speed")
 	float JumpVelocityMultiplier;
 
 	UFUNCTION()
-	void OnCrouchPressedAgain(float TimeHeld);
+	void OnCrouchReleased(float TimeHeld);
 };

@@ -16,18 +16,24 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 
 public:
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AbilityInputPressed(const FGameplayTag& InputTag);
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AbilityInputReleased(const FGameplayTag& InputTag);
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* Instigator, uint8 Level = 1);
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
 
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
 
 };

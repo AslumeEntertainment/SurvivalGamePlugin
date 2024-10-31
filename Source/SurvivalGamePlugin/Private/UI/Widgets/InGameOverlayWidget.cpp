@@ -23,14 +23,6 @@ void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
 	if (HealthPercentOverlayMaterial)
 	{
 		HealthPercentOverlayMaterial->SetScalarParameterValue("BoxDimensions", 0.2 + CurrentHealthPercent);
-		if (GetOwningPlayer()->HasAuthority())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Server: Health overlay updated - %.2f"), CurrentHealthPercent);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Client: Health overlay updated - %.2f"), CurrentHealthPercent);
-		}
 	}
 	
 	HealthBar->SetPercent(CurrentHealthPercent);
