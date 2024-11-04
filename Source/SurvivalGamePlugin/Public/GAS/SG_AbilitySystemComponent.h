@@ -28,7 +28,13 @@ public:
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
+	void AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator);
+
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
+
+	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
+	void AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);

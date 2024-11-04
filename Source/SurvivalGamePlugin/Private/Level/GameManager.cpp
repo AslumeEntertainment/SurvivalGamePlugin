@@ -165,7 +165,7 @@ void AGameManager::CheckAllPlayerReadiness()
 
 	UE_LOG(LogTemp, Warning, TEXT("PlayerReadiness: %d  for %d out of %d players"), ArePlayersReady, PlayerCustomisers.Num(), NumPlayers);
 
-	(ArePlayersReady && (PlayerCustomisers.Num() == NumPlayers)) ? TryStartGame() : TryCancelGame();
+	ArePlayersReady ? TryStartGame() : TryCancelGame();
 }
 
 void AGameManager::TryStartGame()

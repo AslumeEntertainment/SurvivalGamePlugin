@@ -41,6 +41,8 @@ protected:
 
 public:
 
+	TArray<IHittableInterface*> GetOverlappedActors() { return OverlapedActors; }
+
 	void ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap = false);
 
 };

@@ -19,6 +19,10 @@ void UPassiveDamageDealingComponent::BeginPlay()
 
 void UPassiveDamageDealingComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (OtherActor == GetOwner())
+	{
+		return;
+	}
 	IHittableInterface* HittableActor = Cast<IHittableInterface>(OtherActor);
 	
 	if (HittableActor != nullptr)
