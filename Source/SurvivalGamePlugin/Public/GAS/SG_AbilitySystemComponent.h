@@ -28,16 +28,16 @@ public:
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator);
+	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
+	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator);
+	FGameplayAbilitySpecHandle AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator);
+	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);

@@ -84,9 +84,17 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 	{
 		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
 	}
-	if (Attribute == GetEnergyAttribute() && NewValue == GetMaxEnergy())
+	if (Attribute == GetEnergyAttribute())
 	{
-		AvatarActor->SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("Bool.HasFull.Energy"), FGameplayEventData());
+		if (NewValue == GetMaxEnergy())
+		{
+			AvatarActor->SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("Bool.HasFull.Energy"), FGameplayEventData());
+		}
+		else if (NewValue == 0.f)
+		{
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
+		}
 	}
 	if (Attribute == GetMaxEnergyAttribute())
 	{

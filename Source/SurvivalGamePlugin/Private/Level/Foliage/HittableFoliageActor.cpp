@@ -10,6 +10,7 @@
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/PassiveDamageDealingComponent.h"
 #include "Components/LootTableComponent.h"
 
 
@@ -20,6 +21,11 @@ AHittableFoliageActor::AHittableFoliageActor()
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
+
+	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
+	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+
+	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AHittableFoliageActor::OnImpactReceived);
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 

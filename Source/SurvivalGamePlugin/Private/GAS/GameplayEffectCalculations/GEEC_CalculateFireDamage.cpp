@@ -26,13 +26,9 @@ void UGEEC_CalculateFireDamage::Execute_Implementation(const FGameplayEffectCust
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateFireDamage::Execute_Implementation IsValid(TargetAbilitySystemComponent) == false"));
 		return;
 	}
+
 	USG_AbilitySystemComponent* SourceAbilitySystemComponent = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetSourceAbilitySystemComponent());
-
 	AActor* SourceActor = IsValid(SourceAbilitySystemComponent) ? SourceAbilitySystemComponent->GetOwner() : nullptr;
-
-	const FGameplayEffectSpec& Spec = ExecutionParams.GetOwningSpec();
-	float BaseDamage = Spec.GetSetByCallerMagnitude(SetByCallerMagnitudeDataTag, false, -1.0f);
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, BaseDamage));
 
 	if (false)
 	{
@@ -46,7 +42,5 @@ void UGEEC_CalculateFireDamage::Execute_Implementation(const FGameplayEffectCust
 	}
 
 	TargetAbilitySystemComponent->AddEffectFromClass(DefaultBurningEffect, SourceActor);
-	TargetAbilitySystemComponent->AddPassiveAbility(OnStartedBurningPassiveAbility, 1, SourceActor);
-
 
 }

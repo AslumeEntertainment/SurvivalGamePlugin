@@ -34,14 +34,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
 	FDamageGameplayEffect DefaultDamageEffect;
 
-	TArray<IHittableInterface*> OverlapedActors;
+	TArray<IHittableInterface*> OverlappedActors;
 
 	TArray<FGameplayEffectSpecHandle> InstantGameplayEffectSpecHandles;
 
 
 public:
 
-	TArray<IHittableInterface*> GetOverlappedActors() { return OverlapedActors; }
+	TArray<IHittableInterface*> GetOverlappedActors() { return OverlappedActors; }
 
 	void ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap = false);
 

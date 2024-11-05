@@ -15,6 +15,18 @@ UPassiveDamageDealingComponent::UPassiveDamageDealingComponent()
 void UPassiveDamageDealingComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TArray<AActor*> OverlappingActors;
+	GetOverlappingActors(OverlappingActors);
+
+	for (AActor* OverlappingActor : OverlappingActors)
+	{
+		IHittableInterface* HittableActor = Cast<IHittableInterface>(OverlappingActor);
+		if (HittableActor != nullptr && OverlappingActor != GetOwner() && OverlappedActors.Contains(HittableActor) == false)
+		{
+			OverlappedActors.Add(HittableActor);
+		}
+	}
 }
 
 void UPassiveDamageDealingComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -27,7 +39,7 @@ void UPassiveDamageDealingComponent::OnActorBeginOverlap(UPrimitiveComponent* Ov
 	
 	if (HittableActor != nullptr)
 	{
-		OverlapedActors.Add(HittableActor);
+		OverlappedActors.Add(HittableActor);
 		HittableActor->OnHit(InstantGameplayEffectSpecHandles);
 	}
 }
@@ -37,7 +49,7 @@ void UPassiveDamageDealingComponent::OnActorEndOverlap(UPrimitiveComponent* Over
 	IHittableInterface* HittableActor = Cast<IHittableInterface>(OtherActor);
 	if (HittableActor != nullptr)
 	{
-		OverlapedActors.Remove(HittableActor);
+		OverlappedActors.Remove(HittableActor);
 	}
 }
 
@@ -46,9 +58,9 @@ void UPassiveDamageDealingComponent::ApplyInstantGameplayEffectSpecHandle(FGamep
 	TArray<FGameplayEffectSpecHandle> SpecHandlesToApply;
 	SpecHandlesToApply.Add(SpecHandle);
 
-	for (IHittableInterface* OverlapedActor : OverlapedActors)
+	for (IHittableInterface* OverlappedActor : OverlappedActors)
 	{
-		OverlapedActor->OnHit(SpecHandlesToApply);
+		OverlappedActor->OnHit(SpecHandlesToApply);
 	}
 
 }

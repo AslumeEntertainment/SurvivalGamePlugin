@@ -40,7 +40,7 @@ protected:
 	TSubclassOf<UGameplayEffect> BurningEffect;
 
 	UFUNCTION()
-	void OnEffectEnded(FGameplayEventData Payload);
+	void OnEffectEnded();
 
 	UFUNCTION()
 	void AttemptSpreadFire();

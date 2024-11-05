@@ -487,7 +487,7 @@ void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEven
 {
 	if (HasAuthority() == false)
 	{
-		Server_SendGameplayEventToSelf(EventTag, EventData);
+		Server_SendGameplayEventToSelf(EventTag, EventData, bServerOnly);
 		if(bServerOnly) return;
 	}
 
@@ -496,6 +496,6 @@ void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEven
 
 void ASG_Character::Server_SendGameplayEventToSelf_Implementation(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
 {
-	SendGameplayEventToSelf(EventTag, EventData);
+	SendGameplayEventToSelf(EventTag, EventData, bServerOnly);
 }
 

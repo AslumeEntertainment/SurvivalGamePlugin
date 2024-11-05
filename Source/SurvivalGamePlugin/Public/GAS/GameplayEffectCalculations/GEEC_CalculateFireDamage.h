@@ -7,7 +7,6 @@
 #include "Headers/DamageGameplayEffectStruct.h"
 #include "GEEC_CalculateFireDamage.generated.h"
 
-class USGGA_OnStartedBurning;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UGEEC_CalculateFireDamage : public UGameplayEffectExecutionCalculation
@@ -26,6 +25,4 @@ public:
 	UPROPERTY(EditAnywhere, Category = "BurningEffect")
 	TSubclassOf<UGameplayEffect> DefaultBurningEffect;
 
-	UPROPERTY(EditAnywhere, Category = "BurningEffect")
-	TSubclassOf<USGGA_OnStartedBurning> OnStartedBurningPassiveAbility;
 };

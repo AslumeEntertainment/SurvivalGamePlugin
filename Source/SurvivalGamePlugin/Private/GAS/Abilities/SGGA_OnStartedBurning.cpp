@@ -4,7 +4,6 @@
 #include "GAS/Abilities/SGGA_OnStartedBurning.h"
 
 #include "AbilitySystemInterface.h"
-#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
 #include "Components/PassiveDamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -39,15 +38,15 @@ void USGGA_OnStartedBurning::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	}
 	OwnerActor->GetWorldTimerManager().SetTimer(FireSpreadTimer, this, &USGGA_OnStartedBurning::AttemptSpreadFire, Frequency, true);
 
-	UAbilityTask_WaitGameplayEvent* WaitMixedGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("CommonEvents.Burning.Stop"), nullptr, false, true);
-	WaitMixedGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_OnStartedBurning::OnEffectEnded);
-	WaitMixedGameplayEventTask->ReadyForActivation();
+	FTimerHandle AbilityDurationTimer;
+	OwnerActor->GetWorldTimerManager().SetTimer(AbilityDurationTimer, this, &USGGA_OnStartedBurning::OnEffectEnded, GetAbilityLevel());
 }
 
-void USGGA_OnStartedBurning::OnEffectEnded(FGameplayEventData Payload)
+void USGGA_OnStartedBurning::OnEffectEnded()
 {
 	OwnerActor->GetWorldTimerManager().ClearTimer(FireSpreadTimer);
 
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_OnStartedBurning Effect ended"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -62,7 +61,7 @@ void USGGA_OnStartedBurning::AttemptSpreadFire()
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 			continue;
 		}
-
+		
 		USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI->GetAbilitySystemComponent());
 		if (IsValid(ASC) == false)
 		{

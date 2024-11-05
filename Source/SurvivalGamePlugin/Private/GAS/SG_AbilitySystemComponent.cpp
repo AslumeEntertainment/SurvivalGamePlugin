@@ -86,36 +86,59 @@ void USG_AbilitySystemComponent::RemoveEffectFromSpec(FActiveGameplayEffectHandl
 	RemoveActiveGameplayEffect(GameplayEffectSpecHandle, StacksToRemove);
 }
 
-void USG_AbilitySystemComponent::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator)
+FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates)
 {
+	if (bAllowDuplicates == false)
+	{
+		for (const FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+		{
+			if (Spec.Ability.GetClass() == AbilityClass)
+			{
+				return FGameplayAbilitySpecHandle();
+			}
+		}
+	}
 	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, Instigator);
 
 	if (const USG_GameplayAbility* SG_Ability = Cast<USG_GameplayAbility>(Spec.Ability))
 	{
 		Spec.DynamicAbilityTags.AddTag(SG_Ability->InputTag);
-		GiveAbility(Spec);
+		return GiveAbility(Spec);
 	}
+
+	return FGameplayAbilitySpecHandle();
 }
 
-void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator)
+void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates)
 {
 	for (const TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		AddAbility(Ability.Key, Ability.Value, Instigator);
+		AddAbility(Ability.Key, Ability.Value, Instigator, bAllowDuplicates);
 	}
 }
 
-void USG_AbilitySystemComponent::AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator)
+FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates)
 {
+	if (bAllowDuplicates == false)
+	{
+		for (const FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+		{
+			if (Spec.Ability.GetClass() == AbilityClass)
+			{
+				return FGameplayAbilitySpecHandle();
+			}
+		}
+	}
+	
 	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, Instigator);
-	GiveAbilityAndActivateOnce(Spec);
+	return GiveAbilityAndActivateOnce(Spec);
 }
 
-void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator)
+void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates)
 {
 	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		AddPassiveAbility(Ability.Key, Ability.Value, Instigator);
+		AddPassiveAbility(Ability.Key, Ability.Value, Instigator, bAllowDuplicates);
 	}
 }
 
@@ -123,3 +146,5 @@ void USG_AbilitySystemComponent::RemoveAbilityFromSpec(FGameplayAbilitySpecHandl
 {
 	ClearAbility(RemovedAbilitySpecHandle);
 }
+
+
