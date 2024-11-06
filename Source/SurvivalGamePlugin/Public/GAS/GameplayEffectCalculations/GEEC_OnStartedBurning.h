@@ -6,7 +6,6 @@
 #include "GameplayEffectExecutionCalculation.h"
 #include "GEEC_OnStartedBurning.generated.h"
 
-class USGGA_OnStartedBurning;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UGEEC_OnStartedBurning : public UGameplayEffectExecutionCalculation
@@ -19,9 +18,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
 	TSubclassOf<UGameplayEffect> BurningEffect;
-
-	/*UPROPERTY(EditAnywhere, Category = "CustomValues")
-	TSubclassOf<USGGA_OnStartedBurning> OnStartedBurningPassiveAbility;*/
 
 	/** This will be replaced when we set up the fire related gameplay attributes */
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues", meta = (ClampMin = "1", ClampMax = "100", UIMin = "1", UIMax = "100"))

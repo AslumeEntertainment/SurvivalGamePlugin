@@ -20,9 +20,6 @@ public:
 protected:
 
 	UAbilitySystemComponent* ASC;
-	
-	UPROPERTY(EditDefaultsOnly)
-	USoundBase* OnActivationSound;
 
 	UPROPERTY(EditDefaultsOnly)
 	float SpeedMultiplier;

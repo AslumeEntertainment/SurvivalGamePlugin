@@ -7,7 +7,6 @@
 
 #include "Components/PassiveDamageDealingComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
-#include "GAS/Abilities/SGGA_OnStartedBurning.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Interfaces/HittableInterface.h"
 
@@ -28,8 +27,6 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 		return;
 	}
 
-	//TSubclassOf<UGameplayEffect> BurningEffect = ExecutionParams.GetOwningSpec().
-
 	UPassiveDamageDealingComponent* TargetPassiveDamageDealer = TargetActor->GetComponentByClass<UPassiveDamageDealingComponent>();
 	if (IsValid(TargetPassiveDamageDealer) == false)
 	{
@@ -37,12 +34,18 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 		return;
 	}
 
-	for (IHittableInterface* HittableActor : TargetPassiveDamageDealer->GetOverlappedActors())
+	TArray<AActor*> OverlappingActors;
+	TargetPassiveDamageDealer->GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
 	{
-		IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(HittableActor);
+		if (Actor == TargetActor)
+		{
+			continue;
+		}
+		IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(Actor);
 		if (ASI == nullptr)
 		{
-			UE_LOG(LogTemp, Error, TEXT("USGGA_OnStartedBurning::AttemptSpreadFire ASI == nullptr"));
 			continue;
 		}
 
@@ -59,5 +62,4 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 			ASC->AddEffectFromClass(BurningEffect, TargetActor);
 		}
 	}
-	
 }

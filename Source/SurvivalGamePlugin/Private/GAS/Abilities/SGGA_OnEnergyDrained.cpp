@@ -18,14 +18,6 @@ void USGGA_OnEnergyDrained::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		return;
 	}
 
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_OnEnergyDrained::ActivateAbility IsValid(World) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
-	}
-
 	ASC = ActorInfo->AbilitySystemComponent.Get();
 	if (IsValid(ASC) == false)
 	{
@@ -33,8 +25,6 @@ void USGGA_OnEnergyDrained::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
-	UGameplayStatics::PlaySound2D(World, OnActivationSound);
 
 	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) * SpeedMultiplier);
 	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetAttackSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetAttackSpeedAttribute()) * AttackSpeedMultiplier);

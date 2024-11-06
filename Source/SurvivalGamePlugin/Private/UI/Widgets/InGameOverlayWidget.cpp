@@ -3,6 +3,7 @@
 
 #include "UI/Widgets/InGameOverlayWidget.h"
 
+#include "Kismet/KismetStringLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/BackgroundBlur.h"
@@ -14,7 +15,9 @@
 
 void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
 {
-	TXT_CurrentSpeed->SetText(FText::FromString(FString::SanitizeFloat(FMath::CeilToFloat(NewValue / 100)) + " m/s"));
+	NewValue = FMath::RoundToFloat(NewValue);
+	NewValue *= 0.01f;
+	TXT_CurrentSpeed->SetText(FText::FromString(FString::SanitizeFloat(NewValue) + " m/s"));
 }
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)

@@ -8,59 +8,49 @@
 
 UPassiveDamageDealingComponent::UPassiveDamageDealingComponent()
 {
-	OnComponentBeginOverlap.AddDynamic(this, &UPassiveDamageDealingComponent::OnActorBeginOverlap);
-	OnComponentEndOverlap.AddDynamic(this, &UPassiveDamageDealingComponent::OnActorEndOverlap);
 }
 
 void UPassiveDamageDealingComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TArray<AActor*> OverlappingActors;
-	GetOverlappingActors(OverlappingActors);
-
-	for (AActor* OverlappingActor : OverlappingActors)
-	{
-		IHittableInterface* HittableActor = Cast<IHittableInterface>(OverlappingActor);
-		if (HittableActor != nullptr && OverlappingActor != GetOwner() && OverlappedActors.Contains(HittableActor) == false)
-		{
-			OverlappedActors.Add(HittableActor);
-		}
-	}
 }
 
-void UPassiveDamageDealingComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor == GetOwner())
-	{
-		return;
-	}
-	IHittableInterface* HittableActor = Cast<IHittableInterface>(OtherActor);
-	
-	if (HittableActor != nullptr)
-	{
-		OverlappedActors.Add(HittableActor);
-		HittableActor->OnHit(InstantGameplayEffectSpecHandles);
-	}
-}
-
-void UPassiveDamageDealingComponent::OnActorEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	IHittableInterface* HittableActor = Cast<IHittableInterface>(OtherActor);
-	if (HittableActor != nullptr)
-	{
-		OverlappedActors.Remove(HittableActor);
-	}
-}
-
-void UPassiveDamageDealingComponent::ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap)
-{
-	TArray<FGameplayEffectSpecHandle> SpecHandlesToApply;
-	SpecHandlesToApply.Add(SpecHandle);
-
-	for (IHittableInterface* OverlappedActor : OverlappedActors)
-	{
-		OverlappedActor->OnHit(SpecHandlesToApply);
-	}
-
-}
+//void UPassiveDamageDealingComponent::ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap)
+//{
+//	TArray<FGameplayEffectSpecHandle> SpecHandlesToApply;
+//	SpecHandlesToApply.Add(SpecHandle);
+//
+//	TArray<AActor*> OverlappingActors;
+//	TargetPassiveDamageDealer->GetOverlappingActors(OverlappingActors);
+//
+//	for (IHittableInterface* OverlappedActor : OverlappedActors)
+//	{
+//		OverlappedActor->OnHit(SpecHandlesToApply);
+//	}
+//
+//	for (AActor* Actor : OverlappingActors)
+//	{
+//		if (Actor == TargetActor)
+//		{
+//			continue;
+//		}
+//		IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(Actor);
+//		if (ASI == nullptr)
+//		{
+//			continue;
+//		}
+//
+//		USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI->GetAbilitySystemComponent());
+//		if (IsValid(ASC) == false)
+//		{
+//			UE_LOG(LogTemp, Error, TEXT("USGGA_OnStartedBurning::AttemptSpreadFire IsValid(ASC) == false"));
+//			continue;
+//		}
+//
+//		int Amount = FMath::RandRange(1, 100);
+//		if (Amount <= ChanceToSpread)
+//		{
+//			ASC->AddEffectFromClass(BurningEffect, TargetActor);
+//		}
+//	}
+//}

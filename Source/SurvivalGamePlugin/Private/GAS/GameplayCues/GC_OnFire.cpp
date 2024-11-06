@@ -5,7 +5,6 @@
 
 #include "AbilitySystemInterface.h"
 
-#include "GAS/Abilities/SGGA_OnStartedBurning.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/SG_Character.h"
 

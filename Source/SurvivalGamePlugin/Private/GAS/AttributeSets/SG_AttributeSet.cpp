@@ -11,12 +11,20 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 
 
+USG_AttributeSet::USG_AttributeSet()
+{
+	
+}
+
 void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, IgnitionThreshold, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, FireDamageResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ExtinguishTime, COND_None, REPNOTIFY_Always);
 }
 
 void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -109,4 +117,19 @@ void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldMaxHealth);
+}
+
+void USG_AttributeSet::OnRep_IgnitionThreshold(const FGameplayAttributeData& OldIgnitionThreshold)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, IgnitionThreshold, OldIgnitionThreshold);
+}
+
+void USG_AttributeSet::OnRep_FireDamageResistance(const FGameplayAttributeData& OldFireDamageResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, FireDamageResistance, OldFireDamageResistance);
+}
+
+void USG_AttributeSet::OnRep_ExtinguishTime(const FGameplayAttributeData& OldExtinguishTime)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ExtinguishTime, OldExtinguishTime);
 }

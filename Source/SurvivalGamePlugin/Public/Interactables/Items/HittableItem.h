@@ -8,6 +8,7 @@
 #include "Interfaces/HittableInterface.h"
 #include "HittableItem.generated.h"
 
+class UPassiveDamageDealingComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
@@ -27,6 +28,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;

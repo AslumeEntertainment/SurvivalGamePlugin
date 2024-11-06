@@ -6,7 +6,6 @@
 #include "AbilitySystemBlueprintLibrary.h"
 
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
-#include "GAS/Abilities/SGGA_OnStartedBurning.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"

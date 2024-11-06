@@ -7,12 +7,16 @@
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/PassiveDamageDealingComponent.h"
 #include "Components/LootTableComponent.h"
 
 AHittableItem::AHittableItem()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+
+	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
+	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 

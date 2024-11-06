@@ -20,29 +20,16 @@ public:
 
 	virtual void BeginPlay() override;
 
-private:
-
-	UFUNCTION()
-	void OnActorBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnActorEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
 	FDamageGameplayEffect DefaultDamageEffect;
-
-	TArray<IHittableInterface*> OverlappedActors;
 
 	TArray<FGameplayEffectSpecHandle> InstantGameplayEffectSpecHandles;
 
 
 public:
 
-	TArray<IHittableInterface*> GetOverlappedActors() { return OverlappedActors; }
-
-	void ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap = false);
+	//void ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap = false);
 
 };

@@ -163,6 +163,10 @@ void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent
 	{
 		return;
 	}
+	/*if (Cast<UMeshComponent>(OtherComp) == nullptr)
+	{
+		return;
+	}*/
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 	FGameplayEventData EventData = FGameplayEventData();
