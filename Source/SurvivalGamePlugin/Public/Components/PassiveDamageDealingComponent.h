@@ -22,14 +22,17 @@ public:
 
 protected:
 
+	UPROPERTY()
+	FGameplayEffectSpecHandle EffectSpecHandle;
+
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
-	FDamageGameplayEffect DefaultDamageEffect;
+	FDamageGameplayEffect DamageEffectOnOverlap;
 
-	TArray<FGameplayEffectSpecHandle> InstantGameplayEffectSpecHandles;
+	UFUNCTION()
+	void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-
-public:
-
-	//void ApplyInstantGameplayEffectSpecHandle(FGameplayEffectSpecHandle SpecHandle, bool bShouldApplyOnOverlap = false);
 
 };

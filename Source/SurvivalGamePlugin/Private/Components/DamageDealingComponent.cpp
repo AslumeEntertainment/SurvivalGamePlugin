@@ -66,10 +66,10 @@ void UDamageDealingComponent::AttemptHit()
 		}
 		if (HittableActor != nullptr && HittableActor->bCanBeHit() == true)
 		{
-			UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
-			if (ASC == nullptr)
+			UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+			if (IsValid(ASC) == false)
 			{
-				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit HittableActor->ASC == nullptr"));
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(ASC) == false"));
 				continue;
 			}
 
@@ -103,7 +103,6 @@ void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 {
 	if (ActorsToIgnore.Contains(ActorToIgnore) == true)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddActorToIgnored_Implementation Actor is already being ignored!"));
 		return;
 	}
 	ActorsToIgnore.Add(ActorToIgnore);
@@ -185,12 +184,12 @@ void UDamageDealingComponent::ResetDamageComponentTagSuffix()
 
 FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FDamageGameplayEffect NewGameplayEffect)
 {
-	if (!IsValid(NewGameplayEffect.DamageEffectClass))
+	if (IsValid(NewGameplayEffect.DamageEffectClass) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(NewGameplayEffect.DamageEffectClass) == false"));
 		return FGameplayEffectSpecHandle();
 	}
-	if (!IsValid(GetOwner()))
+	if (IsValid(GetOwner()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(GetOwner()) == false"));
 		return FGameplayEffectSpecHandle();

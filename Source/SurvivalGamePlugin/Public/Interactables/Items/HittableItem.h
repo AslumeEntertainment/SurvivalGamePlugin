@@ -41,9 +41,6 @@ protected:
 	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
 
-	UFUNCTION()
-	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-
 
 public:
 
@@ -51,7 +48,6 @@ public:
 
 	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
 
-	//UFUNCTION(NetMulticast, Reliable)
 	virtual void OnHittableDestroyed() override;
 
 	virtual bool bCanBeHit() override;

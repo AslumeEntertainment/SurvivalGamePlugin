@@ -5,8 +5,9 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "EnhancedInputComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
@@ -31,9 +32,7 @@ AInGameCharacter::AInGameCharacter()
 
 	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
 	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
-
-	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
-
+	
 	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
 }
 
@@ -148,33 +147,15 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 		return;
 	}
 
+	FVector NormalVelocity = UKismetMathLibrary::Normal(GetVelocity());
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("NormalVelocity.Z - %.2f"), NormalVelocity.Z));
+	if (NormalVelocity.Z > -0.45)
+	{
+		return;
+	}
+
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
 	SendGameplayEventToSelf(EventTag, FGameplayEventData());
-}
-
-void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (HasAuthority() == false)
-	{
-		return;
-	}
-
-	if (SweepResult.Component != nullptr && SweepResult.Component->GetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn) == ECollisionResponse::ECR_Ignore)
-	{
-		return;
-	}
-	/*if (Cast<UMeshComponent>(OtherComp) == nullptr)
-	{
-		return;
-	}*/
-
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
-	FGameplayEventData EventData = FGameplayEventData();
-	EventData.Instigator = OtherActor;
-
-	SendGameplayEventToSelf(EventTag, EventData);
-	
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }
 
 void AInGameCharacter::MainHandAction()
@@ -358,15 +339,15 @@ void AInGameCharacter::OnHittableDestroyed_Implementation()
 	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
 	AbilitySystemComponent->CancelAllAbilities();
 
-  GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
+	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 
 	EquipmentComponent->UnequipAllItems();
 	bIsAlive = false;
 
-  OnCharacterDeath.Broadcast();
-  
+	OnCharacterDeath.Broadcast();
+
 	UnPossessed();
 }
 

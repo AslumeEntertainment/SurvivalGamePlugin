@@ -19,4 +19,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	FGameplayTag InputTag;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	bool bShouldActivateOnGranted = false;
+
+	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 };

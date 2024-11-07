@@ -25,8 +25,6 @@ AHittableFoliageActor::AHittableFoliageActor()
 	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
 	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
 
-	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AHittableFoliageActor::OnImpactReceived);
-
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
 	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
@@ -46,10 +44,6 @@ void AHittableFoliageActor::BeginPlay()
 	}
 
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
-}
-
-void AHittableFoliageActor::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
 }
 
 void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)

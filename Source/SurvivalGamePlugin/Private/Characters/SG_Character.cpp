@@ -271,7 +271,6 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	//--------------------------------this must not be here-----------------------------
 	if (bIsCameraMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -283,7 +282,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
 		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 	}
-	//------------------------------------------------------------------------------------
+	
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	AddMovementInput(RightDirection, MovementVector.X);
 	
@@ -364,20 +363,23 @@ void ASG_Character::InitCharacterDefaults()
 		return;
 	}
 	/* There might be a better way to do this */
-	TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultAbilitiesMap;
+	/* (There was a better way to do this) */
+	//TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultAbilitiesMap;
 	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultAbilities)
 	{
-		DefaultAbilitiesMap.Add(Ability, 1);
+		AbilitySystemComponent->AddAbility(Ability, 1, this);
+		//DefaultAbilitiesMap.Add(Ability, 1);
 	}
 	
-	TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultPassiveAbilitiesMap;
+	//TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultPassiveAbilitiesMap;
 	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultPassiveAbilities)
 	{
-		DefaultPassiveAbilitiesMap.Add(Ability, 1);
+		AbilitySystemComponent->AddPassiveAbility(Ability, 1, this);
+		//DefaultPassiveAbilitiesMap.Add(Ability, 1);
 	}
 
-	AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilitiesMap, this);
-	AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilitiesMap, this);
+	//AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilitiesMap, this);
+	//AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilitiesMap, this);
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
 }
 
@@ -436,7 +438,7 @@ void ASG_Character::DisablePlayerInput(float Duration)
 		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("Movement disabled"));
+	UE_LOG(LogTemp, Log, TEXT("ASG_Character::DisablePlayerInput - %s"), *GetName());
 }
 
 void ASG_Character::EnablePlayerInput()
@@ -448,18 +450,18 @@ void ASG_Character::EnablePlayerInput()
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::EnablePlayerInput IsValid(PlayerCont) == false"));
 		return;
 	}
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
 	if (IsValid(InputSystem) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::EnablePlayerInput IsValid(InputSystem) == false"));
 		return;
 	}
 
 	InputSystem->AddMappingContext(DefaultMappingContext, 0);
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Turquoise, TEXT("Movement enabled"));
+	UE_LOG(LogTemp, Log, TEXT("ASG_Character::EnablePlayerInput - %s"), *GetName());
 }
 
 bool ASG_Character::IsMirrored()

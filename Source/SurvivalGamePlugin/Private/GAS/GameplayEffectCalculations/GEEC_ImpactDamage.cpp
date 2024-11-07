@@ -32,9 +32,10 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 
 	float Damage = 0;
 	FVector Velocity = Target->GetVelocity();
+	FVector NormalVelocity = UKismetMathLibrary::Normal(Velocity);
 	FString DamageContextString;
 
-	if (UKismetMathLibrary::Normal(Velocity).Z < -0.6f)
+	if (NormalVelocity.Z <= -0.45)
 	{
 		Damage = FMath::Abs(Velocity.Z) * 0.08 - 60;
 		DamageContextString = "Fall";
@@ -55,6 +56,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("%s damage - %f"), *DamageContextString, Damage));
 
 		TargetAbilitySystemComponent->AddEffectFromClass(InvincibilityEffectClass, nullptr);
+		TargetAbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.RecieveDamage"));
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
 	}
 
