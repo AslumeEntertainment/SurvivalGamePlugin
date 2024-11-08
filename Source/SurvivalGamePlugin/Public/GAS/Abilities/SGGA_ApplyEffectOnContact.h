@@ -6,6 +6,7 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "SGGA_ApplyEffectOnContact.generated.h"
 
+class AStaticMeshActor;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectOnContact : public USG_GameplayAbility
@@ -16,18 +17,32 @@ public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+
+
 protected:
 
 	AActor* AvatarActor = nullptr;
 
-	UPROPERTY(EditDefaultsOnly)
+	AStaticMeshActor* OverlayMeshActor = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	bool bShouldApplyOnActivation = true;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	bool bShouldAffectUser = false;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
+	TSubclassOf<AStaticMeshActor> OverlayMeshActorClass = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
+	FName SocketToAttach;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TArray<TSubclassOf<UGameplayEffect>> EffectsToApply;
+
+	UFUNCTION()
+	void SpawnOverlayMesh();
 
 	UFUNCTION()
 	void OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
