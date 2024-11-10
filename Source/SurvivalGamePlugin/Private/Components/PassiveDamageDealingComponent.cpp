@@ -4,12 +4,13 @@
 #include "Components/PassiveDamageDealingComponent.h"
 
 #include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystemInterface.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
-#include "Interfaces/HittableInterface.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
+#include "Interfaces/HittableInterface.h"
 
 
 UPassiveDamageDealingComponent::UPassiveDamageDealingComponent()
@@ -89,6 +90,41 @@ void UPassiveDamageDealingComponent::OnActorBeginOverlap(UPrimitiveComponent* Ov
 		return;
 	}
 	ASC->ApplyGameplayEffectSpecToSelf(*Spec);
+}
+
+USG_AbilitySystemComponent* UPassiveDamageDealingComponent::GetOwnerAbilitySystemComponent()
+{
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UPassiveDamageDealingComponent::GetOwnerAbilitySystemComponent IsValid(GetOwner()) == false"));
+		return nullptr;
+	}
+	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner());
+	if(ASI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UPassiveDamageDealingComponent::GetOwnerAbilitySystemComponent ASI == nullptr"));
+		return nullptr;
+	}
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI->GetAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UPassiveDamageDealingComponent::GetOwnerAbilitySystemComponent IsValid(ASC) == false"));
+		return nullptr;
+	}
+	return ASC;
+}
+
+void UPassiveDamageDealingComponent::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
+{
+}
+
+void UPassiveDamageDealingComponent::OnHittableDestroyed()
+{
+}
+
+bool UPassiveDamageDealingComponent::bCanBeHit()
+{
+	return false;
 }
 
 

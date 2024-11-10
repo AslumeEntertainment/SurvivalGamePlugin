@@ -66,7 +66,7 @@ void UDamageDealingComponent::AttemptHit()
 		}
 		if (HittableActor != nullptr && HittableActor->bCanBeHit() == true)
 		{
-			UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+			UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
 			if (IsValid(ASC) == false)
 			{
 				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(ASC) == false"));
