@@ -26,6 +26,15 @@ protected:
 	UPROPERTY()
 	FGameplayEffectSpecHandle EffectSpecHandle;
 
+	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	bool bCanEverReceiveImpactDamage = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	bool bCanEverDealImpactDamage = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	bool bCanEverApplyGameplayEffects = true;
+
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
 	FDamageGameplayEffect DamageEffectOnOverlap;
 
@@ -43,5 +52,14 @@ public:
 	void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles);
 
 	void OnHittableDestroyed();
+
+	UFUNCTION(BlueprintCallable)
+	bool CanEverReceiveImpactDamage() { return bCanEverReceiveImpactDamage; }
+
+	UFUNCTION(BlueprintCallable)
+	bool CanEverDealImpactDamage() { return bCanEverDealImpactDamage; }
+
+	UFUNCTION(BlueprintCallable)
+	bool CanEverApplyGameplayEffects() { return bCanEverApplyGameplayEffects; }
 
 };

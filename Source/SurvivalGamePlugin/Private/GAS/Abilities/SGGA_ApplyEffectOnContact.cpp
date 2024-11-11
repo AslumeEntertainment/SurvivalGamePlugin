@@ -53,15 +53,7 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 		{
 			continue;
 		}
-		USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor));
-		if (IsValid(ASC) == false)
-		{
-			continue;
-		}
-		for (TSubclassOf<UGameplayEffect> Effect : EffectsToApply)
-		{
-			ASC->AddEffectFromClass(Effect, AvatarActor);
-		}
+		AttemptHit(Actor);
 	}
 }
 
@@ -103,17 +95,32 @@ void USGGA_ApplyEffectOnContact::SpawnOverlayMesh()
 	OverlayMeshActor->AttachToComponent(AvatarMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, SocketToAttach);
 }
 
-void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void USGGA_ApplyEffectOnContact::AttemptHit(AActor* TargetActor)
 {
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor));
-	if (IsValid(ASC) == false)
+	UHittableComponent* TargetHittableComp = TargetActor->GetComponentByClass<UHittableComponent>();
+	if (IsValid(TargetHittableComp) == false)
+	{
+		return;
+	}
+	if (TargetHittableComp->CanEverApplyGameplayEffects() == false)
 	{
 		return;
 	}
 
+	USG_AbilitySystemComponent* ASC = TargetHittableComp->GetOwnerAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit IsValid(ASC) == false"));
+		return;
+	}
 	for (TSubclassOf<UGameplayEffect> Effect : EffectsToApply)
 	{
 		ASC->AddEffectFromClass(Effect, AvatarActor);
 	}
+}
+
+void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AttemptHit(OtherActor);
 }
 

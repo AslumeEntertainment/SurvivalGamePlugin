@@ -64,6 +64,10 @@ void UDamageDealingComponent::AttemptHit()
 		{
 			continue;
 		}
+		if (HittableComp->CanEverApplyGameplayEffects() == false)
+		{
+			return;
+		}
 
 		USG_AbilitySystemComponent* ASC = HittableComp->GetOwnerAbilitySystemComponent();
 		if (IsValid(ASC) == false)

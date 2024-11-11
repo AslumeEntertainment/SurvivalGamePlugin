@@ -10,24 +10,41 @@
 
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
+#include "Components/LootTableComponent.h"
+#include "Components/HittableComponent.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
-// Sets default values
-AItemBase::AItemBase()
-{
-	bReplicates = true;
-
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	SetRootComponent(StaticMesh);
-}
 
 void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
 	DOREPLIFETIME(AItemBase, CurrentDurability);
+}
+
+// Sets default values
+AItemBase::AItemBase()
+{
+	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	SetRootComponent(StaticMesh);
+
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
+
+	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
+
+	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
 }
 
 // Called when the game starts or when spawned
@@ -45,6 +62,31 @@ void AItemBase::BeginPlay()
 	}
 	ItemData = *TempItemData;
 	CurrentDurability = ItemData.ItemMaxDurability;
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	if (IsValid(AttributeSet) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay IsValid(AttributeSet) == false"));
+		return;
+	}
+
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			SetDurability(Data.NewValue);
+		}
+	);
 }
 
 void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
@@ -76,6 +118,11 @@ void AItemBase::LoseDurability(float LostDurability)
 	{
 		DestroyItem();
 	}
+}
+
+UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 float AItemBase::GetDurability() const

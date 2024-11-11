@@ -51,6 +51,10 @@ void UHittableComponent::BeginPlay()
 
 void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (bCanEverReceiveImpactDamage == false)
+	{
+		return;
+	}
 	if (IsValid(GetOwner()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UHittableComponent::OnImpactReceived IsValid(GetOwner()) == false"));
