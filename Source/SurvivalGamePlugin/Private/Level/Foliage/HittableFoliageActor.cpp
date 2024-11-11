@@ -10,8 +10,8 @@
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/PassiveDamageDealingComponent.h"
 #include "Components/LootTableComponent.h"
+#include "Components/HittableComponent.h"
 
 
 AHittableFoliageActor::AHittableFoliageActor()
@@ -22,8 +22,8 @@ AHittableFoliageActor::AHittableFoliageActor()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
 
-	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
-	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -44,29 +44,6 @@ void AHittableFoliageActor::BeginPlay()
 	}
 
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
-}
-
-void AHittableFoliageActor::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-{
-	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
-}
-
-void AHittableFoliageActor::OnHittableDestroyed()
-{
-	if (HasAuthority())
-	{
-		LootTableComponent->DropLoot();
-	}
-
-	Destroy();
-}
-
-bool AHittableFoliageActor::bCanBeHit()
-{
-	return true;
 }
 
 UAbilitySystemComponent* AHittableFoliageActor::GetAbilitySystemComponent() const

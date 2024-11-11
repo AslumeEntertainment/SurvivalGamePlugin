@@ -1,0 +1,22 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameplayCueNotify_Static.h"
+#include "GC_OnDestroyed.generated.h"
+
+class UNiagaraSystem;
+
+UCLASS()
+class SURVIVALGAMEPLUGIN_API UGC_OnDestroyed : public UGameplayCueNotify_Static
+{
+	GENERATED_BODY()
+	
+protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
+	UNiagaraSystem* OnDestroyedEffect;
+
+	virtual bool OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
+};

@@ -7,7 +7,7 @@
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/PassiveDamageDealingComponent.h"
+#include "Components/HittableComponent.h"
 #include "Components/LootTableComponent.h"
 
 AHittableItem::AHittableItem()
@@ -15,8 +15,8 @@ AHittableItem::AHittableItem()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
-	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -73,29 +73,6 @@ void AHittableItem::LoseDurability(float LostDurability)
 	}
 
 	AbilitySystemComponent->SetNumericAttributeBase(AttributeSet->GetHealthAttribute(), CurrentDurability);
-}
-
-void AHittableItem::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-{
-	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
-}
-
-void AHittableItem::OnHittableDestroyed()
-{
-	if (HasAuthority())
-	{
-		LootTableComponent->DropLoot();
-	}
-
-	Destroy();
-}
-
-bool AHittableItem::bCanBeHit()
-{
-	return true;
 }
 
 UAbilitySystemComponent* AHittableItem::GetAbilitySystemComponent() const

@@ -5,10 +5,10 @@
 
 #include "AbilitySystemInterface.h"
 
-#include "Components/PassiveDamageDealingComponent.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Interfaces/HittableInterface.h"
+
 
 void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
@@ -27,15 +27,15 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 		return;
 	}
 
-	UPassiveDamageDealingComponent* TargetPassiveDamageDealer = TargetActor->GetComponentByClass<UPassiveDamageDealingComponent>();
-	if (IsValid(TargetPassiveDamageDealer) == false)
+	UHittableComponent* TargetHittableComp = TargetActor->GetComponentByClass<UHittableComponent>();
+	if (IsValid(TargetHittableComp) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_OnStartedBurning::ActivateAbility IsValid(OwnerPassiveDamageDealer) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_OnStartedBurning::ActivateAbility IsValid(TargetHittableComp) == false"));
 		return;
 	}
 
 	TArray<AActor*> OverlappingActors;
-	TargetPassiveDamageDealer->GetOverlappingActors(OverlappingActors);
+	TargetHittableComp->GetOverlappingActors(OverlappingActors);
 
 	for (AActor* Actor : OverlappingActors)
 	{

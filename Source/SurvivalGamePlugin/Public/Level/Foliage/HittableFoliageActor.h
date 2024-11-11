@@ -5,17 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "AbilitySystemInterface.h"
-#include "Interfaces/HittableInterface.h"
 #include "HittableFoliageActor.generated.h"
 
 class UStaticMeshComponent;
-class UPassiveDamageDealingComponent;
+class UHittableComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AHittableFoliageActor : public AActor, public IAbilitySystemInterface, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API AHittableFoliageActor : public AActor, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -34,7 +33,7 @@ protected:
 	UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
+	UHittableComponent* HittableComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
@@ -47,13 +46,6 @@ protected:
 
 
 public:	
-	
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-
-	//UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;
-
-	virtual bool bCanBeHit() override;
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

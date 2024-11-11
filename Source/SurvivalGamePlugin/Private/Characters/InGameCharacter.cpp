@@ -11,7 +11,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Components/PassiveDamageDealingComponent.h"
+#include "Components/HittableComponent.h"
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -30,8 +30,8 @@ AInGameCharacter::AInGameCharacter()
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
-	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
-	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
 	
 	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
 }
@@ -309,19 +309,6 @@ float AInGameCharacter::GetAttackSpeed() const
 	return AttackSpeed;
 }
 
-void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-{
-	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
-}
-
-bool AInGameCharacter::bCanBeHit()
-{
-	return IsAlive();
-}
-
 bool AInGameCharacter::IsRightHanded()
 {
 	return bIsRightHanded;
@@ -334,21 +321,9 @@ void AInGameCharacter::SetIsRightHanded(bool NewValue)
 	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 }
 
-void AInGameCharacter::OnHittableDestroyed_Implementation()
+void AInGameCharacter::SetIsAlive(bool NewValue)
 {
-	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
-	AbilitySystemComponent->CancelAllAbilities();
-
-	GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
-	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-	GetMesh()->SetSimulatePhysics(true);
-
-	EquipmentComponent->UnequipAllItems();
-	bIsAlive = false;
-
-	OnCharacterDeath.Broadcast();
-
-	UnPossessed();
+	bIsAlive = NewValue;
 }
 
 bool AInGameCharacter::IsAlive()

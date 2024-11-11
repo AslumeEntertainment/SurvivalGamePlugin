@@ -5,7 +5,7 @@
 
 #include "Engine/StaticMeshActor.h"
 
-#include "Components/PassiveDamageDealingComponent.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
@@ -25,10 +25,10 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	UPassiveDamageDealingComponent* PassiveDamageDealer = ActorInfo->AvatarActor.Get()->GetComponentByClass<UPassiveDamageDealingComponent>();
-	if (IsValid(PassiveDamageDealer) == false)
+	UHittableComponent* HittableComp = ActorInfo->AvatarActor.Get()->GetComponentByClass<UHittableComponent>();
+	if (IsValid(HittableComp) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::ActivateAbility IsValid(PassiveDamageDealer) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::ActivateAbility IsValid(HittableComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -38,14 +38,14 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 		SpawnOverlayMesh();
 	}
 
-	PassiveDamageDealer->OnComponentBeginOverlap.AddDynamic(this, &USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap);
+	HittableComp->OnComponentBeginOverlap.AddDynamic(this, &USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap);
 	if (bShouldApplyOnActivation == false)
 	{
 		return;
 	}
 
 	TArray<AActor*> OverlappingActors;
-	PassiveDamageDealer->GetOverlappingActors(OverlappingActors);
+	HittableComp->GetOverlappingActors(OverlappingActors);
 
 	for (AActor* Actor : OverlappingActors)
 	{

@@ -5,16 +5,15 @@
 #include "CoreMinimal.h"
 #include "Interactables/Items/ItemBase.h"
 #include "AbilitySystemInterface.h"
-#include "Interfaces/HittableInterface.h"
 #include "HittableItem.generated.h"
 
-class UPassiveDamageDealingComponent;
+class UHittableComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AHittableItem : public AItemBase, public IAbilitySystemInterface, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API AHittableItem : public AItemBase, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -30,7 +29,7 @@ protected:
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
+	UHittableComponent* HittableComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
@@ -45,12 +44,6 @@ protected:
 public:
 
 	virtual void LoseDurability(float LostDurability) override;
-
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-
-	virtual void OnHittableDestroyed() override;
-
-	virtual bool bCanBeHit() override;
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

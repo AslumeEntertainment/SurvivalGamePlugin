@@ -32,6 +32,7 @@ public class SurvivalGamePlugin : ModuleRules
 				"UMG",
 				"Foliage",
                 "MoviePlayer",
+                "Niagara",
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }

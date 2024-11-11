@@ -7,7 +7,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Characters/InGameCharacter.h"
-#include "Interfaces/HittableInterface.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
 
@@ -48,10 +48,10 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 
 	if (Attribute == GetHealthAttribute())
 	{
-		IHittableInterface* HittableAvatarActor = Cast<IHittableInterface>(GetOwningActor());
-		if (HittableAvatarActor == nullptr)
+		UHittableComponent* HittableComp = GetOwningActor()->GetComponentByClass<UHittableComponent>();
+		if (IsValid(HittableComp) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange AttributeOwner == nullptr"));
+			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(HittableComp) == false"));
 			return;
 		}
 
@@ -66,11 +66,11 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
 		}
 
-		if (GetHealth() == 0.f && HittableAvatarActor->bCanBeHit())
+		if (GetHealth() == 0.f)
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
-			HittableAvatarActor->OnHittableDestroyed();
+			HittableComp->OnHittableDestroyed();
 		}
 	}
 }

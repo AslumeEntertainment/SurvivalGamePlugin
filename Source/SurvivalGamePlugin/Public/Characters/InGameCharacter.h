@@ -5,18 +5,17 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
-#include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
 
 #include "InGameCharacter.generated.h"
 
 class UEquipmentComponent;
-class UPassiveDamageDealingComponent;
+class UHittableComponent;
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
 {
 	GENERATED_BODY()
 	
@@ -78,7 +77,7 @@ protected:
 	UDamageDealingComponent* RightHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
+	UHittableComponent* HittableComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -116,18 +115,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetAttackSpeed() const;
 
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-	
-	virtual bool bCanBeHit() override;
-
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;
-
 	UFUNCTION(BlueprintCallable)
 	bool IsRightHanded();
 
 	UFUNCTION(BlueprintCallable)
 	void SetIsRightHanded(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsAlive(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();
