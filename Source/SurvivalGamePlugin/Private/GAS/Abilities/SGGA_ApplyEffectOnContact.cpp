@@ -102,7 +102,7 @@ void USGGA_ApplyEffectOnContact::AttemptHit(AActor* TargetActor)
 	{
 		return;
 	}
-	if (TargetHittableComp->CanEverApplyGameplayEffects() == false)
+	if (TargetHittableComp->CanEverReceiveGameplayEffects() == false)
 	{
 		return;
 	}

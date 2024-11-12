@@ -27,6 +27,8 @@ private:
 
 	bool bIsAlive = true;
 
+	float OldHittableCompHalfHeight = 0.f;
+
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
 
@@ -48,6 +50,9 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
 
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
+
 	UFUNCTION()
 	void OnInGameCharacterDestroyed(AActor* RefToSelf);
 
@@ -60,6 +65,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	void PossessedBy(AController* NewController) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "OnCrouched", meta = (ForceUnits = cm))
+	float HittableCompOnCrouchedHalfHeight = 60.f;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
@@ -102,6 +110,10 @@ public:
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
 
 	virtual void BroadcastInitialValues();
+
+	virtual void Crouch(bool bClientSimulation = false) override;
+
+	virtual void UnCrouch(bool bClientSimulation = false) override;
 
 	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues();

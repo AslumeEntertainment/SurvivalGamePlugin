@@ -36,6 +36,11 @@ AInGameCharacter::AInGameCharacter()
 	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
 }
 
+void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
+{
+	HittableComponent->SetCapsuleHalfHeight(NewValue);
+}
+
 void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 {
 	TArray<AItemBase*> Equipment = EquipmentComponent->GetAllEquipedItems();
@@ -55,6 +60,8 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
 	if (bIsRightHanded == false)
 	{
@@ -142,11 +149,6 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
-	if (HasAuthority() == false)
-	{
-		return;
-	}
-
 	FVector NormalVelocity = UKismetMathLibrary::Normal(GetVelocity());
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("NormalVelocity.Z - %.2f"), NormalVelocity.Z));
 	if (NormalVelocity.Z > -0.45)
@@ -233,6 +235,10 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
+			if (Data.NewValue == 0)
+			{
+				HittableComponent->OnHittableDestroyed();
+			}
 		}
 	);
 
@@ -292,6 +298,26 @@ void AInGameCharacter::BroadcastInitialValues()
 	Client_OnUpdatePlayerMaxHunger(AttributeSet->GetMaxHunger());
 	Client_OnUpdatePlayerEnergy(AttributeSet->GetEnergy(), AttributeSet->GetMaxEnergy());
 	Client_OnUpdatePlayerMaxEnergy(AttributeSet->GetMaxEnergy());
+}
+
+void AInGameCharacter::Crouch(bool bClientSimulation)
+{
+	Super::Crouch(bClientSimulation);
+	
+	if (HasAuthority())
+	{
+		NetMulticast_SetHittableCompHalfHeight(HittableCompOnCrouchedHalfHeight);
+	}
+}
+
+void AInGameCharacter::UnCrouch(bool bClientSimulation)
+{
+	Super::UnCrouch(bClientSimulation);
+	
+	if (HasAuthority())
+	{
+		NetMulticast_SetHittableCompHalfHeight(OldHittableCompHalfHeight);
+	}
 }
 
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()

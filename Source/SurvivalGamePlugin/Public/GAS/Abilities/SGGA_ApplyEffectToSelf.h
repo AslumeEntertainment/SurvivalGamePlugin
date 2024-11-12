@@ -24,9 +24,4 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
 	TSubclassOf<UGameplayEffect> EffectClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	FGameplayTag EventTag;
-
-	UFUNCTION()
-	void OnEventReceived(FGameplayEventData Payload);
 };

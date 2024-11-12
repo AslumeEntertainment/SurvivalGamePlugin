@@ -13,21 +13,20 @@ void USGGA_ApplyEffectToSelf::ActivateAbility(const FGameplayAbilitySpecHandle H
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectToSelf::ActivateAbility CommitAbility() == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
-	UAbilityTask_WaitGameplayEvent* WaitMixedGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, EventTag, nullptr, false, true);
-	WaitMixedGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_ApplyEffectToSelf::OnEventReceived);
-	WaitMixedGameplayEventTask->ReadyForActivation();
-}
-
-void USGGA_ApplyEffectToSelf::OnEventReceived(FGameplayEventData Payload)
-{
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ActorInfo->AbilitySystemComponent);
 	if (IsValid(ASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectToSelf::OnEventReceived IsValid(ASC) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectToSelf::ActivateAbility IsValid(ASC) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
+	
+	const AActor* Instigator = (TriggerEventData == nullptr) ? nullptr : TriggerEventData->Instigator;
 
-	ASC->AddEffectFromClass(EffectClass, Payload.Instigator);
+	ASC->AddEffectFromClass(EffectClass, Instigator);
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
+

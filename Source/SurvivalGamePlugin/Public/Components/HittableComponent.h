@@ -27,13 +27,7 @@ protected:
 	FGameplayEffectSpecHandle EffectSpecHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
-	bool bCanEverReceiveImpactDamage = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
-	bool bCanEverDealImpactDamage = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
-	bool bCanEverApplyGameplayEffects = true;
+	bool bCanEverReceiveGameplayEffects = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
 	FDamageGameplayEffect DamageEffectOnOverlap;
@@ -49,17 +43,13 @@ public:
 
 	USG_AbilitySystemComponent* GetOwnerAbilitySystemComponent();
 
+	UFUNCTION(BlueprintCallable)
 	void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles);
 
+	UFUNCTION(BlueprintCallable)
 	void OnHittableDestroyed();
 
 	UFUNCTION(BlueprintCallable)
-	bool CanEverReceiveImpactDamage() { return bCanEverReceiveImpactDamage; }
-
-	UFUNCTION(BlueprintCallable)
-	bool CanEverDealImpactDamage() { return bCanEverDealImpactDamage; }
-
-	UFUNCTION(BlueprintCallable)
-	bool CanEverApplyGameplayEffects() { return bCanEverApplyGameplayEffects; }
+	bool CanEverReceiveGameplayEffects() { return bCanEverReceiveGameplayEffects; }
 
 };

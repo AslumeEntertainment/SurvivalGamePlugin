@@ -70,7 +70,6 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
-			HittableComp->OnHittableDestroyed();
 		}
 	}
 }

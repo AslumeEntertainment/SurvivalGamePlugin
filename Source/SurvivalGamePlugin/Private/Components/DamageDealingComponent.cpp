@@ -64,7 +64,7 @@ void UDamageDealingComponent::AttemptHit()
 		{
 			continue;
 		}
-		if (HittableComp->CanEverApplyGameplayEffects() == false)
+		if (HittableComp->CanEverReceiveGameplayEffects() == false)
 		{
 			return;
 		}
