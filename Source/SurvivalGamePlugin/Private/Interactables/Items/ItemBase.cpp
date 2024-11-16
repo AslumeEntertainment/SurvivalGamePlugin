@@ -79,7 +79,10 @@ void AItemBase::BeginPlay()
 		return;
 	}
 
-	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+	if (IsValid(DefaultAttributeEffect))
+	{
+		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+	}
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)

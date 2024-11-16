@@ -22,16 +22,21 @@ class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 public:
 
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "CraftingInfo")
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingProcessInfo")
 	UDataTable* CraftingInfoTable;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingProcessInfo")
 	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CraftingProcessInfo")
+	FGameplayTag CraftingProcessContinueTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;

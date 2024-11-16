@@ -3,6 +3,7 @@
 
 #include "Level/WaterVolume.h"
 
+#include "Components/PostProcessComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 
@@ -14,6 +15,11 @@ AWaterVolume::AWaterVolume()
 {
 	WaterBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WaterBox"));
 	WaterBox->SetupAttachment(GetRootComponent());
+
+	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComponent"));
+	PostProcessComponent->SetupAttachment(WaterBox);
+	PostProcessComponent->bUnbound = false;
+	PostProcessComponent->bUseAttachParentBound = true;
 
 	WaterSurfaceMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WaterSurfaceMesh"));
 	WaterSurfaceMesh->SetupAttachment(WaterBox);

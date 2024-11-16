@@ -10,6 +10,7 @@
 class UBoxComponent;
 class UGameplayEffect;
 class UStaticMeshComponent;
+class UPostProcessComponent;
 
 UCLASS(Blueprintable)
 class SURVIVALGAMEPLUGIN_API AWaterVolume : public AActor
@@ -30,6 +31,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* WaterBox;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UPostProcessComponent* PostProcessComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* WaterSurfaceMesh;

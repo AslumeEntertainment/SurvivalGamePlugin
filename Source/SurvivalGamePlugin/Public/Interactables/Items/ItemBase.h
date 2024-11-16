@@ -69,10 +69,10 @@ protected:
 	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetActorPhysics(bool NewActorPhysics);
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
 
 public:	
