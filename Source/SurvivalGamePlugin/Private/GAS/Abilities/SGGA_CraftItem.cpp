@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "UI/Widgets/CraftingWindowWidget.h"
@@ -78,7 +79,7 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_CraftItem::CancelCrafting);
 	WaitInputReleaseTask->ReadyForActivation();
 
-	UAbilityTask_WaitGameplayEvent* WaitStartCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Craft"), nullptr, true, false);
+	UAbilityTask_WaitGameplayEvent* WaitStartCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, CraftingProcessContinueTag, nullptr, true, true);
 	WaitStartCraftingTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::StartCrafting);
 	WaitStartCraftingTask->ReadyForActivation();
 }
@@ -159,11 +160,17 @@ void USGGA_CraftItem::OnItemToCraftSelected(FText itemName)
 {
 	CloseCraftingWindow();
 
-	FString GameplayTagString = FString(TEXT("Craft.")) + itemName.ToString();
-	GameplayTagString.RemoveSpacesInline();
-	FGameplayTag ProductNameTag = FGameplayTag::RequestGameplayTag(FName(GameplayTagString));
+	FString ItemNameString = /*FString(TEXT("Craft.")) +*/ itemName.ToString();
+	ItemNameString.RemoveSpacesInline();
+	//FGameplayTag ProductName = FGameplayTag::RequestGameplayTag(FName(ItemNameString));
 
-	Player->SendGameplayEventToSelf(ProductNameTag, FGameplayEventData());
+	FSG_GameplayAbilityTargetData* TargetData = new FSG_GameplayAbilityTargetData();
+	TargetData->OptionalNameProperty = FName(ItemNameString);
+	
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.TargetData.Add(TargetData);
+
+	Player->SendGameplayEventToSelf(CraftingProcessContinueTag, EventData);
 }
 
 void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
@@ -182,7 +189,15 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	FName ProductItemName = FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
+	FName ProductItemName = FName("Null"); //= FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
+	if (Payload.TargetData.IsValid(0))
+	{
+		FSG_GameplayAbilityTargetData* MyTargetData = static_cast<FSG_GameplayAbilityTargetData*>(Payload.TargetData.Data[0].Get());
+		if (MyTargetData)
+		{
+			ProductItemName = MyTargetData->OptionalNameProperty;
+		}
+	}
 
 	ProductItemData = CraftingInfoTable->FindRow<FCraftingProcessDataStruct>(ProductItemName, "");
 	if (ProductItemData == nullptr)

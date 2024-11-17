@@ -3,7 +3,7 @@
 
 #include "GAS/Abilities/SGGA_Crouch.h"
 
-#include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -27,11 +27,7 @@ void USGGA_Crouch::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 
 	Player->Crouch();
-
-	FGameplayEffectSpecHandle SpeedEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedDecreaseEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
-	FGameplayEffectSpec* SpeedEffectSpec = SpeedEffectSpecHandle.Data.Get();
-	SpeedEffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), SpeedMultiplier);
-	SpeedDecreaseEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpeedEffectSpec);
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Started"));
 
 	FGameplayEffectSpecHandle JumpVelocityEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(JumpVelocityDecreaseEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
 	FGameplayEffectSpec* JumpVelocityEffectSpec = JumpVelocityEffectSpecHandle.Data.Get();
@@ -40,14 +36,13 @@ void USGGA_Crouch::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 	ActorInfo->AbilitySystemComponent->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsCrouching")));
 
-	UAbilityTask_WaitInputPress* WaitInputPressTask = UAbilityTask_WaitInputPress::WaitInputPress(this);
-	WaitInputPressTask->OnPress.AddDynamic(this, &USGGA_Crouch::OnCrouchPressedAgain);
-	WaitInputPressTask->ReadyForActivation();
+	UAbilityTask_WaitInputRelease* WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
+	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_Crouch::OnCrouchReleased);
+	WaitInputReleaseTask->ReadyForActivation();
 }
 
 void USGGA_Crouch::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SpeedDecreaseEffectSpecHandle);
 	ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(JumpVelocityDecreaseEffectSpecHandle);
 	ActorInfo->AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.IsCrouching")));
 
@@ -56,10 +51,12 @@ void USGGA_Crouch::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		Player->UnCrouch();
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void USGGA_Crouch::OnCrouchPressedAgain(float TimeHeld)
+void USGGA_Crouch::OnCrouchReleased(float TimeHeld)
 {
+	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Released"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

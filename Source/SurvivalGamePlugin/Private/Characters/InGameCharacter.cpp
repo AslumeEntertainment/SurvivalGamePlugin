@@ -5,12 +5,13 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "EnhancedInputComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Components/PassiveDamageDealingComponent.h"
+#include "Components/HittableComponent.h"
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -29,12 +30,15 @@ AInGameCharacter::AInGameCharacter()
 	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
 	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
 
-	PassiveDamageDealingComponent = CreateDefaultSubobject<UPassiveDamageDealingComponent>(TEXT("PassiveDamageDealingComponent"));
-	PassiveDamageDealingComponent->SetupAttachment(GetRootComponent());
-
-	PassiveDamageDealingComponent->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnImpactReceived);
-
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
+	
 	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
+}
+
+void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
+{
+	HittableComponent->SetCapsuleHalfHeight(NewValue);
 }
 
 void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
@@ -56,6 +60,8 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
 	if (bIsRightHanded == false)
 	{
@@ -143,34 +149,15 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
-	if (HasAuthority() == false)
+	FVector NormalVelocity = UKismetMathLibrary::Normal(GetVelocity());
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("NormalVelocity.Z - %.2f"), NormalVelocity.Z));
+	if (NormalVelocity.Z > -0.45)
 	{
 		return;
 	}
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
 	SendGameplayEventToSelf(EventTag, FGameplayEventData());
-}
-
-void AInGameCharacter::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (HasAuthority() == false)
-	{
-		return;
-	}
-
-	if (SweepResult.Component != nullptr && SweepResult.Component->GetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn) == ECollisionResponse::ECR_Ignore)
-	{
-		return;
-	}
-
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
-	FGameplayEventData EventData = FGameplayEventData();
-	EventData.Instigator = OtherActor;
-
-	SendGameplayEventToSelf(EventTag, EventData);
-	
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }
 
 void AInGameCharacter::MainHandAction()
@@ -309,6 +296,26 @@ void AInGameCharacter::BroadcastInitialValues()
 	Client_OnUpdatePlayerMaxEnergy(AttributeSet->GetMaxEnergy());
 }
 
+void AInGameCharacter::Crouch(bool bClientSimulation)
+{
+	Super::Crouch(bClientSimulation);
+	
+	if (HasAuthority())
+	{
+		NetMulticast_SetHittableCompHalfHeight(HittableCompOnCrouchedHalfHeight);
+	}
+}
+
+void AInGameCharacter::UnCrouch(bool bClientSimulation)
+{
+	Super::UnCrouch(bClientSimulation);
+	
+	if (HasAuthority())
+	{
+		NetMulticast_SetHittableCompHalfHeight(OldHittableCompHalfHeight);
+	}
+}
+
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 {
 	BroadcastInitialValues();
@@ -324,19 +331,6 @@ float AInGameCharacter::GetAttackSpeed() const
 	return AttackSpeed;
 }
 
-void AInGameCharacter::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-{
-	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-	{
-		AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
-}
-
-bool AInGameCharacter::bCanBeHit()
-{
-	return IsAlive();
-}
-
 bool AInGameCharacter::IsRightHanded()
 {
 	return bIsRightHanded;
@@ -349,21 +343,9 @@ void AInGameCharacter::SetIsRightHanded(bool NewValue)
 	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 }
 
-void AInGameCharacter::OnHittableDestroyed_Implementation()
+void AInGameCharacter::SetIsAlive(bool NewValue)
 {
-	AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
-	AbilitySystemComponent->CancelAllAbilities();
-
-  GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
-	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
-	GetMesh()->SetSimulatePhysics(true);
-
-	EquipmentComponent->UnequipAllItems();
-	bIsAlive = false;
-
-  OnCharacterDeath.Broadcast();
-  
-	UnPossessed();
+	bIsAlive = NewValue;
 }
 
 bool AInGameCharacter::IsAlive()

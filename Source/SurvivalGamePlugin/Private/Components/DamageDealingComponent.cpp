@@ -6,7 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "Interfaces/HittableInterface.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
@@ -59,28 +59,30 @@ void UDamageDealingComponent::AttemptHit()
 			continue;
 		}
 
-		IHittableInterface* HittableActor = Cast<IHittableInterface>(HitResult.GetActor());
-		if (HittableActor == nullptr)
+		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
+		if (IsValid(HittableComp) == false)
 		{
 			continue;
 		}
-		if (HittableActor != nullptr && HittableActor->bCanBeHit() == true)
+		if (HittableComp->CanEverReceiveGameplayEffects() == false)
 		{
-			UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
-			if (ASC == nullptr)
-			{
-				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit HittableActor->ASC == nullptr"));
-				continue;
-			}
-
-			FGameplayCueParameters CueParams = FGameplayCueParameters();
-			CueParams.Location = HitResult.ImpactPoint;
-			ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
-
-			HittableActor->OnHit(GameplayEffectSpecHandles);
-			OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
-			ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
+			return;
 		}
+
+		USG_AbilitySystemComponent* ASC = HittableComp->GetOwnerAbilitySystemComponent();
+		if (IsValid(ASC) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(ASC) == false"));
+			continue;
+		}
+
+		FGameplayCueParameters CueParams = FGameplayCueParameters();
+		CueParams.Location = HitResult.ImpactPoint;
+		ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
+
+		HittableComp->OnHit(GameplayEffectSpecHandles);
+		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
+		ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 	}
 }
 
@@ -103,7 +105,6 @@ void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 {
 	if (ActorsToIgnore.Contains(ActorToIgnore) == true)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddActorToIgnored_Implementation Actor is already being ignored!"));
 		return;
 	}
 	ActorsToIgnore.Add(ActorToIgnore);
@@ -185,12 +186,12 @@ void UDamageDealingComponent::ResetDamageComponentTagSuffix()
 
 FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FDamageGameplayEffect NewGameplayEffect)
 {
-	if (!IsValid(NewGameplayEffect.DamageEffectClass))
+	if (IsValid(NewGameplayEffect.DamageEffectClass) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(NewGameplayEffect.DamageEffectClass) == false"));
 		return FGameplayEffectSpecHandle();
 	}
-	if (!IsValid(GetOwner()))
+	if (IsValid(GetOwner()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(GetOwner()) == false"));
 		return FGameplayEffectSpecHandle();

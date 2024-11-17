@@ -17,6 +17,7 @@ struct SURVIVALGAMEPLUGIN_API FSG_GameplayAbilityTargetData : public FGameplayAb
     UPROPERTY()
     FName OptionalNameProperty;
 
+
     virtual UScriptStruct* GetScriptStruct() const override
     {
         return FSG_GameplayAbilityTargetData::StaticStruct();

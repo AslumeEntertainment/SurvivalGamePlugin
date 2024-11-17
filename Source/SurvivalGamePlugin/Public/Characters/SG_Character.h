@@ -184,6 +184,7 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SetIsMirrored(bool NewValue);
 
+	UFUNCTION(BlueprintCallable)
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
 
 	FTextTransferSignature InteractIndicationTextDelegate;

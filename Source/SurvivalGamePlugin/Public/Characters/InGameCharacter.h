@@ -5,18 +5,17 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
-#include "Interfaces/HittableInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
 
 #include "InGameCharacter.generated.h"
 
 class UEquipmentComponent;
-class UPassiveDamageDealingComponent;
+class UHittableComponent;
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
 {
 	GENERATED_BODY()
 	
@@ -27,6 +26,8 @@ public:
 private:
 
 	bool bIsAlive = true;
+
+	float OldHittableCompHalfHeight = 0.f;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
@@ -49,6 +50,9 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
 
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
+
 	UFUNCTION()
 	void OnInGameCharacterDestroyed(AActor* RefToSelf);
 
@@ -61,6 +65,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	void PossessedBy(AController* NewController) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "OnCrouched", meta = (ForceUnits = cm))
+	float HittableCompOnCrouchedHalfHeight = 60.f;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
@@ -78,7 +85,7 @@ protected:
 	UDamageDealingComponent* RightHandDamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UPassiveDamageDealingComponent* PassiveDamageDealingComponent;
+	UHittableComponent* HittableComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -93,9 +100,6 @@ protected:
 
 	virtual void Landed(const FHitResult& Hit) override;
 
-	UFUNCTION()
-	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-
 	virtual void MainHandAction();
 	virtual void SecondaryHandAction();
 
@@ -106,6 +110,10 @@ public:
 	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
 
 	virtual void BroadcastInitialValues();
+
+	virtual void Crouch(bool bClientSimulation = false) override;
+
+	virtual void UnCrouch(bool bClientSimulation = false) override;
 
 	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues();
@@ -119,18 +127,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetAttackSpeed() const;
 
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-	
-	virtual bool bCanBeHit() override;
-
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;
-
 	UFUNCTION(BlueprintCallable)
 	bool IsRightHanded();
 
 	UFUNCTION(BlueprintCallable)
 	void SetIsRightHanded(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsAlive(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsAlive();

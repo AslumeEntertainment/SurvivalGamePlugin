@@ -4,18 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
 #include "Headers/ItemDataStruct.h"
 #include "Interfaces/InteractableInterface.h"
+#include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
+
 #include "ItemBase.generated.h"
 
 class UStaticMeshComponent;
 class AInGameCharacter;
 class USG_GameplayAbility;
+class UHittableComponent;
+class ULootTableComponent;
+class USG_AbilitySystemComponent;
+class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface
+class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -44,13 +51,28 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* StaticMesh;
 
-	UFUNCTION(Server, Reliable)
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UHittableComponent* HittableComponent;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	ULootTableComponent* LootTableComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USG_AbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(Transient)
+	USG_AttributeSet* AttributeSet;
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetActorPhysics(bool NewActorPhysics);
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
 
 public:	
@@ -59,6 +81,8 @@ public:
 	FItemDataStruct ItemData;
 
 	virtual void LoseDurability(float LostDurability);
+
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION()
 	float GetDurability() const;

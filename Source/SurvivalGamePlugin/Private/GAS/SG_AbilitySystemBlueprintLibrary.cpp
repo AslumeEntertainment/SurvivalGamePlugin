@@ -9,47 +9,19 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 
 
-//bool USG_AbilitySystemBlueprintLibrary::CalculateAndApplyImpactDamage(AActor* Actor, UAbilitySystemComponent* ASC)
+//void USG_AbilitySystemBlueprintLibrary::Server_SG_SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
 //{
-//	if (ASC == nullptr)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemBlueprintLibrary::CalculateImpactDamage ASC == nullptr"));
-//		return false;
-//	}
-//
-//	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasInvincibility")) ||
-//		ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasImmunity.ImpactDamage")))
-//	{
-//		return false;
-//	}
-//
-//	float Damage = 0;
-//	FVector Velocity = Actor->GetVelocity();
-//	FString DamageContextString;
-//
-//	if (UKismetMathLibrary::Normal(Velocity).Z < -0.5)
-//	{
-//		Damage = FMath::Abs(Velocity.Z) * 0.08 - 60;
-//		DamageContextString = "Fall";
-//	}
-//	else
-//	{
-//		Damage = Velocity.Length() * 0.057 - 71;
-//		DamageContextString = "Impact";
-//	}
-//	
-//	// Damage *= Actor.Vulnerability
-//	Damage = FMath::Clamp<float>(Damage, 0, ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
-//	Damage = FMath::CeilToFloat(Damage);
-//
-//	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length()));
-//	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("%s damage - %f"), *DamageContextString, Damage));
-//
-//	if (Damage > 0.f)
-//	{
-//		ASC->ApplyModToAttribute(USG_AttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, -Damage);
-//		return true;
-//	}
-//	return false;
+//	SG_SendGameplayEventToActor(Actor, EventTag, EventData, bServerOnly);
 //}
-
+//
+//void USG_AbilitySystemBlueprintLibrary::SG_SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)
+//{
+//	if (Actor->HasAuthority() == false)
+//	{
+//		Server_SG_SendGameplayEventToActor(Actor, EventTag, EventData, bServerOnly);
+//		if (bServerOnly) return;
+//	}
+//
+//	UAbilitySystemComponent* ASC = GetAbilitySystemComponent(Actor);
+//	ASC->HandleGameplayEvent(EventTag, &EventData);
+//}

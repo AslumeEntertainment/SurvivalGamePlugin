@@ -5,16 +5,16 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "AbilitySystemInterface.h"
-#include "Interfaces/HittableInterface.h"
 #include "HittableFoliageActor.generated.h"
 
-class StaticMeshComponent;
+class UStaticMeshComponent;
+class UHittableComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AHittableFoliageActor : public AActor, public IAbilitySystemInterface, public IHittableInterface
+class SURVIVALGAMEPLUGIN_API AHittableFoliageActor : public AActor, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -33,6 +33,9 @@ protected:
 	UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UHittableComponent* HittableComponent;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -41,18 +44,8 @@ protected:
 	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
 
-	UFUNCTION()
-	virtual void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-
 
 public:	
-	
-	virtual void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles) override;
-
-	//UFUNCTION(NetMulticast, Reliable)
-	virtual void OnHittableDestroyed() override;
-
-	virtual bool bCanBeHit() override;
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

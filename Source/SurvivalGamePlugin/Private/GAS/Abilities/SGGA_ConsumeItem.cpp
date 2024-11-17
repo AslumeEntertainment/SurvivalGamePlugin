@@ -99,6 +99,11 @@ void USGGA_ConsumeItem::OnEventRecieved(FGameplayEventData Payload)
 
 	for (UConsumableItemEffectDataObject* EffectDataObject : ConsumableItem->GetEffects())
 	{
+		if (EffectDataObject == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved EffectDataObject == nullptr"));
+			continue;
+		}
 		ASC->AddEffectFromClass(EffectDataObject->EffectClass, EffectDataObject, EffectDataObject->EffectLevel);
 	}
 

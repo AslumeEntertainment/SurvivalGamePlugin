@@ -7,9 +7,14 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Characters/InGameCharacter.h"
-#include "Interfaces/HittableInterface.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
+
+USG_AttributeSet::USG_AttributeSet()
+{
+	
+}
 
 void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -17,6 +22,9 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, IgnitionThreshold, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, FireDamageResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ExtinguishTime, COND_None, REPNOTIFY_Always);
 }
 
 void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -40,29 +48,31 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 
 	if (Attribute == GetHealthAttribute())
 	{
-		IHittableInterface* HittableAvatarActor = Cast<IHittableInterface>(GetOwningActor());
-		if (HittableAvatarActor == nullptr)
+		UHittableComponent* HittableComp = GetOwningActor()->GetComponentByClass<UHittableComponent>();
+		if (IsValid(HittableComp) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange AttributeOwner == nullptr"));
+			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(HittableComp) == false"));
 			return;
 		}
 
+		UE_LOG(LogTemp, Warning, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth())
+
 		if (HasMaxHealth())
 		{
-			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
-			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
-		else if(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth"))))
+		else if(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health"))))
 		{
-			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
-			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHealth")));
+			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
+			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
 
-		if (GetHealth() == 0.f && HittableAvatarActor->bCanBeHit())
+		if (GetHealth() == 0.f)
 		{
-			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
-			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNoHealth")));
-			HittableAvatarActor->OnHittableDestroyed();
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
+			HittableComp->OnHittableDestroyed();
 		}
 	}
 }
@@ -109,4 +119,19 @@ void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldMaxHealth);
+}
+
+void USG_AttributeSet::OnRep_IgnitionThreshold(const FGameplayAttributeData& OldIgnitionThreshold)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, IgnitionThreshold, OldIgnitionThreshold);
+}
+
+void USG_AttributeSet::OnRep_FireDamageResistance(const FGameplayAttributeData& OldFireDamageResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, FireDamageResistance, OldFireDamageResistance);
+}
+
+void USG_AttributeSet::OnRep_ExtinguishTime(const FGameplayAttributeData& OldExtinguishTime)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ExtinguishTime, OldExtinguishTime);
 }

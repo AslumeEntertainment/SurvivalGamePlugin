@@ -22,9 +22,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	FGameplayTag SetByCallerMagnitudeDataTag;
 
-	UPROPERTY(EditAnywhere)
-	FGameplayTag SetByCallerMagnitudeEffectDurationTag;
+	UPROPERTY(EditAnywhere, Category = "BurningEffect")
+	TSubclassOf<UGameplayEffect> DefaultBurningEffect;
 
-	UPROPERTY(EditAnywhere, Category = "DamageEffect")
-	FDamageGameplayEffect DefaultBurningEffect;
 };
