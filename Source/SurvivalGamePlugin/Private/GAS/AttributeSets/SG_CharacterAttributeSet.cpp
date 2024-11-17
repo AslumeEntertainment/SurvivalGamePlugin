@@ -161,17 +161,17 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 	{
 		if (GetHunger() >= GetMaxHunger() * 0.99)
 		{
-			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
-			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));
+			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.CanRegenerateHealth")));
 		}
 		else 
 		{
-			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasFullHunger")))
+			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasFull.Hunger")))
 			{
-				ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
-				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFullHunger")));
+				ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));
+				ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));
 			}
 			if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CurrentlyHealing")) == false && 
 				ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.CanRegenerateHealth")))

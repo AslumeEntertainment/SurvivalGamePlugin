@@ -362,24 +362,17 @@ void ASG_Character::InitCharacterDefaults()
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::InitCharacterDefaults IsValid(AbilitySystemComponent) == false"));
 		return;
 	}
-	/* There might be a better way to do this */
-	/* (There was a better way to do this) */
-	//TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultAbilitiesMap;
+	
 	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultAbilities)
 	{
 		AbilitySystemComponent->AddAbility(Ability, 1, this);
-		//DefaultAbilitiesMap.Add(Ability, 1);
 	}
 	
-	//TMap<TSubclassOf<USG_GameplayAbility>, int> DefaultPassiveAbilitiesMap;
 	for (TSubclassOf<USG_GameplayAbility> Ability : DefaultPassiveAbilities)
 	{
 		AbilitySystemComponent->AddPassiveAbility(Ability, 1, this);
-		//DefaultPassiveAbilitiesMap.Add(Ability, 1);
 	}
 
-	//AbilitySystemComponent->AddAbilitiesFromMap(DefaultAbilitiesMap, this);
-	//AbilitySystemComponent->AddPassiveAbilitiesFromMap(DefaultPassiveAbilitiesMap, this);
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
 }
 

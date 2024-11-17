@@ -53,7 +53,7 @@ void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedCompone
 {
 	if (IsValid(GetOwner()) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UHittableComponent::OnImpactReceived IsValid(GetOwner()) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnImpactReceived IsValid(GetOwner()) == false"));
 		return;
 	}
 	if (SweepResult.Component != nullptr && SweepResult.Component->GetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn) == ECollisionResponse::ECR_Ignore)
@@ -64,15 +64,13 @@ void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedCompone
 	{
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("UHittableComponent::OnImpactReceived - %s, Velocity - %.3f"), *OtherActor->GetName(), GetOwner()->GetVelocity().Length());
+	UE_LOG(LogTemp, Log, TEXT("UHittableComponent::OnImpactReceived - %s, Velocity - %.3f"), *OtherActor->GetName(), GetOwner()->GetVelocity().Length());
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.Instigator = OtherActor;
 
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventTag, EventData);
-
-	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Impact recieved! Player velocity - %f ; OtherActor velocity - %f"), GetVelocity().Length(), OtherActor->GetVelocity().Length()));
 }
 
 void UHittableComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

@@ -235,10 +235,6 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
-			if (Data.NewValue == 0)
-			{
-				HittableComponent->OnHittableDestroyed();
-			}
 		}
 	);
 
