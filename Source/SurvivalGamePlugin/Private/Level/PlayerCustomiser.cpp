@@ -3,6 +3,7 @@
 
 #include "Level/PlayerCustomiser.h"
 
+#include "Camera/CameraActor.h"
 #include "Kismet/GameplayStatics.h" 
 #include "Net/UnrealNetwork.h"
 
@@ -10,7 +11,7 @@
 #include "Characters/InGameCharacter.h"
 #include "UI/HUD/InGameHUD.h"
 #include "UI/Widgets/PlayerCustomisingWidget.h"
-
+#include "Level/GameManager.h"
 
 
 // Sets default values
@@ -18,9 +19,7 @@ APlayerCustomiser::APlayerCustomiser()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
-
 
 void APlayerCustomiser::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -29,13 +28,10 @@ void APlayerCustomiser::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsActive, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsTaken, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(APlayerCustomiser, bIsPlayerReady, COND_None, REPNOTIFY_Always);
-
 }
-
 
 void APlayerCustomiser::BeginPlay()
 {
-
 	Super::BeginPlay();
 
 	UWorld* World = GetWorld();
@@ -95,19 +91,21 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 
 bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 {
-	return bIsActive && !bIsTaken;
+	return bIsActive && !bIsTaken && !PlayerCustomisingWidget->IsInViewport();
 }
 
 void APlayerCustomiser::Client_StopInteracting_Implementation()
 {
 	if (IsValid(InteractingPlayer) == true)
 	{
+		InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
 		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 		InteractingPlayer->bShowMouseCursor = false;
 		InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 		InteractingPlayer = nullptr;
 	}
-	Client_HideUI();
+
+	Client_HideUI(true);
 	Server_StopInteracting();
 }
 
@@ -234,13 +232,17 @@ void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bS
 	HUD->ShowInteractionOverlayWidget();
 }
 
-void APlayerCustomiser::Client_HideUI_Implementation()
+void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 {
-	PlayerCustomisingWidget->RemoveFromParent();
+	bUsesAnimation ? PlayerCustomisingWidget->CloseWidget() : PlayerCustomisingWidget->RemoveFromParent();
 }
 
 void APlayerCustomiser::Client_ShowUI_Implementation()
 {
+	if (IsValid(GetParentActor()) && IsValid(InteractingPlayer))
+	{
+		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	}
 	PlayerCustomisingWidget->AddToViewport();
 }
 

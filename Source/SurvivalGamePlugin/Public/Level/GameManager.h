@@ -70,7 +70,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
-	
 
 	void SetActiveSkeletalMesh(ESupervisionState State);
 	void UpdateSkeletalMesh();

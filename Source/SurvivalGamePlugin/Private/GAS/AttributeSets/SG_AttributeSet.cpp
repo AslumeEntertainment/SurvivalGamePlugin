@@ -55,7 +55,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			return;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth())
+		//UE_LOG(LogTemp, Warning, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth())
 
 		if (HasMaxHealth())
 		{

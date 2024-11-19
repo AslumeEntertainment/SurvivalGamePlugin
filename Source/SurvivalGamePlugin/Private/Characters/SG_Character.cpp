@@ -26,6 +26,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 ASG_Character::ASG_Character()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bFindCameraComponentWhenViewTarget = true;
 
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 

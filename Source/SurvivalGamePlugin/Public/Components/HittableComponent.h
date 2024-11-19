@@ -29,6 +29,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	bool bCanEverReceiveGameplayEffects = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	FGameplayTag OnDestroyedGameplayCueTag;
+
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
 	FDamageGameplayEffect DamageEffectOnOverlap;
 
