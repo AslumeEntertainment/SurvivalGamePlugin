@@ -4,6 +4,8 @@
 #include "UI/Widgets/CraftingWindowWidget.h"
 
 #include "Components/WrapBox.h"
+#include "Components/WidgetSwitcher.h"
+
 #include "UI/Widgets//ItemIconWidget.h"
 
 void UCraftingWindowWidget::AddCraftingRecipe(UItemIconWidget* ItemIconWidget)
@@ -17,4 +19,9 @@ void UCraftingWindowWidget::ClearRecipes()
 	{
 		CraftingRecipeWrapBox->ClearChildren();
 	}
+}
+
+void UCraftingWindowWidget::SetWidgetSwitcherActiveIndex(int Index)
+{
+	WidgetSwitcher->SetActiveWidgetIndex(Index);
 }

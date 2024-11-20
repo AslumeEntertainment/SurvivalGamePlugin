@@ -40,6 +40,9 @@ public:
 	UFUNCTION()
 	void SetItemImage(UTexture2D* ItemImage);
 
+	UFUNCTION()
+	void SetItemColor(FLinearColor Color);
+
 	FTextTransferSignature IconClicked;
 
 };

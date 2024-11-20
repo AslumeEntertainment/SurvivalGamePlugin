@@ -23,11 +23,8 @@ struct FItemCraftingDataStruct : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText ProductItemName;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UTexture2D* ProductItemImage = nullptr;
+	FDataTableRowHandle ProductItemResourceCardData;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName IngredientItemID;
@@ -42,7 +39,6 @@ struct FItemDataStruct : public FTableRowBase
 	FItemDataStruct()
 	{
 		ItemName = FText::FromString("None");
-		ItemImage = nullptr;
 		ItemMaxDurability = 0.f;
 		ItemAbility = nullptr;
 	}
@@ -51,7 +47,7 @@ struct FItemDataStruct : public FTableRowBase
 	FText ItemName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UTexture2D* ItemImage;
+	FDataTableRowHandle ResourceCardData;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float ItemMaxDurability;

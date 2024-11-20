@@ -7,6 +7,7 @@
 #include "CraftingWindowWidget.generated.h"
 
 class UWrapBox;
+class UWidgetSwitcher;
 class UItemIconWidget;
 
 UCLASS()
@@ -19,6 +20,9 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWrapBox* CraftingRecipeWrapBox;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWidgetSwitcher* WidgetSwitcher;
+
 public:
 
 	UFUNCTION()
@@ -26,4 +30,7 @@ public:
 
 	UFUNCTION()
 	void ClearRecipes();
+
+	UFUNCTION()
+	void SetWidgetSwitcherActiveIndex(int Index);
 };
