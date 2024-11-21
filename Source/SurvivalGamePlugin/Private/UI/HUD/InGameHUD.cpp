@@ -32,24 +32,33 @@ void AInGameHUD::BeginPlay()
 	ShowInteractionOverlayWidget();
 }
 
-void AInGameHUD::ShowInteractionOverlayWidget()
+void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
 {
-	if (PlayerOwner && InteractionOverlayWidget)
+	if (InteractionOverlayWidget)
 	{
-		ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
-		if (IsValid(Player) == false)
+		InteractionOverlayWidget->SetInteractIndicationText(FText::FromString(""));
+		if(IsValid(InteractingCharacter) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowInteractionOverlayWidget IsValid(Player) == false"));
+			UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(InteractingCharacter) == false"));
 			return;
 		}
+		InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+	}
+}
 
-		Player->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
-		Player->InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
+void AInGameHUD::ShowInteractionOverlayWidget()
+{
+	if (PlayerOwner && InteractionOverlayWidget && InteractionOverlayWidget->IsInViewport() == false)
+	{
+		InteractionOverlayWidget->AddToViewport();
+	}
+}
 
-		if (InteractionOverlayWidget->IsInViewport() == false)
-		{
-			InteractionOverlayWidget->AddToViewport();
-		}
+void AInGameHUD::RemoveInteractionOverlayWidget()
+{
+	if (PlayerOwner && InteractionOverlayWidget && InteractionOverlayWidget->IsInViewport() == true)
+	{
+		InteractionOverlayWidget->RemoveFromParent();
 	}
 }
 

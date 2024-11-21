@@ -37,6 +37,7 @@ protected:
 	UFUNCTION()
 	void OnLeaveButtonClicked();
 
+
 public:
 
 	void NativeOnInitialized() override;

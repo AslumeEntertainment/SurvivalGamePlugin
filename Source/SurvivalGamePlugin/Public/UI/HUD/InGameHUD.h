@@ -7,6 +7,8 @@
 #include "Headers/ItemDataStruct.h"
 #include "InGameHUD.generated.h"
 
+class ASG_Character;
+
 class UInGameOverlayWidget;
 class UInteractionOverlayWidget;
 
@@ -34,7 +36,13 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable)
+	void SetInteractionOverlayBindings(ASG_Character* InteractingCharacter);
+
+	UFUNCTION(BlueprintCallable)
 	void ShowInteractionOverlayWidget();
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveInteractionOverlayWidget();
 
 	UFUNCTION(BlueprintCallable)
 	void ShowGameplayOverlayWidget();

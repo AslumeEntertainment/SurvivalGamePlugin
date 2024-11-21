@@ -66,6 +66,7 @@ void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 	}
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	InteractingPlayer->SetShowMouseCursor(true);
 
 	UpdateWidgets();
 
@@ -81,6 +82,7 @@ void AShopKeeper::StopInteracting()
 {
 	InteractingPlayer->OnSaveUpdated.RemoveAll(this);
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer->SetShowMouseCursor(false);
 	ShopWidget->RemoveFromParent();
 	InteractingPlayer = nullptr;
 

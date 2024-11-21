@@ -43,6 +43,6 @@ public:
 	UFUNCTION()
 	void SetItemColor(FLinearColor Color);
 
-	FTextTransferSignature IconClicked;
+	FIntegerTransferSignature IconClicked;
 
 };

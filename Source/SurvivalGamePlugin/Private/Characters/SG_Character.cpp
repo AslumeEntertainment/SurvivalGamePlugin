@@ -19,6 +19,7 @@
 #include "Animation/SG_AnimInstance.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -195,6 +196,23 @@ void ASG_Character::BeginPlay()
 		CameraViewResetTimeline.AddInterpFloat(CameraViewResetCurve, ProgressUpdate);
 		CameraViewResetTimeline.SetLooping(false);
 	}
+
+	if (IsLocallyControlled() && HasAuthority())
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (IsValid(PlayerController) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
+			return;
+		}
+		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
+		if (IsValid(HUD) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(HUD) == false"));
+			return;
+		}
+		HUD->SetInteractionOverlayBindings(this);
+	}
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -341,19 +359,43 @@ void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (bIsCameraMovementConstrained)
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (IsValid(PlayerController))
 	{
-		APlayerController* PlayerController = Cast<APlayerController>(Controller);
-		if (!IsValid(PlayerController))
+		if (bIsCameraMovementConstrained)
 		{
-			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::Move IsValid(PlayerController) == false"));
-			return;
+			PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
+			PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 		}
-		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
-		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
+		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
+		if (IsValid(HUD))
+		{
+			HUD->SetInteractionOverlayBindings(this);
+		}
 	}
 
 	InitCharacterDefaults();
+}
+
+void ASG_Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (IsValid(PlayerController))
+	{
+		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
+		if (IsValid(HUD))
+		{
+			HUD->SetInteractionOverlayBindings(this);
+		}
+	}
+}
+
+void ASG_Character::UnPossessed()
+{
+	Super::UnPossessed();
+	InteractIndicationTextDelegate.Clear();
 }
 
 void ASG_Character::InitCharacterDefaults()

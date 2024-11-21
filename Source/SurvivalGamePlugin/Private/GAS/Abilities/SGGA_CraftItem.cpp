@@ -22,38 +22,6 @@
 #include "Animation/SG_AnimInstance.h"
 
 
-bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
-{
-	Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
-	
-	/*AInGameCharacter* PlayerRef = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
-	if (IsValid(PlayerRef) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CanActivateAbility IsValid(HumanPlayer) == false"));
-		return false;
-	}
-	UEquipmentComponent* EquipmentComponent = PlayerRef->GetEquipmentComponent();
-	if (IsValid(EquipmentComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(EquipmentComp) == false"));
-		return false;
-	}
-	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) == false || 
-		IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player needs to have an item in both hands!"));
-		return false;
-	}
-	if (EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->ItemData.bCanCraftWithItem(EquipmentComponent->
-		GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player cannot craft anything with their current items!"));
-		return false;
-	}*/
-
-	return true;
-}
-
 void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
@@ -146,6 +114,8 @@ void USGGA_CraftItem::OpenCraftingWindow()
 				continue;
 			}
 
+			PossibleProductItemNames.Add(CraftingRecipe.ProductItemResourceCardData.RowName);
+
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
 			ItemIcon->SetItemImage(ResourceCardData->UnitImage);
 			ItemIcon->SetItemName(ResourceCardData->UnitName);
@@ -178,15 +148,15 @@ void USGGA_CraftItem::CancelCrafting(float TimeHeld)
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USGGA_CraftItem::OnItemToCraftSelected(FText itemName)
+void USGGA_CraftItem::OnItemToCraftSelected(int IconID)
 {
 	CloseCraftingWindow();
 
-	FString ItemNameString = itemName.ToString();
-	ItemNameString.RemoveSpacesInline();
+	/*FString ItemNameString = itemName.ToString();
+	ItemNameString.RemoveSpacesInline();*/
 
 	FSG_GameplayAbilityTargetData* TargetData = new FSG_GameplayAbilityTargetData();
-	TargetData->OptionalNameProperty = FName(ItemNameString);
+	TargetData->OptionalNameProperty = PossibleProductItemNames[IconID];
 	
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.TargetData.Add(TargetData);
@@ -210,7 +180,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 
-	FName ProductItemName = FName("Null"); //= FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
+	FName ProductItemName = FName("None");
 	if (Payload.TargetData.IsValid(0))
 	{
 		FSG_GameplayAbilityTargetData* MyTargetData = static_cast<FSG_GameplayAbilityTargetData*>(Payload.TargetData.Data[0].Get());

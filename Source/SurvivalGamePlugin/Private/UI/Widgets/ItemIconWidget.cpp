@@ -10,12 +10,12 @@
 
 void UItemIconWidget::OnIconClicked()
 {
-	UWrapBox* WrapBox = Cast<UWrapBox>(this->GetParent());
-	if (IsValid(WrapBox))
+	UWrapBox* ParentWrapBox = Cast<UWrapBox>(this->GetParent());
+	if (IsValid(ParentWrapBox) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%d"), WrapBox->GetChildIndex(this));
+		UE_LOG(LogTemp, Error, TEXT("UItemIconWidget::OnIconClicked IsValid(ParentWrapBox) == false"));
 	}
-	IconClicked.Broadcast(TXT_ItemName->GetText());
+	IconClicked.Broadcast(ParentWrapBox->GetChildIndex(this));
 }
 
 void UItemIconWidget::NativeOnInitialized()

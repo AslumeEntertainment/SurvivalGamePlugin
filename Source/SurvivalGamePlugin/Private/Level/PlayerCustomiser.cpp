@@ -73,6 +73,12 @@ void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 
 	if (PC->IsLocalPlayerController() == true)
 	{
+		/*AInGameHUD* HUD = Cast<AInGameHUD>(PC->GetHUD());
+		if (IsValid(HUD))
+		{
+			HUD->RemoveInteractionOverlayWidget();
+		}*/
+
 		PC->Client_SetInputMode(EInputMode::UIOnly);
 		PC->bShowMouseCursor = true;
 		Client_ShowUI();
@@ -96,6 +102,8 @@ bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 
 void APlayerCustomiser::Client_StopInteracting_Implementation()
 {
+	Client_HideUI(true);
+
 	if (IsValid(InteractingPlayer) == true)
 	{
 		InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
@@ -105,7 +113,6 @@ void APlayerCustomiser::Client_StopInteracting_Implementation()
 		InteractingPlayer = nullptr;
 	}
 
-	Client_HideUI(true);
 	Server_StopInteracting();
 }
 
@@ -234,6 +241,11 @@ void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bS
 
 void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 {
+	AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
+	if (IsValid(HUD))
+	{
+		HUD->ShowInteractionOverlayWidget();
+	}
 	bUsesAnimation ? PlayerCustomisingWidget->CloseWidget() : PlayerCustomisingWidget->RemoveFromParent();
 }
 
@@ -242,6 +254,11 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	if (IsValid(GetParentActor()) && IsValid(InteractingPlayer))
 	{
 		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+		AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
+		if (IsValid(HUD))
+		{
+			HUD->RemoveInteractionOverlayWidget();
+		}
 	}
 	PlayerCustomisingWidget->AddToViewport();
 }
