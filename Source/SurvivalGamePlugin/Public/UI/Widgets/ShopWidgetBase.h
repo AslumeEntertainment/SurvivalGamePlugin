@@ -52,8 +52,9 @@ protected:
 public:
 	void NativeOnInitialized() override;
 
-	void FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint16> Costs);
-	void FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<uint16> HeroCosts, TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<uint16> ResourceCosts);
+	void FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint16> Costs);
+	void FillHeroes(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<FLinearColor> HeroColors, TArray<uint16> HeroCosts);
+	void FillResources(TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<FLinearColor> ResourceColors, TArray<uint16> ResourceCosts);
 	void SetMoney(uint32 Money);
 
 	FVoidDataTransferSignature OnExitButton;

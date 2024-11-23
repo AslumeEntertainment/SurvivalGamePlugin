@@ -273,6 +273,7 @@ void ALobbyManager::StopInteracting()
 
 	CampaignNames.Empty();
 	CampaignIcons.Empty();
+	CampaignColors.Empty();
 	CampaignCodes.Empty();
 
 }
@@ -326,6 +327,7 @@ void ALobbyManager::SetupSelectorWidget()
 			CampaignIDs.Add(CampaignRow->ID);
 			CampaignNames.Add(CampaignRow->UnitName);
 			CampaignIcons.Add(CampaignRow->UnitImage);
+			CampaignColors.Add(CampaignRow->UnitColor);
 			CampaignCodes.Add(CampaignRow->Code);
 			CampaignPlayerNums.Add(CampaignRow->DevPlayerNum);
 			CampaignProgressions.Add(SavedCampaign.Level);
@@ -348,7 +350,7 @@ void ALobbyManager::SetupSelectorWidget()
 		return;
 	}
 
-	CampaignChooserWidget->FillCampaigns(CampaignNames, CampaignIcons, CampaignPlayerNums);
+	CampaignChooserWidget->FillCampaigns(CampaignNames, CampaignIcons, CampaignColors, CampaignPlayerNums);
 
 	CampaignChooserWidget->OnCampaignSelected.AddDynamic(this, &ALobbyManager::CampaignSelected);
 	CampaignChooserWidget->OnExitButton.AddDynamic(CampaignChooserWidget, &UCampaignChooserWidgetBase::RemoveFromParent);

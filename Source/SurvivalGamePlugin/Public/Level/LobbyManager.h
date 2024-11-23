@@ -51,6 +51,8 @@ private:
 	UPROPERTY()
 	TArray<UTexture2D*> CampaignIcons;
 	UPROPERTY()
+	TArray<FLinearColor> CampaignColors;
+	UPROPERTY()
 	TArray<FString> CampaignCodes;
 	UPROPERTY()
 	TArray<uint8> CampaignPlayerNums;

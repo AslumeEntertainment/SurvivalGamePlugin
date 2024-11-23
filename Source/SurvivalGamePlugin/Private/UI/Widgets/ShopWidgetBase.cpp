@@ -16,7 +16,7 @@ void UShopWidgetBase::NativeOnInitialized()
 	BTN_Exit->OnClicked.AddDynamic(this, &UShopWidgetBase::OnExitButtonClicked);
 }
 
-void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint16> Costs)
+void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint16> Costs)
 {
 	UShopUnitWidgetBase* TempUnit = nullptr;
 
@@ -29,13 +29,13 @@ void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Imag
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillBoosters IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(Names[i], Images[i], Costs[i]);
+		TempUnit->Config(Names[i], Images[i], Colors[i], Costs[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnBoosterPackClicked);
 		WRPB_BoosterPack->AddChild(TempUnit);
 	}
 }
 
-void UShopWidgetBase::FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<uint16> HeroCosts, TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<uint16> ResourceCosts)
+void UShopWidgetBase::FillHeroes(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<FLinearColor> HeroColors, TArray<uint16> HeroCosts)
 {
 	UShopUnitWidgetBase* TempUnit = nullptr;
 
@@ -43,28 +43,31 @@ void UShopWidgetBase::FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> Her
 	for (int i = 0; i < HeroNames.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
-		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
 		if (IsValid(TempUnit) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillSells IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
+			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillHeroes IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(HeroNames[i], HeroImages[i], HeroCosts[i]);
+		TempUnit->Config(HeroNames[i], HeroImages[i], HeroColors[i], HeroCosts[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnHeroCardClicked);
 		WRPB_Heroes->AddChild(TempUnit);
 	}
+}
+
+void UShopWidgetBase::FillResources(TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<FLinearColor> ResourceColors, TArray<uint16> ResourceCosts)
+{
+	UShopUnitWidgetBase* TempUnit = nullptr;
 
 	WRPB_Resources->ClearChildren();
 	for (int i = 0; i < ResourceNames.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
-		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
 		if (IsValid(TempUnit) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillSells IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
+			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillResources IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(ResourceNames[i], ResourceImages[i], ResourceCosts[i]);
+		TempUnit->Config(ResourceNames[i], ResourceImages[i], ResourceColors[i], ResourceCosts[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnResourceCardClicked);
 		WRPB_Resources->AddChild(TempUnit);
 	}

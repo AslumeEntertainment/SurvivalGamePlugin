@@ -32,7 +32,7 @@ protected:
 	UTextBlock* TXT_Cost;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	uint16 InvisibleCost = 1;
+	uint16 InvisibleCost = 0;
 
 	UFUNCTION()
 	void OnBodyButtonClicked();
@@ -41,7 +41,7 @@ public:
 	void NativeOnInitialized() override;
 
 	UFUNCTION()
-	void Config(FText Name, UTexture2D* Image, uint16 Cost = 1);
+	void Config(FText Name, UTexture2D* Image, FLinearColor Color, uint16 Cost = 1);
 
 	FWidgetTransferSignature OnBodyButton;
 

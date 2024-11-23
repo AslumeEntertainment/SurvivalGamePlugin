@@ -30,6 +30,9 @@ struct FPersistentDataUnit : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UTexture2D* UnitImage = nullptr;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor UnitColor;
+
 };
 
 USTRUCT()
@@ -90,8 +93,6 @@ struct FResourseCardPersistentData : public FPersistentDataUnit
     UPROPERTY(EditAnywhere)
     uint16 Value = 10;
 
-    UPROPERTY(EditAnywhere)
-    FLinearColor CardColor;
 };
 
 USTRUCT(BlueprintType)

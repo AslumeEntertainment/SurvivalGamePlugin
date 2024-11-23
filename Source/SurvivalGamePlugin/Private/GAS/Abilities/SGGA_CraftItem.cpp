@@ -119,7 +119,7 @@ void USGGA_CraftItem::OpenCraftingWindow()
 			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
 			ItemIcon->SetItemImage(ResourceCardData->UnitImage);
 			ItemIcon->SetItemName(ResourceCardData->UnitName);
-			ItemIcon->SetItemColor(ResourceCardData->CardColor);
+			ItemIcon->SetItemColor(ResourceCardData->UnitColor);
 			ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
 
 			CraftingWindow->AddCraftingRecipe(ItemIcon);

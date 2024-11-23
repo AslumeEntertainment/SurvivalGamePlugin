@@ -37,6 +37,8 @@ private:
 	UPROPERTY()
 	TArray<UTexture2D*> BoosterIcons;
 	UPROPERTY()
+	TArray<FLinearColor> BoosterColors;
+	UPROPERTY()
 	TArray<uint16> BoosterCosts;
 
 	UPROPERTY()
@@ -44,12 +46,16 @@ private:
 	UPROPERTY()
 	TArray<UTexture2D*> HeroIcons;
 	UPROPERTY()
+	TArray<FLinearColor> HeroColors;
+	UPROPERTY()
 	TArray<uint16> HeroCosts;
 
 	UPROPERTY()
 	TArray<FText> ResourceNames;
 	UPROPERTY()
 	TArray<UTexture2D*> ResourceIcons;
+	UPROPERTY()
+	TArray<FLinearColor> ResourceColors;
 	UPROPERTY()
 	TArray<uint16> ResourceCosts;
 

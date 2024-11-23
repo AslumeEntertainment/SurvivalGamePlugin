@@ -14,7 +14,6 @@ AShopKeeper::AShopKeeper()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
 // Called when the game starts or when spawned
@@ -91,12 +90,15 @@ void AShopKeeper::StopInteracting()
 	BoosterIDs.Empty();
 	BoosterNames.Empty();
 	BoosterIcons.Empty();
+	BoosterColors.Empty();
 	BoosterCosts.Empty();
 	HeroNames.Empty();
 	HeroIcons.Empty();
+	HeroColors.Empty();
 	HeroCosts.Empty();
 	ResourceNames.Empty();
 	ResourceIcons.Empty();
+	ResourceColors.Empty();
 	ResourceCosts.Empty();
 }
 
@@ -283,13 +285,12 @@ void AShopKeeper::StartLootingAnimation(TArray<FDataTableRowHandle> Drops)
 	TArray<FText> DropNames;
 	TArray<UTexture2D*> DropImages;
 	FPersistentDataUnit* TempUnit;
-	for (FDataTableRowHandle Drop : Drops)
+	for (const FDataTableRowHandle Drop : Drops)
 	{
 		TempUnit = Drop.GetRow<FPersistentDataUnit>("Getting icon for drop");
 		DropNames.Add(TempUnit->UnitName);
 		DropImages.Add(TempUnit->UnitImage);
 	}
-
 
 	//start animation
 }
@@ -321,12 +322,15 @@ void AShopKeeper::FillShopWidget()
 	BoosterIDs.Empty();
 	BoosterNames.Empty();
 	BoosterIcons.Empty();
+	BoosterColors.Empty();
 	BoosterCosts.Empty();
 	HeroNames.Empty();
 	HeroIcons.Empty();
+	HeroColors.Empty();
 	HeroCosts.Empty();
 	ResourceNames.Empty();
 	ResourceIcons.Empty();
+	ResourceColors.Empty();
 	ResourceCosts.Empty();
 
 	TArray<FBoosterPackPersistentData*> Rows;
@@ -337,6 +341,7 @@ void AShopKeeper::FillShopWidget()
 		BoosterIDs.Add(Row->ID);
 		BoosterNames.Add(Row->UnitName);
 		BoosterIcons.Add(Row->UnitImage);
+		BoosterColors.Add(Row->UnitColor);
 		BoosterCosts.Add(Row->Cost);
 	}
 
@@ -363,11 +368,10 @@ void AShopKeeper::FillShopWidget()
 
 			HeroNames.Add(HeroRow->UnitName);
 			HeroIcons.Add(HeroRow->UnitImage);
+			HeroColors.Add(HeroRow->UnitColor);
 			HeroCosts.Add(*HeroCostPtr);
-
 		}
 	}
-
 
 	TArray<FResourseCardPersistentData*> ResourceDataRows;
 
@@ -375,19 +379,18 @@ void AShopKeeper::FillShopWidget()
 
 	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
 	{
-
 		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
 		{
-
 			if (SavedResource.ID != ResourceRow->ID) continue;
 
 			ResourceNames.Add(ResourceRow->UnitName);
 			ResourceIcons.Add(ResourceRow->UnitImage);
+			ResourceColors.Add(ResourceRow->UnitColor);
 			ResourceCosts.Add(ResourceRow->Value);
-
 		}
 	}
 
-	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterCosts);
-	ShopWidget->FillSells(HeroNames, HeroIcons, HeroCosts, ResourceNames, ResourceIcons, ResourceCosts);
+	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterColors, BoosterCosts);
+	ShopWidget->FillHeroes(HeroNames, HeroIcons, HeroColors, HeroCosts);
+	ShopWidget->FillResources(ResourceNames, ResourceIcons, ResourceColors, ResourceCosts);
 }

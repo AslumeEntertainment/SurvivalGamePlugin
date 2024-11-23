@@ -14,9 +14,9 @@ void UShopUnitWidgetBase::NativeOnInitialized()
 	BTN_Icon->OnClicked.AddDynamic(this, &UShopUnitWidgetBase::OnBodyButtonClicked);
 }
 
-void UShopUnitWidgetBase::Config(FText Name, UTexture2D* Image, uint16 Cost)
+void UShopUnitWidgetBase::Config(FText Name, UTexture2D* Image, FLinearColor Color, uint16 Cost)
 {
-
+	BTN_Icon->SetBackgroundColor(Color);
 	TXT_Name->SetText(Name);
 	TXT_Cost->SetText(FText::FromString(Cost == InvisibleCost ? "" : FString::FromInt(Cost)));
 	IMG_Icon->SetBrushFromTexture(Image);

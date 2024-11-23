@@ -16,7 +16,7 @@ void UCampaignChooserWidgetBase::NativeOnInitialized()
 	BTN_Exit->OnClicked.AddDynamic(this, &UCampaignChooserWidgetBase::OnExitButtonClicked);
 }
 
-void UCampaignChooserWidgetBase::FillCampaigns(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint8> PlayerNums)
+void UCampaignChooserWidgetBase::FillCampaigns(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint8> PlayerNums)
 {
 	UShopUnitWidgetBase* TempUnit = nullptr;
 
@@ -24,13 +24,13 @@ void UCampaignChooserWidgetBase::FillCampaigns(TArray<FText> Names, TArray<UText
 	for (int i = 0; i < Names.Num(); i++)
 	{
 		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
-		TempUnit = CreateWidget<UShopUnitWidgetBase>(this, ShopUnitWidgetClass);
+
 		if (IsValid(TempUnit) == false)
 		{
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillSells IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(Names[i], Images[i], PlayerNums[i]);
+		TempUnit->Config(Names[i], Images[i], Colors[i], PlayerNums[i]);
 		TempUnit->OnBodyButton.AddDynamic(this, &UCampaignChooserWidgetBase::OnCampaignClicked);
 		WRPB_Campaigns->AddChild(TempUnit);
 	}
