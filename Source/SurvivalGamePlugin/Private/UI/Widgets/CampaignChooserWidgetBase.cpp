@@ -30,8 +30,8 @@ void UCampaignChooserWidgetBase::FillCampaigns(TArray<FText> Names, TArray<UText
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillSells IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(Names[i], Images[i], Colors[i], PlayerNums[i]);
-		TempUnit->OnBodyButton.AddDynamic(this, &UCampaignChooserWidgetBase::OnCampaignClicked);
+		TempUnit->ConfigShopUnit(Names[i], Images[i], Colors[i], PlayerNums[i]);
+		TempUnit->IconClicked.AddDynamic(this, &UCampaignChooserWidgetBase::OnCampaignClicked);
 		WRPB_Campaigns->AddChild(TempUnit);
 	}
 }
@@ -58,8 +58,7 @@ void UCampaignChooserWidgetBase::OnExitButtonClicked()
 	OnExitButton.Broadcast();
 }
 
-void UCampaignChooserWidgetBase::OnCampaignClicked(UUserWidget* Widget)
+void UCampaignChooserWidgetBase::OnCampaignClicked(int CampaignWidgetID)
 {
-
-	OnCampaignSelected.Broadcast(WRPB_Campaigns->GetChildIndex(Widget));
+	OnCampaignSelected.Broadcast(CampaignWidgetID);
 }

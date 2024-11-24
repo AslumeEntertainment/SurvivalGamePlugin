@@ -7,8 +7,9 @@
 #include "Headers/GeneralDelegates.h"
 #include "ItemIconWidget.generated.h"
 
-class UButton;
 class UImage;
+class UButton;
+class USizeBox;
 class UTextBlock;
 
 UCLASS()
@@ -30,6 +31,9 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextBlock* TXT_ItemName;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	USizeBox* UnitSizeBox;
+
 public:
 
 	virtual void NativeOnInitialized() override;
@@ -42,6 +46,12 @@ public:
 
 	UFUNCTION()
 	void SetItemColor(FLinearColor Color);
+
+	UFUNCTION()
+	void SetUnitScale(float Scale);
+
+	UFUNCTION()
+	void ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Color, float Scale);
 
 	FIntegerTransferSignature IconClicked;
 

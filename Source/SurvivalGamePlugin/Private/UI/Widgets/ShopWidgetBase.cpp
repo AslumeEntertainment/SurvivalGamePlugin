@@ -29,8 +29,8 @@ void UShopWidgetBase::FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Imag
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillBoosters IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(Names[i], Images[i], Colors[i], Costs[i]);
-		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnBoosterPackClicked);
+		TempUnit->ConfigShopUnit(Names[i], Images[i], Colors[i], Costs[i], BoosterPackWidgetScale);
+		TempUnit->IconClicked.AddDynamic(this, &UShopWidgetBase::OnBoosterPackClicked);
 		WRPB_BoosterPack->AddChild(TempUnit);
 	}
 }
@@ -48,8 +48,8 @@ void UShopWidgetBase::FillHeroes(TArray<FText> HeroNames, TArray<UTexture2D*> He
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillHeroes IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(HeroNames[i], HeroImages[i], HeroColors[i], HeroCosts[i]);
-		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnHeroCardClicked);
+		TempUnit->ConfigShopUnit(HeroNames[i], HeroImages[i], HeroColors[i], HeroCosts[i], HeroCardWidgetScale);
+		TempUnit->IconClicked.AddDynamic(this, &UShopWidgetBase::OnHeroCardClicked);
 		WRPB_Heroes->AddChild(TempUnit);
 	}
 }
@@ -67,8 +67,8 @@ void UShopWidgetBase::FillResources(TArray<FText> ResourceNames, TArray<UTexture
 			UE_LOG(LogTemp, Error, TEXT("UShopWidgetBase::FillResources IsValid(TempUnit) == false - Check ShopUnitWidgetClass in %s"), *GetClass()->GetName());
 			return;
 		}
-		TempUnit->Config(ResourceNames[i], ResourceImages[i], ResourceColors[i], ResourceCosts[i]);
-		TempUnit->OnBodyButton.AddDynamic(this, &UShopWidgetBase::OnResourceCardClicked);
+		TempUnit->ConfigShopUnit(ResourceNames[i], ResourceImages[i], ResourceColors[i], ResourceCosts[i], ResourceCardWidgetScale);
+		TempUnit->IconClicked.AddDynamic(this, &UShopWidgetBase::OnResourceCardClicked);
 		WRPB_Resources->AddChild(TempUnit);
 	}
 }
@@ -83,17 +83,17 @@ void UShopWidgetBase::OnExitButtonClicked()
 	OnExitButton.Broadcast();
 }
 
-void UShopWidgetBase::OnBoosterPackClicked(UUserWidget* Widget)
+void UShopWidgetBase::OnBoosterPackClicked(int WidgetIndex)
 {
-	OnPackSelected.Broadcast(WRPB_BoosterPack->GetChildIndex(Widget));
+	OnPackSelected.Broadcast(WidgetIndex);
 }
 
-void UShopWidgetBase::OnHeroCardClicked(UUserWidget* Widget)
+void UShopWidgetBase::OnHeroCardClicked(int WidgetIndex)
 {
-	OnHeroCardSelected.Broadcast(WRPB_Heroes->GetChildIndex(Widget));
+	OnHeroCardSelected.Broadcast(WidgetIndex);
 }
 
-void UShopWidgetBase::OnResourceCardClicked(UUserWidget* Widget)
+void UShopWidgetBase::OnResourceCardClicked(int WidgetIndex)
 {
-	OnResourceCardSelected.Broadcast(WRPB_Resources->GetChildIndex(Widget));
+	OnResourceCardSelected.Broadcast(WidgetIndex);
 }

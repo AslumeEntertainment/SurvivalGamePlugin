@@ -31,7 +31,7 @@ protected:
 	void OnExitButtonClicked();
 
 	UFUNCTION()
-	void OnCampaignClicked(UUserWidget* Widget);
+	void OnCampaignClicked(int CampaignWidgetID);
 
 public:
 	void NativeOnInitialized() override;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/Widgets/ItemIconWidget.h"
 
 #include "Headers/GeneralDelegates.h"
 
@@ -14,19 +14,11 @@ class UTextBlock;
 class UImage;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UShopUnitWidgetBase : public UUserWidget
+class SURVIVALGAMEPLUGIN_API UShopUnitWidgetBase : public UItemIconWidget
 {
 	GENERATED_BODY()
 	
 protected:
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UButton* BTN_Icon;
-
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UImage* IMG_Icon;
-
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UTextBlock* TXT_Name;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextBlock* TXT_Cost;
@@ -34,15 +26,12 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	uint16 InvisibleCost = 0;
 
-	UFUNCTION()
-	void OnBodyButtonClicked();
-
-public:
-	void NativeOnInitialized() override;
+public: 
 
 	UFUNCTION()
-	void Config(FText Name, UTexture2D* Image, FLinearColor Color, uint16 Cost = 1);
+	void SetUnitCost(uint16 Cost = 1);
 
-	FWidgetTransferSignature OnBodyButton;
+	UFUNCTION()
+	void ConfigShopUnit(FText Name, UTexture2D* Image, FLinearColor Color, uint16 Cost = 1, float Scale = 1);
 
 };

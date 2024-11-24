@@ -4,6 +4,7 @@
 #include "UI/Widgets/ItemIconWidget.h"
 
 #include "Components/TextBlock.h"
+#include "Components/SizeBox.h"
 #include "Components/WrapBox.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -37,4 +38,19 @@ void UItemIconWidget::SetItemImage(UTexture2D* ItemImage)
 void UItemIconWidget::SetItemColor(FLinearColor Color)
 {
 	BTN_Icon->SetBackgroundColor(Color);
+}
+
+void UItemIconWidget::SetUnitScale(float Scale)
+{
+	UnitSizeBox->WidthOverride *= Scale;
+	UnitSizeBox->HeightOverride *= Scale;
+}
+
+void UItemIconWidget::ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Color, float Scale)
+{
+	TXT_ItemName->SetText(Name);
+	IMG_ItemIcon->SetBrushFromTexture(Image);
+	BTN_Icon->SetBackgroundColor(Color);
+	UnitSizeBox->WidthOverride *= Scale;
+	UnitSizeBox->HeightOverride *= Scale;
 }
