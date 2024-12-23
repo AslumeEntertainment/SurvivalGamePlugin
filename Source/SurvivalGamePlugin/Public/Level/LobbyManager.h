@@ -16,6 +16,7 @@ class UDataTable;
 class ASG_PlayerController;
 class UCampaignChooserWidgetBase;
 class ULobbyManagingWidgetBase;
+class UWarningWidgetBase;
 
 struct PerCampaignData
 {
@@ -43,6 +44,8 @@ private:
 	UCampaignChooserWidgetBase* CampaignChooserWidget;
 	UPROPERTY()
 	ULobbyManagingWidgetBase* LobbyManagingWidget;
+	UPROPERTY()
+	UWarningWidgetBase* LeavingGameWarningWidget = nullptr;
 
 	UPROPERTY()
 	TArray<uint16> CampaignIDs;
@@ -72,6 +75,8 @@ private:
 	UPROPERTY()
 	AGameManager* ActiveGameManager = nullptr;
 
+	UFUNCTION()
+	void ShowLeavingGameWarning();
 
 protected:
 	// Called when the game starts or when spawned
@@ -88,6 +93,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<ULobbyManagingWidgetBase> LobbyManagingWidgetBaseClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UWarningWidgetBase> LeavingGameWarningWidgetClass;
 
 	UPROPERTY(EditAnywhere, Category = "GameManaging")
 	TMap<uint8, AGameManager*> TablesByPlayerNum;

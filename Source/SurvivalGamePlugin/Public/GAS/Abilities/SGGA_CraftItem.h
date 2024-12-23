@@ -7,7 +7,7 @@
 #include "Headers/ItemDataStruct.h"
 #include "SGGA_CraftItem.generated.h"
 
-class UItemIconWidget;
+class UUnitIconWidget;
 class UCraftingWindowWidget;
 class UAbilityTask_WaitInputRelease;
 class AInGameCharacter;
@@ -47,7 +47,7 @@ protected:
 	FGameplayTag CraftingProcessContinueTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
-	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
+	TSubclassOf<UUnitIconWidget> ItemIconWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;

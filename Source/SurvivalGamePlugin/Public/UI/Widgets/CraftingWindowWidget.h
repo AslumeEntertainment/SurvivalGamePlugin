@@ -8,7 +8,7 @@
 
 class UWrapBox;
 class UWidgetSwitcher;
-class UItemIconWidget;
+class UUnitIconWidget;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCraftingWindowWidget : public UUserWidget
@@ -26,7 +26,7 @@ protected:
 public:
 
 	UFUNCTION()
-	void AddCraftingRecipe(UItemIconWidget* ItemIconWidget);
+	void AddCraftingRecipe(UUnitIconWidget* ItemIconWidget);
 
 	UFUNCTION()
 	void ClearRecipes();

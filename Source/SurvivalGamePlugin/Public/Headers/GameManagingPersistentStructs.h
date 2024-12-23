@@ -31,7 +31,7 @@ struct FPersistentDataUnit : public FTableRowBase
     UTexture2D* UnitImage = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FLinearColor UnitColor;
+    FLinearColor UnitColor = FLinearColor();
 
 };
 

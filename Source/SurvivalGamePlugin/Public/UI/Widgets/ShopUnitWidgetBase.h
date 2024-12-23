@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/Widgets/ItemIconWidget.h"
+#include "UI/Widgets/UnitIconWidget.h"
 
 #include "Headers/GeneralDelegates.h"
 
@@ -14,7 +14,7 @@ class UTextBlock;
 class UImage;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UShopUnitWidgetBase : public UItemIconWidget
+class SURVIVALGAMEPLUGIN_API UShopUnitWidgetBase : public UUnitIconWidget
 {
 	GENERATED_BODY()
 	

@@ -6,9 +6,9 @@
 #include "Components/WrapBox.h"
 #include "Components/WidgetSwitcher.h"
 
-#include "UI/Widgets//ItemIconWidget.h"
+#include "UI/Widgets/UnitIconWidget.h"
 
-void UCraftingWindowWidget::AddCraftingRecipe(UItemIconWidget* ItemIconWidget)
+void UCraftingWindowWidget::AddCraftingRecipe(UUnitIconWidget* ItemIconWidget)
 {
 	CraftingRecipeWrapBox->AddChildToWrapBox(ItemIconWidget);
 }

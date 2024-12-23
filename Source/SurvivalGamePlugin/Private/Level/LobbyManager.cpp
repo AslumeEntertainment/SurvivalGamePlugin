@@ -10,10 +10,11 @@
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
-#include "Level/GameManager.h"
-#include "Headers/GameManagingStructs.h"
-#include "UI/Widgets/LobbyManagingWidgetBase.h"
 #include "UI/Widgets/CampaignChooserWidgetBase.h"
+#include "UI/Widgets/LobbyManagingWidgetBase.h"
+#include "UI/Widgets/WarningWidgetBase.h"
+#include "Headers/GameManagingStructs.h"
+#include "Level/GameManager.h"
 
 // Sets default values
 ALobbyManager::ALobbyManager()
@@ -23,12 +24,16 @@ ALobbyManager::ALobbyManager()
 
 }
 
-// Called when the game starts or when spawned
 void ALobbyManager::BeginPlay()
 {
 	Super::BeginPlay();
 
 	SetupManagingWidget();
+}
+
+void ALobbyManager::ShowLeavingGameWarning()
+{
+	LeavingGameWarningWidget->AddToViewport();
 }
 
 void ALobbyManager::OpenPlaySpace()
@@ -280,7 +285,6 @@ void ALobbyManager::StopInteracting()
 
 void ALobbyManager::SetupManagingWidget()
 {
-
 	UWorld* World = GetWorld();
 	if (!IsValid(World))
 	{
@@ -289,6 +293,7 @@ void ALobbyManager::SetupManagingWidget()
 	}
 
 	LobbyManagingWidget = CreateWidget<ULobbyManagingWidgetBase>(World, LobbyManagingWidgetBaseClass);
+	LeavingGameWarningWidget = CreateWidget<UWarningWidgetBase>(World, LeavingGameWarningWidgetClass);
 
 	if (IsValid(LobbyManagingWidget) == false)
 	{
@@ -302,10 +307,13 @@ void ALobbyManager::SetupManagingWidget()
 	LobbyManagingWidget->OnStartCampaignButton.AddDynamic(this, &ALobbyManager::OpenPlaySpace);
 	LobbyManagingWidget->OnStopCampaignButton.AddDynamic(this, &ALobbyManager::ClosePlaySpace);
 	LobbyManagingWidget->OnExitButton.AddDynamic(this, &ALobbyManager::StopInteracting);
-	LobbyManagingWidget->OnLeaveButton.AddDynamic(this, &ALobbyManager::LeaveLobby);
+	LobbyManagingWidget->OnLeaveButton.AddDynamic(this, &ALobbyManager::ShowLeavingGameWarning);
 	LobbyManagingWidget->OnSupervisedChanged.AddDynamic(this, &ALobbyManager::SetSupervision);
 	LobbyManagingWidget->OnActiveGameChanged.AddDynamic(this, &ALobbyManager::SetCurrentGame);
 
+	LeavingGameWarningWidget->OnConfirmButtonClicked.AddDynamic(this, &ALobbyManager::LeaveLobby);
+	LeavingGameWarningWidget->OnCancelButtonClicked.AddDynamic(LeavingGameWarningWidget, &UWarningWidgetBase::RemoveFromParent);
+	LeavingGameWarningWidget->ConfigWarning(FText::FromString("Are you sure you want to leave the game?"));
 }
 
 void ALobbyManager::SetupSelectorWidget()

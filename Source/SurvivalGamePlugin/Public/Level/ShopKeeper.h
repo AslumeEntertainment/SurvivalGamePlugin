@@ -9,7 +9,7 @@
 
 class ASG_PlayerController;
 class UShopWidgetBase;
-class UShopNotificationWidgetBase;
+class UWarningWidgetBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AShopKeeper : public AActor, public IInteractableInterface
@@ -28,7 +28,7 @@ private:
 	UPROPERTY()
 	UShopWidgetBase* ShopWidget = nullptr;
 	UPROPERTY()
-	UShopNotificationWidgetBase* NotificationWidget = nullptr;
+	UWarningWidgetBase* ShopWarningWidget = nullptr;
 
 	UPROPERTY()
 	TArray<uint16> BoosterIDs;
@@ -90,7 +90,7 @@ private:
 	void StartLootingAnimation(TArray<FDataTableRowHandle> Drops);
 
 	UFUNCTION()
-	void ShowNotification(bool CanAfford, FText Action, FText Object, uint16 Cost);
+	void ShowNotification(FText Message, bool CanAfford);
 
 	UFUNCTION()
 	void HideNotification();
@@ -115,13 +115,16 @@ protected:
 	TSubclassOf<UShopWidgetBase> ShopWidgetClass;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<UShopNotificationWidgetBase> ShopNotificationWidgetClass;
+	TSubclassOf<UWarningWidgetBase> ShopWarningWidgetClass;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
-	FText BuyingAction;
+	FString WarningMessageBeginning;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
-	FText SellingAction;
+	FString BuyingAction;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	FString SellingAction;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	uint16 MaxRNGRange = 10000;

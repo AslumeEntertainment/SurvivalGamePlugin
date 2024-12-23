@@ -14,7 +14,7 @@
 #include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "UI/Widgets/CraftingWindowWidget.h"
-#include "UI/Widgets/ItemIconWidget.h"
+#include "UI/Widgets/UnitIconWidget.h"
 #include "Headers/GameManagingPersistentStructs.h"
 #include "Components/EquipmentComponent.h"
 #include "Interactables/Items/ItemBase.h"
@@ -28,18 +28,21 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	OpenCraftingWindow();
@@ -106,25 +109,26 @@ void USGGA_CraftItem::OpenCraftingWindow()
 	TArray<FItemCraftingDataStruct> CraftingRecipes = MainItem->ItemData.CraftableItems;
 	for (FItemCraftingDataStruct CraftingRecipe : CraftingRecipes)
 	{
-		if (CraftingRecipe.IngredientItemID == SecondaryItem->GetItemDataRowName())
+		if (CraftingRecipe.IngredientItemID == SecondaryItem->GetItemDataRowName() == false)
 		{
-			const FResourseCardPersistentData* ResourceCardData = CraftingRecipe.ProductItemResourceCardData.GetRow<FResourseCardPersistentData>("");
-			if (ResourceCardData == nullptr)
-			{
-				continue;
-			}
-
-			PossibleProductItemNames.Add(CraftingRecipe.ProductItemResourceCardData.RowName);
-
-			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(ResourceCardData->UnitImage);
-			ItemIcon->SetItemName(ResourceCardData->UnitName);
-			ItemIcon->SetItemColor(ResourceCardData->UnitColor);
-			ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
-
-			CraftingWindow->AddCraftingRecipe(ItemIcon);
-			CraftingWindow->SetWidgetSwitcherActiveIndex(1);
+			continue;
 		}
+		const FResourseCardPersistentData* ResourceCardData = CraftingRecipe.ProductItemResourceCardData.GetRow<FResourseCardPersistentData>("");
+		if (ResourceCardData == nullptr)
+		{
+			continue;
+		}
+
+		PossibleProductItemNames.Add(CraftingRecipe.ProductItemResourceCardData.RowName);
+
+		UUnitIconWidget* ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
+		ItemIcon->SetItemImage(ResourceCardData->UnitImage);
+		ItemIcon->SetItemName(ResourceCardData->UnitName);
+		ItemIcon->SetItemColor(ResourceCardData->UnitColor);
+		ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
+
+		CraftingWindow->AddCraftingRecipe(ItemIcon);
+		CraftingWindow->SetWidgetSwitcherActiveIndex(1);
 	}
 }
 
@@ -152,9 +156,6 @@ void USGGA_CraftItem::OnItemToCraftSelected(int IconID)
 {
 	CloseCraftingWindow();
 
-	/*FString ItemNameString = itemName.ToString();
-	ItemNameString.RemoveSpacesInline();*/
-
 	FSG_GameplayAbilityTargetData* TargetData = new FSG_GameplayAbilityTargetData();
 	TargetData->OptionalNameProperty = PossibleProductItemNames[IconID];
 	
@@ -178,6 +179,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
 	FName ProductItemName = FName("None");
@@ -195,6 +197,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility ProductItemData == nullptr"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
 	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
@@ -218,6 +221,7 @@ void USGGA_CraftItem::OnAnimMontageCompleted()
 	
 	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	return;
 }
 
 void USGGA_CraftItem::OnAnimMontageCanceled()
@@ -226,6 +230,7 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 
 	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	return;
 }
 
 void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
@@ -286,5 +291,6 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));
+	return;
 }
 
