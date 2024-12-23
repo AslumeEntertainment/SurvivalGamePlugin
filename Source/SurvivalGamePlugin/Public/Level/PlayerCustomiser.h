@@ -103,7 +103,7 @@ public:
 	void Client_SetInGameOverlayVisibility(bool bShouldAddToViewport);
 
 	UFUNCTION(Client, Reliable)
-	void Client_HideUI();
+	void Client_HideUI(bool bUsesAnimation = false);
 
 	UFUNCTION(Client, Reliable)
 	void Client_ShowUI();

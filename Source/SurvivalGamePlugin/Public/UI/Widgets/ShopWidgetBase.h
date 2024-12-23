@@ -19,6 +19,7 @@ class SURVIVALGAMEPLUGIN_API UShopWidgetBase : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UButton* BTN_Exit;
 
@@ -34,26 +35,37 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWrapBox* WRPB_Resources;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "UnitWidgets|Scale")
+	float BoosterPackWidgetScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "UnitWidgets|Scale")
+	float HeroCardWidgetScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "UnitWidgets|Scale")
+	float ResourceCardWidgetScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "UnitWidgets|Classes")
 	TSubclassOf<UShopUnitWidgetBase> ShopUnitWidgetClass;
 
 	UFUNCTION()
 	void OnExitButtonClicked();
 
 	UFUNCTION()
-	void OnBoosterPackClicked(UUserWidget* Widget);
+	void OnBoosterPackClicked(int WidgetIndex);
 
 	UFUNCTION()
-	void OnHeroCardClicked(UUserWidget* Widget);
+	void OnHeroCardClicked(int WidgetIndex);
 
 	UFUNCTION()
-	void OnResourceCardClicked(UUserWidget* Widget);
+	void OnResourceCardClicked(int WidgetIndex);
 
 public:
+
 	void NativeOnInitialized() override;
 
-	void FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint16> Costs);
-	void FillSells(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<uint16> HeroCosts, TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<uint16> ResourceCosts);
+	void FillBoosters(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint16> Costs);
+	void FillHeroes(TArray<FText> HeroNames, TArray<UTexture2D*> HeroImages, TArray<FLinearColor> HeroColors, TArray<uint16> HeroCosts);
+	void FillResources(TArray<FText> ResourceNames, TArray<UTexture2D*> ResourceImages, TArray<FLinearColor> ResourceColors, TArray<uint16> ResourceCosts);
 	void SetMoney(uint32 Money);
 
 	FVoidDataTransferSignature OnExitButton;

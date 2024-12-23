@@ -31,13 +31,13 @@ protected:
 	void OnExitButtonClicked();
 
 	UFUNCTION()
-	void OnCampaignClicked(UUserWidget* Widget);
+	void OnCampaignClicked(int CampaignWidgetID);
 
 public:
 	void NativeOnInitialized() override;
 
 	UFUNCTION()
-	void FillCampaigns(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<uint8> PlayerNums);
+	void FillCampaigns(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor>Colors, TArray<uint8> PlayerNums);
 
 	UFUNCTION()
 	void Show();

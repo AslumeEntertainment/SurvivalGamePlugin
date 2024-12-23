@@ -24,14 +24,14 @@ void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	IInteractableInterface* FocusedInteractable = Cast<IInteractableInterface>(Player->GetFocusedInteractableObject());
 	if (FocusedInteractable == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility FocusedInteractable == nullptr"));
+		//UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility FocusedInteractable == nullptr"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 
 	if (FocusedInteractable->bCanInteract(Player->GetController()) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot interact!"));
+		UE_LOG(LogTemp, Warning, TEXT("%s cannot interact with current focuesd interactable!"), *Player->GetName());
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}

@@ -13,45 +13,14 @@
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_GameplayAbilityTargetData.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/EquipmentComponent.h"
 #include "UI/Widgets/CraftingWindowWidget.h"
-#include "UI/Widgets/ItemIconWidget.h"
+#include "UI/Widgets/UnitIconWidget.h"
+#include "Headers/GameManagingPersistentStructs.h"
+#include "Components/EquipmentComponent.h"
 #include "Interactables/Items/ItemBase.h"
 #include "Characters/InGameCharacter.h"
 #include "Animation/SG_AnimInstance.h"
 
-
-bool USGGA_CraftItem::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const
-{
-	Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
-	
-	AInGameCharacter* PlayerRef = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
-	if (IsValid(PlayerRef) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CanActivateAbility IsValid(HumanPlayer) == false"));
-		return false;
-	}
-	UEquipmentComponent* EquipmentComponent = PlayerRef->GetEquipmentComponent();
-	if (IsValid(EquipmentComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_UnequipItem::ActivateAbility IsValid(EquipmentComp) == false"));
-		return false;
-	}
-	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) == false || 
-		IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player needs to have an item in both hands!"));
-		return false;
-	}
-	if (EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->ItemData.bCanCraftWithItem(EquipmentComponent->
-		GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem: Player cannot craft anything with their current items!"));
-		return false;
-	}
-
-	return true;
-}
 
 void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -59,18 +28,21 @@ void USGGA_CraftItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	OpenCraftingWindow();
@@ -119,21 +91,45 @@ void USGGA_CraftItem::OpenCraftingWindow()
 		return;
 	}
 
-	for (FItemCraftingDataStruct CraftingRecipe : EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.CraftableItems)
-	{
-		if (CraftingRecipe.IngredientItemID == EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetItemDataRowName())
-		{
-			UItemIconWidget* ItemIcon = CreateWidget<UItemIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(CraftingRecipe.ProductItemImage);
-			ItemIcon->SetItemName(CraftingRecipe.ProductItemName);
-			ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
-			CraftingWindow->AddCraftingRecipe(ItemIcon);
-		}
-	}
-
 	CraftingWindow->AddToViewport();
 	PlayerCont->SetInputMode(FInputModeGameAndUI());
 	PlayerCont->bShowMouseCursor = true;
+
+	AItemBase* MainItem = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag());
+	if (IsValid(MainItem) == false)
+	{
+		return;
+	}
+	AItemBase* SecondaryItem = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag());
+	if (IsValid(SecondaryItem) == false)
+	{
+		return;
+	}
+
+	TArray<FItemCraftingDataStruct> CraftingRecipes = MainItem->ItemData.CraftableItems;
+	for (FItemCraftingDataStruct CraftingRecipe : CraftingRecipes)
+	{
+		if (CraftingRecipe.IngredientItemID == SecondaryItem->GetItemDataRowName() == false)
+		{
+			continue;
+		}
+		const FResourseCardPersistentData* ResourceCardData = CraftingRecipe.ProductItemResourceCardData.GetRow<FResourseCardPersistentData>("");
+		if (ResourceCardData == nullptr)
+		{
+			continue;
+		}
+
+		PossibleProductItemNames.Add(CraftingRecipe.ProductItemResourceCardData.RowName);
+
+		UUnitIconWidget* ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
+		ItemIcon->SetItemImage(ResourceCardData->UnitImage);
+		ItemIcon->SetItemName(ResourceCardData->UnitName);
+		ItemIcon->SetItemColor(ResourceCardData->UnitColor);
+		ItemIcon->IconClicked.AddDynamic(this, &USGGA_CraftItem::OnItemToCraftSelected);
+
+		CraftingWindow->AddCraftingRecipe(ItemIcon);
+		CraftingWindow->SetWidgetSwitcherActiveIndex(1);
+	}
 }
 
 void USGGA_CraftItem::CloseCraftingWindow()
@@ -156,16 +152,12 @@ void USGGA_CraftItem::CancelCrafting(float TimeHeld)
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
-void USGGA_CraftItem::OnItemToCraftSelected(FText itemName)
+void USGGA_CraftItem::OnItemToCraftSelected(int IconID)
 {
 	CloseCraftingWindow();
 
-	FString ItemNameString = /*FString(TEXT("Craft.")) +*/ itemName.ToString();
-	ItemNameString.RemoveSpacesInline();
-	//FGameplayTag ProductName = FGameplayTag::RequestGameplayTag(FName(ItemNameString));
-
 	FSG_GameplayAbilityTargetData* TargetData = new FSG_GameplayAbilityTargetData();
-	TargetData->OptionalNameProperty = FName(ItemNameString);
+	TargetData->OptionalNameProperty = PossibleProductItemNames[IconID];
 	
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.TargetData.Add(TargetData);
@@ -187,9 +179,10 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::StartCrafting IsValid(Player->MainHandItem || Player->SecondaryHandItem) == false"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
-	FName ProductItemName = FName("Null"); //= FName(Payload.EventTag.ToString().RightChop(6)); //Removing the "Craft." prefix
+	FName ProductItemName = FName("None");
 	if (Payload.TargetData.IsValid(0))
 	{
 		FSG_GameplayAbilityTargetData* MyTargetData = static_cast<FSG_GameplayAbilityTargetData*>(Payload.TargetData.Data[0].Get());
@@ -204,6 +197,7 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility ProductItemData == nullptr"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
 	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
@@ -227,6 +221,7 @@ void USGGA_CraftItem::OnAnimMontageCompleted()
 	
 	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	return;
 }
 
 void USGGA_CraftItem::OnAnimMontageCanceled()
@@ -235,6 +230,7 @@ void USGGA_CraftItem::OnAnimMontageCanceled()
 
 	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	return;
 }
 
 void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
@@ -287,10 +283,14 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 		{
 			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), ProductItem);
 		}
-		ProductItem->OnItemEquiped(Player, ProductItemSocketName);
+		if (Player->GetMesh()->DoesSocketExist(ProductItemSocketName))
+		{
+			ProductItem->OnItemEquiped(Player, ProductItemSocketName);
+		}
 		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));
+	return;
 }
 

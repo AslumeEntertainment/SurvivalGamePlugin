@@ -140,7 +140,7 @@ void UHittableComponent::OnHittableDestroyed()
 
 	ASC->CancelAllAbilities();
 	ASC->RemoveAllGameplayCues();
-	ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Explode"));
+	ASC->ExecuteGameplayCue(OnDestroyedGameplayCueTag);
 
 	if (GetOwner()->HasAuthority())
 	{

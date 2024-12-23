@@ -30,6 +30,9 @@ struct FPersistentDataUnit : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UTexture2D* UnitImage = nullptr;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FLinearColor UnitColor = FLinearColor();
+
 };
 
 USTRUCT()
@@ -71,6 +74,7 @@ struct FBoosterPackPersistentData : public FPersistentDataUnit
     TArray<FBoosterPackHelperStruct> PossibleCampaigns;
 
     UPROPERTY(EditAnywhere)
+
     uint8 NumberOfBiomes = 0;
 
     UPROPERTY(EditAnywhere)

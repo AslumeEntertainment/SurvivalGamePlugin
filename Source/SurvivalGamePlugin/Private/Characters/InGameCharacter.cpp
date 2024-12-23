@@ -48,6 +48,23 @@ void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 	{
 		Item->Destroy();
 	}
+
+	if (IsLocallyControlled())
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (IsValid(PlayerController) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(PlayerController) == false"));
+			return;
+		}
+		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
+		if (IsValid(HUD) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(HUD) == false"));
+			return;
+		}
+		HUD->SetInteractionOverlayBindings(this);
+	}
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -68,9 +85,21 @@ void AInGameCharacter::BeginPlay()
 		EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 	}
 
-	if (IsLocallyControlled() == false)
+	if (IsLocallyControlled())
 	{
-		return;
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (IsValid(PlayerController) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(PlayerController) == false"));
+			return;
+		}
+		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
+		if (IsValid(HUD) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(HUD) == false"));
+			return;
+		}
+		OnCharacterDeath.AddDynamic(HUD, &AInGameHUD::RemoveInteractionOverlayWidget);
 	}
 }
 

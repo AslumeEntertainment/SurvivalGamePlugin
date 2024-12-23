@@ -5,8 +5,8 @@
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
+#include "UI/Widgets/WarningWidgetBase.h"
 #include "UI/Widgets/ShopWidgetBase.h"
-#include "UI/Widgets/ShopNotificationWidgetBase.h"
 #include "Headers/GameManagingPersistentStructs.h"
 
 // Sets default values
@@ -14,7 +14,6 @@ AShopKeeper::AShopKeeper()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
 // Called when the game starts or when spawned
@@ -30,7 +29,7 @@ void AShopKeeper::BeginPlay()
 	}
 
 	ShopWidget = CreateWidget<UShopWidgetBase>(World, ShopWidgetClass);
-	NotificationWidget = CreateWidget<UShopNotificationWidgetBase>(World, ShopNotificationWidgetClass);
+	ShopWarningWidget = CreateWidget<UWarningWidgetBase>(World, ShopWarningWidgetClass);
 
 	if (IsValid(ShopWidget) == false)
 	{
@@ -38,7 +37,7 @@ void AShopKeeper::BeginPlay()
 		return;
 	}
 
-	if (IsValid(NotificationWidget) == false)
+	if (IsValid(ShopWarningWidget) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AShopKeeper::BeginPlay IsValid(NotificationWidget) == false"));
 		return;
@@ -49,7 +48,7 @@ void AShopKeeper::BeginPlay()
 	ShopWidget->OnHeroCardSelected.AddDynamic(this, &AShopKeeper::HeroCardSelected);
 	ShopWidget->OnResourceCardSelected.AddDynamic(this, &AShopKeeper::ResourceCardSelected);
 
-	NotificationWidget->OnCancelButton.AddDynamic(this, &AShopKeeper::HideNotification);
+	ShopWarningWidget->OnCancelButtonClicked.AddDynamic(this, &AShopKeeper::HideNotification);
 }
 
 void AShopKeeper::InteractRequest(AController* InteractingCharacter)
@@ -66,6 +65,7 @@ void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 	}
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
+	InteractingPlayer->SetShowMouseCursor(true);
 
 	UpdateWidgets();
 
@@ -81,6 +81,7 @@ void AShopKeeper::StopInteracting()
 {
 	InteractingPlayer->OnSaveUpdated.RemoveAll(this);
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
+	InteractingPlayer->SetShowMouseCursor(false);
 	ShopWidget->RemoveFromParent();
 	InteractingPlayer = nullptr;
 
@@ -89,12 +90,15 @@ void AShopKeeper::StopInteracting()
 	BoosterIDs.Empty();
 	BoosterNames.Empty();
 	BoosterIcons.Empty();
+	BoosterColors.Empty();
 	BoosterCosts.Empty();
 	HeroNames.Empty();
 	HeroIcons.Empty();
+	HeroColors.Empty();
 	HeroCosts.Empty();
 	ResourceNames.Empty();
 	ResourceIcons.Empty();
+	ResourceColors.Empty();
 	ResourceCosts.Empty();
 }
 
@@ -102,11 +106,13 @@ void AShopKeeper::BoosterPackSelected(int Index)
 {
 	ActiveIndex = Index;
 
-	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::BuyBoosterPack);
+	ShopWarningWidget->OnConfirmButtonClicked.AddDynamic(this, &AShopKeeper::BuyBoosterPack);
 
 	bool CanAfford = BoosterCosts[Index] <= InteractingPlayer->GetSave()->Money;
+	FText Message = FText::FromString(WarningMessageBeginning + " " + BuyingAction + " " + BoosterNames[Index].ToString() 
+		+ " for " + FString::FromInt(BoosterCosts[Index]) + "?");
 
-	ShowNotification(CanAfford, BuyingAction, BoosterNames[Index], BoosterCosts[Index]);
+	ShowNotification(Message, CanAfford);
 
 }
 
@@ -224,9 +230,12 @@ void AShopKeeper::HeroCardSelected(int Index)
 {
 	ActiveIndex = Index;
 
-	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::SellHeroCard);
+	ShopWarningWidget->OnConfirmButtonClicked.AddDynamic(this, &AShopKeeper::SellHeroCard);
 
-	ShowNotification(true, SellingAction, HeroNames[Index], HeroCosts[Index]);
+	FText Message = FText::FromString(WarningMessageBeginning + " " + SellingAction + " " + HeroNames[Index].ToString()
+		+ " for " + FString::FromInt(HeroCosts[Index]) + "?");
+
+	ShowNotification(Message, true);
 }
 
 void AShopKeeper::SellHeroCard()
@@ -252,9 +261,12 @@ void AShopKeeper::ResourceCardSelected(int Index)
 {
 	ActiveIndex = Index;
 
-	NotificationWidget->OnOkButton.AddDynamic(this, &AShopKeeper::SellResourceCard);
+	ShopWarningWidget->OnConfirmButtonClicked.AddDynamic(this, &AShopKeeper::SellResourceCard);
 
-	ShowNotification(true, SellingAction, ResourceNames[Index], ResourceCosts[Index]);
+	FText Message = FText::FromString(WarningMessageBeginning + " " + SellingAction + " " + ResourceNames[Index].ToString()
+		+ " for " + FString::FromInt(ResourceCosts[Index]) + "?");
+
+	ShowNotification(Message, true);
 }
 
 void AShopKeeper::SellResourceCard()
@@ -281,27 +293,26 @@ void AShopKeeper::StartLootingAnimation(TArray<FDataTableRowHandle> Drops)
 	TArray<FText> DropNames;
 	TArray<UTexture2D*> DropImages;
 	FPersistentDataUnit* TempUnit;
-	for (FDataTableRowHandle Drop : Drops)
+	for (const FDataTableRowHandle Drop : Drops)
 	{
 		TempUnit = Drop.GetRow<FPersistentDataUnit>("Getting icon for drop");
 		DropNames.Add(TempUnit->UnitName);
 		DropImages.Add(TempUnit->UnitImage);
 	}
 
-
 	//start animation
 }
 
-void AShopKeeper::ShowNotification(bool CanAfford, FText Action, FText Object, uint16 Cost)
+void AShopKeeper::ShowNotification(FText Message, bool CanAfford)
 {
-	NotificationWidget->Config(CanAfford, Action, Object, Cost);
-	NotificationWidget->AddToViewport();
+	ShopWarningWidget->ConfigWarning(Message, CanAfford);
+	ShopWarningWidget->AddToViewport();
 }
 
 void AShopKeeper::HideNotification()
 {
-	NotificationWidget->RemoveFromParent();
-	NotificationWidget->OnOkButton.RemoveAll(this);
+	ShopWarningWidget->RemoveFromParent();
+	ShopWarningWidget->OnConfirmButtonClicked.RemoveAll(this);
 	ActiveIndex = -1;
 }
 
@@ -319,12 +330,15 @@ void AShopKeeper::FillShopWidget()
 	BoosterIDs.Empty();
 	BoosterNames.Empty();
 	BoosterIcons.Empty();
+	BoosterColors.Empty();
 	BoosterCosts.Empty();
 	HeroNames.Empty();
 	HeroIcons.Empty();
+	HeroColors.Empty();
 	HeroCosts.Empty();
 	ResourceNames.Empty();
 	ResourceIcons.Empty();
+	ResourceColors.Empty();
 	ResourceCosts.Empty();
 
 	TArray<FBoosterPackPersistentData*> Rows;
@@ -335,6 +349,7 @@ void AShopKeeper::FillShopWidget()
 		BoosterIDs.Add(Row->ID);
 		BoosterNames.Add(Row->UnitName);
 		BoosterIcons.Add(Row->UnitImage);
+		BoosterColors.Add(Row->UnitColor);
 		BoosterCosts.Add(Row->Cost);
 	}
 
@@ -361,11 +376,10 @@ void AShopKeeper::FillShopWidget()
 
 			HeroNames.Add(HeroRow->UnitName);
 			HeroIcons.Add(HeroRow->UnitImage);
+			HeroColors.Add(HeroRow->UnitColor);
 			HeroCosts.Add(*HeroCostPtr);
-
 		}
 	}
-
 
 	TArray<FResourseCardPersistentData*> ResourceDataRows;
 
@@ -373,19 +387,18 @@ void AShopKeeper::FillShopWidget()
 
 	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
 	{
-
 		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
 		{
-
 			if (SavedResource.ID != ResourceRow->ID) continue;
 
 			ResourceNames.Add(ResourceRow->UnitName);
 			ResourceIcons.Add(ResourceRow->UnitImage);
+			ResourceColors.Add(ResourceRow->UnitColor);
 			ResourceCosts.Add(ResourceRow->Value);
-
 		}
 	}
 
-	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterCosts);
-	ShopWidget->FillSells(HeroNames, HeroIcons, HeroCosts, ResourceNames, ResourceIcons, ResourceCosts);
+	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterColors, BoosterCosts);
+	ShopWidget->FillHeroes(HeroNames, HeroIcons, HeroColors, HeroCosts);
+	ShopWidget->FillResources(ResourceNames, ResourceIcons, ResourceColors, ResourceCosts);
 }

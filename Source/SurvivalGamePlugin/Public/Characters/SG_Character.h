@@ -146,6 +146,8 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	virtual void OnRep_PlayerState() override;
+
 	void InitCharacterDefaults();
 
 
@@ -156,6 +158,8 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void UnPossessed() override;
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();

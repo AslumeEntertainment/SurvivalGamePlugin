@@ -7,7 +7,8 @@
 #include "CraftingWindowWidget.generated.h"
 
 class UWrapBox;
-class UItemIconWidget;
+class UWidgetSwitcher;
+class UUnitIconWidget;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCraftingWindowWidget : public UUserWidget
@@ -19,11 +20,17 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWrapBox* CraftingRecipeWrapBox;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWidgetSwitcher* WidgetSwitcher;
+
 public:
 
 	UFUNCTION()
-	void AddCraftingRecipe(UItemIconWidget* ItemIconWidget);
+	void AddCraftingRecipe(UUnitIconWidget* ItemIconWidget);
 
 	UFUNCTION()
 	void ClearRecipes();
+
+	UFUNCTION()
+	void SetWidgetSwitcherActiveIndex(int Index);
 };

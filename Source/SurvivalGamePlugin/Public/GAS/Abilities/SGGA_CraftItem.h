@@ -7,7 +7,7 @@
 #include "Headers/ItemDataStruct.h"
 #include "SGGA_CraftItem.generated.h"
 
-class UItemIconWidget;
+class UUnitIconWidget;
 class UCraftingWindowWidget;
 class UAbilityTask_WaitInputRelease;
 class AInGameCharacter;
@@ -20,14 +20,22 @@ class SURVIVALGAMEPLUGIN_API USGGA_CraftItem : public USG_GameplayAbility
 	GENERATED_BODY()
 
 public:
-
-	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled);
 
 protected:
+
+	AInGameCharacter* Player;
+	APlayerController* PlayerCont;
+	UEquipmentComponent* EquipmentComp;
+
+	TArray<FName> PossibleProductItemNames;
+
+	FCraftingProcessDataStruct* ProductItemData = nullptr;
+
+	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CraftingProcessInfo")
 	UDataTable* CraftingInfoTable;
@@ -39,7 +47,7 @@ protected:
 	FGameplayTag CraftingProcessContinueTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
-	TSubclassOf<UItemIconWidget> ItemIconWidgetClass;
+	TSubclassOf<UUnitIconWidget> ItemIconWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UCraftingWindowWidget> CraftingWindowWidgetClass;
@@ -50,18 +58,11 @@ protected:
 	UPROPERTY()
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask;
 
-	AInGameCharacter* Player;
-	APlayerController* PlayerCont;
-	UEquipmentComponent* EquipmentComp;
-
-	FActiveGameplayEffectHandle SpeedReductionEffectSpecHandle;
-
 	UPROPERTY()
 	AItemBase* ProductItem;
+
 	UPROPERTY()
 	FName ProductItemSocketName;
-
-	FCraftingProcessDataStruct* ProductItemData = nullptr;
 
 	UFUNCTION()
 	void OpenCraftingWindow();
@@ -73,7 +74,7 @@ protected:
 	void CancelCrafting(float TimeHeld);
 
 	UFUNCTION()
-	void OnItemToCraftSelected(FText itemName);
+	void OnItemToCraftSelected(int IconID);
 
 	UFUNCTION()
 	void StartCrafting(FGameplayEventData Payload);

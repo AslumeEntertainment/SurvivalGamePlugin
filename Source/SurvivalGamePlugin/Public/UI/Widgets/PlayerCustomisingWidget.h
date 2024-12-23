@@ -37,11 +37,16 @@ protected:
 	UFUNCTION()
 	void OnLeaveButtonClicked();
 
+
 public:
+
 	void NativeOnInitialized() override;
 
 	UFUNCTION()
 	void Config(EPlayerReadinessUIStatus PlayerReadiness);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void CloseWidget();
 
 	FVoidDataTransferSignature OnReadyButton;
 	FVoidDataTransferSignature OnLeaveButton;
