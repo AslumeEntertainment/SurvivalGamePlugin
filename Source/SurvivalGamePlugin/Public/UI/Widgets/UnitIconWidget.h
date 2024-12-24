@@ -22,6 +22,9 @@ protected:
 	UFUNCTION()
 	void OnIconClicked();
 
+	UFUNCTION()
+	void BroadcastParentOnIconClicked();
+
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UButton* BTN_Icon;
 
@@ -38,21 +41,25 @@ public:
 
 	virtual void NativeOnInitialized() override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetItemName(FText ItemName);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
+	FString GetItemName();
+
+	UFUNCTION(BlueprintCallable)
 	void SetItemImage(UTexture2D* ItemImage);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetItemColor(FLinearColor Color);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetUnitScale(float Scale);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Color, float Scale);
 
 	FIntegerTransferSignature IconClicked;
+	FPanelWidgetTransferSignature BroadcastParentOnClicked;
 
 };

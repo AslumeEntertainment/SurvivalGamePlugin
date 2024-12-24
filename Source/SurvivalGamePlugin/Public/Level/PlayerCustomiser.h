@@ -13,6 +13,7 @@
 class ASG_PlayerController;
 class AInGameCharacter;
 class UPlayerCustomisingWidget;
+class UCardSelectorWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
@@ -62,11 +63,20 @@ private:
 
 protected:
 
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* HeroTable = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* ResourceTable = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AInGameCharacter> DefaultHeroClass;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UPlayerCustomisingWidget> PlayerCustomisingWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UCardSelectorWidget> CardSelectorWidgetClass;
 
 	UFUNCTION()
 	void OnRepIsPlayerReady();

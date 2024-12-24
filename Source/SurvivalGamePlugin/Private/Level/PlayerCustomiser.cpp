@@ -8,9 +8,11 @@
 #include "Net/UnrealNetwork.h"
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
+#include "GameFoundation/SaveGames/SG_SaveGame.h"
+#include "Headers/GameManagingPersistentStructs.h"
 #include "Characters/InGameCharacter.h"
-#include "UI/HUD/InGameHUD.h"
 #include "UI/Widgets/PlayerCustomisingWidget.h"
+#include "UI/HUD/InGameHUD.h"
 #include "Level/GameManager.h"
 
 
@@ -251,6 +253,12 @@ void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 
 void APlayerCustomiser::Client_ShowUI_Implementation()
 {
+	if (IsValid(HeroTable) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation IsValid(HeroTable) == false"));
+		return;
+	}
+
 	if (IsValid(GetParentActor()) && IsValid(InteractingPlayer))
 	{
 		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
@@ -260,6 +268,50 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 			HUD->RemoveInteractionOverlayWidget();
 		}
 	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+
+	TArray<FHeroCardPersistentData*> HeroDataRows;
+
+	HeroTable->GetAllRows<FHeroCardPersistentData>("Filling Heroes", HeroDataRows);
+
+	FProgressiveDataHelperStruct FirstSavedHero = Save->HeroCards[0];
+	for (FHeroCardPersistentData* HeroRow : HeroDataRows)
+	{
+		if (FirstSavedHero.ID == HeroRow->ID)
+		{
+			PlayerCustomisingWidget->FillHeroCardSlot(HeroRow->UnitName, HeroRow->UnitImage, HeroRow->UnitColor);
+			break;
+		}
+	}
+
+	TArray<FText> ResourceNames;
+	TArray<UTexture2D*> ResourceIcons;
+	TArray<FLinearColor> ResourceColors;
+
+	TArray<FResourseCardPersistentData*> ResourceDataRows;
+
+	ResourceTable->GetAllRows<FResourseCardPersistentData>("Filling Resource", ResourceDataRows);
+
+	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	{
+		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
+		{
+			if (SavedResource.ID != ResourceRow->ID) continue;
+
+			ResourceNames.Add(ResourceRow->UnitName);
+			ResourceIcons.Add(ResourceRow->UnitImage);
+			ResourceColors.Add(ResourceRow->UnitColor);
+
+			if (ResourceNames.Num() == 6) break;
+		}
+	}
+
+	/*for (int i = 0; i < 3; i++)
+	{
+
+	}*/
+
 	PlayerCustomisingWidget->AddToViewport();
 }
 

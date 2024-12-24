@@ -3,20 +3,32 @@
 
 #include "UI/Widgets/UnitIconWidget.h"
 
+#include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
-#include "Components/WrapBox.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
 void UUnitIconWidget::OnIconClicked()
 {
-	UWrapBox* ParentWrapBox = Cast<UWrapBox>(this->GetParent());
-	if (IsValid(ParentWrapBox) == false)
+	UPanelWidget* ParentWidget = Cast<UPanelWidget>(this->GetParent());
+	if (IsValid(ParentWidget) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UItemIconWidget::OnIconClicked IsValid(ParentWrapBox) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UItemIconWidget::OnIconClicked IsValid(ParentWidget) == false"));
+		return;
 	}
-	IconClicked.Broadcast(ParentWrapBox->GetChildIndex(this));
+	IconClicked.Broadcast(ParentWidget->GetChildIndex(this));
+}
+
+void UUnitIconWidget::BroadcastParentOnIconClicked()
+{
+	UPanelWidget* ParentWidget = Cast<UPanelWidget>(this->GetParent());
+	if (IsValid(ParentWidget) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UItemIconWidget::BroadcastParentOnIconClicked IsValid(ParentWidget) == false"));
+		return;
+	}
+	BroadcastParentOnClicked.Broadcast(ParentWidget);
 }
 
 void UUnitIconWidget::NativeOnInitialized()
@@ -28,6 +40,11 @@ void UUnitIconWidget::NativeOnInitialized()
 void UUnitIconWidget::SetItemName(FText ItemName)
 {
 	TXT_ItemName->SetText(ItemName);
+}
+
+FString UUnitIconWidget::GetItemName()
+{
+	return TXT_ItemName->GetText().ToString();
 }
 
 void UUnitIconWidget::SetItemImage(UTexture2D* ItemImage)

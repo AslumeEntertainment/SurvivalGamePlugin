@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 //#include "GEEC_Statics.generated.h"
 
 
