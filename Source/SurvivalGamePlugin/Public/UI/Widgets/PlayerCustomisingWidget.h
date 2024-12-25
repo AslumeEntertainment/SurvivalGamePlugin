@@ -7,8 +7,8 @@
 #include "Headers/GeneralDelegates.h"
 #include "PlayerCustomisingWidget.generated.h"
 
-
 class UTextButtonWidgetBase;
+class UCardSelectorWidget;
 class UUnitIconWidget;
 class UHorizontalBox;
 class UWrapBox;
@@ -49,6 +49,9 @@ protected:
 	UWrapBox* SecondaryHandCardsBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBorder* CardSelectorBorder;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextButtonWidgetBase* TXTBTN_ReadyStatus;
 	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
@@ -80,14 +83,22 @@ public:
 
 	void NativeOnInitialized() override;
 
+	UPanelWidget* GetHeroCardPanel();
+
+	UPanelWidget* GetMainCardsPanel();
+
+	UPanelWidget* GetSecondaryCardsPanel();
+
+	UUnitIconWidget* FillHeroCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
+
+	TArray<UUnitIconWidget*> FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
+
+	TArray<UUnitIconWidget*> FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
+
+	void OpenCardSelector(UCardSelectorWidget* CardSelector);
+
 	UFUNCTION()
 	void Config(EPlayerReadinessUIStatus PlayerReadiness);
-
-	void FillHeroCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
-
-	void FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
-
-	void FillSecondaryHandSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void CloseWidget();

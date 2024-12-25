@@ -9,6 +9,7 @@
 #include "Components/Button.h"
 
 #include "UI/Widgets/Core/TextButtonWidgetBase.h"
+#include "UI/Widgets/Deck/CardSelectorWidget.h"
 #include "UI/Widgets/UnitIconWidget.h"
 #include "UI/Widgets/Deck/DeckIcon.h"
 
@@ -38,6 +39,21 @@ void UPlayerCustomisingWidget::NativeOnInitialized()
 	TXTBTN_ReadyStatus->OnButtonClickedVoid.AddDynamic(this, &UPlayerCustomisingWidget::OnReadyButtonClicked);
 	TXTBTN_LeaveTable->OnButtonClickedVoid.AddDynamic(this, &UPlayerCustomisingWidget::OnLeaveButtonClicked);
 	TXTBTN_LeaveTable->SetText(FText::FromString("Leave Table"));
+}
+
+UPanelWidget* UPlayerCustomisingWidget::GetHeroCardPanel()
+{
+	return HeroCardBorder;
+}
+
+UPanelWidget* UPlayerCustomisingWidget::GetMainCardsPanel()
+{
+	return MainHandCardsBox;
+}
+
+UPanelWidget* UPlayerCustomisingWidget::GetSecondaryCardsPanel()
+{
+	return SecondaryHandCardsBox;
 }
 
 void UPlayerCustomisingWidget::SelectDeck(int DeckIndex)
@@ -103,13 +119,13 @@ void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
 	TXTBTN_ReadyStatus->SetText(FText::FromString(PlayerReadiness == EPlayerReadinessUIStatus::Ready ? "Cancel" : (PlayerReadiness == EPlayerReadinessUIStatus::NotReady ? "Ready" : "Updating Status")));
 }
 
-void UPlayerCustomisingWidget::FillHeroCardSlot(FText Name, UTexture2D* Image, FLinearColor Color)
+UUnitIconWidget* UPlayerCustomisingWidget::FillHeroCardSlot(FText Name, UTexture2D* Image, FLinearColor Color)
 {
 	UUnitIconWidget* HeroCard = CreateWidget<UUnitIconWidget>(this, HeroCardWidgetClass);
 	if (IsValid(HeroCard) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillHeroCardSlot IsValid(HeroCard) == false"));
-		return;
+		return nullptr;
 	}
 	HeroCard->ConfigUnit(Name, Image, Color, 1);
 	
@@ -118,16 +134,16 @@ void UPlayerCustomisingWidget::FillHeroCardSlot(FText Name, UTexture2D* Image, F
 		HeroCardBorder->ClearChildren();
 	}
 	HeroCardBorder->AddChild(HeroCard);
+
+	return HeroCard;
 }
 
-void UPlayerCustomisingWidget::FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
+TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
 {
-	UUnitIconWidget* TempCard = nullptr;
-
 	if (Names.Num() != Images.Num() || Names.Num() != Colors.Num())
 	{
 		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillMainHandCardsSlots Names, Images and Colors have different sizes!"));
-		return;
+		return TArray<UUnitIconWidget*>();
 	}
 
 	if (MainHandCardsBox->HasAnyChildren())
@@ -135,27 +151,31 @@ void UPlayerCustomisingWidget::FillMainHandCardsSlots(TArray<FText> Names, TArra
 		MainHandCardsBox->ClearChildren();
 	}
 
+	UUnitIconWidget* TempCard = nullptr;
+	TArray<UUnitIconWidget*> AddedCards;
+
 	for (int i = 0; i < Names.Num(); i++)
 	{
 		TempCard = CreateWidget<UUnitIconWidget>(this, ResourceCardWidgetClass);
 		if (IsValid(TempCard) == false)
 		{
 			UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillMainHandCardsSlots IsValid(TempCard) == false"));
-			return;
+			return TArray<UUnitIconWidget*>();
 		}
 		TempCard->ConfigUnit(Names[i], Images[i], Colors[i], 1);
 		MainHandCardsBox->AddChildToWrapBox(TempCard);
+		AddedCards.Add(TempCard);
 	}
+
+	return AddedCards;
 }
 
-void UPlayerCustomisingWidget::FillSecondaryHandSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
+TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
 {
-	UUnitIconWidget* TempCard = nullptr;
-
 	if (Names.Num() != Images.Num() || Names.Num() != Colors.Num())
 	{
 		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillSecondaryHandSlots Names, Images and Colors have different sizes!"));
-		return;
+		return TArray<UUnitIconWidget*>();
 	}
 
 	if (SecondaryHandCardsBox->HasAnyChildren())
@@ -163,17 +183,32 @@ void UPlayerCustomisingWidget::FillSecondaryHandSlots(TArray<FText> Names, TArra
 		SecondaryHandCardsBox->ClearChildren();
 	}
 
+	UUnitIconWidget* TempCard = nullptr;
+	TArray<UUnitIconWidget*> AddedCards;
+
 	for (int i = 0; i < Names.Num(); i++)
 	{
 		TempCard = CreateWidget<UUnitIconWidget>(this, ResourceCardWidgetClass);
 		if (IsValid(TempCard) == false)
 		{
 			UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillSecondaryHandSlots IsValid(TempCard) == false"));
-			return;
+			return TArray<UUnitIconWidget*>();
 		}
 		TempCard->ConfigUnit(Names[i], Images[i], Colors[i], 1);
 		SecondaryHandCardsBox->AddChildToWrapBox(TempCard);
+		AddedCards.Add(TempCard);
 	}
+
+	return AddedCards;
+}
+
+void UPlayerCustomisingWidget::OpenCardSelector(UCardSelectorWidget* CardSelector)
+{
+	if (CardSelectorBorder->HasAnyChildren())
+	{
+		CardSelectorBorder->ClearChildren();
+	}
+	CardSelectorBorder->AddChild(CardSelector);
 }
 
 void UPlayerCustomisingWidget::CloseWidget_Implementation()

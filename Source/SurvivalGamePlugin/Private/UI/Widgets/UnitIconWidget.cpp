@@ -35,6 +35,7 @@ void UUnitIconWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	BTN_Icon->OnClicked.AddDynamic(this, &UUnitIconWidget::OnIconClicked);
+	BTN_Icon->OnClicked.AddDynamic(this, &UUnitIconWidget::BroadcastParentOnIconClicked);
 }
 
 void UUnitIconWidget::SetItemName(FText ItemName)

@@ -12,6 +12,8 @@
 #include "Headers/GameManagingPersistentStructs.h"
 #include "Characters/InGameCharacter.h"
 #include "UI/Widgets/PlayerCustomisingWidget.h"
+#include "UI/Widgets/Deck/CardSelectorWidget.h"
+#include "UI/Widgets/UnitIconWidget.h"
 #include "UI/HUD/InGameHUD.h"
 #include "Level/GameManager.h"
 
@@ -139,6 +141,109 @@ void APlayerCustomiser::ToggleReady()
 	Server_ToggleReady();
 }
 
+void APlayerCustomiser::OpenCardSelector(UPanelWidget* CallerWidget)
+{
+	if (!IsValid(HeroTable) || !IsValid(MainHandResourceTable) || !IsValid(SecondaryHandResourceTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::OpenCardSelector One or more card data tables are invalid"));
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::OpenCardSelector IsValid(World) == false"));
+		return;
+	}
+
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::OpenCardSelector IsValid(InteractingPlayer) == false"));
+		return;
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::OpenCardSelector IsValid(Save) == false"));
+		return;
+	}
+
+	TArray<FText> CardNames;
+	TArray<UTexture2D*> CardIcons;
+	TArray<FLinearColor> CardColors;
+
+	FString Title = "";
+	int CardsNeeded = 0;
+
+	if (CallerWidget == PlayerCustomisingWidget->GetHeroCardPanel())
+	{
+		TArray<FHeroCardPersistentData*> HeroDataRows;
+		HeroTable->GetAllRows<FHeroCardPersistentData>("Filling Heroes", HeroDataRows);
+
+		for (FProgressiveDataHelperStruct SavedHero : Save->HeroCards)
+		{
+			for (FHeroCardPersistentData* HeroRow : HeroDataRows)
+			{
+				if (SavedHero.ID != HeroRow->ID) continue;
+
+				CardNames.Add(HeroRow->UnitName);
+				CardIcons.Add(HeroRow->UnitImage);
+				CardColors.Add(HeroRow->UnitColor);
+			}
+		}
+		CardsNeeded = 1;
+		Title = "Select a hero card";
+	}
+	if (CallerWidget == PlayerCustomisingWidget->GetMainCardsPanel())
+	{
+		TArray<FResourseCardPersistentData*> MainResourceDataRows;
+		MainHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling main hand resources", MainResourceDataRows);
+
+		for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+		{
+			for (FResourseCardPersistentData* ResourceRow : MainResourceDataRows)
+			{
+				if (SavedResource.ID != ResourceRow->ID) continue;
+
+				CardNames.Add(ResourceRow->UnitName);
+				CardIcons.Add(ResourceRow->UnitImage);
+				CardColors.Add(ResourceRow->UnitColor);
+			}
+		}
+		CardsNeeded = 3;
+		Title = "Select main hand resource cards";
+	}
+	if (CallerWidget == PlayerCustomisingWidget->GetSecondaryCardsPanel())
+	{
+		TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
+		SecondaryHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling secondary hand resources", SecondaryResourceDataRows);
+
+		for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+		{
+			for (FResourseCardPersistentData* ResourceRow : SecondaryResourceDataRows)
+			{
+				if (SavedResource.ID != ResourceRow->ID) continue;
+
+				CardNames.Add(ResourceRow->UnitName);
+				CardIcons.Add(ResourceRow->UnitImage);
+				CardColors.Add(ResourceRow->UnitColor);
+			}
+		}
+		CardsNeeded = 3;
+		Title = "Select secondary hand resource cards";
+	}
+
+	UCardSelectorWidget* CardSelector = CreateWidget<UCardSelectorWidget>(World, CardSelectorWidgetClass);
+	if (IsValid(CardSelector))
+	{
+		CardSelector->ConfigCardSelector(CallerWidget, CardsNeeded);
+		CardSelector->FillCards(CardNames, CardIcons, CardColors);
+		CardSelector->SetTitle(Title);
+		PlayerCustomisingWidget->OpenCardSelector(CardSelector);
+	}
+}
+
 void APlayerCustomiser::Server_ToggleReady_Implementation()
 {
 	OnPlayerReadinessChanged.Broadcast(this);
@@ -253,13 +358,19 @@ void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 
 void APlayerCustomiser::Client_ShowUI_Implementation()
 {
-	if (IsValid(HeroTable) == false)
+	if (IsValid(InteractingPlayer) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation IsValid(HeroTable) == false"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation IsValid(InteractingPlayer) == false"));
 		return;
 	}
 
-	if (IsValid(GetParentActor()) && IsValid(InteractingPlayer))
+	if (!IsValid(HeroTable) || !IsValid(MainHandResourceTable) || !IsValid(SecondaryHandResourceTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation One or more card data tables are invalid"));
+		return;
+	}
+
+	if (IsValid(GetParentActor()))
 	{
 		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
 		AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
@@ -270,9 +381,13 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	}
 
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation IsValid(Save) == false"));
+		return;
+	}
 
 	TArray<FHeroCardPersistentData*> HeroDataRows;
-
 	HeroTable->GetAllRows<FHeroCardPersistentData>("Filling Heroes", HeroDataRows);
 
 	FProgressiveDataHelperStruct FirstSavedHero = Save->HeroCards[0];
@@ -280,7 +395,12 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	{
 		if (FirstSavedHero.ID == HeroRow->ID)
 		{
-			PlayerCustomisingWidget->FillHeroCardSlot(HeroRow->UnitName, HeroRow->UnitImage, HeroRow->UnitColor);
+			UUnitIconWidget* Card = PlayerCustomisingWidget->FillHeroCardSlot(HeroRow->UnitName, HeroRow->UnitImage, HeroRow->UnitColor);
+			if (IsValid(Card))
+			{
+				Card->BroadcastParentOnClicked.AddDynamic(this, &APlayerCustomiser::OpenCardSelector);
+			}
+			
 			break;
 		}
 	}
@@ -288,14 +408,14 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	TArray<FText> ResourceNames;
 	TArray<UTexture2D*> ResourceIcons;
 	TArray<FLinearColor> ResourceColors;
+	TArray<UUnitIconWidget*> Cards;
 
-	TArray<FResourseCardPersistentData*> ResourceDataRows;
-
-	ResourceTable->GetAllRows<FResourseCardPersistentData>("Filling Resource", ResourceDataRows);
+	TArray<FResourseCardPersistentData*> MainResourceDataRows;
+	MainHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling main hand resources", MainResourceDataRows);
 
 	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
 	{
-		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
+		for (FResourseCardPersistentData* ResourceRow : MainResourceDataRows)
 		{
 			if (SavedResource.ID != ResourceRow->ID) continue;
 
@@ -303,14 +423,48 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 			ResourceIcons.Add(ResourceRow->UnitImage);
 			ResourceColors.Add(ResourceRow->UnitColor);
 
-			if (ResourceNames.Num() == 6) break;
+			if (ResourceNames.Num() == 3) break;
+		}
+		if (ResourceNames.Num() == 3) break;
+	}
+	Cards = PlayerCustomisingWidget->FillMainHandCardsSlots(ResourceNames, ResourceIcons, ResourceColors);
+	for (UUnitIconWidget* Card : Cards)
+	{
+		if (IsValid(Card))
+		{
+			Card->BroadcastParentOnClicked.AddDynamic(this, &APlayerCustomiser::OpenCardSelector);
 		}
 	}
 
-	/*for (int i = 0; i < 3; i++)
-	{
+	ResourceNames.Empty();
+	ResourceIcons.Empty();
+	ResourceColors.Empty();
 
-	}*/
+	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
+	SecondaryHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling secondary hand resources", SecondaryResourceDataRows);
+
+	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	{
+		for (FResourseCardPersistentData* ResourceRow : SecondaryResourceDataRows)
+		{
+			if (SavedResource.ID != ResourceRow->ID) continue;
+
+			ResourceNames.Add(ResourceRow->UnitName);
+			ResourceIcons.Add(ResourceRow->UnitImage);
+			ResourceColors.Add(ResourceRow->UnitColor);
+
+			if (ResourceNames.Num() == 3) break;
+		}
+		if (ResourceNames.Num() == 3) break;
+	}
+	Cards = PlayerCustomisingWidget->FillSecondaryHandCardsSlots(ResourceNames, ResourceIcons, ResourceColors);
+	for (UUnitIconWidget* Card : Cards)
+	{
+		if (IsValid(Card))
+		{
+			Card->BroadcastParentOnClicked.AddDynamic(this, &APlayerCustomiser::OpenCardSelector);
+		}
+	}
 
 	PlayerCustomisingWidget->AddToViewport();
 }
