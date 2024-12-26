@@ -78,7 +78,7 @@ void USGGA_CraftItem::OpenCraftingWindow()
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::ActivateAbility IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OpenCraftingWindow IsValid(World) == false"));
 		return;
 	}
 
@@ -87,7 +87,7 @@ void USGGA_CraftItem::OpenCraftingWindow()
 	PlayerCont = Cast<APlayerController>(Player->GetController());
 	if (IsValid(PlayerCont) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AHumanCharacter::OpenCraftingWindow IsValid(PlayerCont) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OpenCraftingWindow IsValid(PlayerCont) == false"));
 		return;
 	}
 

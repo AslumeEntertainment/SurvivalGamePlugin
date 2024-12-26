@@ -41,6 +41,8 @@ public:
 
 	virtual void NativeOnInitialized() override;
 
+	virtual void SetIsDraggable(bool NewValue);
+
 	UFUNCTION(BlueprintCallable)
 	void SetItemName(FText ItemName);
 
@@ -51,7 +53,16 @@ public:
 	void SetItemImage(UTexture2D* ItemImage);
 
 	UFUNCTION(BlueprintCallable)
+	void SetItemBrush(FSlateBrush ItemBrush);
+
+	UFUNCTION(BlueprintCallable)
+	FSlateBrush GetItemBrush();
+
+	UFUNCTION(BlueprintCallable)
 	void SetItemColor(FLinearColor Color);
+
+	UFUNCTION(BlueprintCallable)
+	FLinearColor GetItemColor();
 
 	UFUNCTION(BlueprintCallable)
 	void SetUnitScale(float Scale);

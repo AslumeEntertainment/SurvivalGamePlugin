@@ -6,12 +6,31 @@
 #include "Blueprint/UserWidget.h"
 #include "InGameDeck.generated.h"
 
-/**
- * 
- */
+class UWrapBox;
+class UWidgetSwitcher;
+class UUnitIconWidget;
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UInGameDeck : public UUserWidget
 {
 	GENERATED_BODY()
 	
+protected:
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* EquipedCardsWrapBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWidgetSwitcher* EquipedCardsWidgetSwitcher;
+
+public:
+
+	UFUNCTION()
+	void AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget);
+
+	UFUNCTION()
+	void ClearEquipedCardsBox();
+
+	UFUNCTION()
+	void SetEquipedCardsWidgetSwitcherActiveIndex(int Index);
 };

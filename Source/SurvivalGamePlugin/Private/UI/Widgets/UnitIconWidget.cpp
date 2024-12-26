@@ -38,6 +38,10 @@ void UUnitIconWidget::NativeOnInitialized()
 	BTN_Icon->OnClicked.AddDynamic(this, &UUnitIconWidget::BroadcastParentOnIconClicked);
 }
 
+void UUnitIconWidget::SetIsDraggable(bool NewValue)
+{
+}
+
 void UUnitIconWidget::SetItemName(FText ItemName)
 {
 	TXT_ItemName->SetText(ItemName);
@@ -53,9 +57,24 @@ void UUnitIconWidget::SetItemImage(UTexture2D* ItemImage)
 	IMG_ItemIcon->SetBrushFromTexture(ItemImage);
 }
 
+void UUnitIconWidget::SetItemBrush(FSlateBrush ItemBrush)
+{
+	IMG_ItemIcon->SetBrush(ItemBrush);
+}
+
+FSlateBrush UUnitIconWidget::GetItemBrush()
+{
+	return IMG_ItemIcon->GetBrush();
+}
+
 void UUnitIconWidget::SetItemColor(FLinearColor Color)
 {
 	BTN_Icon->SetBackgroundColor(Color);
+}
+
+FLinearColor UUnitIconWidget::GetItemColor()
+{
+	return BTN_Icon->GetBackgroundColor();
 }
 
 void UUnitIconWidget::SetUnitScale(float Scale)

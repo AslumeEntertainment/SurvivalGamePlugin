@@ -353,6 +353,7 @@ void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 	{
 		HUD->ShowInteractionOverlayWidget();
 	}
+
 	bUsesAnimation ? PlayerCustomisingWidget->CloseWidget() : PlayerCustomisingWidget->RemoveFromParent();
 }
 

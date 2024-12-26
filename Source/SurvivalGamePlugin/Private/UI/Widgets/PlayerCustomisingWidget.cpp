@@ -112,6 +112,10 @@ void UPlayerCustomisingWidget::OnReadyButtonClicked()
 void UPlayerCustomisingWidget::OnLeaveButtonClicked()
 {
 	OnLeaveButton.Broadcast();
+	if (CardSelectorBorder->HasAnyChildren())
+	{
+		CardSelectorBorder->ClearChildren();
+	}
 }
 
 void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
@@ -127,7 +131,7 @@ UUnitIconWidget* UPlayerCustomisingWidget::FillHeroCardSlot(FText Name, UTexture
 		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillHeroCardSlot IsValid(HeroCard) == false"));
 		return nullptr;
 	}
-	HeroCard->ConfigUnit(Name, Image, Color, 1);
+	HeroCard->ConfigUnit(Name, Image, Color, 2);
 	
 	if (HeroCardBorder->HasAnyChildren())
 	{
