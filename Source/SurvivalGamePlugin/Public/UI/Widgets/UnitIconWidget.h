@@ -19,11 +19,8 @@ class SURVIVALGAMEPLUGIN_API UUnitIconWidget : public UUserWidget
 
 protected:
 
-	UFUNCTION()
-	void OnIconClicked();
-
-	UFUNCTION()
-	void BroadcastParentOnIconClicked();
+	UPROPERTY()
+	bool bCanBeDragged = false;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UButton* BTN_Icon;
@@ -36,6 +33,25 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	USizeBox* UnitSizeBox;
+
+	virtual FEventReply RedirectMouseDownToWidget(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+	
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+	
+	virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
+	virtual void NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
+	UFUNCTION()
+	void OnIconClicked();
+
+	UFUNCTION()
+	void BroadcastParentOnIconClicked();
+
 
 public:
 

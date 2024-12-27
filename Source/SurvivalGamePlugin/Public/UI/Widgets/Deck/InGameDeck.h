@@ -21,6 +21,12 @@ protected:
 	UWrapBox* EquipedCardsWrapBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* MainCardsWrapBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* SecondaryCardsWrapBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWidgetSwitcher* EquipedCardsWidgetSwitcher;
 
 public:
@@ -29,7 +35,19 @@ public:
 	void AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget);
 
 	UFUNCTION()
+	void AddUnitCardToMainCardsBox(UUnitIconWidget* ItemIconWidget);
+
+	UFUNCTION()
+	void AddUnitCardToSecondaryCardsBox(UUnitIconWidget* ItemIconWidget);
+
+	UFUNCTION()
 	void ClearEquipedCardsBox();
+
+	UFUNCTION()
+	void ClearMainCardsBox();
+
+	UFUNCTION()
+	void ClearSecondaryCardsBox();
 
 	UFUNCTION()
 	void SetEquipedCardsWidgetSwitcherActiveIndex(int Index);

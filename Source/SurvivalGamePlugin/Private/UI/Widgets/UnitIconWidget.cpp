@@ -3,11 +3,92 @@
 
 #include "UI/Widgets/UnitIconWidget.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+
+#include "UI/DragWidget.h"
+
+FEventReply UUnitIconWidget::RedirectMouseDownToWidget(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FEventReply Reply;
+	Reply.NativeReply = NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	return Reply;
+}
+
+FReply UUnitIconWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	return RedirectMouseDownToWidget(InGeometry, InMouseEvent).NativeReply;
+}
+
+FReply UUnitIconWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	
+	FEventReply ReplyResult;
+
+	if (bCanBeDragged)
+	{
+		ReplyResult = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
+	}
+	
+	return ReplyResult.NativeReply;
+}
+
+void UUnitIconWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+{
+	if (bCanBeDragged == false)
+	{
+		return;
+	}
+
+	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	if (IsValid(GetParent()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UUnitIconWidget::NativeOnDragDetected"));
+		return;
+	}
+
+	UDragWidget* DragDropOperation = NewObject<UDragWidget>();
+	this->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	DragDropOperation->WidgetReference = this;
+	DragDropOperation->ParentReference = this->GetParent();
+	DragDropOperation->ChildIndexReference = this->GetParent()->GetChildIndex(this);
+	DragDropOperation->DefaultDragVisual = this;
+	DragDropOperation->Pivot = EDragPivot::MouseDown;
+
+	OutOperation = DragDropOperation;
+}
+
+void UUnitIconWidget::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	RemoveFromParent();
+	//SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	UDragWidget* DragWidgetResult = Cast<UDragWidget>(InOperation);
+	if (IsValid(DragWidgetResult) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(DragWidgetResult) == false"));
+		return;
+	}
+	if (IsValid(DragWidgetResult->WidgetReference) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(DragWidgetResult->WidgetReference) == false"));
+		return;
+	}
+	if (IsValid(DragWidgetResult->ParentReference))
+	{
+		DragWidgetResult->ParentReference->AddChild(DragWidgetResult->WidgetReference);
+	}
+}
 
 void UUnitIconWidget::OnIconClicked()
 {
@@ -40,6 +121,7 @@ void UUnitIconWidget::NativeOnInitialized()
 
 void UUnitIconWidget::SetIsDraggable(bool NewValue)
 {
+	bCanBeDragged = NewValue;
 }
 
 void UUnitIconWidget::SetItemName(FText ItemName)

@@ -46,7 +46,8 @@ public class SurvivalGamePlugin : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"GameplayAbilities",
+                "InputCore",
+                "GameplayAbilities",
 				"GameplayTags",
 				"GameplayTasks"
 				// ... add private dependencies that you statically link with here ...	

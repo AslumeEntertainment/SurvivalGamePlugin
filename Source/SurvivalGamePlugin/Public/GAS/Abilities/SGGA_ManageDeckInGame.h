@@ -34,6 +34,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UInGameDeck> InGameDeckWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* MainHandResourceTable = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* SecondaryHandResourceTable = nullptr;
 	
 	UPROPERTY()
 	UInGameDeck* InGameDeckWidget;
