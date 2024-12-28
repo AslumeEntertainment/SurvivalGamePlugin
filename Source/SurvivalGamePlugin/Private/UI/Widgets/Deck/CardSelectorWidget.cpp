@@ -30,28 +30,12 @@ void UCardSelectorWidget::MarkCardAsSelected(int Index)
 			UE_LOG(LogTemp, Error, TEXT("UCardSelectorWidget::MarkCardAsSelected IsValid(CallerWidget) == false"));
 			return;
 		}
-
-		//CallerWidget->ClearChildren();
-		for (int i = 0; i < SelectedCards.Num(); i++)
+		if (CallerWidget->HasAnyChildren())
 		{
-			UUnitIconWidget* CallerCard = Cast<UUnitIconWidget>(CallerWidget->GetChildAt(i));
-			if (IsValid(CallerCard) == false)
-			{
-				return;
-			}
-			UUnitIconWidget* Card = Cast<UUnitIconWidget>(CardWrapBox->GetChildAt(SelectedCards[i]));
-			if (IsValid(Card) == false)
-			{
-				return;
-			}
-
-			CallerCard->SetItemName(FText::FromString(Card->GetItemName()));
-			CallerCard->SetItemBrush(Card->GetItemBrush());
-			CallerCard->SetItemColor(Card->GetItemColor());
-
-			//CallerWidget->AddChild(CardWrapBox->GetChildAt(i));
+			CallerWidget->ClearChildren();
 		}
-
+		OnNeededCardsSelected.Broadcast(SelectedCards, CallerWidget);
+		
 		RemoveFromParent();
 	}
 }

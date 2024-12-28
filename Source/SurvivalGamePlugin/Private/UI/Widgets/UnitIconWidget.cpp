@@ -12,6 +12,7 @@
 
 #include "UI/DragWidget.h"
 
+
 FEventReply UUnitIconWidget::RedirectMouseDownToWidget(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FEventReply Reply;
@@ -67,8 +68,16 @@ void UUnitIconWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 
 void UUnitIconWidget::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	RemoveFromParent();
-	//SetVisibility(ESlateVisibility::Hidden);
+	UDragWidget* DragWidgetResult = Cast<UDragWidget>(InOperation);
+	if (IsValid(DragWidgetResult) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragLeave IsValid(DragWidgetResult) == false"));
+		return;
+	}
+	if (this == DragWidgetResult->WidgetReference)
+	{
+		RemoveFromParent();
+	}
 }
 
 void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
@@ -84,6 +93,9 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(DragWidgetResult->WidgetReference) == false"));
 		return;
 	}
+
+	DragWidgetResult->WidgetReference->SetVisibility(ESlateVisibility::Visible);
+
 	if (IsValid(DragWidgetResult->ParentReference))
 	{
 		DragWidgetResult->ParentReference->AddChild(DragWidgetResult->WidgetReference);

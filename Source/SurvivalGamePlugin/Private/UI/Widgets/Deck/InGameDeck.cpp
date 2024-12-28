@@ -8,6 +8,21 @@
 
 #include "UI/Widgets/UnitIconWidget.h"
 
+TArray<UWidget*> UInGameDeck::GetEquipedCards()
+{
+	return EquipedCardsWrapBox->GetAllChildren();
+}
+
+TArray<UWidget*> UInGameDeck::GetMainHandCards()
+{
+	return MainCardsWrapBox->GetAllChildren();
+}
+
+TArray<UWidget*> UInGameDeck::GetSecondaryHandCards()
+{
+	return SecondaryCardsWrapBox->GetAllChildren();
+}
+
 void UInGameDeck::AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget)
 {
 	EquipedCardsWrapBox->AddChildToWrapBox(ItemIconWidget);

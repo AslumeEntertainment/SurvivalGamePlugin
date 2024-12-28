@@ -9,6 +9,7 @@
 
 class UTextButtonWidgetBase;
 class UCardSelectorWidget;
+class UHeroCardSelector;
 class UUnitIconWidget;
 class UHorizontalBox;
 class UWrapBox;
@@ -40,7 +41,7 @@ protected:
 	UButton* BTN_CycleDecks_Right;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UBorder* HeroCardBorder;
+	UWrapBox* HeroCardBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWrapBox* MainHandCardsBox;
@@ -58,7 +59,7 @@ protected:
 	UTextButtonWidgetBase* TXTBTN_LeaveTable;
 
 	UPROPERTY(EditAnywhere, Category = "CardWidget")
-	TSubclassOf<UUnitIconWidget> HeroCardWidgetClass;
+	TSubclassOf<UHeroCardSelector> HeroCardWidgetClass;
 
 	UPROPERTY(EditAnywhere, Category = "CardWidget")
 	TSubclassOf<UUnitIconWidget> ResourceCardWidgetClass;
@@ -89,9 +90,13 @@ public:
 
 	UPanelWidget* GetSecondaryCardsPanel();
 
-	UUnitIconWidget* FillHeroCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
+	UUnitIconWidget* FillHeroCardSlot(FText Name, UTexture2D* Image, UTexture2D* BackgroundImage, FLinearColor Color);
+
+	UUnitIconWidget* FillSingleMainHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
 
 	TArray<UUnitIconWidget*> FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
+
+	UUnitIconWidget* FillSingleSecondaryHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
 
 	TArray<UUnitIconWidget*> FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
 

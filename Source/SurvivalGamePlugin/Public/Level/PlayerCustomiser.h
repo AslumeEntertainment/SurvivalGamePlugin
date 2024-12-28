@@ -59,6 +59,9 @@ private:
 	UFUNCTION()
 	void OpenCardSelector(UPanelWidget* CallerWidget);
 
+	UFUNCTION()
+	void DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* CardBox);
+
 	UFUNCTION(Server, Reliable)
 	void Server_StopInteracting();
 

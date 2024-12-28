@@ -103,6 +103,9 @@ struct FHeroCardPersistentData : public FPersistentDataUnit
     UPROPERTY(EditAnywhere)
     TSubclassOf<ACharacter> HeroClass;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UTexture2D* HeroBackgroundImage = nullptr;
+
     UPROPERTY(EditAnywhere)
     TMap<uint8, uint16> ValuePerLevel;
 

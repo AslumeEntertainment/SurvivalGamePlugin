@@ -7,8 +7,12 @@
 #include "CardSelectorWidget.generated.h"
 
 class UUnitIconWidget;
+class UPanelWidget;
 class UTextBlock;
 class UWrapBox;
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNeededCardsSelectedSignature, TArray<int>, SelectedIndexes, UPanelWidget*, CallerWidget);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCardSelectorWidget : public UUserWidget
@@ -46,4 +50,6 @@ public:
 	void AddCardToSelector(UWidget* CardWidget);
 
 	void EmptyCardSelector();
+
+	FOnNeededCardsSelectedSignature OnNeededCardsSelected;
 };

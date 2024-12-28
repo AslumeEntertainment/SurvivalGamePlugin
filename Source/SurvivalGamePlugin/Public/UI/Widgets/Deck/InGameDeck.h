@@ -31,6 +31,12 @@ protected:
 
 public:
 
+	TArray<UWidget*> GetEquipedCards();
+
+	TArray<UWidget*> GetMainHandCards();
+
+	TArray<UWidget*> GetSecondaryHandCards();
+
 	UFUNCTION()
 	void AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget);
 
