@@ -30,9 +30,6 @@ protected:
 	UEquipmentComponent* EquipmentComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
-	TSubclassOf<UUnitIconWidget> ItemIconWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UInGameDeck> InGameDeckWidgetClass;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
@@ -41,6 +38,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Data")
 	UDataTable* SecondaryHandResourceTable = nullptr;
 	
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* ItemsDataTable = nullptr;
+
 	UPROPERTY()
 	UInGameDeck* InGameDeckWidget;
 
@@ -52,4 +52,5 @@ protected:
 
 	UFUNCTION()
 	void CloseDeckManager(float TimeHeld);
+
 };

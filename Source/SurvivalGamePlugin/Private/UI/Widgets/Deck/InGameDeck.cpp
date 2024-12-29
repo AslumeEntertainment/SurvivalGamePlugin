@@ -3,66 +3,26 @@
 
 #include "UI/Widgets/Deck/InGameDeck.h"
 
-#include "Components/WrapBox.h"
-#include "Components/WidgetSwitcher.h"
+#include "UI/Widgets/Deck/CardContainer.h"
 
-#include "UI/Widgets/UnitIconWidget.h"
 
-TArray<UWidget*> UInGameDeck::GetEquipedCards()
+bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	return EquipedCardsWrapBox->GetAllChildren();
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("A widget was dropped in %s"), *this->GetName()));
+	return false;
 }
 
-TArray<UWidget*> UInGameDeck::GetMainHandCards()
+UCardContainer* UInGameDeck::GetEquipedCardsContainer()
 {
-	return MainCardsWrapBox->GetAllChildren();
+	return EquipedCardsContainer;
 }
 
-TArray<UWidget*> UInGameDeck::GetSecondaryHandCards()
+UCardContainer* UInGameDeck::GetMainCardsContainer()
 {
-	return SecondaryCardsWrapBox->GetAllChildren();
+	return MainCardsContainer;
 }
 
-void UInGameDeck::AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget)
+UCardContainer* UInGameDeck::GetSecondaryCardsContainer()
 {
-	EquipedCardsWrapBox->AddChildToWrapBox(ItemIconWidget);
-}
-
-void UInGameDeck::AddUnitCardToMainCardsBox(UUnitIconWidget* ItemIconWidget)
-{
-	MainCardsWrapBox->AddChildToWrapBox(ItemIconWidget);
-}
-
-void UInGameDeck::AddUnitCardToSecondaryCardsBox(UUnitIconWidget* ItemIconWidget)
-{
-	SecondaryCardsWrapBox->AddChildToWrapBox(ItemIconWidget);
-}
-
-void UInGameDeck::ClearEquipedCardsBox()
-{
-	if (EquipedCardsWrapBox->HasAnyChildren())
-	{
-		EquipedCardsWrapBox->ClearChildren();
-	}
-}
-
-void UInGameDeck::ClearMainCardsBox()
-{
-	if (MainCardsWrapBox->HasAnyChildren())
-	{
-		MainCardsWrapBox->ClearChildren();
-	}
-}
-
-void UInGameDeck::ClearSecondaryCardsBox()
-{
-	if (SecondaryCardsWrapBox->HasAnyChildren())
-	{
-		SecondaryCardsWrapBox->ClearChildren();
-	}
-}
-
-void UInGameDeck::SetEquipedCardsWidgetSwitcherActiveIndex(int Index)
-{
-	EquipedCardsWidgetSwitcher->SetActiveWidgetIndex(Index);
+	return SecondaryCardsContainer;
 }

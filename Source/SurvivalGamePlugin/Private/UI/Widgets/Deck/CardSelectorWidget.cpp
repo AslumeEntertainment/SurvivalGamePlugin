@@ -13,18 +13,13 @@ void UCardSelectorWidget::MarkCardAsSelected(int Index)
 	if (SelectedCards.Contains(Index))
 	{
 		SelectedCards.Remove(Index);
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red,
-			FString::Printf(TEXT("Card unselected - %d cards out of %d selected"), SelectedCards.Num(), NumberOfCardsToSelect));
 		return;
 	}
 
 	SelectedCards.Add(Index);
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green,
-		FString::Printf(TEXT("Card selected - %d cards out of %d selected"), SelectedCards.Num(), NumberOfCardsToSelect));
 
 	if (SelectedCards.Num() == NumberOfCardsToSelect)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, TEXT("All cards have been selected!"));
 		if (IsValid(CallerWidget) == false)
 		{
 			UE_LOG(LogTemp, Error, TEXT("UCardSelectorWidget::MarkCardAsSelected IsValid(CallerWidget) == false"));
@@ -73,6 +68,7 @@ void UCardSelectorWidget::FillCards(TArray<FText> Names, TArray<UTexture2D*> Ima
 		}
 		TempCard->ConfigUnit(Names[i], Images[i], Colors[i], 1);
 		TempCard->IconClicked.AddDynamic(this, &UCardSelectorWidget::MarkCardAsSelected);
+		TempCard->bHighlightOnSelected = true;
 		CardWrapBox->AddChildToWrapBox(TempCard);
 	}
 }

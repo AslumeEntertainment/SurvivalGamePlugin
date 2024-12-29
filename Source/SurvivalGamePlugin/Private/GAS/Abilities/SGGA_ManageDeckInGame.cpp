@@ -8,10 +8,12 @@
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
+#include "FunctionLibraries/DeckFunctionLibrary.h"
 #include "Headers/GameManagingPersistentStructs.h"
 #include "Components/EquipmentComponent.h"
 #include "Interactables/Items/ItemBase.h"
 #include "Characters/InGameCharacter.h"
+#include "UI/Widgets/Deck/CardContainer.h"
 #include "UI/Widgets/Deck/InGameDeck.h"
 #include "UI/Widgets/UnitIconWidget.h"
 
@@ -90,14 +92,13 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 			continue;
 		}
 
-		ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-		ItemIcon->SetItemImage(ItemCardData->UnitImage);
-		ItemIcon->SetItemName(ItemCardData->UnitName);
-		ItemIcon->SetItemColor(ItemCardData->UnitColor);
-		ItemIcon->SetIsDraggable(true);
+		ItemIcon = InGameDeckWidget->GetEquipedCardsContainer()->AddCard(ItemCardData->UnitName, 
+			ItemCardData->UnitImage, ItemCardData->UnitColor);
 
-		InGameDeckWidget->AddUnitCardToEquipedCardsBox(ItemIcon);
-		InGameDeckWidget->SetEquipedCardsWidgetSwitcherActiveIndex(1);
+		if (IsValid(ItemIcon))
+		{
+			ItemIcon->SetIsDraggable(true);
+		}
 	}
 
 	ASG_PlayerController* SG_PlayerCont = Cast<ASG_PlayerController>(PlayerCont);
@@ -113,54 +114,28 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		return;
 	}
 
-	int Counter = 0;
-
-	TArray<FResourseCardPersistentData*> MainResourceDataRows;
-	MainHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling main hand resources", MainResourceDataRows);
-
-	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	TArray<FResourseCardPersistentData*> MainResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable);
+	for (int i = 0; i < 3; i++)
 	{
-		for (FResourseCardPersistentData* ItemCardData : MainResourceDataRows)
+		ItemIcon = InGameDeckWidget->GetMainCardsContainer()->AddCard(MainResourceDataRows[i]->UnitName,
+			MainResourceDataRows[i]->UnitImage, MainResourceDataRows[i]->UnitColor);
+
+		if (IsValid(ItemIcon))
 		{
-			if (SavedResource.ID != ItemCardData->ID) continue;
-
-			ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(ItemCardData->UnitImage);
-			ItemIcon->SetItemName(ItemCardData->UnitName);
-			ItemIcon->SetItemColor(ItemCardData->UnitColor);
 			ItemIcon->SetIsDraggable(true);
-
-			InGameDeckWidget->AddUnitCardToMainCardsBox(ItemIcon);
-			Counter++;
-
-			if (Counter == 3) break;
 		}
-		if (Counter == 3) break;
 	}
 
-	Counter = 0;
-
-	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
-	SecondaryHandResourceTable->GetAllRows<FResourseCardPersistentData>("Filling secondary hand resources", SecondaryResourceDataRows);
-
-	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
+	for (int i = 0; i < 3; i++)
 	{
-		for (FResourseCardPersistentData* ItemCardData : SecondaryResourceDataRows)
+		ItemIcon = InGameDeckWidget->GetSecondaryCardsContainer()->AddCard(SecondaryResourceDataRows[i]->UnitName,
+			SecondaryResourceDataRows[i]->UnitImage, SecondaryResourceDataRows[i]->UnitColor);
+
+		if (IsValid(ItemIcon))
 		{
-			if (SavedResource.ID != ItemCardData->ID) continue;
-
-			ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
-			ItemIcon->SetItemImage(ItemCardData->UnitImage);
-			ItemIcon->SetItemName(ItemCardData->UnitName);
-			ItemIcon->SetItemColor(ItemCardData->UnitColor);
 			ItemIcon->SetIsDraggable(true);
-
-			InGameDeckWidget->AddUnitCardToSecondaryCardsBox(ItemIcon);
-			Counter++;
-
-			if (Counter == 3) break;
 		}
-		if (Counter == 3) break;
 	}
 }
 
@@ -178,3 +153,4 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
+

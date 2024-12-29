@@ -8,6 +8,7 @@
 #include "UnitIconWidget.generated.h"
 
 class UImage;
+class UBorder;
 class UButton;
 class USizeBox;
 class UTextBlock;
@@ -34,6 +35,9 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	USizeBox* UnitSizeBox;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBorder* HighlightBorder;
+
 	virtual FEventReply RedirectMouseDownToWidget(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
 	
 	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -52,8 +56,9 @@ protected:
 	UFUNCTION()
 	void BroadcastParentOnIconClicked();
 
-
 public:
+
+	bool bHighlightOnSelected = false;
 
 	virtual void NativeOnInitialized() override;
 

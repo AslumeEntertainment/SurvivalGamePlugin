@@ -6,9 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "InGameDeck.generated.h"
 
-class UWrapBox;
-class UWidgetSwitcher;
-class UUnitIconWidget;
+class UCardContainer;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UInGameDeck : public UUserWidget
@@ -18,43 +16,23 @@ class SURVIVALGAMEPLUGIN_API UInGameDeck : public UUserWidget
 protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* EquipedCardsWrapBox;
+	UCardContainer* EquipedCardsContainer;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* MainCardsWrapBox;
+	UCardContainer* MainCardsContainer;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* SecondaryCardsWrapBox;
+	UCardContainer* SecondaryCardsContainer;
 
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWidgetSwitcher* EquipedCardsWidgetSwitcher;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
 
 public:
 
-	TArray<UWidget*> GetEquipedCards();
+	UCardContainer* GetEquipedCardsContainer();
 
-	TArray<UWidget*> GetMainHandCards();
+	UCardContainer* GetMainCardsContainer();
 
-	TArray<UWidget*> GetSecondaryHandCards();
+	UCardContainer* GetSecondaryCardsContainer();
 
-	UFUNCTION()
-	void AddUnitCardToEquipedCardsBox(UUnitIconWidget* ItemIconWidget);
-
-	UFUNCTION()
-	void AddUnitCardToMainCardsBox(UUnitIconWidget* ItemIconWidget);
-
-	UFUNCTION()
-	void AddUnitCardToSecondaryCardsBox(UUnitIconWidget* ItemIconWidget);
-
-	UFUNCTION()
-	void ClearEquipedCardsBox();
-
-	UFUNCTION()
-	void ClearMainCardsBox();
-
-	UFUNCTION()
-	void ClearSecondaryCardsBox();
-
-	UFUNCTION()
-	void SetEquipedCardsWidgetSwitcherActiveIndex(int Index);
 };

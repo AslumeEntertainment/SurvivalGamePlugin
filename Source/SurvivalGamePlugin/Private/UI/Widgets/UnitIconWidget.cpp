@@ -7,6 +7,7 @@
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 
@@ -104,6 +105,11 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 
 void UUnitIconWidget::OnIconClicked()
 {
+	if (bHighlightOnSelected)
+	{
+		HighlightBorder->SetRenderOpacity(1 - HighlightBorder->GetRenderOpacity());
+	}
+
 	UPanelWidget* ParentWidget = Cast<UPanelWidget>(this->GetParent());
 	if (IsValid(ParentWidget) == false)
 	{
