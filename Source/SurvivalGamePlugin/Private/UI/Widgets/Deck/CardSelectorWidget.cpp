@@ -18,7 +18,7 @@ void UCardSelectorWidget::MarkCardAsSelected(int Index)
 
 	SelectedCards.Add(Index);
 
-	if (SelectedCards.Num() == NumberOfCardsToSelect)
+	if (SelectedCards.Num() == NumberOfCardsToSelect || SelectedCards.Num() == CardWrapBox->GetChildrenCount())
 	{
 		if (IsValid(CallerWidget) == false)
 		{

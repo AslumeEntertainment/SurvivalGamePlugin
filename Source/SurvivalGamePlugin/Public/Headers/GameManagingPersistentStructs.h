@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "Interactables/Items/ItemBase.h"
 #include "GameManagingPersistentStructs.generated.h"
 
 USTRUCT()
@@ -89,6 +90,9 @@ struct FResourseCardPersistentData : public FPersistentDataUnit
 
     UPROPERTY(EditAnywhere)
     FDataTableRowHandle RepresentedItem;
+
+    UPROPERTY(EditAnywhere)
+    TSubclassOf<AItemBase> RepresentedItemClass;
 
     UPROPERTY(EditAnywhere)
     uint16 Value = 10;

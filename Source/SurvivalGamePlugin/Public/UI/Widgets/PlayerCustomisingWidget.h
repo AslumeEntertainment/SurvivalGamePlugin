@@ -100,6 +100,10 @@ public:
 
 	TArray<UUnitIconWidget*> FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
 
+	void ClearMainCardsPanel();
+
+	void ClearSecondaryCardsPanel();
+
 	void OpenCardSelector(UCardSelectorWidget* CardSelector);
 
 	UFUNCTION()

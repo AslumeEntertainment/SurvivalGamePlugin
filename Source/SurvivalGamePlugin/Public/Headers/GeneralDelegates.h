@@ -58,3 +58,12 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaveGameTransferSignature, USaveGame*, ReadGame);
 
 //-----------------------------------------------------------------------------------------
+
+
+
+//----------------------------------------Deck Related-------------------------------------
+
+UDELEGATE()
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FOnCardDroppedSignature, UWidget*, CardParent, int, CardIndex);
+
+//-----------------------------------------------------------------------------------------

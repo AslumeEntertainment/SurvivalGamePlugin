@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Headers/GameManagingPersistentStructs.h"
 #include "SGGA_ManageDeckInGame.generated.h"
 
 class UAbilityTask_WaitInputRelease;
@@ -11,7 +12,9 @@ class UEquipmentComponent;
 class APlayerController;
 class AInGameCharacter;
 class UUnitIconWidget;
+class UCardContainer;
 class UInGameDeck;
+class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ManageDeckInGame : public USG_GameplayAbility
@@ -25,9 +28,15 @@ public:
 
 protected:
 
+	bool bIsDropedItemToBeEquiped = false;
+
 	AInGameCharacter* Player;
 	APlayerController* PlayerCont;
 	UEquipmentComponent* EquipmentComp;
+
+	TArray<FResourseCardPersistentData*> EquipedItemsData;
+	TArray<FResourseCardPersistentData*> MainItemsData;
+	TArray<FResourseCardPersistentData*> SecondaryItemsData;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UInGameDeck> InGameDeckWidgetClass;
@@ -37,9 +46,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	UDataTable* SecondaryHandResourceTable = nullptr;
-	
-	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* ItemsDataTable = nullptr;
 
 	UPROPERTY()
 	UInGameDeck* InGameDeckWidget;
@@ -53,4 +59,20 @@ protected:
 	UFUNCTION()
 	void CloseDeckManager(float TimeHeld);
 
+	UFUNCTION()
+	bool AttemptTransferCardFromDeckToWorld(UWidget* CardParent, int CardIndex);
+
+	UFUNCTION()
+	bool AttemptTransferCardFromDeckToEquipment(UWidget* CardParent, int CardIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
+
+private:
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
+
+	UFUNCTION()
+	void EnableDroppingInWorld();
 };

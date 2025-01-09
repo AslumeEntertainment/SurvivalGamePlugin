@@ -270,6 +270,10 @@ void APlayerCustomiser::DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* 
 		TArray<FHeroCardPersistentData*> HeroDataRows = UDeckFunctionLibrary::GetPlayerHeroSaveData(Save, HeroTable);
 		for (int i : CardIndexes)
 		{
+			if (i >= HeroDataRows.Num() || HeroDataRows[i] == nullptr)
+			{
+				continue;
+			}
 			TempCard = PlayerCustomisingWidget->FillHeroCardSlot(HeroDataRows[i]->UnitName,
 				HeroDataRows[i]->UnitImage, HeroDataRows[i]->HeroBackgroundImage, HeroDataRows[i]->UnitColor);
 			if (IsValid(TempCard))
@@ -293,6 +297,10 @@ void APlayerCustomiser::DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* 
 
 	for (int i : CardIndexes)
 	{
+		if (i >= ResourceDataRows.Num() || ResourceDataRows[i] == nullptr)
+		{
+			continue;
+		}
 		if (CardBox == PlayerCustomisingWidget->GetMainCardsPanel())
 		{
 			TempCard = PlayerCustomisingWidget->FillSingleMainHandCardSlot(ResourceDataRows[i]->UnitName,
@@ -454,6 +462,9 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	NeededResourceCards.Add(0);
 	NeededResourceCards.Add(1);
 	NeededResourceCards.Add(2);
+
+	PlayerCustomisingWidget->ClearMainCardsPanel();
+	PlayerCustomisingWidget->ClearSecondaryCardsPanel();
 
 	DisplayDeckCards(NeededHeroCards, PlayerCustomisingWidget->GetHeroCardPanel());
 	DisplayDeckCards(NeededResourceCards, PlayerCustomisingWidget->GetMainCardsPanel());

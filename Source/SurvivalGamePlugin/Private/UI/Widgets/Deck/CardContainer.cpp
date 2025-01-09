@@ -7,11 +7,18 @@
 #include "Components/WrapBox.h"
 
 #include "UI/Widgets/UnitIconWidget.h"
+#include "UI/DragWidget.h"
 
 bool UCardContainer::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("A widget was dropped in %s"), *this->GetName()));
-	return false;
+	UDragWidget* DragWidgetResult = Cast<UDragWidget>(InOperation);
+	if (IsValid(DragWidgetResult) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCardContainer::NativeOnDrop IsValid(DragWidgetResult) == false"));
+		return false;
+	}
+
+	return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
 }
 
 TArray<UUnitIconWidget*> UCardContainer::GetCards()
@@ -27,6 +34,11 @@ TArray<UUnitIconWidget*> UCardContainer::GetCards()
 	}
 
 	return Cards;
+}
+
+bool UCardContainer::IsThisMyCardPanel(UWidget* CardPanel)
+{
+	return (CardPanel == CardWrapBox);
 }
 
 UUnitIconWidget* UCardContainer::AddCard(FText Name, UTexture2D* Image, FLinearColor Color)

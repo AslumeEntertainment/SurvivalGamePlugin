@@ -99,7 +99,14 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 
 	if (IsValid(DragWidgetResult->ParentReference))
 	{
-		DragWidgetResult->ParentReference->AddChild(DragWidgetResult->WidgetReference);
+		TArray<UWidget*> ChildWidgets = DragWidgetResult->ParentReference->GetAllChildren();
+		ChildWidgets.Insert(DragWidgetResult->WidgetReference, DragWidgetResult->ChildIndexReference);
+
+		DragWidgetResult->ParentReference->ClearChildren();
+		for (UWidget* ChildWidget : ChildWidgets)
+		{
+			DragWidgetResult->ParentReference->AddChild(ChildWidget);
+		}
 	}
 }
 

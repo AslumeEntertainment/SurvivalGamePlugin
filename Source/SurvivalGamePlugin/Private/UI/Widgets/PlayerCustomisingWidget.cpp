@@ -167,10 +167,7 @@ TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillMainHandCardsSlots(TArray
 		return TArray<UUnitIconWidget*>();
 	}
 
-	if (MainHandCardsBox->HasAnyChildren())
-	{
-		MainHandCardsBox->ClearChildren();
-	}
+	ClearMainCardsPanel();
 
 	TArray<UUnitIconWidget*> AddedCards;
 
@@ -205,10 +202,7 @@ TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillSecondaryHandCardsSlots(T
 		return TArray<UUnitIconWidget*>();
 	}
 
-	if (SecondaryHandCardsBox->HasAnyChildren())
-	{
-		SecondaryHandCardsBox->ClearChildren();
-	}
+	ClearSecondaryCardsPanel();
 
 	TArray<UUnitIconWidget*> AddedCards;
 
@@ -218,6 +212,22 @@ TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillSecondaryHandCardsSlots(T
 	}
 
 	return AddedCards;
+}
+
+void UPlayerCustomisingWidget::ClearMainCardsPanel()
+{
+	if (MainHandCardsBox->HasAnyChildren())
+	{
+		MainHandCardsBox->ClearChildren();
+	}
+}
+
+void UPlayerCustomisingWidget::ClearSecondaryCardsPanel()
+{
+	if (SecondaryHandCardsBox->HasAnyChildren())
+	{
+		SecondaryHandCardsBox->ClearChildren();
+	}
 }
 
 void UPlayerCustomisingWidget::OpenCardSelector(UCardSelectorWidget* CardSelector)

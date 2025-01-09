@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Headers/GeneralDelegates.h"
 #include "CardContainer.generated.h"
 
 class UWrapBox;
+class UPanelWidget;
 class UWidgetSwitcher;
 class UUnitIconWidget;
 
@@ -32,10 +34,14 @@ public:
 
 	TArray<UUnitIconWidget*> GetCards();
 
+	bool IsThisMyCardPanel(UWidget* CardPanel);
+
 	UFUNCTION()
 	UUnitIconWidget* AddCard(FText Name, UTexture2D* Image, FLinearColor Color);
 
 	UFUNCTION()
 	void ClearCards();
+
+	FOnCardDroppedSignature OnCardDropped;
 
 };

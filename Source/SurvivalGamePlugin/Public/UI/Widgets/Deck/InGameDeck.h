@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Headers/GeneralDelegates.h"
 #include "InGameDeck.generated.h"
 
 class UCardContainer;
@@ -34,5 +35,7 @@ public:
 	UCardContainer* GetMainCardsContainer();
 
 	UCardContainer* GetSecondaryCardsContainer();
+
+	FOnCardDroppedSignature OnCardDropped;
 
 };

@@ -3,13 +3,21 @@
 
 #include "UI/Widgets/Deck/InGameDeck.h"
 
-#include "UI/Widgets/Deck/CardContainer.h"
+#include "Components/PanelWidget.h"
 
+#include "UI/Widgets/Deck/CardContainer.h"
+#include "UI/DragWidget.h"
 
 bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("A widget was dropped in %s"), *this->GetName()));
-	return false;
+	UDragWidget* DragWidgetResult = Cast<UDragWidget>(InOperation);
+	if (IsValid(DragWidgetResult) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCardContainer::NativeOnDrop IsValid(DragWidgetResult) == false"));
+		return false;
+	}
+
+	return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
 }
 
 UCardContainer* UInGameDeck::GetEquipedCardsContainer()
