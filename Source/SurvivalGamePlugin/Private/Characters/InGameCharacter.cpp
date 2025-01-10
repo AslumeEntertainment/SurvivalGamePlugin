@@ -208,7 +208,6 @@ void AInGameCharacter::MainHandAction()
 	else
 	{
 		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedMainEquipmentSlotTag())) || 
 				IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
@@ -236,8 +235,7 @@ void AInGameCharacter::SecondaryHandAction()
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) || 
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetCombinedSecondaryEquipmentSlotTag())) ||
+		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) ||
 			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
 		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
 		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));

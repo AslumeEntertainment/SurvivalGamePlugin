@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Headers/PhysicalPropertyEnums.h"
+
 #include "ItemDataStruct.generated.h"
 
 class AItemBase;
@@ -57,6 +61,9 @@ struct FItemDataStruct : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FGameplayTag EquipmentSlotTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	EWeight ItemWeight;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;

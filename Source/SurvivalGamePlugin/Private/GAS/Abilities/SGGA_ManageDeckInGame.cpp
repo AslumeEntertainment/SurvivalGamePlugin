@@ -296,14 +296,9 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UWidget* Car
 	FItemDataStruct* ResourceItemData = ResourseCardData->RepresentedItem.GetRow<FItemDataStruct>("");
 	FGameplayTag ItemEquipmentSlot = ResourceItemData->EquipmentSlotTag;
 
-	if (EquipmentComp->HasEquipmentSlotWithTag(ItemEquipmentSlot) == false)
+	if (EquipmentComp->HasEquipmentSlotWithTag(ItemEquipmentSlot) == false || EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AttemptTransferCardFromDeckToEquipment: Player doesn't have an equipment slot for this item"));
-		return false;
-	}
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(ItemEquipmentSlot)))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AttemptTransferCardFromDeckToEquipment: Player doesn't have space for this item"));
 		return false;
 	}
 
@@ -344,8 +339,7 @@ void USGGA_ManageDeckInGame::SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AI
 
 	if (IsValid(NewItem) && bShouldEquip)
 	{
-		EquipmentComp->SetEquipedItemAtSlot(ItemData.EquipmentSlotTag, NewItem);
-		NewItem->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(ItemData.EquipmentSlotTag));
+		EquipmentComp->EquipItem(NewItem);
 	}
 }
 

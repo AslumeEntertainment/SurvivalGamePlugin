@@ -62,15 +62,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
 	FGameplayTag MixedEquipmentSlotTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedMainEquipmentSlotTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
-	FGameplayTag CombinedSecondaryEquipmentSlotTag;
-
 	void PackageEquipment(FPackagedEquipmentData& OutEquipment);
 
 	void ReconstructEquipmentData(const FPackagedEquipmentData& EquipmentData);
@@ -93,29 +84,23 @@ public:
 	FGameplayTag GetMainEquipmentSlotTag()                { return MainEquipmentSlotTag; }
 	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
 	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
-	FGameplayTag GetCombinedEquipmentSlotTag()            { return CombinedEquipmentSlotTag; }
-	FGameplayTag GetCombinedMainEquipmentSlotTag()        { return CombinedMainEquipmentSlotTag; }
-	FGameplayTag GetCombinedSecondaryEquipmentSlotTag()   { return CombinedSecondaryEquipmentSlotTag; }
 
 	void SwapMainAndSecondaryEquipmentSlots();
 
 	UFUNCTION()
-	bool EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty);
+	bool EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);
 
 	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetPossibleEquipmentSlotForItem(FGameplayTag ItemDefaultEquipmentSlot);
+	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
-
-	UFUNCTION(BlueprintCallable)
-	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag = true);
+	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag = true);
+	void Server_SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag = true) const;
+	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
 	TArray<AItemBase*> GetAllEquipedItems() const;
@@ -130,10 +115,10 @@ public:
 	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;
 
 	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
+	bool HasEquipmentSocketWithTag(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
-	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag = true) const;
+	FName GetEquipmentSocketWithTag(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
 	TMap<FGameplayTag, AItemBase*> GetEquipmentSlots() const;
