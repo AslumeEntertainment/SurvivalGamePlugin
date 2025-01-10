@@ -17,7 +17,12 @@ bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 		return false;
 	}
 
-	return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
+	if (OnCardDropped.IsBound())
+	{
+		return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
+	}
+
+	return false;
 }
 
 UCardContainer* UInGameDeck::GetEquipedCardsContainer()

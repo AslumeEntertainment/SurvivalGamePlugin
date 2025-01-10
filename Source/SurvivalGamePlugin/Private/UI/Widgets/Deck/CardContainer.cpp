@@ -18,7 +18,12 @@ bool UCardContainer::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 		return false;
 	}
 
-	return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
+	if (OnCardDropped.IsBound())
+	{
+		return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
+	}
+
+	return false;
 }
 
 TArray<UUnitIconWidget*> UCardContainer::GetCards()

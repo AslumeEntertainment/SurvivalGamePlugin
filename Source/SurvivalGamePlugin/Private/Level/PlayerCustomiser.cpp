@@ -426,6 +426,7 @@ void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 	if (IsValid(HUD))
 	{
 		HUD->ShowInteractionOverlayWidget();
+		InteractingPlayer->bShowMouseCursor = false;
 	}
 
 	bUsesAnimation ? PlayerCustomisingWidget->CloseWidget() : PlayerCustomisingWidget->RemoveFromParent();
@@ -452,6 +453,7 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 		if (IsValid(HUD))
 		{
 			HUD->RemoveInteractionOverlayWidget();
+			InteractingPlayer->bShowMouseCursor = true;
 		}
 	}
 

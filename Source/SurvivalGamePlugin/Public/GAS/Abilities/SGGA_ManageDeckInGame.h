@@ -57,6 +57,15 @@ protected:
 	void OpenDeckManager();
 
 	UFUNCTION()
+	void RefreshEquipedCards();
+
+	UFUNCTION()
+	void RefreshMainCards();
+
+	UFUNCTION()
+	void RefreshSecondaryCards();
+
+	UFUNCTION()
 	void CloseDeckManager(float TimeHeld);
 
 	UFUNCTION()

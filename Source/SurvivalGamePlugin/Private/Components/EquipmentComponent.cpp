@@ -6,6 +6,8 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 bool FPackagedEquipmentData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
@@ -69,6 +71,88 @@ void UEquipmentComponent::SwapMainAndSecondaryEquipmentSlots()
 		EquipmentSockets[GetMainEquipmentSlotTag()] = EquipmentSockets[GetSecondaryEquipmentSlotTag()];
 		EquipmentSockets[GetSecondaryEquipmentSlotTag()] = Temp;
 	}
+}
+
+bool UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
+{
+	if (IsValid(Item) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::EquipItem IsValid(Item) == false"));
+		return false;
+	}
+	
+	FGameplayTag ItemEquipmentSlotTag = GetPossibleEquipmentSlotForItem(Item->ItemData.EquipmentSlotTag);
+	
+	if (HasEquipmentSlotWithTag(ItemEquipmentSlotTag) == false)
+	{
+		return false;
+	}
+
+	if (bShouldSlotBeEmpty && IsValid(GetEquipedItemAtSlot(ItemEquipmentSlotTag)))
+	{
+		return false;
+	}
+
+	if (ItemEquipmentSlotTag.RequestDirectParent() == CombinedEquipmentSlotTag)
+	{
+		UnequipAllItems();
+	}
+
+	if (IsValid(GetEquipedItemAtSlot(ItemEquipmentSlotTag)))
+	{
+		
+		/*else
+		{
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())))
+			{
+				EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
+				EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), nullptr);
+			}
+			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)))
+			{
+				EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
+			}
+		}
+
+		EquipmentComp->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
+		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(SlotToEquipAtTag));*/
+
+		/*UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
+		return;*/
+	}
+
+	return true;
+}
+
+FGameplayTag UEquipmentComponent::GetPossibleEquipmentSlotForItem(FGameplayTag ItemDefaultEquipmentSlot)
+{
+	FGameplayTag PossibleEquipmentSlotTag = ItemDefaultEquipmentSlot;
+
+	UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(ASC) == false"));
+		return PossibleEquipmentSlotTag;
+	}
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) && ItemDefaultEquipmentSlot.ToString().Contains(".Combined"))
+	{
+		if (ItemDefaultEquipmentSlot == CombinedMainEquipmentSlotTag)
+		{
+			PossibleEquipmentSlotTag = MainEquipmentSlotTag;
+		}
+		else if (ItemDefaultEquipmentSlot == CombinedSecondaryEquipmentSlotTag)
+		{
+			PossibleEquipmentSlotTag = SecondaryEquipmentSlotTag;
+		}
+	}
+
+	if (HasEquipmentSlotWithTag(MixedEquipmentSlotTag))
+	{
+		PossibleEquipmentSlotTag = MixedEquipmentSlotTag;
+	}
+
+	return PossibleEquipmentSlotTag;
 }
 
 bool UEquipmentComponent::HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
