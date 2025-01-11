@@ -5,7 +5,9 @@
 
 #include "Components/PanelWidget.h"
 
+#include "UI/Widgets/Core/CardSlotWidget.h"
 #include "UI/Widgets/Deck/CardContainer.h"
+#include "UI/Widgets/UnitIconWidget.h"
 #include "UI/DragWidget.h"
 
 bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
@@ -19,9 +21,9 @@ bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 
 	if (OnCardDropped.IsBound())
 	{
-		return OnCardDropped.Execute(DragWidgetResult->ParentReference, DragWidgetResult->ChildIndexReference);
+		return OnCardDropped.Execute(DragWidgetResult->WidgetSlotReference, DragWidgetResult->ChildIndexReference);
 	}
-
+	
 	return false;
 }
 

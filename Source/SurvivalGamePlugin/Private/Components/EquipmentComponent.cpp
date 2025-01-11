@@ -145,6 +145,41 @@ bool UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 	return true;
 }
 
+bool UEquipmentComponent::UnequipItem(AItemBase* Item)
+{
+	if (IsValid(Item) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::UnequipItem IsValid(Item) == false"));
+		return false;
+	}
+
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	{
+		if (EquipmentSlot.Value == Item)
+		{
+			Item->OnItemUnequiped();
+			SetEquipedItemAtSlot(EquipmentSlot.Key, nullptr);
+		}
+	}
+
+	return true;
+}
+
+int UEquipmentComponent::GetNumberOfEquipedItems() const
+{
+	int i = 0;
+
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	{
+		if (IsValid(EquipmentSlot.Value))
+		{
+			i++;
+		}
+	}
+
+	return i;
+}
+
 
 bool UEquipmentComponent::HasEquipmentSlotWithTag(FGameplayTag SlotTag) const
 {
@@ -163,12 +198,12 @@ void UEquipmentComponent::SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* 
 		Server_SetEquipedItemAtSlot(SlotTag, Item);
 		return;
 	}
-
-	if (HasEquipmentSlotWithTag(SlotTag))
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
 	{
-		EquipmentSlots[SlotTag] = Item;
+		return;
 	}
 
+	EquipmentSlots[SlotTag] = Item;
 	PackageEquipment(CachedEquipment);
 }
 
@@ -190,7 +225,7 @@ AItemBase* UEquipmentComponent::GetEquipedItemAtSlot(FGameplayTag SlotTag) const
 TArray<AItemBase*> UEquipmentComponent::GetAllEquipedItems() const
 {
 	TArray<AItemBase*> EquipedItems;
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		if (IsValid(EquipmentSlot.Value))
 		{
@@ -212,7 +247,7 @@ void UEquipmentComponent::UnequipAllItems()
 		Server_UnequipAllItems();
 		return;
 	}
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		if (IsValid(EquipmentSlot.Value))
 		{
@@ -232,7 +267,7 @@ void UEquipmentComponent::Server_UnequipAllItems_Implementation()
 TArray<ADamageDealingItem*> UEquipmentComponent::GetAllEquipedWeapons() const
 {
 	TArray<ADamageDealingItem*> EquipedWeapons;
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
 		if (IsValid(EquipedWeapon))

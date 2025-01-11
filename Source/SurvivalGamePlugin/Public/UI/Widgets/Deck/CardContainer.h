@@ -9,8 +9,8 @@
 
 class UWrapBox;
 class UPanelWidget;
-class UWidgetSwitcher;
 class UUnitIconWidget;
+class UCardSlotWidget;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCardContainer : public UUserWidget
@@ -22,25 +22,31 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UWrapBox* CardWrapBox;
 
-	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWidgetSwitcher* CardWidgetSwitcher;
-
 	UPROPERTY(EditAnywhere, Category = "CardWidget")
 	TSubclassOf<UUnitIconWidget> CardWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "CardWidget")
+	TSubclassOf<UCardSlotWidget> CardSlotWidgetClass;
 
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
 public:
 
+	void InitContainer(int NumberOfCardsToHold);
+
 	TArray<UUnitIconWidget*> GetCards();
 
-	bool IsThisMyCardPanel(UWidget* CardPanel);
+	bool ContainsCard(UUnitIconWidget* Card);
+
+	bool ContainsSlot(UCardSlotWidget* CardSlot);
 
 	UFUNCTION()
 	UUnitIconWidget* AddCard(FText Name, UTexture2D* Image, FLinearColor Color);
 
 	UFUNCTION()
 	void ClearCards();
+
+	void ClearSlots();
 
 	FOnCardDroppedSignature OnCardDropped;
 

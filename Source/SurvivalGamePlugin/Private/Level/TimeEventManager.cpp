@@ -49,7 +49,6 @@ void ATimeEventManager::StartSkyRotation()
 {
 	SetActorRotation(FRotator(FMath::RandRange(0, 360), 270, 0));
 	SkyRotationComponent->RotationRate = FRotator(-360 / DayLength, 0, 0);
-
 }
 
 void ATimeEventManager::StopSkyRotation()

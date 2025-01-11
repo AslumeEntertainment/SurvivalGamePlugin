@@ -29,7 +29,7 @@ protected:
 
 
 public:
-
+	
 	UCardContainer* GetEquipedCardsContainer();
 
 	UCardContainer* GetMainCardsContainer();

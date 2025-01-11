@@ -11,6 +11,7 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 
+#include "UI/Widgets/Core/CardSlotWidget.h"
 #include "UI/DragWidget.h"
 
 
@@ -59,7 +60,7 @@ void UUnitIconWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 	this->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	DragDropOperation->WidgetReference = this;
-	DragDropOperation->ParentReference = this->GetParent();
+	DragDropOperation->WidgetSlotReference = Cast<UCardSlotWidget>(this->GetOuter());
 	DragDropOperation->ChildIndexReference = this->GetParent()->GetChildIndex(this);
 	DragDropOperation->DefaultDragVisual = this;
 	DragDropOperation->Pivot = EDragPivot::MouseDown;
@@ -89,24 +90,26 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(DragWidgetResult) == false"));
 		return;
 	}
-	if (IsValid(DragWidgetResult->WidgetReference) == false)
+	UUnitIconWidget* Card = Cast<UUnitIconWidget>(DragWidgetResult->WidgetReference);
+	if (IsValid(Card) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(DragWidgetResult->WidgetReference) == false"));
+		UE_LOG(LogTemp, Warning, TEXT("UUnitIconWidget::NativeOnDragCancelled IsValid(Card) == false"));
 		return;
 	}
 
-	DragWidgetResult->WidgetReference->SetVisibility(ESlateVisibility::Visible);
+	Card->SetVisibility(ESlateVisibility::Visible);
 
-	if (IsValid(DragWidgetResult->ParentReference))
+	if (IsValid(DragWidgetResult->WidgetSlotReference))
 	{
-		TArray<UWidget*> ChildWidgets = DragWidgetResult->ParentReference->GetAllChildren();
+		DragWidgetResult->WidgetSlotReference->SetCard(Card);
+		/*TArray<UWidget*> ChildWidgets = DragWidgetResult->ParentReference->GetAllChildren();
 		ChildWidgets.Insert(DragWidgetResult->WidgetReference, DragWidgetResult->ChildIndexReference);
 
 		DragWidgetResult->ParentReference->ClearChildren();
 		for (UWidget* ChildWidget : ChildWidgets)
 		{
 			DragWidgetResult->ParentReference->AddChild(ChildWidget);
-		}
+		}*/
 	}
 }
 

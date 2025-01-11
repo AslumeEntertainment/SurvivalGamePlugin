@@ -45,15 +45,6 @@ void USGGA_ManageDeckInGame::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	OpenDeckManager();
 
-	if (HasAuthority(&ActivationInfo))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SERVER Setting task"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CLIENT Setting task"));
-	}
-
 	WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_ManageDeckInGame::CloseDeckManager);
 	WaitInputReleaseTask->ReadyForActivation();
@@ -95,6 +86,7 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 	InGameDeckWidget->OnCardDropped.BindDynamic(this, &USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld);
 	InGameDeckWidget->GetEquipedCardsContainer()->OnCardDropped.BindDynamic(this, &USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment);
 
+	InGameDeckWidget->GetEquipedCardsContainer()->InitContainer(EquipmentComp->GetEquipmentSlots().Num());
 	RefreshEquipedCards();
 
 	ASG_PlayerController* SG_PlayerCont = Cast<ASG_PlayerController>(PlayerCont);
@@ -121,6 +113,7 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		}
 		MainItemsData.Add(MainResourceDataRows[i]);
 	}
+	InGameDeckWidget->GetMainCardsContainer()->InitContainer(3);
 	RefreshMainCards();
 	
 	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
@@ -132,17 +125,23 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		}
 		SecondaryItemsData.Add(SecondaryResourceDataRows[i]);
 	}
+	InGameDeckWidget->GetSecondaryCardsContainer()->InitContainer(3);
 	RefreshSecondaryCards();
 }
 
 void USGGA_ManageDeckInGame::RefreshEquipedCards()
 {
-	InGameDeckWidget->GetEquipedCardsContainer()->ClearCards();
+	//InGameDeckWidget->GetEquipedCardsContainer()->ClearCards();
+	EquipedItemsData.Empty();
 
 	UUnitIconWidget* ItemIcon = nullptr;
 
 	TArray<AItemBase*> EquipedItems = EquipmentComp->GetAllEquipedItems();
-	for (int i = EquipedItems.Num() - 1; i >= 0; i--)
+	
+	int IterationStep = Player->IsRightHanded() ? -1 : 1;
+	int i = Player->IsRightHanded() ? EquipedItems.Num() - 1 : 0;
+
+	for ( ; i >= 0 && i < EquipedItems.Num(); i += IterationStep)
 	{
 		FResourseCardPersistentData* ItemCardData = EquipedItems[i]->ItemData.ResourceCardData.GetRow<FResourseCardPersistentData>("");
 		if (ItemCardData == nullptr)
@@ -164,7 +163,7 @@ void USGGA_ManageDeckInGame::RefreshEquipedCards()
 
 void USGGA_ManageDeckInGame::RefreshMainCards()
 {
-	InGameDeckWidget->GetMainCardsContainer()->ClearCards();
+	//InGameDeckWidget->GetMainCardsContainer()->ClearCards();
 
 	UUnitIconWidget* ItemIcon = nullptr;
 
@@ -181,7 +180,7 @@ void USGGA_ManageDeckInGame::RefreshMainCards()
 
 void USGGA_ManageDeckInGame::RefreshSecondaryCards()
 {
-	InGameDeckWidget->GetSecondaryCardsContainer()->ClearCards();
+	//InGameDeckWidget->GetSecondaryCardsContainer()->ClearCards();
 
 	UUnitIconWidget* ItemIcon = nullptr;
 
@@ -198,15 +197,6 @@ void USGGA_ManageDeckInGame::RefreshSecondaryCards()
 
 void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 {
-	if (HasAuthority(&CurrentActivationInfo))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SERVER Task executing"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CLIENT Task executing"));
-	}
-
 	if (IsLocallyControlled() == false)
 	{
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -222,25 +212,47 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UWidget* CardParent, int CardIndex)
+bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UCardSlotWidget* Slot, int CardIndex)
 {
+	UE_LOG(LogTemp, Warning, TEXT("AttemptTransferCardFromDeckToWorld"));
 	if (bIsDropedItemToBeEquiped)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot do this because the card was dropped in a container"));
 		return false;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Checking if card is from equipment"));
+	if (InGameDeckWidget->GetEquipedCardsContainer()->ContainsSlot(Slot))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("It is!"));
+		if (Player->IsRightHanded())
+		{
+			EquipmentComp->UnequipItem(EquipmentComp->GetAllEquipedItems()[EquipedItemsData.Num() - 1 - CardIndex]);
+		}
+		else
+		{
+			EquipmentComp->UnequipItem(EquipmentComp->GetAllEquipedItems()[CardIndex]);
+		}
+		RefreshEquipedCards();
+		return true;
 	}
 
 	FResourseCardPersistentData* ResourseCardData = nullptr;
 
-	if (InGameDeckWidget->GetMainCardsContainer()->IsThisMyCardPanel(CardParent))
+	UE_LOG(LogTemp, Warning, TEXT("Checking if card is from main hand box"));
+	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("It is!"));
 		ResourseCardData = MainItemsData[CardIndex];
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->IsThisMyCardPanel(CardParent))
+	UE_LOG(LogTemp, Warning, TEXT("Checking if card is from secondary hand box"));
+	if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("It is!"));
 		ResourseCardData = SecondaryItemsData[CardIndex];
 	}
 	if (ResourseCardData == nullptr)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot find the card's origin"));
 		return false;
 	}
 
@@ -249,20 +261,25 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UWidget* CardPar
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Attempting to drop %s"), *ResourseCardData->UnitName.ToString()));
 
 	SpawnItemFromCard(false, ResourseCardData->RepresentedItemClass, *ResourceItemData);
-	if (InGameDeckWidget->GetMainCardsContainer()->IsThisMyCardPanel(CardParent))
+	UE_LOG(LogTemp, Warning, TEXT("Item should have spawned by now..."));
+	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Refreshing main cards..."));
 		MainItemsData.RemoveAt(CardIndex);
 		RefreshMainCards();
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->IsThisMyCardPanel(CardParent))
+	if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Refreshing secondary cards..."));
 		SecondaryItemsData.RemoveAt(CardIndex);
 		RefreshSecondaryCards();
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Everything should be done!"));
+	
 	return true;
 }
 
-bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UWidget* CardParent, int CardIndex)
+bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UCardSlotWidget* Slot, int CardIndex)
 {
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
@@ -278,12 +295,12 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UWidget* Car
 	UCardContainer* CardParentContainer = nullptr;
 	FResourseCardPersistentData* ResourseCardData = nullptr;
 
-	if (InGameDeckWidget->GetMainCardsContainer()->IsThisMyCardPanel(CardParent))
+	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
 	{
 		ResourseCardData = MainItemsData[CardIndex];
 		CardParentContainer = InGameDeckWidget->GetMainCardsContainer();
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->IsThisMyCardPanel(CardParent))
+	else if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
 	{
 		ResourseCardData = SecondaryItemsData[CardIndex];
 		CardParentContainer = InGameDeckWidget->GetSecondaryCardsContainer();
@@ -296,7 +313,7 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UWidget* Car
 	FItemDataStruct* ResourceItemData = ResourseCardData->RepresentedItem.GetRow<FItemDataStruct>("");
 	FGameplayTag ItemEquipmentSlot = ResourceItemData->EquipmentSlotTag;
 
-	if (EquipmentComp->HasEquipmentSlotWithTag(ItemEquipmentSlot) == false || EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) == false)
+	if (EquipmentComp->HasEquipmentSlotWithTag(ItemEquipmentSlot) == false && EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AttemptTransferCardFromDeckToEquipment: Player doesn't have an equipment slot for this item"));
 		return false;
@@ -305,12 +322,12 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UWidget* Car
 	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Attempting to equip %s"), *ResourseCardData->UnitName.ToString()));
 
 	SpawnItemFromCard(true, ResourseCardData->RepresentedItemClass, *ResourceItemData);
-	if (InGameDeckWidget->GetMainCardsContainer()->IsThisMyCardPanel(CardParent))
+	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
 	{
 		MainItemsData.RemoveAt(CardIndex);
 		RefreshMainCards();
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->IsThisMyCardPanel(CardParent))
+	else if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
 	{
 		SecondaryItemsData.RemoveAt(CardIndex);
 		RefreshSecondaryCards();
@@ -324,8 +341,8 @@ void USGGA_ManageDeckInGame::SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AI
 {
 	if (HasAuthority(&CurrentActivationInfo) == false)
 	{
-		Server_SpawnItemFromCard(bShouldEquip, ItemClass, ItemData);
-		return;
+		//Server_SpawnItemFromCard(bShouldEquip, ItemClass, ItemData);
+		//return;
 	}
 
 	UWorld* World = GetWorld();

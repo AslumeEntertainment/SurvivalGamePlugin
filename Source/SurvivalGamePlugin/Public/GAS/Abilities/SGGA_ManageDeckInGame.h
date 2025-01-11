@@ -11,6 +11,7 @@ class UAbilityTask_WaitInputRelease;
 class UEquipmentComponent;
 class APlayerController;
 class AInGameCharacter;
+class UCardSlotWidget;
 class UUnitIconWidget;
 class UCardContainer;
 class UInGameDeck;
@@ -69,10 +70,10 @@ protected:
 	void CloseDeckManager(float TimeHeld);
 
 	UFUNCTION()
-	bool AttemptTransferCardFromDeckToWorld(UWidget* CardParent, int CardIndex);
+	bool AttemptTransferCardFromDeckToWorld(UCardSlotWidget* Slot, int CardIndex);
 
 	UFUNCTION()
-	bool AttemptTransferCardFromDeckToEquipment(UWidget* CardParent, int CardIndex);
+	bool AttemptTransferCardFromDeckToEquipment(UCardSlotWidget* Slot, int CardIndex);
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);

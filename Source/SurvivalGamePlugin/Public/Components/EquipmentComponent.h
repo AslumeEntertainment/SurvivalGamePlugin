@@ -87,8 +87,14 @@ public:
 
 	void SwapMainAndSecondaryEquipmentSlots();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	bool EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);
+
+	UFUNCTION(BlueprintCallable)
+	bool UnequipItem(AItemBase* Item);
+
+	UFUNCTION(BlueprintCallable)
+	int GetNumberOfEquipedItems() const;
 
 	UFUNCTION(BlueprintCallable)
 	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;

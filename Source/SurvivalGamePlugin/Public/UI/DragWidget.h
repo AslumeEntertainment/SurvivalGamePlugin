@@ -8,7 +8,7 @@
 
 
 class UUserWidget;
-class UPanelWidget;
+class UCardSlotWidget;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UDragWidget : public UDragDropOperation
@@ -21,7 +21,7 @@ public:
 	UUserWidget* WidgetReference = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UPanelWidget* ParentReference = nullptr;
+	UCardSlotWidget* WidgetSlotReference = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int ChildIndexReference = 0;

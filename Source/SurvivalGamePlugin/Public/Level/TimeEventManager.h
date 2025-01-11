@@ -51,10 +51,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bShouldPrintDebug = true;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void StartSkyRotation();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void StopSkyRotation();
 
 };
