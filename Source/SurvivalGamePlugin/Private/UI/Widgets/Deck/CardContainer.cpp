@@ -48,7 +48,7 @@ TArray<UUnitIconWidget*> UCardContainer::GetCards()
 	for (UWidget* Child : CardWrapBox->GetAllChildren())
 	{
 		UCardSlotWidget* CardSlot = Cast<UCardSlotWidget>(Child);
-		if (IsValid(CardSlot) && IsValid(CardSlot->GetCard()))
+		if (IsValid(CardSlot) && CardSlot->IsEmpty() == false)
 		{
 			Cards.Add(CardSlot->GetCard());
 		}
@@ -115,6 +115,34 @@ UUnitIconWidget* UCardContainer::AddCard(FText Name, UTexture2D* Image, FLinearC
 	}
 
 	return nullptr;
+}
+
+UUnitIconWidget* UCardContainer::InsertCardAt(FText Name, UTexture2D* Image, FLinearColor Color, int Index)
+{
+	if (Index < 0 || Index >= CardWrapBox->GetChildrenCount())
+	{
+		return nullptr;
+	}
+	UCardSlotWidget* CardSlot = Cast<UCardSlotWidget>(CardWrapBox->GetChildAt(Index));
+	if (IsValid(CardSlot) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCardContainer::InsertCardAt IsValid(CardSlot) == false"))
+		return nullptr;
+	}
+	if (CardSlot->IsEmpty() == false)
+	{
+		return nullptr;
+	}
+
+	UUnitIconWidget* Card = CreateWidget<UUnitIconWidget>(this, CardWidgetClass);
+	if (IsValid(Card) == false)
+	{
+		return nullptr;
+	}
+	Card->ConfigUnit(Name, Image, Color, 1);
+	CardSlot->SetCard(Card);
+
+	return Card;
 }
 
 void UCardContainer::ClearCards()

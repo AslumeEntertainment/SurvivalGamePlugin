@@ -222,15 +222,25 @@ AItemBase* UEquipmentComponent::GetEquipedItemAtSlot(FGameplayTag SlotTag) const
 	return EquipmentSlots[SlotTag];
 }
 
-TArray<AItemBase*> UEquipmentComponent::GetAllEquipedItems() const
+TArray<AItemBase*> UEquipmentComponent::GetAllEquipedItems(bool bIsReversed, bool bIncludeNullItems) const
 {
 	TArray<AItemBase*> EquipedItems;
 	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
-		if (IsValid(EquipmentSlot.Value))
+		if (IsValid(EquipmentSlot.Value) == false && bIncludeNullItems == false)
+		{
+			continue;
+		}
+
+		if (bIsReversed)
+		{
+			EquipedItems.Insert(EquipmentSlot.Value, 0);
+		}
+		else
 		{
 			EquipedItems.Add(EquipmentSlot.Value);
 		}
+		
 	}
 	return EquipedItems;
 }
@@ -251,8 +261,7 @@ void UEquipmentComponent::UnequipAllItems()
 	{
 		if (IsValid(EquipmentSlot.Value))
 		{
-			EquipmentSlot.Value->OnItemUnequiped();
-			EquipmentSlot.Value = nullptr;
+			UnequipItem(EquipmentSlot.Value);
 		}
 	}
 

@@ -109,7 +109,7 @@ public:
 	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AItemBase*> GetAllEquipedItems() const;
+	TArray<AItemBase*> GetAllEquipedItems(bool bIsReversed = false, bool bIncludeNullItems = false) const;
 
 	UFUNCTION(BlueprintCallable)
 	void UnequipAllItems();

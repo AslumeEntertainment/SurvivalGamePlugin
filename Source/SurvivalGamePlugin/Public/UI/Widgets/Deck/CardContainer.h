@@ -40,10 +40,10 @@ public:
 
 	bool ContainsSlot(UCardSlotWidget* CardSlot);
 
-	UFUNCTION()
 	UUnitIconWidget* AddCard(FText Name, UTexture2D* Image, FLinearColor Color);
 
-	UFUNCTION()
+	UUnitIconWidget* InsertCardAt(FText Name, UTexture2D* Image, FLinearColor Color, int Index);
+
 	void ClearCards();
 
 	void ClearSlots();

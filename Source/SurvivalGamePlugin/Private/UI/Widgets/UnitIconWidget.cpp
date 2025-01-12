@@ -60,8 +60,8 @@ void UUnitIconWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FP
 	this->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	DragDropOperation->WidgetReference = this;
-	DragDropOperation->WidgetSlotReference = Cast<UCardSlotWidget>(this->GetOuter());
-	DragDropOperation->ChildIndexReference = this->GetParent()->GetChildIndex(this);
+	DragDropOperation->WidgetSlotReference = Cast<UCardSlotWidget>(this->GetParent()->GetOuter()->GetOuter());
+	DragDropOperation->ChildIndexReference = DragDropOperation->WidgetSlotReference->GetParent()->GetChildIndex(DragDropOperation->WidgetSlotReference);
 	DragDropOperation->DefaultDragVisual = this;
 	DragDropOperation->Pivot = EDragPivot::MouseDown;
 
@@ -102,14 +102,6 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 	if (IsValid(DragWidgetResult->WidgetSlotReference))
 	{
 		DragWidgetResult->WidgetSlotReference->SetCard(Card);
-		/*TArray<UWidget*> ChildWidgets = DragWidgetResult->ParentReference->GetAllChildren();
-		ChildWidgets.Insert(DragWidgetResult->WidgetReference, DragWidgetResult->ChildIndexReference);
-
-		DragWidgetResult->ParentReference->ClearChildren();
-		for (UWidget* ChildWidget : ChildWidgets)
-		{
-			DragWidgetResult->ParentReference->AddChild(ChildWidget);
-		}*/
 	}
 }
 
