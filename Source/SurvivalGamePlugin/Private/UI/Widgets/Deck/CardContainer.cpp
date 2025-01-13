@@ -6,7 +6,7 @@
 #include "Components/WrapBox.h"
 
 #include "UI/Widgets/Core/CardSlotWidget.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 #include "UI/DragWidget.h"
 
 bool UCardContainer::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)

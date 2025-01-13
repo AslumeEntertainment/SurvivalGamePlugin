@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Widgets/AnnouncementWidgetBase.h"
+#include "UI/Widgets/Core/AnnouncementWidgetBase.h"
 
 #include "Components/TextBlock.h"
 

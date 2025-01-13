@@ -7,7 +7,7 @@
 
 #include "UI/Widgets/Core/CardSlotWidget.h"
 #include "UI/Widgets/Deck/CardContainer.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 #include "UI/DragWidget.h"
 
 bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)

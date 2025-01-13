@@ -6,7 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WrapBox.h"
 
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 
 void UCardSelectorWidget::MarkCardAsSelected(int Index)
 {

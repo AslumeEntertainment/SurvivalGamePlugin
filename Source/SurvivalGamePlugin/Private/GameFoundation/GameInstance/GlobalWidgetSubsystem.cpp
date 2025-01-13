@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h" 
 #include "MoviePlayer.h"
 
-#include "UI/Widgets/AnnouncementWidgetBase.h"
+#include "UI/Widgets/Core/AnnouncementWidgetBase.h"
 
 DEFINE_LOG_CATEGORY_STATIC(GlobalWidgetSubsystem, Log, All);
 
