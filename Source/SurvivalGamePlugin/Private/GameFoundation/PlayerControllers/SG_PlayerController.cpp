@@ -10,7 +10,8 @@
 #include "GameFoundation/GameInstance/UserCloudSubsystem.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
-
+#include "Components/EquipmentComponent.h"
+#include "Characters/InGameCharacter.h"
 
 void ASG_PlayerController::BeginPlay()
 {
@@ -39,14 +40,6 @@ void ASG_PlayerController::BeginPlay()
 void ASG_PlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	/*if (bIsCameraMovementConstrained)
-	{
-		PlayerCameraManager->ViewYawMin = -80.f;
-		PlayerCameraManager->ViewYawMax = 80.f;
-		PlayerCameraManager->ViewPitchMin = -55.f;
-		PlayerCameraManager->ViewPitchMax = 55.f;
-	}*/
 
 }
 
@@ -106,6 +99,46 @@ void ASG_PlayerController::WriteSave()
 {
 	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::WriteSave Requesting Write"));
 	OnWriteSaveRequested.Broadcast(Save);
+}
+
+void ASG_PlayerController::SpawnItemInFrontOfPlayer(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData)
+{
+	if (HasAuthority() == false)
+	{
+		Server_SpawnItemInFrontOfPlayer(bShouldEquip, ItemClass, ItemData);
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::SpawnItemInFrontOfPlayer IsValid(World) == false"));
+		return;
+	}
+	AInGameCharacter* PlayerPawn = Cast<AInGameCharacter>(GetPawn());
+	if (IsValid(Player) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::SpawnItemInFrontOfPlayer IsValid(Player) == false"));
+		return;
+	}
+	UEquipmentComponent* EquipmentComp = PlayerPawn->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::SpawnItemInFrontOfPlayer IsValid(EquipmentComp) == false"));
+		return;
+	}
+
+	AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, PlayerPawn->GetPlayerLookAtLocation(100.f), PlayerPawn->GetActorRotation());
+
+	if (IsValid(NewItem) && bShouldEquip)
+	{
+		EquipmentComp->EquipItem(NewItem);
+	}
+}
+
+void ASG_PlayerController::Server_SpawnItemInFrontOfPlayer_Implementation(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData)
+{
+	SpawnItemInFrontOfPlayer(bShouldEquip, ItemClass, ItemData);
 }
 
 USG_SaveGame* ASG_PlayerController::GetSave()

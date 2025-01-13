@@ -8,8 +8,8 @@
 #include "SGGA_ManageDeckInGame.generated.h"
 
 class UAbilityTask_WaitInputRelease;
+class ASG_PlayerController;
 class UEquipmentComponent;
-class APlayerController;
 class AInGameCharacter;
 class UCardSlotWidget;
 class UUnitIconWidget;
@@ -32,7 +32,7 @@ protected:
 	bool bIsDropedItemToBeEquiped = false;
 
 	AInGameCharacter* Player;
-	APlayerController* PlayerCont;
+	ASG_PlayerController* PlayerCont;
 	UEquipmentComponent* EquipmentComp;
 
 	TArray<FResourseCardPersistentData*> EquipedItemsData;
@@ -75,13 +75,7 @@ protected:
 	UFUNCTION()
 	bool AttemptTransferCardFromDeckToEquipment(UCardSlotWidget* Slot, int CardIndex);
 
-	UFUNCTION(BlueprintCallable)
-	void SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
-
 private:
-
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
 
 	UFUNCTION()
 	void EnableDroppingInWorld();

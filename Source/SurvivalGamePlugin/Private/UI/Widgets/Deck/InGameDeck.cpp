@@ -32,12 +32,13 @@ UCardContainer* UInGameDeck::GetEquipedCardsContainer()
 	return EquipedCardsContainer;
 }
 
-UCardContainer* UInGameDeck::GetMainCardsContainer()
+UCardContainer* UInGameDeck::GetMainCardsContainer(bool bIsPlayerRightHanded)
 {
-	return MainCardsContainer;
+	return bIsPlayerRightHanded ? RightVerticalCardsContainer : LeftVerticalCardsContainer;
 }
 
-UCardContainer* UInGameDeck::GetSecondaryCardsContainer()
+UCardContainer* UInGameDeck::GetSecondaryCardsContainer(bool bIsPlayerRightHanded)
 {
-	return SecondaryCardsContainer;
+	return bIsPlayerRightHanded ? LeftVerticalCardsContainer : RightVerticalCardsContainer;
 }
+

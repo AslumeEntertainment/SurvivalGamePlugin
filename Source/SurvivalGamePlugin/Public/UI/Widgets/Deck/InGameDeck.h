@@ -20,10 +20,10 @@ protected:
 	UCardContainer* EquipedCardsContainer;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UCardContainer* MainCardsContainer;
+	UCardContainer* LeftVerticalCardsContainer;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UCardContainer* SecondaryCardsContainer;
+	UCardContainer* RightVerticalCardsContainer;
 
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
@@ -32,9 +32,9 @@ public:
 	
 	UCardContainer* GetEquipedCardsContainer();
 
-	UCardContainer* GetMainCardsContainer();
+	UCardContainer* GetMainCardsContainer(bool bIsPlayerRightHanded);
 
-	UCardContainer* GetSecondaryCardsContainer();
+	UCardContainer* GetSecondaryCardsContainer(bool bIsPlayerRightHanded);
 
 	FOnCardDroppedSignature OnCardDropped;
 

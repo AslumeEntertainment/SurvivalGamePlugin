@@ -78,10 +78,10 @@ void USGGA_UnequipItem::UnequipMain(FGameplayEventData Payload)
 	{
 		return;
 	}
-	
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), nullptr);
-}
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), nullptr);
+}                                                                          
 
 
 void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
@@ -90,9 +90,9 @@ void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
 	{
 		return;
 	}
-	
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), nullptr);
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::UnequipMixed(FGameplayEventData Payload)
@@ -101,9 +101,9 @@ void USGGA_UnequipItem::UnequipMixed(FGameplayEventData Payload)
 	{
 		return;
 	}
-
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::OnUnequipCanceled(float TimeHeld)

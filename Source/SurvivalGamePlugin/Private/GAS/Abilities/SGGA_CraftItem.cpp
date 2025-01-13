@@ -275,7 +275,7 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(ProductItem))
 	{
-		if (ProductItemSocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()))
+		/*if (ProductItemSocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()))
 		{
 			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), ProductItem);
 		}
@@ -286,8 +286,10 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 		if (Player->GetMesh()->DoesSocketExist(ProductItemSocketName))
 		{
 			ProductItem->OnItemEquiped(Player, ProductItemSocketName);
-		}
+		}*/
 		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
+		EquipmentComp->EquipItem(ProductItem);
+		
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));

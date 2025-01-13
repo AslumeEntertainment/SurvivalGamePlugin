@@ -78,6 +78,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
 	TMap<FGameplayTag, FName> EquipmentSockets;
 
+	UFUNCTION(BlueprintCallable)
+	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
 
 public:
 
@@ -88,34 +93,40 @@ public:
 	void SwapMainAndSecondaryEquipmentSlots();
 
 	UFUNCTION(BlueprintCallable)
-	bool EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);
-
-	UFUNCTION(BlueprintCallable)
-	bool UnequipItem(AItemBase* Item);
-
-	UFUNCTION(BlueprintCallable)
-	int GetNumberOfEquipedItems() const;
-
-	UFUNCTION(BlueprintCallable)
-	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;
-
-	UFUNCTION(BlueprintCallable)
-	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
+	void EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
+	void Server_EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);
 
 	UFUNCTION(BlueprintCallable)
-	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
+	void UnequipItem(AItemBase* Item);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_UnequipItem(AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AItemBase*> GetAllEquipedItems(bool bIsReversed = false, bool bIncludeNullItems = false) const;
+	void UnequipItemAtSlot(FGameplayTag SlotTag);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_UnequipItemAtSlot(FGameplayTag SlotTag);
 
 	UFUNCTION(BlueprintCallable)
 	void UnequipAllItems();
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_UnequipAllItems();
+
+	UFUNCTION(BlueprintCallable)
+	bool HasEquipmentSlotWithTag(FGameplayTag SlotTag) const;
+
+	UFUNCTION(BlueprintCallable)
+	int GetNumberOfEquipedItems() const;
+
+	UFUNCTION(BlueprintCallable)
+	AItemBase* GetEquipedItemAtSlot(FGameplayTag SlotTag) const;
+
+	UFUNCTION(BlueprintCallable)
+	TArray<AItemBase*> GetAllEquipedItems(bool bIsReversed = false, bool bIncludeNullItems = false) const;
 
 	UFUNCTION(BlueprintCallable)
 	TArray<ADamageDealingItem*> GetAllEquipedWeapons() const;

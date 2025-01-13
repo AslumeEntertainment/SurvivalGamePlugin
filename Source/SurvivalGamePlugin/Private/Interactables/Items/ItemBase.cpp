@@ -14,7 +14,6 @@
 #include "Components/HittableComponent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -225,7 +224,44 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)
 {
-	//check if item is giant
+	AInGameCharacter* InteractingPawn = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
+	if (IsValid(InteractingPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(InteractingPawn) == false"));
+		return false;
+	}
+	UAbilitySystemComponent* ASC = InteractingPawn->GetAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(ASC) == false"));
+		return false;
+	}
+	UEquipmentComponent* EquipmentComp = InteractingPawn->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(EquipmentComp) == false"));
+		return false;
+	}
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) == false)
+	{
+		if (ItemData.ItemWeight == EWeight::Giant)
+		{
+			return false;
+		}
+		if (ItemData.ItemWeight == EWeight::Heavy && EquipmentComp->GetEquipmentSlots().Num() == 1)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (ItemData.ItemWeight == EWeight::Giant && EquipmentComp->GetEquipmentSlots().Num() == 1)
+		{
+			return false;
+		}
+	}
+	
 	return !bIsAttached;
 }
 

@@ -35,6 +35,13 @@ void USGGA_ManageDeckInGame::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+	PlayerCont = Cast<ASG_PlayerController>(Player->GetController());
+	if (IsValid(PlayerCont) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::ActivateAbility IsValid(PlayerCont) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 	EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
@@ -72,13 +79,6 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 
 	InGameDeckWidget = CreateWidget<UInGameDeck>(UGameplayStatics::GetGameInstance(World), InGameDeckWidgetClass);
 
-	PlayerCont = Cast<APlayerController>(Player->GetController());
-	if (IsValid(PlayerCont) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::OpenDeckManager IsValid(PlayerCont) == false"));
-		return;
-	}
-
 	PlayerCont->SetInputMode(FInputModeGameAndUI());
 	PlayerCont->bShowMouseCursor = true;
 
@@ -113,7 +113,7 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		}
 		MainItemsData.Add(MainResourceDataRows[i]);
 	}
-	InGameDeckWidget->GetMainCardsContainer()->InitContainer(3);
+	InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	RefreshMainCards();
 	
 	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
@@ -125,7 +125,7 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		}
 		SecondaryItemsData.Add(SecondaryResourceDataRows[i]);
 	}
-	InGameDeckWidget->GetSecondaryCardsContainer()->InitContainer(3);
+	InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	RefreshSecondaryCards();
 }
 
@@ -173,7 +173,7 @@ void USGGA_ManageDeckInGame::RefreshEquipedCards()
 
 void USGGA_ManageDeckInGame::RefreshMainCards()
 {
-	InGameDeckWidget->GetMainCardsContainer()->ClearCards();
+	InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ClearCards();
 
 	UUnitIconWidget* ItemIcon = nullptr;
 
@@ -183,7 +183,7 @@ void USGGA_ManageDeckInGame::RefreshMainCards()
 		{
 			continue;
 		}
-		ItemIcon = InGameDeckWidget->GetMainCardsContainer()->InsertCardAt(MainItemsData[i]->UnitName, MainItemsData[i]->UnitImage, MainItemsData[i]->UnitColor, i);
+		ItemIcon = InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->InsertCardAt(MainItemsData[i]->UnitName, MainItemsData[i]->UnitImage, MainItemsData[i]->UnitColor, i);
 
 		if (IsValid(ItemIcon))
 		{
@@ -194,7 +194,7 @@ void USGGA_ManageDeckInGame::RefreshMainCards()
 
 void USGGA_ManageDeckInGame::RefreshSecondaryCards()
 {
-	InGameDeckWidget->GetSecondaryCardsContainer()->ClearCards();
+	InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ClearCards();
 
 	UUnitIconWidget* ItemIcon = nullptr;
 
@@ -204,7 +204,7 @@ void USGGA_ManageDeckInGame::RefreshSecondaryCards()
 		{
 			continue;
 		}
-		ItemIcon = InGameDeckWidget->GetSecondaryCardsContainer()->InsertCardAt(SecondaryItemsData[i]->UnitName, SecondaryItemsData[i]->UnitImage, SecondaryItemsData[i]->UnitColor, i);
+		ItemIcon = InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->InsertCardAt(SecondaryItemsData[i]->UnitName, SecondaryItemsData[i]->UnitImage, SecondaryItemsData[i]->UnitColor, i);
 
 		if (IsValid(ItemIcon))
 		{
@@ -247,17 +247,32 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UCardSlotWidget*
 		{
 			EquipmentComp->UnequipItem(EquipmentComp->GetAllEquipedItems(false, true)[CardIndex]);
 		}
-		RefreshEquipedCards();
+		if (HasAuthority(&CurrentActivationInfo))
+		{
+			RefreshEquipedCards();
+		}
+		else
+		{
+			UWorld* World = GetWorld();
+			if (IsValid(World) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld IsValid(World) == false"));
+				return false;
+			}
+
+			FTimerHandle RefreshEquipmentTimer;
+			World->GetTimerManager().SetTimer(RefreshEquipmentTimer, this, &USGGA_ManageDeckInGame::RefreshEquipedCards, 0.1f);
+		}
 		return true;
 	}
 
 	FResourseCardPersistentData* ResourseCardData = nullptr;
 
-	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
+	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		ResourseCardData = MainItemsData[CardIndex];
 	}
-	if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
+	if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		ResourseCardData = SecondaryItemsData[CardIndex];
 	}
@@ -270,13 +285,17 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UCardSlotWidget*
 
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Attempting to drop %s"), *ResourseCardData->UnitName.ToString()));
 
-	SpawnItemFromCard(false, ResourseCardData->RepresentedItemClass, *ResourceItemData);
+	if (IsValid(PlayerCont) == false)
+	{
+		return false;
+	}
+	PlayerCont->SpawnItemInFrontOfPlayer(false, ResourseCardData->RepresentedItemClass, *ResourceItemData);
 	
-	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
+	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		MainItemsData[CardIndex] = nullptr;
 	}
-	if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
+	if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		SecondaryItemsData[CardIndex] = nullptr;
 	}
@@ -299,11 +318,11 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UCardSlotWid
 
 	FResourseCardPersistentData* ResourseCardData = nullptr;
 
-	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
+	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		ResourseCardData = MainItemsData[CardIndex];
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
+	else if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		ResourseCardData = SecondaryItemsData[CardIndex];
 	}
@@ -323,46 +342,32 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UCardSlotWid
 
 	//GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Attempting to equip %s"), *ResourseCardData->UnitName.ToString()));
 
-	SpawnItemFromCard(true, ResourseCardData->RepresentedItemClass, *ResourceItemData);
-	if (InGameDeckWidget->GetMainCardsContainer()->ContainsSlot(Slot))
+	if (IsValid(PlayerCont) == false)
+	{
+		return false;
+	}
+	PlayerCont->SpawnItemInFrontOfPlayer(true, ResourseCardData->RepresentedItemClass, *ResourceItemData);
+	
+	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		MainItemsData[CardIndex] = nullptr;
 	}
-	else if (InGameDeckWidget->GetSecondaryCardsContainer()->ContainsSlot(Slot))
+	else if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		SecondaryItemsData[CardIndex] = nullptr;
 	}
-	RefreshEquipedCards();
 
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		RefreshEquipedCards();
+	}
+	else
+	{
+		FTimerHandle RefreshEquipmentTimer;
+		World->GetTimerManager().SetTimer(RefreshEquipmentTimer, this, &USGGA_ManageDeckInGame::RefreshEquipedCards, 0.1f);
+	}
+	
 	return true;
-}
-
-void USGGA_ManageDeckInGame::SpawnItemFromCard(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData)
-{
-	if (HasAuthority(&CurrentActivationInfo) == false)
-	{
-		//Server_SpawnItemFromCard(bShouldEquip, ItemClass, ItemData);
-		//return;
-	}
-
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::SpawnItemFromCard IsValid(World) == false"));
-		return;
-	}
-
-	AItemBase* NewItem = World->SpawnActor<AItemBase>(ItemClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-
-	if (IsValid(NewItem) && bShouldEquip)
-	{
-		EquipmentComp->EquipItem(NewItem);
-	}
-}
-
-void USGGA_ManageDeckInGame::Server_SpawnItemFromCard_Implementation(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData)
-{
-	SpawnItemFromCard(bShouldEquip, ItemClass, ItemData);
 }
 
 void USGGA_ManageDeckInGame::EnableDroppingInWorld()
