@@ -8,6 +8,13 @@
 #include "PlayerCustomisingWidget.generated.h"
 
 class UTextButtonWidgetBase;
+class UCardSelectorWidget;
+class UHeroCardSelector;
+class UUnitIconWidget;
+class UHorizontalBox;
+class UWrapBox;
+class UBorder;
+class UButton;
 
 UENUM(BlueprintType)
 enum class EPlayerReadinessUIStatus : uint8
@@ -17,7 +24,6 @@ enum class EPlayerReadinessUIStatus : uint8
 	NotReady,
 };
 
-
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UPlayerCustomisingWidget : public UUserWidget
 {
@@ -26,10 +32,46 @@ class SURVIVALGAMEPLUGIN_API UPlayerCustomisingWidget : public UUserWidget
 protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UHorizontalBox* DeckIconBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UButton* BTN_CycleDecks_Left;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UButton* BTN_CycleDecks_Right;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* HeroCardBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* MainHandCardsBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWrapBox* SecondaryHandCardsBox;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBorder* CardSelectorBorder;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextButtonWidgetBase* TXTBTN_ReadyStatus;
 	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextButtonWidgetBase* TXTBTN_LeaveTable;
+
+	UPROPERTY(EditAnywhere, Category = "CardWidget")
+	TSubclassOf<UHeroCardSelector> HeroCardWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "CardWidget")
+	TSubclassOf<UUnitIconWidget> ResourceCardWidgetClass;
+
+	UFUNCTION()
+	void SelectDeck(int DeckIndex);
+
+	UFUNCTION()
+	void CycleDecks_Left();
+
+	UFUNCTION()
+	void CycleDecks_Right();
 
 	UFUNCTION()
 	void OnReadyButtonClicked();
@@ -42,12 +84,35 @@ public:
 
 	void NativeOnInitialized() override;
 
+	UPanelWidget* GetHeroCardPanel();
+
+	UPanelWidget* GetMainCardsPanel();
+
+	UPanelWidget* GetSecondaryCardsPanel();
+
+	UUnitIconWidget* FillHeroCardSlot(FText Name, UTexture2D* Image, UTexture2D* BackgroundImage, FLinearColor Color);
+
+	UUnitIconWidget* FillSingleMainHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
+
+	TArray<UUnitIconWidget*> FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
+
+	UUnitIconWidget* FillSingleSecondaryHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
+
+	TArray<UUnitIconWidget*> FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
+
+	void ClearMainCardsPanel();
+
+	void ClearSecondaryCardsPanel();
+
+	void OpenCardSelector(UCardSelectorWidget* CardSelector);
+
 	UFUNCTION()
 	void Config(EPlayerReadinessUIStatus PlayerReadiness);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void CloseWidget();
 
+	FIntegerTransferSignature DeckSelected;
 	FVoidDataTransferSignature OnReadyButton;
 	FVoidDataTransferSignature OnLeaveButton;
 };

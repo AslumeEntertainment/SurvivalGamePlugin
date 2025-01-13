@@ -8,6 +8,7 @@
 #include "UnitIconWidget.generated.h"
 
 class UImage;
+class UBorder;
 class UButton;
 class USizeBox;
 class UTextBlock;
@@ -19,8 +20,8 @@ class SURVIVALGAMEPLUGIN_API UUnitIconWidget : public UUserWidget
 
 protected:
 
-	UFUNCTION()
-	void OnIconClicked();
+	UPROPERTY()
+	bool bCanBeDragged = false;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UButton* BTN_Icon;
@@ -34,25 +35,63 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	USizeBox* UnitSizeBox;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UBorder* HighlightBorder;
+
+	virtual FEventReply RedirectMouseDownToWidget(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+	
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+	
+	virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
+	virtual void NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+
+	UFUNCTION()
+	void OnIconClicked();
+
+	UFUNCTION()
+	void BroadcastParentOnIconClicked();
+
 public:
+
+	bool bHighlightOnSelected = false;
 
 	virtual void NativeOnInitialized() override;
 
-	UFUNCTION()
+	virtual void SetIsDraggable(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
 	void SetItemName(FText ItemName);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
+	FString GetItemName();
+
+	UFUNCTION(BlueprintCallable)
 	void SetItemImage(UTexture2D* ItemImage);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
+	void SetItemBrush(FSlateBrush ItemBrush);
+
+	UFUNCTION(BlueprintCallable)
+	FSlateBrush GetItemBrush();
+
+	UFUNCTION(BlueprintCallable)
 	void SetItemColor(FLinearColor Color);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
+	FLinearColor GetItemColor();
+
+	UFUNCTION(BlueprintCallable)
 	void SetUnitScale(float Scale);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Color, float Scale);
 
 	FIntegerTransferSignature IconClicked;
+	FPanelWidgetTransferSignature BroadcastParentOnClicked;
 
 };

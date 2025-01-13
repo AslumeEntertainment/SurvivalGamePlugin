@@ -6,10 +6,12 @@
 #include "GameFramework/PlayerController.h"
 
 #include "Headers/GeneralDelegates.h"
+#include "Headers/ItemDataStruct.h"
 
 #include "SG_PlayerController.generated.h"
 
 class USG_SaveGame;
+class AItemBase;
 
 UENUM(BlueprintType)
 enum class EInputMode : uint8
@@ -55,6 +57,12 @@ public:
 
 	UFUNCTION()
 	void WriteSave();
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnItemInFrontOfPlayer(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SpawnItemInFrontOfPlayer(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData);
 
 	USG_SaveGame* GetSave();
 

@@ -148,16 +148,20 @@ void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payl
 	if (IsValid(MainItemActor))
 	{
 		MainItemActor->SetDurability(MainItemActor->GetDurability() * ItemDurabilityPercent);
-		MainItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()));
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), MainItemActor);
+		EquipmentComp->EquipItem(MainItemActor);
+
+		//MainItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()));
+		//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), MainItemActor);
 	}
 
 	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) == false)
 	{
 		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
-		IngredientItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()));
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
+		EquipmentComp->EquipItem(IngredientItemActor);
+		
+		//IngredientItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+		//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
 	}
 	else if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())))
 	{

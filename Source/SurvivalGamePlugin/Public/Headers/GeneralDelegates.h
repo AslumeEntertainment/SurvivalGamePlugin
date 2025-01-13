@@ -4,6 +4,7 @@
 
 #include "GeneralDelegates.generated.h"
 
+
 //------------------------------------Primitive Types---------------------------------------
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FVoidDataTransferSignature);
@@ -49,8 +50,21 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerControllerTransferSignature, 
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWidgetTransferSignature, UUserWidget*, Widget);
 
+class UPanelWidget;
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPanelWidgetTransferSignature, UPanelWidget*, Widget);
+
 class USaveGame;
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaveGameTransferSignature, USaveGame*, ReadGame);
+
+//-----------------------------------------------------------------------------------------
+
+
+
+//----------------------------------------Deck Related-------------------------------------
+
+UDELEGATE()
+DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FOnCardDroppedSignature, UCardSlotWidget*, Card, int, CardIndex);
 
 //-----------------------------------------------------------------------------------------

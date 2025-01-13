@@ -13,6 +13,8 @@
 class ASG_PlayerController;
 class AInGameCharacter;
 class UPlayerCustomisingWidget;
+class UCardSelectorWidget;
+class UPanelWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
@@ -54,6 +56,12 @@ private:
 	UFUNCTION()
 	void ToggleReady();
 
+	UFUNCTION()
+	void OpenCardSelector(UPanelWidget* CallerWidget);
+
+	UFUNCTION()
+	void DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* CardBox);
+
 	UFUNCTION(Server, Reliable)
 	void Server_StopInteracting();
 
@@ -62,11 +70,23 @@ private:
 
 protected:
 
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* HeroTable = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* MainHandResourceTable = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* SecondaryHandResourceTable = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AInGameCharacter> DefaultHeroClass;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UPlayerCustomisingWidget> PlayerCustomisingWidgetClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UCardSelectorWidget> CardSelectorWidgetClass;
 
 	UFUNCTION()
 	void OnRepIsPlayerReady();

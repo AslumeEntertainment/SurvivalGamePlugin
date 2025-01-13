@@ -14,7 +14,6 @@
 #include "Components/HittableComponent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -219,74 +218,50 @@ void AItemBase::InteractRequest(AController* InteractingCharacter)
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
 		return;
 	}
-	UAbilitySystemComponent* ASC = InteractingPlayer->GetAbilitySystemComponent();
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(ASC) == false"));
-		return;
-	}
 
-	FGameplayTag SlotToEquipAtTag = ItemData.EquipmentSlotTag;
-
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) && SlotToEquipAtTag.ToString().Contains(".Combined"))
-	{
-		if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedMainEquipmentSlotTag())
-		{
-			SlotToEquipAtTag = EquipmentComp->GetMainEquipmentSlotTag();
-		}
-		else if (ItemData.EquipmentSlotTag == EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())
-		{
-			SlotToEquipAtTag = EquipmentComp->GetSecondaryEquipmentSlotTag();
-		}
-	}
-
-	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()) &&
-		SlotToEquipAtTag.RequestDirectParent() != EquipmentComp->GetCombinedEquipmentSlotTag())
-	{
-		if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())))
-		{
-			EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
-			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
-		}
-		
-		SlotToEquipAtTag = EquipmentComp->GetMixedEquipmentSlotTag();
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), this);
-		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMixedEquipmentSlotTag()));
-		
-		return;
-	}
-	
-	if (EquipmentComp->HasEquipmentSlotWithTag(SlotToEquipAtTag))
-	{
-		if (SlotToEquipAtTag.RequestDirectParent() == EquipmentComp->GetCombinedEquipmentSlotTag())
-		{
-			EquipmentComp->UnequipAllItems();
-		}
-		else
-		{
-			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())))
-			{
-				EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())->OnItemUnequiped();
-				EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), nullptr);
-			}
-			if (IsValid(EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)))
-			{
-				EquipmentComp->GetEquipedItemAtSlot(SlotToEquipAtTag)->OnItemUnequiped();
-			}
-		}
-		
-		EquipmentComp->SetEquipedItemAtSlot(SlotToEquipAtTag, this);
-		OnItemEquiped(InteractingPlayer, EquipmentComp->GetEquipmentSocketWithTag(SlotToEquipAtTag));
-
-		UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Equiping item in slot"));
-		return;
-	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("AItemBase::InteractRequest Item could not be equiped"));
+	EquipmentComp->EquipItem(this);
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)
 {
+	AInGameCharacter* InteractingPawn = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
+	if (IsValid(InteractingPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(InteractingPawn) == false"));
+		return false;
+	}
+	UAbilitySystemComponent* ASC = InteractingPawn->GetAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(ASC) == false"));
+		return false;
+	}
+	UEquipmentComponent* EquipmentComp = InteractingPawn->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::bCanInteract IsValid(EquipmentComp) == false"));
+		return false;
+	}
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) == false)
+	{
+		if (ItemData.ItemWeight == EWeight::Giant)
+		{
+			return false;
+		}
+		if (ItemData.ItemWeight == EWeight::Heavy && EquipmentComp->GetEquipmentSlots().Num() == 1)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (ItemData.ItemWeight == EWeight::Giant && EquipmentComp->GetEquipmentSlots().Num() == 1)
+		{
+			return false;
+		}
+	}
+	
 	return !bIsAttached;
 }
 

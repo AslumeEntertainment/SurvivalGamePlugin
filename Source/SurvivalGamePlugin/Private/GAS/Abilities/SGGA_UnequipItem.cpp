@@ -45,19 +45,19 @@ void USGGA_UnequipItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	WaitInputReleaseTask->OnRelease.AddDynamic(this, &USGGA_UnequipItem::OnUnequipCanceled);
 	WaitInputReleaseTask->ReadyForActivation();
 
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())) || IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedMainEquipmentSlotTag())))
+	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())))
 	{
 		UAbilityTask_WaitGameplayEvent* WaitMainGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main"), nullptr, true, true);
 		WaitMainGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipMain);
 		WaitMainGameplayEventTask->ReadyForActivation();
 	}
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) || IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())))
+	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())))
 	{
 		UAbilityTask_WaitGameplayEvent* WaitSecondaryGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary"), nullptr, true, true);
 		WaitSecondaryGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipSecondary);
 		WaitSecondaryGameplayEventTask->ReadyForActivation();
 	}
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())) || IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag())))
+	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())))
 	{
 		UAbilityTask_WaitGameplayEvent* WaitMixedGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed"), nullptr, true, true);
 		WaitMixedGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_UnequipItem::UnequipMixed);
@@ -78,17 +78,10 @@ void USGGA_UnequipItem::UnequipMain(FGameplayEventData Payload)
 	{
 		return;
 	}
-	
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedMainEquipmentSlotTag())))
-	{
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedMainEquipmentSlotTag())->OnItemUnequiped();
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedMainEquipmentSlotTag(), nullptr);
-		return;
-	}
-	
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), nullptr);
-}
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), nullptr);
+}                                                                          
 
 
 void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
@@ -97,16 +90,9 @@ void USGGA_UnequipItem::UnequipSecondary(FGameplayEventData Payload)
 	{
 		return;
 	}
-
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())))
-	{
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedSecondaryEquipmentSlotTag())->OnItemUnequiped();
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedSecondaryEquipmentSlotTag(), nullptr);
-		return;
-	}
-	
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), nullptr);
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::UnequipMixed(FGameplayEventData Payload)
@@ -115,16 +101,9 @@ void USGGA_UnequipItem::UnequipMixed(FGameplayEventData Payload)
 	{
 		return;
 	}
-
-	if (IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), false)))
-	{
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), false)->OnItemUnequiped();
-		EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetCombinedEquipmentSlotTag(), nullptr, false);
-		return;
-	}
-
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
-	EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
+	EquipmentComp->UnequipItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag());
+	//EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag())->OnItemUnequiped();
+	//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMixedEquipmentSlotTag(), nullptr);
 }
 
 void USGGA_UnequipItem::OnUnequipCanceled(float TimeHeld)

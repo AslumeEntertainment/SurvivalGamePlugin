@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "Interactables/Items/ItemBase.h"
 #include "GameManagingPersistentStructs.generated.h"
 
 USTRUCT()
@@ -91,6 +92,9 @@ struct FResourseCardPersistentData : public FPersistentDataUnit
     FDataTableRowHandle RepresentedItem;
 
     UPROPERTY(EditAnywhere)
+    TSubclassOf<AItemBase> RepresentedItemClass;
+
+    UPROPERTY(EditAnywhere)
     uint16 Value = 10;
 
 };
@@ -102,6 +106,9 @@ struct FHeroCardPersistentData : public FPersistentDataUnit
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<ACharacter> HeroClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UTexture2D* HeroBackgroundImage = nullptr;
 
     UPROPERTY(EditAnywhere)
     TMap<uint8, uint16> ValuePerLevel;

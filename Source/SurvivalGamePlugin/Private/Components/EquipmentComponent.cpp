@@ -6,6 +6,9 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Characters/InGameCharacter.h"
 
 bool FPackagedEquipmentData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
@@ -23,9 +26,6 @@ UEquipmentComponent::UEquipmentComponent()
 	MainEquipmentSlotTag                 = FGameplayTag::RequestGameplayTag("EquipmentSlot.Main");
 	SecondaryEquipmentSlotTag            = FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary");
 	MixedEquipmentSlotTag                = FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed");
-	CombinedEquipmentSlotTag             = FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined");
-	CombinedMainEquipmentSlotTag         = FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Main");
-	CombinedSecondaryEquipmentSlotTag    = FGameplayTag::RequestGameplayTag("EquipmentSlot.Combined.Secondary");
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -71,17 +71,7 @@ void UEquipmentComponent::SwapMainAndSecondaryEquipmentSlots()
 	}
 }
 
-bool UEquipmentComponent::HasEquipmentSlotWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
-{
-	if (CheckParentTag)
-	{
-		return EquipmentSlots.Contains(SlotTag) || EquipmentSlots.Contains(SlotTag.RequestDirectParent());
-	}
-
-	return EquipmentSlots.Contains(SlotTag);
-}
-
-void UEquipmentComponent::SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag)
+void UEquipmentComponent::SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item)
 {
 	if (IsValid(GetOwner()) == false)
 	{
@@ -90,57 +80,220 @@ void UEquipmentComponent::SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* 
 	}
 	if (GetOwner()->HasAuthority() == false)
 	{
-		Server_SetEquipedItemAtSlot(SlotTag, Item, CheckParentTag);
+		Server_SetEquipedItemAtSlot(SlotTag, Item);
+		return;
+	}
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
+	{
 		return;
 	}
 
-	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
-	{
-		return;
-	}
-	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
-	{
-		EquipmentSlots[SlotTag.RequestDirectParent()] = Item;
-	}
-	else
-	{
-		EquipmentSlots[SlotTag] = Item;
-	}
-
+	EquipmentSlots[SlotTag] = Item;
 	PackageEquipment(CachedEquipment);
 }
 
-void UEquipmentComponent::Server_SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item, bool CheckParentTag)
+void UEquipmentComponent::Server_SetEquipedItemAtSlot_Implementation(FGameplayTag SlotTag, AItemBase* Item)
 {
-	SetEquipedItemAtSlot(SlotTag, Item, CheckParentTag);
+	SetEquipedItemAtSlot(SlotTag, Item);
 }
 
-AItemBase* UEquipmentComponent::GetEquipedItemAtSlot(FGameplayTag SlotTag, bool CheckParentTag) const
+void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 {
-	if (HasEquipmentSlotWithTag(SlotTag, CheckParentTag) == false)
+	AInGameCharacter* InGameCharacter = Cast<AInGameCharacter>(GetOwner());
+	if (IsValid(InGameCharacter) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::EquipItem IsValid(InGameCharacter) == false"));
+		return;
+	}
+	if (InGameCharacter->HasAuthority() == false)
+	{
+		Server_EquipItem(Item, bShouldSlotBeEmpty);
+		return;
+	}
+	if (IsValid(Item) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::EquipItem IsValid(Item) == false"));
+		return;
+	}
+	UAbilitySystemComponent* ASC = InGameCharacter->GetAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::EquipItem IsValid(ASC) == false"));
+		return;
+	}
+
+	FGameplayTag EquipmentSlotTag = Item->ItemData.EquipmentSlotTag;
+
+	EWeight ItemWeight = Item->ItemData.ItemWeight;
+	TArray<EWeight> EquipedItemsWeights;
+
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	{
+		if (IsValid(EquipmentSlot.Value))
+		{
+			EquipedItemsWeights.Add(EquipmentSlot.Value->ItemData.ItemWeight);
+		}
+	}
+
+	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")))
+	{
+		ItemWeight = (EWeight)FMath::Clamp((uint8)ItemWeight - 1, 0, 3);
+		for (int i = 0; i < EquipedItemsWeights.Num(); i++)
+		{
+			EquipedItemsWeights[i] = (EWeight)FMath::Clamp((uint8)EquipedItemsWeights[i] - 1, 0, 3);
+		}
+	}
+
+	if (HasEquipmentSlotWithTag(MixedEquipmentSlotTag))
+	{
+		EquipmentSlotTag = MixedEquipmentSlotTag;
+		if (ItemWeight == EWeight::Heavy)
+		{
+			return;
+		}
+	}
+	if (bShouldSlotBeEmpty && IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
+	{
+		return;
+	}
+
+	if (ItemWeight == EWeight::Heavy || EquipedItemsWeights.Contains(EWeight::Heavy))
+	{
+		UnequipAllItems();
+	}
+
+	if (IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
+	{
+		GetEquipedItemAtSlot(EquipmentSlotTag)->OnItemUnequiped();
+		SetEquipedItemAtSlot(EquipmentSlotTag, nullptr);
+	}
+
+	SetEquipedItemAtSlot(EquipmentSlotTag, Item);
+	Item->OnItemEquiped(InGameCharacter, GetEquipmentSocketWithTag(EquipmentSlotTag));
+
+	return;
+}
+
+void UEquipmentComponent::Server_EquipItem_Implementation(AItemBase* Item, bool bShouldSlotBeEmpty)
+{
+	EquipItem(Item, bShouldSlotBeEmpty);
+}
+
+void UEquipmentComponent::UnequipItem(AItemBase* Item)
+{
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::UnequipItem IsValid(GetOwner()) == false"));
+		return;
+	}
+	if (GetOwner()->HasAuthority() == false)
+	{
+		Server_UnequipItem(Item);
+		return;
+	}
+
+	if (IsValid(Item) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::UnequipItem IsValid(Item) == false"));
+		return;
+	}
+
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	{
+		if (EquipmentSlot.Value == Item)
+		{
+			Item->OnItemUnequiped();
+			SetEquipedItemAtSlot(EquipmentSlot.Key, nullptr);
+		}
+	}
+
+	return;
+}
+
+void UEquipmentComponent::UnequipItemAtSlot(FGameplayTag SlotTag)
+{
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::UnequipItemAtSlot IsValid(GetOwner()) == false"));
+		return;
+	}
+	if (GetOwner()->HasAuthority() == false)
+	{
+		Server_UnequipItemAtSlot(SlotTag);
+		return;
+	}
+
+	if (IsValid(GetEquipedItemAtSlot(SlotTag)))
+	{
+		GetEquipedItemAtSlot(SlotTag)->OnItemUnequiped();
+		SetEquipedItemAtSlot(SlotTag, nullptr);
+	}
+
+	return;
+}
+
+void UEquipmentComponent::Server_UnequipItemAtSlot_Implementation(FGameplayTag SlotTag)
+{
+	UnequipItemAtSlot(SlotTag);
+}
+
+void UEquipmentComponent::Server_UnequipItem_Implementation(AItemBase* Item)
+{
+	UnequipItem(Item);
+}
+
+int UEquipmentComponent::GetNumberOfEquipedItems() const
+{
+	int i = 0;
+
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	{
+		if (IsValid(EquipmentSlot.Value))
+		{
+			i++;
+		}
+	}
+
+	return i;
+}
+
+
+bool UEquipmentComponent::HasEquipmentSlotWithTag(FGameplayTag SlotTag) const
+{
+	return EquipmentSlots.Contains(SlotTag);
+}
+
+
+
+AItemBase* UEquipmentComponent::GetEquipedItemAtSlot(FGameplayTag SlotTag) const
+{
+	if (HasEquipmentSlotWithTag(SlotTag) == false)
 	{
 		return nullptr;
 	}
 
-	if (HasEquipmentSlotWithTag(SlotTag, false) == false)
-	{
-		return EquipmentSlots[SlotTag.RequestDirectParent()];
-	}
-	else
-	{
-		return EquipmentSlots[SlotTag];
-	}
+	return EquipmentSlots[SlotTag];
 }
 
-TArray<AItemBase*> UEquipmentComponent::GetAllEquipedItems() const
+TArray<AItemBase*> UEquipmentComponent::GetAllEquipedItems(bool bIsReversed, bool bIncludeNullItems) const
 {
 	TArray<AItemBase*> EquipedItems;
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
-		if (IsValid(EquipmentSlot.Value))
+		if (IsValid(EquipmentSlot.Value) == false && bIncludeNullItems == false)
+		{
+			continue;
+		}
+
+		if (bIsReversed)
+		{
+			EquipedItems.Insert(EquipmentSlot.Value, 0);
+		}
+		else
 		{
 			EquipedItems.Add(EquipmentSlot.Value);
 		}
+		
 	}
 	return EquipedItems;
 }
@@ -157,12 +310,11 @@ void UEquipmentComponent::UnequipAllItems()
 		Server_UnequipAllItems();
 		return;
 	}
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		if (IsValid(EquipmentSlot.Value))
 		{
-			EquipmentSlot.Value->OnItemUnequiped();
-			EquipmentSlot.Value = nullptr;
+			UnequipItem(EquipmentSlot.Value);
 		}
 	}
 
@@ -177,7 +329,7 @@ void UEquipmentComponent::Server_UnequipAllItems_Implementation()
 TArray<ADamageDealingItem*> UEquipmentComponent::GetAllEquipedWeapons() const
 {
 	TArray<ADamageDealingItem*> EquipedWeapons;
-	for (auto& EquipmentSlot : EquipmentSlots)
+	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		ADamageDealingItem* EquipedWeapon = Cast<ADamageDealingItem>(EquipmentSlot.Value);
 		if (IsValid(EquipedWeapon))
@@ -188,30 +340,19 @@ TArray<ADamageDealingItem*> UEquipmentComponent::GetAllEquipedWeapons() const
 	return EquipedWeapons;
 }
 
-bool UEquipmentComponent::HasEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
+bool UEquipmentComponent::HasEquipmentSocketWithTag(FGameplayTag SlotTag) const
 {
-	if (CheckParentTag)
-	{
-		return EquipmentSockets.Contains(SlotTag) || EquipmentSockets.Contains(SlotTag.RequestDirectParent());
-	}
-
 	return EquipmentSockets.Contains(SlotTag);
 }
 
-FName UEquipmentComponent::GetEquipmentSocketWithTag(FGameplayTag SlotTag, bool CheckParentTag) const
+FName UEquipmentComponent::GetEquipmentSocketWithTag(FGameplayTag SlotTag) const
 {
-	if (HasEquipmentSocketWithTag(SlotTag, CheckParentTag) == false)
+	if (HasEquipmentSocketWithTag(SlotTag) == false)
 	{
 		return FName();
 	}
-	if (HasEquipmentSocketWithTag(SlotTag, false) == false)
-	{
-		return EquipmentSockets[SlotTag.RequestDirectParent()];
-	}
-	else
-	{
-		return EquipmentSockets[SlotTag];
-	}
+	
+	return EquipmentSockets[SlotTag];
 }
 
 TMap<FGameplayTag, AItemBase*> UEquipmentComponent::GetEquipmentSlots() const
