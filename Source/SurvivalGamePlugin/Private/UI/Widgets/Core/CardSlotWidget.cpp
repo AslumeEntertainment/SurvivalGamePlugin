@@ -5,7 +5,7 @@
 
 #include "Components/Border.h"
 
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 
 bool UCardSlotWidget::IsEmpty() const
 {

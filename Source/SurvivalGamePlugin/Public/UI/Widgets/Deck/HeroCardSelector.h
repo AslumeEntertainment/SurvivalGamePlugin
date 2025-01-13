@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 #include "HeroCardSelector.generated.h"
 
 class UImage;

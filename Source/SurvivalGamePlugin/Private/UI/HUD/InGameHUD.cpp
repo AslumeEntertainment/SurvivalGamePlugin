@@ -5,8 +5,8 @@
 
 #include "Kismet/GameplayStatics.h"
 
-#include "UI/Widgets/InteractionOverlayWidget.h"
-#include "UI/Widgets/InGameOverlayWidget.h"
+#include "UI/Widgets/Core/InteractionOverlayWidget.h"
+#include "UI/Widgets/Game/InGameOverlayWidget.h"
 #include "Characters/InGameCharacter.h"
 
 

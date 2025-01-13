@@ -5,8 +5,8 @@
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
-#include "UI/Widgets/WarningWidgetBase.h"
-#include "UI/Widgets/ShopWidgetBase.h"
+#include "UI/Widgets/Core/WarningWidgetBase.h"
+#include "UI/Widgets/Lobby/Shop/ShopWidgetBase.h"
 #include "Headers/GameManagingPersistentStructs.h"
 
 // Sets default values

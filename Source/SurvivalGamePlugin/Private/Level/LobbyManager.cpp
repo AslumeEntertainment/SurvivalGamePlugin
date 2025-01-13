@@ -10,9 +10,9 @@
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
-#include "UI/Widgets/CampaignChooserWidgetBase.h"
-#include "UI/Widgets/LobbyManagingWidgetBase.h"
-#include "UI/Widgets/WarningWidgetBase.h"
+#include "UI/Widgets/Lobby/Logistics/CampaignChooserWidgetBase.h"
+#include "UI/Widgets/Lobby/Logistics/LobbyManagingWidgetBase.h"
+#include "UI/Widgets/Core/WarningWidgetBase.h"
 #include "Headers/GameManagingStructs.h"
 #include "Level/GameManager.h"
 

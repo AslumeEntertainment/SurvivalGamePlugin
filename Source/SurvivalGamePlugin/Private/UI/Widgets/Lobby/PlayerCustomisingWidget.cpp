@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Widgets/PlayerCustomisingWidget.h"
+#include "UI/Widgets/Lobby/PlayerCustomisingWidget.h"
 
 #include "Components/HorizontalBox.h"
 #include "Components/WrapBox.h"
@@ -12,7 +12,7 @@
 #include "UI/Widgets/Deck/CardSelectorWidget.h"
 #include "UI/Widgets/Deck/HeroCardSelector.h"
 #include "UI/Widgets/Deck/DeckIcon.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 
 
 void UPlayerCustomisingWidget::NativeOnInitialized()

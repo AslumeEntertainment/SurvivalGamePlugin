@@ -17,7 +17,7 @@
 #include "Characters/InGameCharacter.h"
 #include "UI/Widgets/Deck/CardContainer.h"
 #include "UI/Widgets/Deck/InGameDeck.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 
 
 void USGGA_ManageDeckInGame::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

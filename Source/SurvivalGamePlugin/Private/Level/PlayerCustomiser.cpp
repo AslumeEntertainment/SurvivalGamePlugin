@@ -12,9 +12,9 @@
 #include "FunctionLibraries/DeckFunctionLibrary.h"
 #include "Headers/GameManagingPersistentStructs.h"
 #include "Characters/InGameCharacter.h"
-#include "UI/Widgets/PlayerCustomisingWidget.h"
+#include "UI/Widgets/Lobby/PlayerCustomisingWidget.h"
 #include "UI/Widgets/Deck/CardSelectorWidget.h"
-#include "UI/Widgets/UnitIconWidget.h"
+#include "UI/Widgets/Core/UnitIconWidget.h"
 #include "UI/HUD/InGameHUD.h"
 #include "Level/GameManager.h"
 
