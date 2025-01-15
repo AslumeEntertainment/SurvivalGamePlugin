@@ -11,7 +11,7 @@ struct FProgressiveDataHelperStruct
     GENERATED_USTRUCT_BODY()
 
     UPROPERTY()
-    uint16 ID = 0;
+    uint16 ID = 0; //We accept ID = 0, as invalid(emppty) slot 
 
     UPROPERTY()
     uint8 Level = 0;
