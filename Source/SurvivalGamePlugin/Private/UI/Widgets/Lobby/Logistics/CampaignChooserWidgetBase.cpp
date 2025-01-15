@@ -36,19 +36,9 @@ void UCampaignChooserWidgetBase::FillCampaigns(TArray<FText> Names, TArray<UText
 	}
 }
 
-void UCampaignChooserWidgetBase::Show()
-{
-	AddToViewport();
-}
-
-void UCampaignChooserWidgetBase::Hide()
-{
-	RemoveFromParent();
-}
-
 void UCampaignChooserWidgetBase::MarkForDestruction()
 {
-	Hide();
+	RemoveFromParent();
 	Destruct();
 	MarkAsGarbage();
 }

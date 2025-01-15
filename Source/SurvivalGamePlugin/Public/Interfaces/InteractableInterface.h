@@ -22,7 +22,7 @@ class SURVIVALGAMEPLUGIN_API IInteractableInterface
 
 public:
 
-	virtual void InteractRequest(AController* InteractingCharacter) = 0;
+	virtual bool InteractRequest(AController* InteractingCharacter) = 0;
 
 	virtual bool bCanInteract(AController* InteractingCharacter) = 0;
 

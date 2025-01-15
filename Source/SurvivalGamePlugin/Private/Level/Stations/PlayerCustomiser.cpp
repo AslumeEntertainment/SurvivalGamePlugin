@@ -61,43 +61,29 @@ void APlayerCustomiser::BeginPlay()
 	PlayerCustomisingWidget->OnReadyButton.AddDynamic(this, &APlayerCustomiser::ToggleReady);
 }
 
-void APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
+bool APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 {
-	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest - %s"), *InteractingCharacter->GetName());
-	ASG_PlayerController* PC = Cast<ASG_PlayerController>(InteractingCharacter);
-
-	if (IsValid(PC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest IsValid(InteractingPlayer) == false"));
-		return;
-	}
 
 	//this makes it possible to tell the server you are changing states aka to use RPCs
 	SetOwner(InteractingCharacter);
-	InteractingPlayer = PC;
 
-	if (PC->IsLocalPlayerController() == true)
+	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest - %s"), *InteractingCharacter->GetName());
+	if(Super::InteractRequest(InteractingCharacter)==true)
 	{
-		/*AInGameHUD* HUD = Cast<AInGameHUD>(PC->GetHUD());
-		if (IsValid(HUD))
-		{
-			HUD->RemoveInteractionOverlayWidget();
-		}*/
-
-		PC->Client_SetInputMode(EInputMode::UIOnly);
-		PC->bShowMouseCursor = true;
-		Client_ShowUI();
+		ShowUI();
 	}
 
 	if (HasAuthority() == true)
 	{
 		OnPlayerStartInteracting.Broadcast(this);
-		MainPawn = PC->GetPawn();
+		MainPawn = Cast<ASG_Character>(InteractingPlayer->GetPawn());
 
-		PC->OnConnectionCleanUp.AddDynamic(this, &APlayerCustomiser::HandlePlayerLeavingSession);
+		InteractingPlayer->OnConnectionCleanUp.AddDynamic(this, &APlayerCustomiser::HandlePlayerLeavingSession);
 
 		bIsTaken = true;
 	}
+
+	return true;
 }
 
 bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
@@ -107,17 +93,20 @@ bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
 
 void APlayerCustomiser::Client_StopInteracting_Implementation()
 {
-	Client_HideUI(true);
-
 	if (IsValid(InteractingPlayer) == true)
 	{
-		InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
-		InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-		InteractingPlayer->bShowMouseCursor = false;
-		InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
-		InteractingPlayer = nullptr;
+		StopInteracting();
 	}
+}
 
+void APlayerCustomiser::StopInteracting()
+{
+	HideUI(true);
+
+	InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
+	InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	Super::StopInteracting();
+	
 	Server_StopInteracting();
 }
 
@@ -129,6 +118,7 @@ void APlayerCustomiser::Server_StopInteracting_Implementation()
 
 	if (IsValid(InteractingPlayer) == true)
 	{
+		InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 		InteractingPlayer = nullptr;
 	}
 
@@ -385,7 +375,7 @@ void APlayerCustomiser::DespawnHero()
 
 void APlayerCustomiser::PossessMainPawn()
 {
-	//InteractingPlayer->UnPossess();
+	GamePawn->Cliet_UnbindOverlayDelegates();
 	InteractingPlayer->Possess(MainPawn);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 	Client_ShowUI();
@@ -395,7 +385,7 @@ void APlayerCustomiser::PossessMainPawn()
 
 void APlayerCustomiser::PossessGamePawn()
 {
-	//InteractingPlayer->UnPossess();
+	MainPawn->Cliet_UnbindOverlayDelegates();
 	InteractingPlayer->Possess(GamePawn);
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 	Client_HideUI();
@@ -417,10 +407,14 @@ void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bS
 	}
 
 	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget() : HUD->RemoveGameplayOverlayWidget();
-	HUD->ShowInteractionOverlayWidget();
 }
 
 void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
+{
+	HideUI(bUsesAnimation);
+}
+
+void APlayerCustomiser::HideUI(bool bUsesAnimation)
 {
 	AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
 	if (IsValid(HUD))
@@ -432,17 +426,17 @@ void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
 	bUsesAnimation ? PlayerCustomisingWidget->CloseWidget() : PlayerCustomisingWidget->RemoveFromParent();
 }
 
-void APlayerCustomiser::Client_ShowUI_Implementation()
+void APlayerCustomiser::ShowUI()
 {
 	if (IsValid(InteractingPlayer) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation IsValid(InteractingPlayer) == false"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI IsValid(InteractingPlayer) == false"));
 		return;
 	}
 
 	if (!IsValid(HeroTable) || !IsValid(MainHandResourceTable) || !IsValid(SecondaryHandResourceTable))
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::Client_ShowUI_Implementation One or more card data tables are invalid"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI One or more card data tables are invalid"));
 		return;
 	}
 
@@ -473,6 +467,11 @@ void APlayerCustomiser::Client_ShowUI_Implementation()
 	DisplayDeckCards(NeededResourceCards, PlayerCustomisingWidget->GetSecondaryCardsPanel());
 
 	PlayerCustomisingWidget->AddToViewport();
+}
+
+void APlayerCustomiser::Client_ShowUI_Implementation()
+{
+	ShowUI();
 }
 
 

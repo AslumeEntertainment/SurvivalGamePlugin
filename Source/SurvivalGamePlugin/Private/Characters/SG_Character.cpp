@@ -197,7 +197,7 @@ void ASG_Character::BeginPlay()
 		CameraViewResetTimeline.SetLooping(false);
 	}
 
-	if (IsLocallyControlled() && HasAuthority())
+	/*if (IsLocallyControlled() && HasAuthority())
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (IsValid(PlayerController) == false)
@@ -212,7 +212,7 @@ void ASG_Character::BeginPlay()
 			return;
 		}
 		HUD->SetInteractionOverlayBindings(this);
-	}
+	}*/
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -355,6 +355,18 @@ void ASG_Character::SetRepControlRotation(FRotator InControlRotation)
 	ControlRotation = InControlRotation;
 }
 
+void ASG_Character::Cliet_UnbindOverlayDelegates_Implementation()
+{
+	UnbindOverlayDelegates();
+}
+
+void ASG_Character::UnbindOverlayDelegates()
+{
+	InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
+	InteractIndicationTextDelegate.Clear();
+}
+
+
 void ASG_Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -367,35 +379,11 @@ void ASG_Character::PossessedBy(AController* NewController)
 			PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
 			PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 		}
-		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
-		if (IsValid(HUD))
-		{
-			HUD->SetInteractionOverlayBindings(this);
-		}
 	}
+
+	if (bAlreadySetUp) return;
 
 	InitCharacterDefaults();
-}
-
-void ASG_Character::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (IsValid(PlayerController))
-	{
-		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
-		if (IsValid(HUD))
-		{
-			HUD->SetInteractionOverlayBindings(this);
-		}
-	}
-}
-
-void ASG_Character::UnPossessed()
-{
-	Super::UnPossessed();
-	InteractIndicationTextDelegate.Clear();
 }
 
 void ASG_Character::InitCharacterDefaults()
@@ -417,6 +405,8 @@ void ASG_Character::InitCharacterDefaults()
 	}
 
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+
+	bAlreadySetUp = true;
 }
 
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const

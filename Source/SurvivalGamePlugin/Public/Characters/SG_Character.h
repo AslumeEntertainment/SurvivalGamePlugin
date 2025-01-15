@@ -41,6 +41,7 @@ public:
 private:
 
 	bool bIsFirstPerson = true;
+	bool bAlreadySetUp = false;
 
 	float CurrentInteractionRange;
 
@@ -63,6 +64,8 @@ private:
 	void EmitInteractionChecker();
 	void CheckForInteractables(FHitResult HitResult);
 
+	UFUNCTION(Server, Reliable)
+	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
 
 protected:
 
@@ -146,8 +149,6 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	virtual void OnRep_PlayerState() override;
-
 	void InitCharacterDefaults();
 
 
@@ -158,8 +159,6 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
-	virtual void UnPossessed() override;
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
@@ -193,9 +192,10 @@ public:
 
 	FTextTransferSignature InteractIndicationTextDelegate;
 
-private:
+	UFUNCTION(Client, Reliable)
+	void Cliet_UnbindOverlayDelegates();
 
-	UFUNCTION(Server, Reliable)
-	void Server_SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
+	UFUNCTION()
+	void UnbindOverlayDelegates();
 
 };

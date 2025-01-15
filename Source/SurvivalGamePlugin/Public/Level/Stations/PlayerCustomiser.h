@@ -10,6 +10,7 @@
 
 #include "PlayerCustomiser.generated.h"
 
+class ASG_Character;
 class AInGameCharacter;
 class UPlayerCustomisingWidget;
 class UCardSelectorWidget;
@@ -41,7 +42,7 @@ private:
 	bool bIsTaken = false;
 
 	UPROPERTY()
-	APawn* MainPawn = nullptr;
+	ASG_Character* MainPawn = nullptr;
 
 	UPROPERTY()
 	AInGameCharacter* GamePawn = nullptr;
@@ -93,8 +94,9 @@ protected:
 public:	
 
 	virtual void BeginPlay() override;
-	virtual void InteractRequest(AController* InteractingCharacter) override;
+	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual void StopInteracting() override;
 	virtual FText GetInteractableName() override { return FText::FromString("Join Table"); }
 
 	UFUNCTION()
@@ -121,8 +123,12 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_HideUI(bool bUsesAnimation = false);
 
+	void HideUI(bool bUsesAnimation = false);
+
 	UFUNCTION(Client, Reliable)
 	void Client_ShowUI();
+
+	void ShowUI();
 
 	UFUNCTION(Client, Reliable)
 	void Client_StopInteracting();

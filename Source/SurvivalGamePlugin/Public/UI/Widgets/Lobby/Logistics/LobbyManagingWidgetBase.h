@@ -113,12 +113,6 @@ public:
 	void ResetCampaign();
 
 	UFUNCTION()
-	void Show();
-
-	UFUNCTION()
-	void Hide();
-
-	UFUNCTION()
 	void MarkForDestruction();
 
 	UFUNCTION()

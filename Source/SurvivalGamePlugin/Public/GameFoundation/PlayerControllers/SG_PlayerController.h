@@ -49,7 +49,7 @@ public:
 
 	void OnNetCleanup(UNetConnection* Connection) override;
 
-	void OnPossess(APawn* InPawn) override;
+	void AcknowledgePossession(APawn* InPawn) override;
 
 	//Work with save game
 	UFUNCTION()

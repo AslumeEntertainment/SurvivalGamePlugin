@@ -49,6 +49,8 @@ private:
 	TArray<FLinearColor> HeroColors;
 	UPROPERTY()
 	TArray<uint16> HeroCosts;
+	UPROPERTY()
+	TArray<uint16> HeroIndexes;
 
 	UPROPERTY()
 	TArray<FText> ResourceNames;
@@ -58,6 +60,8 @@ private:
 	TArray<FLinearColor> ResourceColors;
 	UPROPERTY()
 	TArray<uint16> ResourceCosts;
+	UPROPERTY()
+	TArray<uint16> ResourceIndexes;
 
 	UPROPERTY()
 	uint16 ActiveIndex = -1;
@@ -128,7 +132,6 @@ protected:
 
 public:	
 	virtual void StopInteracting() override;
-	virtual void InteractRequest(AController* InteractingCharacter) override;
-	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override { return FText::FromString("Shopkeeper"); }
 };

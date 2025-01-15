@@ -13,13 +13,6 @@ AStation::AStation()
 
 }
 
-// Called when the game starts or when spawned
-void AStation::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 void AStation::StopInteracting()
 {
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
@@ -27,25 +20,23 @@ void AStation::StopInteracting()
 	InteractingPlayer = nullptr;
 }
 
-void AStation::InteractRequest(AController* InteractingCharacter)
+bool AStation::InteractRequest(AController* InteractingCharacter)
 {
-	if (InteractingCharacter->IsLocalPlayerController() == false)
-	{
-		return;
-	}
-
 	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
 	if (IsValid(InteractingPlayer) == false)
 	{
-		return;
+		return false;
 	}
-	//InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
+
+	if (InteractingCharacter->IsLocalPlayerController() == false)
+	{
+		return false;
+	}
+
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 	InteractingPlayer->SetShowMouseCursor(true);
 
-	//UpdateWidgets();
-
-	//ShopWidget->AddToViewport();
+	return true;
 }
 
 bool AStation::bCanInteract(AController* InteractingCharacter)

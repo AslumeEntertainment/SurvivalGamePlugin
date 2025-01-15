@@ -25,13 +25,10 @@ protected:
 	UPROPERTY()
 	ASG_PlayerController* InteractingPlayer = nullptr;
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	UFUNCTION()
 	virtual void StopInteracting();
 
-	virtual void InteractRequest(AController* InteractingCharacter) override;
+	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override { return FText::FromString("Station"); }
 

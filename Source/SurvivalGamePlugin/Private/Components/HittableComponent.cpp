@@ -163,7 +163,6 @@ void UHittableComponent::OnHittableDestroyed()
 		EquipmentComp->UnequipAllItems();
 
 		Character->SetIsAlive(false);
-		Character->OnCharacterDeath.Broadcast();
 	}
 	else
 	{
