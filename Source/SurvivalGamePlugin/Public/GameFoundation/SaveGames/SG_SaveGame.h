@@ -35,4 +35,15 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
 	TArray<FDeckPersistentData> Decks;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Cards")
+	uint8 MaxResourceCards = 1000;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Cards")
+	uint8 MaxHeroCards = 100;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Cards")
+	uint8 MaxDecks = 10;
+
+	UFUNCTION()
+	void Init();
 };

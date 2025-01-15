@@ -30,7 +30,7 @@ void ASG_PlayerController::BeginPlay()
 	}
 
 	UserCloudSubsystemPtr->OnGameRead.AddDynamic(this, &ASG_PlayerController::ReceiveReadSave);
-	UserCloudSubsystemPtr->OnWriteFinished.AddDynamic(this, &ASG_PlayerController::ReadSave);
+	//UserCloudSubsystemPtr->OnWriteFinished.AddDynamic(this, &ASG_PlayerController::ReadSave);  -  commented so that all clinet side changes are preditions only and send to the cloud
 	OnReadSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::ReadSaveFile);
 	OnWriteSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::WriteSaveFile);
 
@@ -82,6 +82,7 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
 		Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+		Save->Init();
 		WriteSave();
 	}
 
