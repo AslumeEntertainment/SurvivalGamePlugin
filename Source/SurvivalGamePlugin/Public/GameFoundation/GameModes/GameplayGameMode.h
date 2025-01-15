@@ -41,8 +41,8 @@ private:
 	UFUNCTION()
 	void EndGame();
 
-	UFUNCTION()
-	void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
+	//UFUNCTION()
+	//void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
 
 	UFUNCTION()
 	void KickAllPlayers();

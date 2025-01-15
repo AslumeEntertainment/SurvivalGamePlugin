@@ -3,16 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Level/Stations/Station.h"
+
 #include "Interfaces/InteractableInterface.h"
 #include "ShopKeeper.generated.h"
 
-class ASG_PlayerController;
+
 class UShopWidgetBase;
 class UWarningWidgetBase;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AShopKeeper : public AActor, public IInteractableInterface
+class SURVIVALGAMEPLUGIN_API AShopKeeper : public AStation
 {
 	GENERATED_BODY()
 	
@@ -23,8 +24,7 @@ public:
 private:
 
 	//can make a dlegate for getting the save game insted of this if we start optimizing
-	UPROPERTY()
-	ASG_PlayerController* InteractingPlayer = nullptr;
+
 	UPROPERTY()
 	UShopWidgetBase* ShopWidget = nullptr;
 	UPROPERTY()
@@ -64,9 +64,6 @@ private:
 
 	UFUNCTION()
 	void FillShopWidget();
-
-	UFUNCTION()
-	void StopInteracting();
 
 	UFUNCTION()
 	void BoosterPackSelected(int Index);
@@ -130,7 +127,7 @@ protected:
 	uint16 MaxRNGRange = 10000;
 
 public:	
-
+	virtual void StopInteracting() override;
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override { return FText::FromString("Shopkeeper"); }

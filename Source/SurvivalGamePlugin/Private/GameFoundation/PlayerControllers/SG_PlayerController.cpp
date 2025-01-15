@@ -81,9 +81,10 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 	if (IsValid(Save) == false)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
-		Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
-		Save->Init();
-		WriteSave();
+		Cheat_ClearAccount();
+		//Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+		//Save->Init();
+		//WriteSave();
 	}
 
 	OnSaveUpdated.Broadcast();
@@ -167,6 +168,7 @@ void ASG_PlayerController::Cheat_SetMoney(uint32 Money)
 void ASG_PlayerController::Cheat_ClearAccount()
 {
 	Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
+	Save->Init();
 	WriteSave();
 }
 

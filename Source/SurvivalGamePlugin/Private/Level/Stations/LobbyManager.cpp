@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Level/LobbyManager.h"
+#include "Level/Stations/LobbyManager.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -239,18 +239,7 @@ void ALobbyManager::SendCampaign()
 
 void ALobbyManager::InteractRequest(AController* InteractingCharacter)
 {
-	if (InteractingCharacter->IsLocalPlayerController() == false)
-	{
-		return;
-	}
-	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
-	if (IsValid(InteractingPlayer) == false)
-	{
-		return;
-	}
-
-	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
-	InteractingPlayer->bShowMouseCursor = true;
+	Super::InteractRequest(InteractingCharacter);
 
 	if (HasAuthority() == true)
 	{
@@ -267,9 +256,7 @@ bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
 
 void ALobbyManager::StopInteracting()
 {
-	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-	InteractingPlayer->bShowMouseCursor = false;
-	InteractingPlayer = nullptr;
+	Super::StopInteracting();
 
 	CampaignChooserWidget->MarkForDestruction();
 	CampaignChooserWidget = nullptr;

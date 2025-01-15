@@ -36,7 +36,7 @@ public:
 	TArray<FDeckPersistentData> Decks;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Cards")
-	uint8 MaxResourceCards = 1000;
+	uint16 MaxResourceCards = 1000;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Cards")
 	uint8 MaxHeroCards = 100;
