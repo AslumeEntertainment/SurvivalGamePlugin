@@ -99,7 +99,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void DestroyItem();
 
-	virtual void InteractRequest(AController* InteractingCharacter) override;
+	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override;
 

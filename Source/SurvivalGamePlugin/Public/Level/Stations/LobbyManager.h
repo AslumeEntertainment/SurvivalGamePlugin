@@ -131,8 +131,7 @@ public:
 	void SendCampaign();
 
 	void StopInteracting() override;
-	virtual void InteractRequest(AController* InteractingCharacter) override;
-	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override { return FText::FromString("Manage Campaigns"); }
 
 };

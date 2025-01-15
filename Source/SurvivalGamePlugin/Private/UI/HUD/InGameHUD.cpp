@@ -20,6 +20,11 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->bShowMouseCursor = false;
 	}
 
+}
+
+void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
+{
+
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
@@ -27,23 +32,20 @@ void AInGameHUD::BeginPlay()
 		return;
 	}
 
-	InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(UGameplayStatics::GetGameInstance(World), InteractionOverlayWidgetClass);
-
-	ShowInteractionOverlayWidget();
-}
-
-void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
-{
-	if (InteractionOverlayWidget)
+	if (IsValid(InteractionOverlayWidget) == false)
 	{
-		InteractionOverlayWidget->SetInteractIndicationText(FText::FromString(""));
-		if(IsValid(InteractingCharacter) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(InteractingCharacter) == false"));
-			return;
-		}
-		InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+		InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(UGameplayStatics::GetGameInstance(World), InteractionOverlayWidgetClass);
 	}
+	
+	InteractionOverlayWidget->SetInteractIndicationText(FText::FromString(""));
+	if(IsValid(InteractingCharacter) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(InteractingCharacter) == false"));
+		return;
+	}
+	InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+	
+	ShowInteractionOverlayWidget();
 }
 
 void AInGameHUD::ShowInteractionOverlayWidget()
@@ -103,6 +105,12 @@ void AInGameHUD::RemoveGameplayOverlayWidget()
 		GameplayOverlayWidget->RemoveFromParent();
 		GameplayOverlayWidget->Destruct();
 	}
+}
+
+void AInGameHUD::ClearScreen()
+{
+	RemoveGameplayOverlayWidget();
+	RemoveInteractionOverlayWidget();
 }
 
 

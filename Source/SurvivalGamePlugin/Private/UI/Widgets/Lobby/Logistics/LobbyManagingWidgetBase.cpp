@@ -30,19 +30,9 @@ void ULobbyManagingWidgetBase::NativeConstruct()
 	WSW_CampaignWindow->SetActiveWidgetIndex(CurrentActiveWidget);
 }
 
-void ULobbyManagingWidgetBase::Show()
-{
-	AddToViewport();
-}
-
-void ULobbyManagingWidgetBase::Hide()
-{
-	RemoveFromParent();
-}
-
 void ULobbyManagingWidgetBase::MarkForDestruction()
 {
-	Hide();
+	RemoveFromParent();
 	Destruct();
 	MarkAsGarbage();
 }

@@ -33,6 +33,8 @@ AInGameCharacter::AInGameCharacter()
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
 	HittableComponent->SetupAttachment(GetRootComponent());
 	
+	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
+
 	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
 }
 
@@ -49,22 +51,7 @@ void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 		Item->Destroy();
 	}
 
-	if (IsLocallyControlled())
-	{
-		APlayerController* PlayerController = Cast<APlayerController>(Controller);
-		if (IsValid(PlayerController) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(PlayerController) == false"));
-			return;
-		}
-		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
-		if (IsValid(HUD) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(HUD) == false"));
-			return;
-		}
-		HUD->SetInteractionOverlayBindings(this);
-	}
+	
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -72,6 +59,7 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, AttackSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, bIsAlive, COND_None, REPNOTIFY_OnChanged);
 }
 
 void AInGameCharacter::BeginPlay()
@@ -301,6 +289,11 @@ void AInGameCharacter::BindCallbacksToDependencies()
 	);
 }
 
+void AInGameCharacter::OnRep_IsAlive()
+{
+	if (bIsAlive == false) OnCharacterDeath.Broadcast();
+}
+
 void AInGameCharacter::BroadcastInitialValues()
 {
 	if (HasAuthority() == false)
@@ -373,6 +366,7 @@ void AInGameCharacter::SetIsRightHanded(bool NewValue)
 void AInGameCharacter::SetIsAlive(bool NewValue)
 {
 	bIsAlive = NewValue;
+	if(bIsAlive == false) OnCharacterDeath.Broadcast();
 }
 
 bool AInGameCharacter::IsAlive()

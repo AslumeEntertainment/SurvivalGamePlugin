@@ -104,7 +104,7 @@ void ALobbyManager::LeaveLobby()
 
 void ALobbyManager::SelectCampaign()
 {
-	CampaignChooserWidget->Show();
+	CampaignChooserWidget->AddToViewport();
 }
 
 void ALobbyManager::CampaignSelected(int Index)
@@ -184,7 +184,7 @@ void ALobbyManager::CampaignSelected(int Index)
 
 	SendCampaign();
 
-	CampaignChooserWidget->Hide();
+	CampaignChooserWidget->RemoveFromParent();
 }
 
 void ALobbyManager::SetCurrentGame(int Index)
@@ -237,31 +237,28 @@ void ALobbyManager::SendCampaign()
 	OnCampaignFillNeeded.Broadcast(CurrentCampaignName, NumPlayers, bIsSupervised, CurrentSupervisionChangeable, CurrentGameNames, CurrentMaxProgression, CurrentGame);
 }
 
-void ALobbyManager::InteractRequest(AController* InteractingCharacter)
+bool ALobbyManager::InteractRequest(AController* InteractingCharacter)
 {
-	Super::InteractRequest(InteractingCharacter);
+	if (Super::InteractRequest(InteractingCharacter) == false) return false;
 
 	if (HasAuthority() == true)
 	{
 		SetupSelectorWidget();
 	}
 
-	LobbyManagingWidget->Show();
-}
+	LobbyManagingWidget->AddToViewport();
 
-bool ALobbyManager::bCanInteract(AController* InteractingCharacter)
-{
-	return true;// HasAuthority();
+	return true;
 }
 
 void ALobbyManager::StopInteracting()
 {
 	Super::StopInteracting();
 
-	CampaignChooserWidget->MarkForDestruction();
+	if(IsValid(CampaignChooserWidget) == true) CampaignChooserWidget->MarkForDestruction();
 	CampaignChooserWidget = nullptr;
 
-	LobbyManagingWidget->Hide();
+	LobbyManagingWidget->RemoveFromParent();
 
 	CampaignNames.Empty();
 	CampaignIcons.Empty();

@@ -51,19 +51,16 @@ void AShopKeeper::BeginPlay()
 	ShopWarningWidget->OnCancelButtonClicked.AddDynamic(this, &AShopKeeper::HideNotification);
 }
 
-void AShopKeeper::InteractRequest(AController* InteractingCharacter)
+bool AShopKeeper::InteractRequest(AController* InteractingCharacter)
 {
-	Super::InteractRequest(InteractingCharacter);
+	if (Super::InteractRequest(InteractingCharacter) == false) return false;
 
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
 
 	UpdateWidgets();
 
 	ShopWidget->AddToViewport();
-}
 
-bool AShopKeeper::bCanInteract(AController* InteractingCharacter)
-{
 	return true;
 }
 
@@ -216,7 +213,7 @@ void AShopKeeper::BuyBoosterPack()
 	}
 
 	InteractingPlayer->WriteSave();
-	FillShopWidget();
+	UpdateWidgets();
 	HideNotification();
 
 	StartLootingAnimation(Drops);
@@ -246,10 +243,10 @@ void AShopKeeper::SellHeroCard()
 
 	Save->Money += HeroCosts[ActiveIndex];
 
-	Save->HeroCards.RemoveAt(ActiveIndex);
+	Save->HeroCards[HeroIndexes[ActiveIndex]] = FProgressiveDataHelperStruct();
 
 	InteractingPlayer->WriteSave();
-	FillShopWidget();
+	UpdateWidgets();
 	HideNotification();
 }
 
@@ -277,10 +274,10 @@ void AShopKeeper::SellResourceCard()
 
 	Save->Money += ResourceCosts[ActiveIndex];
 
-	Save->ResourceCards.RemoveAt(ActiveIndex);
+	Save->ResourceCards[ResourceIndexes[ActiveIndex]] = FProgressiveDataHelperStruct();
 
 	InteractingPlayer->WriteSave();
-	FillShopWidget();
+	UpdateWidgets();
 	HideNotification();
 }
 
@@ -332,10 +329,12 @@ void AShopKeeper::FillShopWidget()
 	HeroIcons.Empty();
 	HeroColors.Empty();
 	HeroCosts.Empty();
+	HeroIndexes.Empty();
 	ResourceNames.Empty();
 	ResourceIcons.Empty();
 	ResourceColors.Empty();
 	ResourceCosts.Empty();
+	ResourceIndexes.Empty();
 
 	TArray<FBoosterPackPersistentData*> Rows;
 	BoosterPackTable->GetAllRows<FBoosterPackPersistentData>("GettingBoosterPacks", Rows);
@@ -381,36 +380,13 @@ void AShopKeeper::FillShopWidget()
 		HeroIcons.Add(FoundHeroDataPtr->UnitImage);
 		HeroColors.Add(FoundHeroDataPtr->UnitColor);
 		HeroCosts.Add(*HeroCostPtr);
+		HeroIndexes.Add(HeroIndex);
 	}
-
-	/*for (FProgressiveDataHelperStruct SavedHero : Save->HeroCards)
-	{
-
-		for (FHeroCardPersistentData* HeroRow : HeroDataRows)
-		{
-
-			if (SavedHero.ID != HeroRow->ID) continue;
-
-			uint16* HeroCostPtr = HeroRow->ValuePerLevel.Find(SavedHero.Level);
-			if (HeroCostPtr == nullptr)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Hero[%d] doesn't have value for level %d"), SavedHero.ID, SavedHero.Level);
-				return;
-			}
-
-			HeroNames.Add(HeroRow->UnitName);
-			HeroIcons.Add(HeroRow->UnitImage);
-			HeroColors.Add(HeroRow->UnitColor);
-			HeroCosts.Add(*HeroCostPtr);
-		}
-	}*/
-
-
 
 	uint16 ResourceIndex = -1;
 	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
 	{
-		HeroIndex++;
+		ResourceIndex++;
 		if (SavedResource.ID == 0) continue;
 
 		FResourseCardPersistentData* FoundResourceDataPtr = ResourceTable->FindRow<FResourseCardPersistentData>(FName(*FString::FromInt(SavedResource.ID)), "Filling Resources");
@@ -425,26 +401,8 @@ void AShopKeeper::FillShopWidget()
 		ResourceIcons.Add(FoundResourceDataPtr->UnitImage);
 		ResourceColors.Add(FoundResourceDataPtr->UnitColor);
 		ResourceCosts.Add(FoundResourceDataPtr->Value);
+		ResourceIndexes.Add(ResourceIndex);
 	}
-
-
-	/*TArray<FResourseCardPersistentData*> ResourceDataRows;
-
-	ResourceTable->GetAllRows<FResourseCardPersistentData>("Filling Resource", ResourceDataRows);
-
-	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
-	{
-		for (FResourseCardPersistentData* ResourceRow : ResourceDataRows)
-		{
-			if (SavedResource.ID != ResourceRow->ID) continue;
-
-			ResourceNames.Add(ResourceRow->UnitName);
-			ResourceIcons.Add(ResourceRow->UnitImage);
-			ResourceColors.Add(ResourceRow->UnitColor);
-			ResourceCosts.Add(ResourceRow->Value);
-		}
-	}
-	*/
 
 	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterColors, BoosterCosts);
 	ShopWidget->FillHeroes(HeroNames, HeroIcons, HeroColors, HeroCosts);

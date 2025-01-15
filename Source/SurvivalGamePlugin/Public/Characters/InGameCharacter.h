@@ -25,6 +25,7 @@ public:
 
 private:
 
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_IsAlive)
 	bool bIsAlive = true;
 
 	float OldHittableCompHalfHeight = 0.f;
@@ -104,6 +105,9 @@ protected:
 	virtual void SecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies();
+
+	UFUNCTION()
+	void OnRep_IsAlive();
 
 public:
 

@@ -10,6 +10,7 @@
 #include "GameFoundation/GameInstance/UserCloudSubsystem.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
+#include "UI/HUD/InGameHUD.h"
 #include "Components/EquipmentComponent.h"
 #include "Characters/InGameCharacter.h"
 
@@ -37,10 +38,31 @@ void ASG_PlayerController::BeginPlay()
 	ReadSave();
 }
 
-void ASG_PlayerController::OnPossess(APawn* InPawn)
+void ASG_PlayerController::AcknowledgePossession(APawn* InPawn)
 {
-	Super::OnPossess(InPawn);
+	Super::AcknowledgePossession(InPawn);
 
+	ASG_Character* ControlledCharacter = Cast<ASG_Character>(InPawn);
+
+	if (IsValid(ControlledCharacter) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CANNOT ACKNOWEGE POSSESION "));
+		return;
+	}
+
+	AInGameHUD* HUD = Cast<AInGameHUD>(GetHUD());
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("INVALID HUDDDDDDDDDDD "));
+		return;
+	}
+
+	HUD->SetInteractionOverlayBindings(ControlledCharacter);
+	
+	AInGameCharacter* InGameCharacter = Cast<AInGameCharacter>(ControlledCharacter);
+	if (IsValid(InGameCharacter) == false) return;
+
+	InGameCharacter->OnCharacterDeath.AddDynamic(HUD, &AInGameHUD::ClearScreen);
 }
 
 void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMode)

@@ -50,5 +50,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RemoveGameplayOverlayWidget();
 
-
+	UFUNCTION()
+	void ClearScreen();
 };

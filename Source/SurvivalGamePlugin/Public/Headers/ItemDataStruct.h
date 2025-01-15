@@ -63,7 +63,7 @@ struct FItemDataStruct : public FTableRowBase
 	FGameplayTag EquipmentSlotTag;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	EWeight ItemWeight;
+	EWeight ItemWeight = EWeight::Normal;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<FItemCraftingDataStruct> CraftableItems;

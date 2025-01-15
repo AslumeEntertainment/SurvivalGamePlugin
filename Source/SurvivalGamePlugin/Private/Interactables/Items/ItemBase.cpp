@@ -200,26 +200,28 @@ void AItemBase::DestroyItem()
 	Destroy();
 }
 
-void AItemBase::InteractRequest(AController* InteractingCharacter)
+bool AItemBase::InteractRequest(AController* InteractingCharacter)
 {
 	if (HasAuthority() == false)
 	{
-		return;
+		return false;
 	}
 	AInGameCharacter* InteractingPlayer = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
 	if (IsValid(InteractingPlayer) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(InteractingPlayer) == false"));
-		return;
+		return false;
 	}
 	UEquipmentComponent* EquipmentComp = InteractingPlayer->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
-		return;
+		return false;
 	}
 
 	EquipmentComp->EquipItem(this);
+
+	return true;
 }
 
 bool AItemBase::bCanInteract(AController* InteractingCharacter)

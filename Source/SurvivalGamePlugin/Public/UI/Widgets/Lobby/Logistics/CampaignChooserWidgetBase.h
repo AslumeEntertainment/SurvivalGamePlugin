@@ -40,12 +40,6 @@ public:
 	void FillCampaigns(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor>Colors, TArray<uint8> PlayerNums);
 
 	UFUNCTION()
-	void Show();
-
-	UFUNCTION()
-	void Hide();
-
-	UFUNCTION()
 	void MarkForDestruction();
 
 	FVoidDataTransferSignature OnExitButton;
