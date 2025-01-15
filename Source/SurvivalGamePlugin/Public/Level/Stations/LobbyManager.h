@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Level/Stations/Station.h"
 
 #include "Headers/GeneralDelegates.h"
 #include "Headers/GameManagingPersistentStructs.h"
@@ -13,7 +13,6 @@
 
 class AGameManager;
 class UDataTable;
-class ASG_PlayerController;
 class UCampaignChooserWidgetBase;
 class ULobbyManagingWidgetBase;
 class UWarningWidgetBase;
@@ -28,7 +27,7 @@ struct PerCampaignData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(FCampaignRepresentingSignature, FText, Name, uint8, PlayerNum, bool, IsSupervised, bool, IsChangeable, TArray<FString>, GameNames, uint8, Progression, uint8, CurrentGame);
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API ALobbyManager : public AActor, public IInteractableInterface
+class SURVIVALGAMEPLUGIN_API ALobbyManager : public AStation
 {
 	GENERATED_BODY()
 	
@@ -37,9 +36,6 @@ public:
 	ALobbyManager();
 
 private:
-
-	UPROPERTY()
-	ASG_PlayerController* InteractingPlayer = nullptr;
 	UPROPERTY()
 	UCampaignChooserWidgetBase* CampaignChooserWidget;
 	UPROPERTY()
@@ -103,9 +99,6 @@ protected:
 	void SetupManagingWidget();
 	void SetupSelectorWidget();
 
-	UFUNCTION()
-	void StopInteracting();
-
 	UFUNCTION(BlueprintCallable)
 	void OpenPlaySpace();
 
@@ -137,6 +130,7 @@ public:
 	UFUNCTION()
 	void SendCampaign();
 
+	void StopInteracting() override;
 	virtual void InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
 	virtual FText GetInteractableName() override { return FText::FromString("Manage Campaigns"); }

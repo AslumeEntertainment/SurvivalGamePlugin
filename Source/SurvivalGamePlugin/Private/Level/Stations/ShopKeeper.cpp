@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Level/ShopKeeper.h"
+#include "Level/Stations/ShopKeeper.h"
 
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
@@ -53,19 +53,9 @@ void AShopKeeper::BeginPlay()
 
 void AShopKeeper::InteractRequest(AController* InteractingCharacter)
 {
-	if (InteractingCharacter->IsLocalPlayerController() == false)
-	{
-		return;
-	}
+	Super::InteractRequest(InteractingCharacter);
 
-	InteractingPlayer = Cast<ASG_PlayerController>(InteractingCharacter);
-	if (IsValid(InteractingPlayer) == false)
-	{
-		return;
-	}
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
-	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
-	InteractingPlayer->SetShowMouseCursor(true);
 
 	UpdateWidgets();
 
@@ -79,11 +69,12 @@ bool AShopKeeper::bCanInteract(AController* InteractingCharacter)
 
 void AShopKeeper::StopInteracting()
 {
+
 	InteractingPlayer->OnSaveUpdated.RemoveAll(this);
-	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
-	InteractingPlayer->SetShowMouseCursor(false);
+
+	Super::StopInteracting();
+
 	ShopWidget->RemoveFromParent();
-	InteractingPlayer = nullptr;
 
 	ActiveIndex = -1;
 
@@ -159,10 +150,13 @@ void AShopKeeper::BuyBoosterPack()
 			if (RNG <= Entry.Chance)
 			{
 				Drops.Add(Entry.RepresentedUnit);
-				FProgressiveDataHelperStruct Data;
-				Data.ID = Entry.RepresentedUnit.GetRow<FHeroCardPersistentData>("Winning Hero")->ID;
-				Data.Level = 0;
-				Save->HeroCards.Add(Data);
+
+				FHeroCardPersistentData* Data = Entry.RepresentedUnit.GetRow<FHeroCardPersistentData>("Winning Hero");
+				FProgressiveDataHelperStruct* FoundEmptyHero = Save->HeroCards.FindByPredicate([](FProgressiveDataHelperStruct& EmptyHero) { return EmptyHero.ID == 0; });
+				if (FoundEmptyHero != nullptr)
+				{
+					FoundEmptyHero->ID = Data->ID;
+				}
 				break;
 			}
 		}
@@ -177,10 +171,12 @@ void AShopKeeper::BuyBoosterPack()
 			if (RNG <= Entry.Chance)
 			{
 				Drops.Add(Entry.RepresentedUnit);
-				FProgressiveDataHelperStruct Data;
-				Data.ID = Entry.RepresentedUnit.GetRow<FResourseCardPersistentData>("Winning Hero")->ID;
-				Data.Level = 100;
-				Save->ResourceCards.Add(Data);
+				FResourseCardPersistentData* Data = Entry.RepresentedUnit.GetRow<FResourseCardPersistentData>("Winning Resource");
+				FProgressiveDataHelperStruct* FoundEmptyResource = Save->ResourceCards.FindByPredicate( [](FProgressiveDataHelperStruct& EmptyResource) { return EmptyResource.ID == 0; } );
+				if (FoundEmptyResource != nullptr)
+				{
+					FoundEmptyResource->ID = Data->ID;
+				}
 				break;
 			}
 		}
@@ -220,7 +216,7 @@ void AShopKeeper::BuyBoosterPack()
 	}
 
 	InteractingPlayer->WriteSave();
-
+	FillShopWidget();
 	HideNotification();
 
 	StartLootingAnimation(Drops);
@@ -253,7 +249,7 @@ void AShopKeeper::SellHeroCard()
 	Save->HeroCards.RemoveAt(ActiveIndex);
 
 	InteractingPlayer->WriteSave();
-
+	FillShopWidget();
 	HideNotification();
 }
 
@@ -284,7 +280,7 @@ void AShopKeeper::SellResourceCard()
 	Save->ResourceCards.RemoveAt(ActiveIndex);
 
 	InteractingPlayer->WriteSave();
-
+	FillShopWidget();
 	HideNotification();
 }
 
@@ -359,7 +355,35 @@ void AShopKeeper::FillShopWidget()
 
 	HeroTable->GetAllRows<FHeroCardPersistentData>("Filling Heroes", HeroDataRows);
 
+
+	uint8 HeroIndex = -1;
 	for (FProgressiveDataHelperStruct SavedHero : Save->HeroCards)
+	{
+		HeroIndex++;
+		if (SavedHero.ID == 0) continue;
+		
+		FHeroCardPersistentData* FoundHeroDataPtr = HeroTable->FindRow<FHeroCardPersistentData>(FName(*FString::FromInt(SavedHero.ID)), "Filling Heroes");
+
+		if (FoundHeroDataPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hero[%d] doesn't exist"), SavedHero.ID);
+			continue;
+		}
+
+		uint16* HeroCostPtr = FoundHeroDataPtr->ValuePerLevel.Find(SavedHero.Level);
+		if (HeroCostPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hero[%d] doesn't have value for level %d"), SavedHero.ID, SavedHero.Level);
+			return;
+		}
+
+		HeroNames.Add(FoundHeroDataPtr->UnitName);
+		HeroIcons.Add(FoundHeroDataPtr->UnitImage);
+		HeroColors.Add(FoundHeroDataPtr->UnitColor);
+		HeroCosts.Add(*HeroCostPtr);
+	}
+
+	/*for (FProgressiveDataHelperStruct SavedHero : Save->HeroCards)
 	{
 
 		for (FHeroCardPersistentData* HeroRow : HeroDataRows)
@@ -379,9 +403,32 @@ void AShopKeeper::FillShopWidget()
 			HeroColors.Add(HeroRow->UnitColor);
 			HeroCosts.Add(*HeroCostPtr);
 		}
+	}*/
+
+
+
+	uint16 ResourceIndex = -1;
+	for (FProgressiveDataHelperStruct SavedResource : Save->ResourceCards)
+	{
+		HeroIndex++;
+		if (SavedResource.ID == 0) continue;
+
+		FResourseCardPersistentData* FoundResourceDataPtr = ResourceTable->FindRow<FResourseCardPersistentData>(FName(*FString::FromInt(SavedResource.ID)), "Filling Resources");
+
+		if (FoundResourceDataPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Resource[%d] doesn't exist"), SavedResource.ID);
+			continue;
+		}
+
+		ResourceNames.Add(FoundResourceDataPtr->UnitName);
+		ResourceIcons.Add(FoundResourceDataPtr->UnitImage);
+		ResourceColors.Add(FoundResourceDataPtr->UnitColor);
+		ResourceCosts.Add(FoundResourceDataPtr->Value);
 	}
 
-	TArray<FResourseCardPersistentData*> ResourceDataRows;
+
+	/*TArray<FResourseCardPersistentData*> ResourceDataRows;
 
 	ResourceTable->GetAllRows<FResourseCardPersistentData>("Filling Resource", ResourceDataRows);
 
@@ -397,6 +444,7 @@ void AShopKeeper::FillShopWidget()
 			ResourceCosts.Add(ResourceRow->Value);
 		}
 	}
+	*/
 
 	ShopWidget->FillBoosters(BoosterNames, BoosterIcons, BoosterColors, BoosterCosts);
 	ShopWidget->FillHeroes(HeroNames, HeroIcons, HeroColors, HeroCosts);

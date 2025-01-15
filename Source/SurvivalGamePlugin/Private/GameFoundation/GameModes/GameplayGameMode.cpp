@@ -9,7 +9,7 @@
 
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "Level/TeamManager.h"
-#include "Level/PlayerCustomiser.h"
+//#include "Level/PlayerCustomiser.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(TeamManagement, Log, All);
@@ -186,8 +186,8 @@ FVector AGameplayGameMode::GetValidInGameSpawnLocation()
 	return PredatorLocation;
 }
 
-void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser)
-{
+//void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser)
+//{
 	/*
 	
 	TO BE REWORKED
@@ -242,7 +242,7 @@ void AGameplayGameMode::OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPl
 
 	GetWorldTimerManager().SetTimer(LootingPeriodTimer, this, &AGameplayGameMode::EndGame, LootingPeriodLenght, false);
 	*/
-}
+//}
 
 void AGameplayGameMode::EndGame()
 {

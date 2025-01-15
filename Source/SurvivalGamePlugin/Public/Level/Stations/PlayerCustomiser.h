@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Level/Stations/Station.h"
+
 #include "Headers/GeneralDelegates.h"
 #include "Headers/GameManagingStructs.h"
-#include "Interfaces/InteractableInterface.h"
 
 #include "PlayerCustomiser.generated.h"
 
-class ASG_PlayerController;
 class AInGameCharacter;
 class UPlayerCustomisingWidget;
 class UCardSelectorWidget;
@@ -19,7 +18,7 @@ class UPanelWidget;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API APlayerCustomiser : public AActor, public IInteractableInterface
+class SURVIVALGAMEPLUGIN_API APlayerCustomiser : public AStation
 {
 	GENERATED_BODY()
 	
@@ -46,9 +45,6 @@ private:
 
 	UPROPERTY()
 	AInGameCharacter* GamePawn = nullptr;
-
-	UPROPERTY()
-	ASG_PlayerController* InteractingPlayer = nullptr;
 
 	UFUNCTION(Server, Reliable)
 	void Server_ToggleReady();
