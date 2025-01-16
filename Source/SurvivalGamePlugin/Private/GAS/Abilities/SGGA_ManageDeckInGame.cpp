@@ -104,7 +104,8 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 
 	//TO BE CHANGED WHEN DECKS WORK
 
-	TArray<FResourseCardPersistentData*> MainResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable);
+	TArray<FResourseCardPersistentData*> MainResourceDataRows;
+	UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable, TArray<uint16>()).GenerateValueArray(MainResourceDataRows);
 	for (int i = 0; i < 3; i++)
 	{
 		if (i >= MainResourceDataRows.Num())
@@ -116,7 +117,8 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 	InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	RefreshMainCards();
 	
-	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
+	TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
+	UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable, TArray<uint16>()).GenerateValueArray(SecondaryResourceDataRows);
 	for (int i = 0; i < 3; i++)
 	{
 		if (i >= SecondaryResourceDataRows.Num())

@@ -29,19 +29,22 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Cards")
 	TArray<FProgressiveDataHelperStruct> ResourceCards;
 
-	UPROPERTY(VisibleAnywhere, Category = "Cards")
-	TArray<FProgressiveDataHelperStruct> HeroCards;
-
-	UPROPERTY(VisibleAnywhere, Category = "Cards")
-	TArray<FDeckPersistentData> Decks;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Cards")
 	uint16 MaxResourceCards = 1000;
+
+	UPROPERTY(VisibleAnywhere, Category = "Cards")
+	TArray<FProgressiveDataHelperStruct> HeroCards;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Cards")
 	uint8 MaxHeroCards = 100;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Cards")
+	UPROPERTY(VisibleAnywhere, Category = "Decks")
+	TArray<FDeckPersistentData> Decks;
+
+	UPROPERTY(VisibleAnywhere, Category = "Decks")
+	uint8 ActiveDeckIndex = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Decks")
 	uint8 MaxDecks = 10;
 
 	UFUNCTION()
