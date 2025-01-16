@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "TerrainGenerator.generated.h"
 
+class AMapTile;
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API ATerrainGenerator : public AActor
 {
@@ -20,7 +22,10 @@ private:
 	FVector Center;
 
 	UPROPERTY()
-	TArray<AActor*> Tiles;
+	TArray<AMapTile*> Tiles;
+
+	UPROPERTY()
+	TArray<AMapTile*> BorderTiles;
 
 	UPROPERTY()
 	TSet<FVector> Coordinates;
@@ -31,7 +36,7 @@ protected:
 	int Radius = 1;
 
 	UPROPERTY(EditAnywhere, Category = "TerrainGeneration")
-	TSubclassOf<AActor> TileClass;
+	TSubclassOf<AMapTile> TileClass;
 
 	UPROPERTY(EditAnywhere, Category = "TerrainGeneration")
 	TSubclassOf<AActor> BorderClass;
@@ -42,12 +47,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	void SquareMethod_GenerateTerrainCoordinates();
-
-	UFUNCTION(BlueprintCallable)
-	void Bresenham_GenerateTerrainCoordinates();
-
-	UFUNCTION(BlueprintCallable)
 	void AddCoordinates(int x, int y);
 
 	UFUNCTION(BlueprintCallable)
@@ -56,5 +55,17 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void PlaceTiles();
 
+	UFUNCTION(BlueprintCallable)
+	void PlaceBorder(UWorld* World);
 
+public:
+
+	UFUNCTION(BlueprintCallable)
+	void SquareMethod_GenerateTerrain();
+
+	UFUNCTION(BlueprintCallable)
+	void Bresenham_GenerateTerrainCoordinates();
+
+	UFUNCTION(BlueprintCallable)
+	TArray<AMapTile*> DetermineSpecialTiles(int TileCount);
 };
