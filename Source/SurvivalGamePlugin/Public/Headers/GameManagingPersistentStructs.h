@@ -121,10 +121,13 @@ struct FDeckPersistentData : public FPersistentDataUnit
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    uint8 Hero = 0;
+    uint16 Hero;
 
     UPROPERTY(EditAnywhere)
-    TArray<uint16> StartingEquipment;
+    TArray<uint16> MainEquipment;
+
+    UPROPERTY(EditAnywhere)
+    TArray<uint16> SecondaryEquipment;
 };
 
 USTRUCT(BlueprintType)

@@ -57,7 +57,7 @@ private:
 	void OpenCardSelector(UPanelWidget* CallerWidget);
 
 	UFUNCTION()
-	void DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* CardBox);
+	void DisplayDeckCards(uint8 NumCardsToDisplay, TArray<uint16> CardIndexes, UPanelWidget* CardBox);
 
 	UFUNCTION(Server, Reliable)
 	void Server_StopInteracting();
@@ -66,6 +66,24 @@ private:
 	void InGameCharacterDead();
 
 protected:
+
+	UPROPERTY(EditAnywhere, Category = "Decks")
+	uint8 NumHeroesInDeck = 1;
+
+	UPROPERTY(EditAnywhere, Category = "Decks")
+	uint8 NumEquipmentInDeck = 6;
+
+	UPROPERTY(EditAnywhere, Category = "Decks| Seriers")
+	uint16 MainHandSeriesStart = 30000;
+
+	UPROPERTY(EditAnywhere, Category = "Decks| Seriers")
+	uint16 RuneStoneSeriesStart = 20000;
+
+	UPROPERTY(EditAnywhere, Category = "Decks| Seriers")
+	uint16 SecondaryHandSeriesStart = 10000;
+
+	UPROPERTY(EditAnywhere, Category = "Decks| Seriers")
+	uint16 GenericSeriesStart = 00000;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
 	UDataTable* HeroTable = nullptr;

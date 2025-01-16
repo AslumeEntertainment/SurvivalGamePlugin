@@ -12,7 +12,7 @@ class UTextBlock;
 class UWrapBox;
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNeededCardsSelectedSignature, TArray<int>, SelectedIndexes, UPanelWidget*, CallerWidget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnNeededCardsSelectedSignature, uint8, NumCardsToDisplay, TArray<uint16>, SelectedIndexes, UPanelWidget*, CallerWidget);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCardSelectorWidget : public UUserWidget
@@ -23,9 +23,9 @@ protected:
 
 	UPanelWidget* CallerWidget = nullptr;
 
-	int NumberOfCardsToSelect = 0;
+	uint8 NumberOfCardsToSelect = 0;
 
-	TArray<int> SelectedCards;
+	TArray<uint16> SelectedCards;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextBlock* TXT_Title;

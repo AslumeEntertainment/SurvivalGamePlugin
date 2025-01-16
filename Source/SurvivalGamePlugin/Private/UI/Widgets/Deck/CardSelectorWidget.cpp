@@ -29,7 +29,7 @@ void UCardSelectorWidget::MarkCardAsSelected(int Index)
 		{
 			CallerWidget->ClearChildren();
 		}
-		OnNeededCardsSelected.Broadcast(SelectedCards, CallerWidget);
+		OnNeededCardsSelected.Broadcast(NumberOfCardsToSelect, SelectedCards, CallerWidget);
 		
 		RemoveFromParent();
 	}

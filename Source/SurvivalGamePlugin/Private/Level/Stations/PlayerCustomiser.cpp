@@ -182,7 +182,8 @@ void APlayerCustomiser::OpenCardSelector(UPanelWidget* CallerWidget)
 	}
 	if (CallerWidget == PlayerCustomisingWidget->GetMainCardsPanel())
 	{
-		TArray<FResourseCardPersistentData*> MainResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable);
+		TArray<FResourseCardPersistentData*> MainResourceDataRows;
+		UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable, TArray<uint16>()).GenerateValueArray(MainResourceDataRows);
 		for (FResourseCardPersistentData* ResourceRow : MainResourceDataRows)
 		{
 			CardNames.Add(ResourceRow->UnitName);
@@ -195,7 +196,8 @@ void APlayerCustomiser::OpenCardSelector(UPanelWidget* CallerWidget)
 	}
 	if (CallerWidget == PlayerCustomisingWidget->GetSecondaryCardsPanel())
 	{
-		TArray<FResourseCardPersistentData*> SecondaryResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
+		TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
+		UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable, TArray<uint16>()).GenerateValueArray(SecondaryResourceDataRows);
 		for (FResourseCardPersistentData* ResourceRow : SecondaryResourceDataRows)
 		{
 			CardNames.Add(ResourceRow->UnitName);
@@ -219,7 +221,7 @@ void APlayerCustomiser::OpenCardSelector(UPanelWidget* CallerWidget)
 	}
 }
 
-void APlayerCustomiser::DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* CardBox)
+void APlayerCustomiser::DisplayDeckCards(uint8 NumCardsToDisplay, TArray<uint16> CardIndexes, UPanelWidget* CardBox)
 {
 	if (!IsValid(HeroTable) || !IsValid(MainHandResourceTable) || !IsValid(SecondaryHandResourceTable))
 	{
@@ -274,32 +276,44 @@ void APlayerCustomiser::DisplayDeckCards(TArray<int> CardIndexes, UPanelWidget* 
 		return;
 	}
 
-	TArray<FResourseCardPersistentData*> ResourceDataRows;
+	TMap<uint16, FResourseCardPersistentData*> SavedCards;
 
 	if (CardBox == PlayerCustomisingWidget->GetMainCardsPanel())
 	{
-		ResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable);
+		SavedCards = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, MainHandResourceTable, TArray<uint16>());
 	}
 	else if (CardBox == PlayerCustomisingWidget->GetSecondaryCardsPanel())
 	{
-		ResourceDataRows = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable);
+		SavedCards = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable, TArray<uint16>());
 	}
 
-	for (int i : CardIndexes)
+	for (int i =0; i< NumCardsToDisplay; i++)
 	{
-		if (i >= ResourceDataRows.Num() || ResourceDataRows[i] == nullptr)
+		FResourseCardPersistentData** CardPtr;
+		FResourseCardPersistentData Card;
+		if (i < CardIndexes.Num())
 		{
-			continue;
+			CardPtr = SavedCards.Find(i);
+			if (CardPtr == nullptr)
+			{
+				continue;
+			}
+			Card = **CardPtr;
 		}
+		else
+		{
+			Card = UDeckFunctionLibrary::GenerateCardWithID(SecondaryHandResourceTable, 0);
+		}
+
 		if (CardBox == PlayerCustomisingWidget->GetMainCardsPanel())
 		{
-			TempCard = PlayerCustomisingWidget->FillSingleMainHandCardSlot(ResourceDataRows[i]->UnitName,
-				ResourceDataRows[i]->UnitImage, ResourceDataRows[i]->UnitColor);
+			TempCard = PlayerCustomisingWidget->FillSingleMainHandCardSlot(Card.UnitName ,
+				Card.UnitImage, Card.UnitColor);
 		}
 		else if (CardBox == PlayerCustomisingWidget->GetSecondaryCardsPanel())
 		{
-			TempCard = PlayerCustomisingWidget->FillSingleSecondaryHandCardSlot(ResourceDataRows[i]->UnitName,
-				ResourceDataRows[i]->UnitImage, ResourceDataRows[i]->UnitColor);
+			TempCard = PlayerCustomisingWidget->FillSingleSecondaryHandCardSlot(Card.UnitName,
+				Card.UnitImage, Card.UnitColor);
 		}
 		if (IsValid(TempCard))
 		{
@@ -451,20 +465,24 @@ void APlayerCustomiser::ShowUI()
 		}
 	}
 
-	TArray<int> NeededHeroCards;
-	NeededHeroCards.Add(0);
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI IsValid(Save) == false"));
+		return;
+	}
 
-	TArray<int> NeededResourceCards;
-	NeededResourceCards.Add(0);
-	NeededResourceCards.Add(1);
-	NeededResourceCards.Add(2);
+	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+
+	TArray<uint16> NeededHeroCards;
+	NeededHeroCards.Add(ActiveDeck.Hero);
 
 	PlayerCustomisingWidget->ClearMainCardsPanel();
 	PlayerCustomisingWidget->ClearSecondaryCardsPanel();
 
-	DisplayDeckCards(NeededHeroCards, PlayerCustomisingWidget->GetHeroCardPanel());
-	DisplayDeckCards(NeededResourceCards, PlayerCustomisingWidget->GetMainCardsPanel());
-	DisplayDeckCards(NeededResourceCards, PlayerCustomisingWidget->GetSecondaryCardsPanel());
+	DisplayDeckCards(NumHeroesInDeck, NeededHeroCards, PlayerCustomisingWidget->GetHeroCardPanel());
+	DisplayDeckCards(NumEquipmentInDeck - NumEquipmentInDeck/2, ActiveDeck.MainEquipment, PlayerCustomisingWidget->GetMainCardsPanel());
+	DisplayDeckCards(NumEquipmentInDeck / 2, ActiveDeck.SecondaryEquipment, PlayerCustomisingWidget->GetSecondaryCardsPanel());
 
 	PlayerCustomisingWidget->AddToViewport();
 }
