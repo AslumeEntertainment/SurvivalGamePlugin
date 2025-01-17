@@ -6,9 +6,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "Characters/InGameCharacter.h"
-#include "Components/HittableComponent.h"
+#include "FunctionLibraries/DamageFunctionLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/HittableComponent.h"
+#include "Characters/InGameCharacter.h"
 
 
 USG_AttributeSet::USG_AttributeSet()
@@ -54,8 +55,19 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(HittableComp) == false"));
 			return;
 		}
+		
+		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
 
-		//UE_LOG(LogTemp, Warning, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth())
+		if (NewValue <= OldValue && HittableComp->CanDisplayDamageIndicator())
+		{
+			UWorld* World = GetWorld();
+			if (IsValid(World) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(World) == false"));
+				return;
+			}
+			UDamageFunctionLibrary::ShowDamageIndicator(World, OldValue - NewValue, GetOwningActor());
+		}
 
 		if (HasMaxHealth())
 		{
@@ -67,7 +79,6 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
-
 		if (GetHealth() == 0.f)
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));

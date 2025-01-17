@@ -27,6 +27,9 @@ protected:
 	FGameplayEffectSpecHandle EffectSpecHandle;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	bool bCanDisplayDamageIndicator = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	bool bCanEverReceiveGameplayEffects = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
@@ -53,6 +56,11 @@ public:
 	void OnHittableDestroyed();
 
 	UFUNCTION(BlueprintCallable)
+	bool CanDisplayDamageIndicator() { return bCanDisplayDamageIndicator; }
+
+	UFUNCTION(BlueprintCallable)
 	bool CanEverReceiveGameplayEffects() { return bCanEverReceiveGameplayEffects; }
 
+	UFUNCTION(BlueprintCallable)
+	void SetCanDisplayDamageIndicator(bool NewValue);
 };
