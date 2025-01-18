@@ -21,4 +21,5 @@ protected:
 public:
 
 	void SetDamageText(float Damage);
+
 };

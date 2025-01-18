@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
-//#include "GEEC_Statics.generated.h"
 
 
 struct FSG_DamageStatics

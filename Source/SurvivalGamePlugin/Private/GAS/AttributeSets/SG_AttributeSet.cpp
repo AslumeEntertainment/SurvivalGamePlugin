@@ -3,6 +3,8 @@
 
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 
+#include "GameplayEffect.h"
+#include "GameplayEffectExtension.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -40,41 +42,56 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 
 void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
 {
+	//keeping this method just in case
+}
+
+void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	if (Attribute == GetMaxHealthAttribute())
+	{
+		ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
+	}
+}
+
+void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+	Super::PostGameplayEffectExecute(Data);
+
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(ASC) == false"));
 		return;
 	}
 
-	if (Attribute == GetHealthAttribute())
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		UHittableComponent* HittableComp = GetOwningActor()->GetComponentByClass<UHittableComponent>();
 		if (IsValid(HittableComp) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(HittableComp) == false"));
+			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(HittableComp) == false"));
 			return;
 		}
-		
-		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
 
-		if (NewValue <= OldValue && HittableComp->CanDisplayDamageIndicator())
+		if (Data.EvaluatedData.Magnitude <= 0 && HittableComp->CanDisplayDamageIndicator())
 		{
 			UWorld* World = GetWorld();
 			if (IsValid(World) == false)
 			{
-				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(World) == false"));
+				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(World) == false"));
 				return;
 			}
-			UDamageFunctionLibrary::ShowDamageIndicator(World, OldValue - NewValue, GetOwningActor());
+			UDamageFunctionLibrary::ShowDamageIndicator(World, FMath::Abs(Data.EvaluatedData.Magnitude), GetOwningActor());
 		}
+
+		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
 
 		if (HasMaxHealth())
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
-		else if(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health"))))
+		else if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health"))))
 		{
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
@@ -85,14 +102,6 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
 			HittableComp->OnHittableDestroyed();
 		}
-	}
-}
-
-void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
-{
-	if (Attribute == GetMaxHealthAttribute())
-	{
-		ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
 	}
 }
 
