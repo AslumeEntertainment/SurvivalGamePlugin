@@ -121,7 +121,7 @@ struct FDeckPersistentData : public FPersistentDataUnit
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-    uint16 Hero;
+    TArray<uint16> Heroes;
 
     UPROPERTY(EditAnywhere)
     TArray<uint16> MainEquipment;

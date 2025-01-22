@@ -7,6 +7,7 @@
 
 #include "Headers/GeneralDelegates.h"
 #include "Headers/GameManagingStructs.h"
+#include "Headers/DeckSegmentsEnum.h"
 
 #include "PlayerCustomiser.generated.h"
 
@@ -14,7 +15,22 @@ class ASG_Character;
 class AInGameCharacter;
 class UPlayerCustomisingWidget;
 class UCardSelectorWidget;
-class UPanelWidget;
+class UDeckSegmentPanel;
+
+USTRUCT()
+struct FSegementDefinition
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	uint8 Size;
+
+	UPROPERTY(EditAnywhere)
+	FText Messege;
+
+	UPROPERTY(EditAnywhere)
+	TArray<uint16> Series;
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerCustomiserTransferSignature, APlayerCustomiser*, TriggeringPlayerCustomiser);
 
@@ -54,10 +70,12 @@ private:
 	void ToggleReady();
 
 	UFUNCTION()
-	void OpenCardSelector(UPanelWidget* CallerWidget);
+	void OpenCardSelector(EDeckSegment Segment);
+
+	void DisplayDeck(FDeckPersistentData Deck);
 
 	UFUNCTION()
-	void DisplayDeckCards(uint8 NumCardsToDisplay, TArray<uint16> CardIndexes, UPanelWidget* CardBox);
+	void DisplayDeckCards(TArray<uint16> CardIndexes, EDeckSegment Segment);
 
 	UFUNCTION(Server, Reliable)
 	void Server_StopInteracting();
@@ -86,13 +104,13 @@ protected:
 	uint16 GenericSeriesStart = 00000;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* HeroTable = nullptr;
+	UDataTable* ResourceTable = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* MainHandResourceTable = nullptr;
+	TMap<EDeckSegment, FSegementDefinition> SegmentDefinitions;
 
-	UPROPERTY(EditAnywhere, Category = "Data")
-	UDataTable* SecondaryHandResourceTable = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "Data")
+	TMap<EDeckSegment, UDeckSegmentPanel*> SegmentPanels;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AInGameCharacter> DefaultHeroClass;
@@ -108,6 +126,9 @@ protected:
 
 	UFUNCTION()
 	void HandlePlayerLeavingSession(APlayerController* LeavingPlayer);
+
+	UFUNCTION()
+	void UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment SegmentToUpdate);
 
 public:	
 

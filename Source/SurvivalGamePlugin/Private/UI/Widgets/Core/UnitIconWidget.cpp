@@ -107,10 +107,8 @@ void UUnitIconWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEven
 
 void UUnitIconWidget::OnIconClicked()
 {
-	if (bHighlightOnSelected)
-	{
-		HighlightBorder->SetRenderOpacity(1 - HighlightBorder->GetRenderOpacity());
-	}
+
+	ToggleHighlight();
 
 	UPanelWidget* ParentWidget = Cast<UPanelWidget>(this->GetParent());
 	if (IsValid(ParentWidget) == false)
@@ -191,4 +189,12 @@ void UUnitIconWidget::ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Col
 	IMG_ItemIcon->SetBrushFromTexture(Image);
 	BTN_Icon->SetBackgroundColor(Color);
 	SetUnitScale(Scale);
+}
+
+void UUnitIconWidget::ToggleHighlight()
+{
+	if (bHighlightOnSelected)
+	{
+		HighlightBorder->SetRenderOpacity(1 - HighlightBorder->GetRenderOpacity());
+	}
 }

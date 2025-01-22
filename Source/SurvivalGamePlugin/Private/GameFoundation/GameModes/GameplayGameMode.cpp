@@ -8,7 +8,6 @@
 #include "Kismet/KismetMathLibrary.h"
 
 #include "GameFoundation/GameInstance/SessionSubsystem.h"
-#include "Level/TeamManager.h"
 //#include "Level/PlayerCustomiser.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
 

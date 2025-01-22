@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+
+#include "Headers/DeckSegmentsEnum.h"
+
 #include "CardSelectorWidget.generated.h"
 
 class UUnitIconWidget;
@@ -12,7 +15,7 @@ class UTextBlock;
 class UWrapBox;
 
 UDELEGATE()
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnNeededCardsSelectedSignature, uint8, NumCardsToDisplay, TArray<uint16>, SelectedIndexes, UPanelWidget*, CallerWidget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNeededCardsSelectedSignature, TArray<uint16>, SelectedIndexes, EDeckSegment, Segment);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UCardSelectorWidget : public UUserWidget
@@ -20,11 +23,16 @@ class SURVIVALGAMEPLUGIN_API UCardSelectorWidget : public UUserWidget
 	GENERATED_BODY()
 	
 protected:
+	UPROPERTY()
+	TArray<uint16> CardIndexes;
 
-	UPanelWidget* CallerWidget = nullptr;
+	UPROPERTY()
+	EDeckSegment CallingSegment;
 
+	UPROPERTY()
 	uint8 NumberOfCardsToSelect = 0;
 
+	UPROPERTY()
 	TArray<uint16> SelectedCards;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
@@ -39,15 +47,15 @@ protected:
 	UFUNCTION()
 	void MarkCardAsSelected(int Index);
 
+	void ToggleCardHighlight(uint8 Index);
+
 public:
 
-	void ConfigCardSelector(UPanelWidget* InCallerWidget, int CardsNeeded);
+	void ConfigCardSelector(EDeckSegment Segment, uint8 CardsNeeded, TArray<uint16> AlredySelectedCards);
 
-	void SetTitle(FString Title);
+	void SetTitle(FText Title);
 
-	void FillCards(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
-
-	void AddCardToSelector(UWidget* CardWidget);
+	void FillCards(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint16> InCardIndexes);
 
 	void EmptyCardSelector();
 

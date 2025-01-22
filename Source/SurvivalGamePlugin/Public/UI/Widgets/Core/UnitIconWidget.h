@@ -91,6 +91,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ConfigUnit(FText Name, UTexture2D* Image, FLinearColor Color, float Scale);
 
+	void ToggleHighlight();
+
 	FIntegerTransferSignature IconClicked;
 	FPanelWidgetTransferSignature BroadcastParentOnClicked;
 
