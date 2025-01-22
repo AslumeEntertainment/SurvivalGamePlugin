@@ -12,6 +12,7 @@
 #include "UI/Widgets/Deck/CardSelectorWidget.h"
 #include "UI/Widgets/Deck/HeroCardSelector.h"
 #include "UI/Widgets/Deck/DeckIcon.h"
+#include "UI/Widgets/Deck/DeckSegmentPanel.h"
 #include "UI/Widgets/Core/UnitIconWidget.h"
 
 
@@ -42,17 +43,17 @@ void UPlayerCustomisingWidget::NativeOnInitialized()
 	TXTBTN_LeaveTable->SetText(FText::FromString("Leave Table"));
 }
 
-UPanelWidget* UPlayerCustomisingWidget::GetHeroCardPanel()
+UDeckSegmentPanel* UPlayerCustomisingWidget::GetHeroCardPanel()
 {
 	return HeroCardBox;
 }
 
-UPanelWidget* UPlayerCustomisingWidget::GetMainCardsPanel()
+UDeckSegmentPanel* UPlayerCustomisingWidget::GetMainCardsPanel()
 {
 	return MainHandCardsBox;
 }
 
-UPanelWidget* UPlayerCustomisingWidget::GetSecondaryCardsPanel()
+UDeckSegmentPanel* UPlayerCustomisingWidget::GetSecondaryCardsPanel()
 {
 	return SecondaryHandCardsBox;
 }
@@ -122,112 +123,6 @@ void UPlayerCustomisingWidget::OnLeaveButtonClicked()
 void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
 {
 	TXTBTN_ReadyStatus->SetText(FText::FromString(PlayerReadiness == EPlayerReadinessUIStatus::Ready ? "Cancel" : (PlayerReadiness == EPlayerReadinessUIStatus::NotReady ? "Ready" : "Updating Status")));
-}
-
-UUnitIconWidget* UPlayerCustomisingWidget::FillHeroCardSlot(FText Name, UTexture2D* Image, UTexture2D* BackgroundImage, FLinearColor Color)
-{
-	UHeroCardSelector* HeroCard = CreateWidget<UHeroCardSelector>(this, HeroCardWidgetClass);
-	if (IsValid(HeroCard) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillHeroCardSlot IsValid(HeroCard) == false"));
-		return nullptr;
-	}
-	HeroCard->ConfigUnit(Name, Image, Color, 1);
-	HeroCard->SetHeroBackgroundImage(BackgroundImage);
-	
-	if (HeroCardBox->HasAnyChildren())
-	{
-		HeroCardBox->ClearChildren();
-	}
-	HeroCardBox->AddChild(HeroCard);
-
-	return HeroCard;
-}
-
-UUnitIconWidget* UPlayerCustomisingWidget::FillSingleMainHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color)
-{
-	UUnitIconWidget* ResourceCard = CreateWidget<UUnitIconWidget>(this, ResourceCardWidgetClass);
-	if (IsValid(ResourceCard) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillSingleMainHandCardSlot IsValid(HeroCard) == false"));
-		return nullptr;
-	}
-	ResourceCard->ConfigUnit(Name, Image, Color, 1);
-
-	MainHandCardsBox->AddChild(ResourceCard);
-
-	return ResourceCard;
-}
-
-TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
-{
-	if (Names.Num() != Images.Num() || Names.Num() != Colors.Num())
-	{
-		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillMainHandCardsSlots Names, Images and Colors have different sizes!"));
-		return TArray<UUnitIconWidget*>();
-	}
-
-	ClearMainCardsPanel();
-
-	TArray<UUnitIconWidget*> AddedCards;
-
-	for (int i = 0; i < Names.Num(); i++)
-	{
-		AddedCards.Add(FillSingleMainHandCardSlot(Names[i], Images[i], Colors[i]));
-	}
-
-	return AddedCards;
-}
-
-UUnitIconWidget* UPlayerCustomisingWidget::FillSingleSecondaryHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color)
-{
-	UUnitIconWidget* ResourceCard = CreateWidget<UUnitIconWidget>(this, ResourceCardWidgetClass);
-	if (IsValid(ResourceCard) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillSingleSecondaryHandCardSlot IsValid(HeroCard) == false"));
-		return nullptr;
-	}
-	ResourceCard->ConfigUnit(Name, Image, Color, 1);
-
-	SecondaryHandCardsBox->AddChild(ResourceCard);
-
-	return ResourceCard;
-}
-
-TArray<UUnitIconWidget*> UPlayerCustomisingWidget::FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
-{
-	if (Names.Num() != Images.Num() || Names.Num() != Colors.Num())
-	{
-		UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::FillSecondaryHandSlots Names, Images and Colors have different sizes!"));
-		return TArray<UUnitIconWidget*>();
-	}
-
-	ClearSecondaryCardsPanel();
-
-	TArray<UUnitIconWidget*> AddedCards;
-
-	for (int i = 0; i < Names.Num(); i++)
-	{
-		AddedCards.Add(FillSingleSecondaryHandCardSlot(Names[i], Images[i], Colors[i]));
-	}
-
-	return AddedCards;
-}
-
-void UPlayerCustomisingWidget::ClearMainCardsPanel()
-{
-	if (MainHandCardsBox->HasAnyChildren())
-	{
-		MainHandCardsBox->ClearChildren();
-	}
-}
-
-void UPlayerCustomisingWidget::ClearSecondaryCardsPanel()
-{
-	if (SecondaryHandCardsBox->HasAnyChildren())
-	{
-		SecondaryHandCardsBox->ClearChildren();
-	}
 }
 
 void UPlayerCustomisingWidget::OpenCardSelector(UCardSelectorWidget* CardSelector)

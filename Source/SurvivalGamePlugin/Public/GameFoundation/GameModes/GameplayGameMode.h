@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
-#include "Headers/TeamManagementStructs.h"
 #include "Headers/generalDelegates.h"
 
 #include "GameplayGameMode.generated.h"

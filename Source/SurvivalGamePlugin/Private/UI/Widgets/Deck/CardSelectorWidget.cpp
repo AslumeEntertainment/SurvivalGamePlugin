@@ -10,50 +10,73 @@
 
 void UCardSelectorWidget::MarkCardAsSelected(int Index)
 {
-	if (SelectedCards.Contains(Index))
+	uint16 CardPointingIndex = CardIndexes[Index];
+	if (SelectedCards.Contains(CardPointingIndex))
 	{
-		SelectedCards.Remove(Index);
-		return;
-	}
-
-	SelectedCards.Add(Index);
-
-	if (SelectedCards.Num() == NumberOfCardsToSelect || SelectedCards.Num() == CardWrapBox->GetChildrenCount())
-	{
-		if (IsValid(CallerWidget) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UCardSelectorWidget::MarkCardAsSelected IsValid(CallerWidget) == false"));
-			return;
-		}
-		if (CallerWidget->HasAnyChildren())
-		{
-			CallerWidget->ClearChildren();
-		}
-		OnNeededCardsSelected.Broadcast(NumberOfCardsToSelect, SelectedCards, CallerWidget);
+		SelectedCards.Remove(CardPointingIndex);
 		
-		RemoveFromParent();
 	}
+	else
+	{
+		if (SelectedCards.Num() < NumberOfCardsToSelect)
+		{
+			SelectedCards.Add(CardPointingIndex);
+			
+		}
+		/*else
+		{
+			SelectedCards[NumberOfCardsToSelect - 1] = CardPointingIndex;// ako iskame avtomatichen selestio nan nqkva karta
+		}*/
+	}
+	//ToggleCardHighlight(Index);
+	OnNeededCardsSelected.Broadcast(SelectedCards, CallingSegment);
 }
 
-void UCardSelectorWidget::ConfigCardSelector(UPanelWidget* InCallerWidget, int CardsNeeded)
+void UCardSelectorWidget::ToggleCardHighlight(uint8 Index)
 {
-	CallerWidget = InCallerWidget;
+
+}
+
+void UCardSelectorWidget::ConfigCardSelector(EDeckSegment Segment, uint8 CardsNeeded, TArray<uint16> AlredySelectedCards)
+{
+	SelectedCards = AlredySelectedCards;
+	CallingSegment = Segment;
 	NumberOfCardsToSelect = CardsNeeded;
 }
 
-void UCardSelectorWidget::SetTitle(FString Title)
+void UCardSelectorWidget::SetTitle(FText Title)
 {
-	TXT_Title->SetText(FText::FromString(Title));
+	TXT_Title->SetText(Title);
 }
 
-void UCardSelectorWidget::FillCards(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors)
+void UCardSelectorWidget::FillCards(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors, TArray<uint16> InCardIndexes)
 {
 	UUnitIconWidget* TempCard = nullptr;
+
+	CardIndexes = InCardIndexes;
 
 	if (Names.Num() != Images.Num() || Names.Num() != Colors.Num())
 	{
 		UE_LOG(LogTemp, Error, TEXT("UCardSelectorWidget::FillCards Names, Images and Colors have different sizes!"));
 		return;
+	}
+	TArray<int> IndexesToRemove;
+	for (int i=0; i<SelectedCards.Num();i++)
+	{
+		if (InCardIndexes.Contains(SelectedCards[i]) == false)
+		{
+			IndexesToRemove.Add(i);
+		}
+	}
+
+	if (IndexesToRemove.IsEmpty() == false)
+	{
+		for (int i : IndexesToRemove)
+		{
+			SelectedCards.RemoveAt(i);  //Very costly but aaaaaah
+		}
+
+		OnNeededCardsSelected.Broadcast(SelectedCards, CallingSegment);
 	}
 
 	EmptyCardSelector();
@@ -69,13 +92,11 @@ void UCardSelectorWidget::FillCards(TArray<FText> Names, TArray<UTexture2D*> Ima
 		TempCard->ConfigUnit(Names[i], Images[i], Colors[i], 1);
 		TempCard->IconClicked.AddDynamic(this, &UCardSelectorWidget::MarkCardAsSelected);
 		TempCard->bHighlightOnSelected = true;
+
+		if (SelectedCards.Contains(CardIndexes[i])) TempCard->ToggleHighlight();
+
 		CardWrapBox->AddChildToWrapBox(TempCard);
 	}
-}
-
-void UCardSelectorWidget::AddCardToSelector(UWidget* CardWidget)
-{
-	CardWrapBox->AddChildToWrapBox(CardWidget);
 }
 
 void UCardSelectorWidget::EmptyCardSelector()

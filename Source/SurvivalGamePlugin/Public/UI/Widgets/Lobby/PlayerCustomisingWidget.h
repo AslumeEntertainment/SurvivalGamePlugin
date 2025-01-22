@@ -12,7 +12,7 @@ class UCardSelectorWidget;
 class UHeroCardSelector;
 class UUnitIconWidget;
 class UHorizontalBox;
-class UWrapBox;
+class UDeckSegmentPanel;
 class UBorder;
 class UButton;
 
@@ -41,13 +41,13 @@ protected:
 	UButton* BTN_CycleDecks_Right;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* HeroCardBox;
+	UDeckSegmentPanel* HeroCardBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* MainHandCardsBox;
+	UDeckSegmentPanel* MainHandCardsBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	UWrapBox* SecondaryHandCardsBox;
+	UDeckSegmentPanel* SecondaryHandCardsBox;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBorder* CardSelectorBorder;
@@ -61,8 +61,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "CardWidget")
 	TSubclassOf<UHeroCardSelector> HeroCardWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "CardWidget")
-	TSubclassOf<UUnitIconWidget> ResourceCardWidgetClass;
 
 	UFUNCTION()
 	void SelectDeck(int DeckIndex);
@@ -84,25 +82,11 @@ public:
 
 	void NativeOnInitialized() override;
 
-	UPanelWidget* GetHeroCardPanel();
+	UDeckSegmentPanel* GetHeroCardPanel();
 
-	UPanelWidget* GetMainCardsPanel();
+	UDeckSegmentPanel* GetMainCardsPanel();
 
-	UPanelWidget* GetSecondaryCardsPanel();
-
-	UUnitIconWidget* FillHeroCardSlot(FText Name, UTexture2D* Image, UTexture2D* BackgroundImage, FLinearColor Color);
-
-	UUnitIconWidget* FillSingleMainHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
-
-	TArray<UUnitIconWidget*> FillMainHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
-
-	UUnitIconWidget* FillSingleSecondaryHandCardSlot(FText Name, UTexture2D* Image, FLinearColor Color);
-
-	TArray<UUnitIconWidget*> FillSecondaryHandCardsSlots(TArray<FText> Names, TArray<UTexture2D*> Images, TArray<FLinearColor> Colors);
-
-	void ClearMainCardsPanel();
-
-	void ClearSecondaryCardsPanel();
+	UDeckSegmentPanel* GetSecondaryCardsPanel();
 
 	void OpenCardSelector(UCardSelectorWidget* CardSelector);
 

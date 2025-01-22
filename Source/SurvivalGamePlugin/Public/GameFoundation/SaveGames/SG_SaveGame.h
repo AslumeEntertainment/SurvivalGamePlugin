@@ -26,17 +26,17 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Campaigns")
 	TArray<FName> Biomes;
 
-	UPROPERTY(VisibleAnywhere, Category = "Cards")
+	UPROPERTY(VisibleAnywhere, Category = "Cards | ResourceCards")
 	TArray<FProgressiveDataHelperStruct> ResourceCards;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Cards")
-	uint16 MaxResourceCards = 1000;
+	UPROPERTY(EditDefaultsOnly, Category = "Cards | ResourceCards")
+	uint8 MaxResourceCards = 100;
 
-	UPROPERTY(VisibleAnywhere, Category = "Cards")
+	UPROPERTY(VisibleAnywhere, Category = "Cards | HeroCards")
 	TArray<FProgressiveDataHelperStruct> HeroCards;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Cards")
-	uint8 MaxHeroCards = 100;
+	UPROPERTY(EditDefaultsOnly, Category = "Cards | HeroCards")
+	uint8 MaxHeroCards = 50;
 
 	UPROPERTY(VisibleAnywhere, Category = "Decks")
 	TArray<FDeckPersistentData> Decks;
@@ -45,7 +45,7 @@ public:
 	uint8 ActiveDeckIndex = 0;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Decks")
-	uint8 MaxDecks = 10;
+	uint8 MaxDecks = 5;
 
 	UFUNCTION()
 	void Init();
