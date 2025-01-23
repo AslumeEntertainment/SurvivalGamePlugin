@@ -60,24 +60,6 @@ void UCardSelectorWidget::FillCards(TArray<FText> Names, TArray<UTexture2D*> Ima
 		UE_LOG(LogTemp, Error, TEXT("UCardSelectorWidget::FillCards Names, Images and Colors have different sizes!"));
 		return;
 	}
-	TArray<int> IndexesToRemove;
-	for (int i=0; i<SelectedCards.Num();i++)
-	{
-		if (InCardIndexes.Contains(SelectedCards[i]) == false)
-		{
-			IndexesToRemove.Add(i);
-		}
-	}
-
-	if (IndexesToRemove.IsEmpty() == false)
-	{
-		for (int i : IndexesToRemove)
-		{
-			SelectedCards.RemoveAt(i);  //Very costly but aaaaaah
-		}
-
-		OnNeededCardsSelected.Broadcast(SelectedCards, CallingSegment);
-	}
 
 	EmptyCardSelector();
 
