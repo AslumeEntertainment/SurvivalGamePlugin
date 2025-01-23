@@ -47,6 +47,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Decks")
 	uint8 MaxDecks = 5;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Decks")
+	uint8 UnlockedDecks = 2;
+
 	UFUNCTION()
 	void Init();
 };

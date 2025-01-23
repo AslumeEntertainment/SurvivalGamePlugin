@@ -130,6 +130,17 @@ protected:
 	UFUNCTION()
 	void UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment SegmentToUpdate);
 
+	void CleanseDeck();
+
+	bool IsDeckPlayable(FDeckPersistentData Deck);
+
+	void UseDeck();
+
+	void SendDeckData();
+
+	UFUNCTION()
+	void SwitchDeck(int DeckIndex);
+
 public:	
 
 	virtual void BeginPlay() override;
@@ -175,5 +186,6 @@ public:
 	FPlayerCustomiserTransferSignature OnPlayerStartInteracting;
 	FPlayerCustomiserTransferSignature OnPlayerStopInteracting;
 	FPlayerCustomiserTransferSignature OnPlayerReadinessChanged;
+	FBooleanTransferSignature OnDeckPlayable;
 	FPlayerCustomiserTransferSignature OnInGameCharacterDeath;
 };

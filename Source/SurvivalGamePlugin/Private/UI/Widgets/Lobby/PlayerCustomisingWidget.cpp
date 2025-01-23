@@ -20,27 +20,72 @@ void UPlayerCustomisingWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	for (UWidget* Child : DeckIconBox->GetAllChildren())
-	{
-		UDeckIcon* DeckIcon = Cast<UDeckIcon>(Child);
-		if (IsValid(DeckIcon) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::CycleDecks_Left IsValid(DeckIcon) == false"));
-			continue;
-		}
-
-		int DeckNumber = DeckIconBox->GetChildIndex(Child) + 1;
-		DeckIcon->SetDeckNumber(DeckNumber);
-		DeckIcon->SetIsEnabled(DeckNumber <= 2);
-		DeckIcon->IconClicked.AddDynamic(this, &UPlayerCustomisingWidget::SelectDeck);
-	}
-
 	BTN_CycleDecks_Left->OnClicked.AddDynamic(this, &UPlayerCustomisingWidget::CycleDecks_Left);
 	BTN_CycleDecks_Right->OnClicked.AddDynamic(this, &UPlayerCustomisingWidget::CycleDecks_Right);
 
 	TXTBTN_ReadyStatus->OnButtonClickedVoid.AddDynamic(this, &UPlayerCustomisingWidget::OnReadyButtonClicked);
 	TXTBTN_LeaveTable->OnButtonClickedVoid.AddDynamic(this, &UPlayerCustomisingWidget::OnLeaveButtonClicked);
 	TXTBTN_LeaveTable->SetText(FText::FromString("Leave Table"));
+}
+
+void UPlayerCustomisingWidget::InitDecks(uint8 InActiveDeckIndex, TArray<UTexture2D*> InDeckIcons)
+{
+	ActiveDeckIndex = InActiveDeckIndex;
+	uint8 CenterIndex = NumDecksOnDisplay / 2;
+
+	for (int i = 0; i < InDeckIcons.Num(); i++)
+	{
+		UDeckIcon* DeckIcon = CreateWidget<UDeckIcon>(this, DeckIconClass);
+		if (IsValid(DeckIcon) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UDeckSegmentPanel::InitDecks IsValid(DeckIcon) == false"));
+			return;
+		}
+		DeckIcon->SetDeckNumber(i + 1);
+		DeckIcons.Add(DeckIcon);
+	}
+
+	RearangeIconBox();
+
+}
+
+void UPlayerCustomisingWidget::RearangeIconBox()
+{
+	DeckIconBox->ClearChildren();
+	for (int i = ActiveDeckIndex - NumDecksOnDisplay / 2; i <= ActiveDeckIndex + NumDecksOnDisplay / 2; i++)
+	{
+		int IndexToAdd = i;
+		while(IndexToAdd < 0)
+		{
+			IndexToAdd = DeckIcons.Num() + i;
+		}
+		while(IndexToAdd >= DeckIcons.Num())
+		{
+			IndexToAdd =  i - DeckIcons.Num();
+		}
+		DeckIconBox->AddChild(DeckIcons[IndexToAdd]);
+	}
+	SelectDeck();
+}
+
+void UPlayerCustomisingWidget::CycleDecks_Left()
+{
+	ActiveDeckIndex -= 1;
+	if (ActiveDeckIndex < 0) ActiveDeckIndex = DeckIcons.Num() - 1;
+	RearangeIconBox();
+}
+
+void UPlayerCustomisingWidget::CycleDecks_Right()
+{
+	ActiveDeckIndex += 1;
+	if (ActiveDeckIndex == DeckIcons.Num()) ActiveDeckIndex = 0;
+	RearangeIconBox();
+}
+
+void UPlayerCustomisingWidget::SelectDeck()
+{
+	DeckSelected.Broadcast(ActiveDeckIndex);
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, FString::Printf(TEXT("Selected Deck #%d"), ActiveDeckIndex));
 }
 
 UDeckSegmentPanel* UPlayerCustomisingWidget::GetHeroCardPanel()
@@ -58,80 +103,63 @@ UDeckSegmentPanel* UPlayerCustomisingWidget::GetSecondaryCardsPanel()
 	return SecondaryHandCardsBox;
 }
 
-void UPlayerCustomisingWidget::SelectDeck(int DeckIndex)
-{
-	DeckSelected.Broadcast(DeckIndex);
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, FString::Printf(TEXT("Selected Deck #%d"), DeckIndex));
-}
-
-void UPlayerCustomisingWidget::CycleDecks_Left()
-{
-	for (UWidget* Child : DeckIconBox->GetAllChildren())
-	{
-		UDeckIcon* DeckIcon = Cast<UDeckIcon>(Child);
-		if (IsValid(DeckIcon) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::CycleDecks_Left IsValid(DeckIcon) == false"));
-			continue;
-		}
-		
-		int NewDeckNumber = DeckIcon->GetDeckNumber() - 1;
-		if (NewDeckNumber == 0)
-		{
-			NewDeckNumber = 5;
-		}
-		DeckIcon->SetDeckNumber(NewDeckNumber);
-		DeckIcon->SetIsEnabled(NewDeckNumber <= 2);
-	}
-}
-
-void UPlayerCustomisingWidget::CycleDecks_Right()
-{
-	for (UWidget* Child : DeckIconBox->GetAllChildren())
-	{
-		UDeckIcon* DeckIcon = Cast<UDeckIcon>(Child);
-		if (IsValid(DeckIcon) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UPlayerCustomisingWidget::CycleDecks_Left IsValid(DeckIcon) == false"));
-			continue;
-		}
-
-		int NewDeckNumber = DeckIcon->GetDeckNumber() + 1;
-		if (NewDeckNumber == 6)
-		{
-			NewDeckNumber = 1;
-		}
-		DeckIcon->SetDeckNumber(NewDeckNumber);
-		DeckIcon->SetIsEnabled(NewDeckNumber <= 2);
-	}
-}
-
 void UPlayerCustomisingWidget::OnReadyButtonClicked()
 {
+	CloseCardSelector();
 	OnReadyButton.Broadcast();
 }
 
 void UPlayerCustomisingWidget::OnLeaveButtonClicked()
 {
+	DeckIcons.Empty();
 	OnLeaveButton.Broadcast();
-	if (CardSelectorBorder->HasAnyChildren())
-	{
-		CardSelectorBorder->ClearChildren();
-	}
+	CloseCardSelector();
 }
 
 void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
 {
-	TXTBTN_ReadyStatus->SetText(FText::FromString(PlayerReadiness == EPlayerReadinessUIStatus::Ready ? "Cancel" : (PlayerReadiness == EPlayerReadinessUIStatus::NotReady ? "Ready" : "Updating Status")));
+	if (PlayerReadiness == EPlayerReadinessUIStatus::NotReady)
+	{
+		HeroCardBox->SetIsEnabled(true);
+		MainHandCardsBox->SetIsEnabled(true);
+		SecondaryHandCardsBox->SetIsEnabled(true);
+
+		TXTBTN_ReadyStatus->SetText(FText::FromString("Ready"));
+	}
+	else
+	{
+		HeroCardBox->SetIsEnabled(false);
+		MainHandCardsBox->SetIsEnabled(false);
+		SecondaryHandCardsBox->SetIsEnabled(false);
+		if (PlayerReadiness == EPlayerReadinessUIStatus::Ready)
+		{
+			TXTBTN_ReadyStatus->SetText(FText::FromString("Canle"));
+		}
+		else
+		{
+			TXTBTN_ReadyStatus->SetText(FText::FromString("Updating Status"));
+		}
+	}
+
 }
 
 void UPlayerCustomisingWidget::OpenCardSelector(UCardSelectorWidget* CardSelector)
+{
+	CloseCardSelector();
+	CardSelectorBorder->AddChild(CardSelector);
+}
+
+void UPlayerCustomisingWidget::CloseCardSelector()
 {
 	if (CardSelectorBorder->HasAnyChildren())
 	{
 		CardSelectorBorder->ClearChildren();
 	}
-	CardSelectorBorder->AddChild(CardSelector);
+}
+
+void UPlayerCustomisingWidget::DeckPlayabilityChanged(bool DeckPlayability)
+{
+	TXTBTN_ReadyStatus->SetIsEnabled(DeckPlayability);
 }
 
 void UPlayerCustomisingWidget::CloseWidget_Implementation()

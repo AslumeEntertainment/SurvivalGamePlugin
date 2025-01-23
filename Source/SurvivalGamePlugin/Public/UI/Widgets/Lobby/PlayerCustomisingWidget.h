@@ -13,6 +13,7 @@ class UHeroCardSelector;
 class UUnitIconWidget;
 class UHorizontalBox;
 class UDeckSegmentPanel;
+class UDeckIcon;
 class UBorder;
 class UButton;
 
@@ -58,12 +59,20 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextButtonWidgetBase* TXTBTN_LeaveTable;
 
-	UPROPERTY(EditAnywhere, Category = "CardWidget")
-	TSubclassOf<UHeroCardSelector> HeroCardWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "Display")
+	TSubclassOf<UDeckIcon> DeckIconClass;
 
+	UPROPERTY(EditAnywhere, Category = "Display")
+	uint8 NumDecksOnDisplay = 3;
+
+	UPROPERTY()
+	int8 ActiveDeckIndex = 0;
+
+	UPROPERTY()
+	TArray<UDeckIcon*> DeckIcons;
 
 	UFUNCTION()
-	void SelectDeck(int DeckIndex);
+	void SelectDeck();
 
 	UFUNCTION()
 	void CycleDecks_Left();
@@ -77,10 +86,13 @@ protected:
 	UFUNCTION()
 	void OnLeaveButtonClicked();
 
+	void RearangeIconBox();
 
 public:
 
 	void NativeOnInitialized() override;
+
+	void InitDecks(uint8 InActiveDeckIndex, TArray<UTexture2D*> InDeckIcons);
 
 	UDeckSegmentPanel* GetHeroCardPanel();
 
@@ -89,6 +101,12 @@ public:
 	UDeckSegmentPanel* GetSecondaryCardsPanel();
 
 	void OpenCardSelector(UCardSelectorWidget* CardSelector);
+
+	UFUNCTION()
+	void CloseCardSelector();
+
+	UFUNCTION()
+	void DeckPlayabilityChanged(bool DeckPlayability);
 
 	UFUNCTION()
 	void Config(EPlayerReadinessUIStatus PlayerReadiness);

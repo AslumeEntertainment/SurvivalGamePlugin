@@ -60,6 +60,9 @@ void APlayerCustomiser::BeginPlay()
 
 	PlayerCustomisingWidget->OnLeaveButton.AddDynamic(this, &APlayerCustomiser::Client_StopInteracting);
 	PlayerCustomisingWidget->OnReadyButton.AddDynamic(this, &APlayerCustomiser::ToggleReady);
+	PlayerCustomisingWidget->DeckSelected.AddDynamic(this, &APlayerCustomiser::SwitchDeck);
+	OnDeckPlayable.AddDynamic(PlayerCustomisingWidget, &UPlayerCustomisingWidget::DeckPlayabilityChanged);
+
 
 	UDeckSegmentPanel* HeroPanel = PlayerCustomisingWidget->GetHeroCardPanel();
 	UDeckSegmentPanel* MainPanel = PlayerCustomisingWidget->GetMainCardsPanel();
@@ -87,6 +90,7 @@ bool APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::InteractRequest - %s"), *InteractingCharacter->GetName());
 	if(Super::InteractRequest(InteractingCharacter)==true)
 	{
+		SendDeckData();
 		ShowUI();
 	}
 
@@ -223,6 +227,7 @@ void APlayerCustomiser::OpenCardSelector(EDeckSegment Segment)
 
 void APlayerCustomiser::DisplayDeck(FDeckPersistentData Deck)
 {
+	OnDeckPlayable.Broadcast(IsDeckPlayable(Deck));
 	DisplayDeckCards(Deck.Heroes, EDeckSegment::Hero);
 	DisplayDeckCards(Deck.MainEquipment, EDeckSegment::MainEquipment);
 	DisplayDeckCards(Deck.SecondaryEquipment, EDeckSegment::SecondaryEquipment);
@@ -376,6 +381,161 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 	DisplayDeck(ActiveDeck);
 }
 
+void APlayerCustomiser::CleanseDeck()
+{
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(InteractingPlayer) == false"));
+		return;
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(Save) == false"));
+		return;
+	}
+
+	TMap<uint16, FResourseCardPersistentData*> SavedCards = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, ResourceTable, TArray<uint16>());
+
+	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+
+	//Cleasing Hero Cards
+	TArray<int> IndexesToRemove;
+	for (int i = 0; i < ActiveDeck.Heroes.Num(); i++)
+	{
+		if (SavedCards.Contains(ActiveDeck.Heroes[i]) == false)
+		{
+			IndexesToRemove.Add(i);
+		}
+	}
+	
+	for (int i : IndexesToRemove)
+	{
+		ActiveDeck.Heroes.RemoveAt(i);  //Very costly but aaaaaah
+	}
+	
+	IndexesToRemove.Empty();
+
+	//Cleasing Main Cards
+	for (int i = 0; i < ActiveDeck.MainEquipment.Num(); i++)
+	{
+		if (SavedCards.Contains(ActiveDeck.MainEquipment[i]) == false)
+		{
+			IndexesToRemove.Add(i);
+		}
+	}
+	
+	for (int i : IndexesToRemove)
+	{
+		ActiveDeck.MainEquipment.RemoveAt(i);  //Very costly but aaaaaah
+	}
+	
+	IndexesToRemove.Empty();
+
+	//Cleasing Secondary Cards
+	for (int i = 0; i < ActiveDeck.SecondaryEquipment.Num(); i++)
+	{
+		if (SavedCards.Contains(ActiveDeck.SecondaryEquipment[i]) == false)
+		{
+			IndexesToRemove.Add(i);
+		}
+	}
+	
+	for (int i : IndexesToRemove)
+	{
+		ActiveDeck.SecondaryEquipment.RemoveAt(i);  //Very costly but aaaaaah
+	}
+	
+	IndexesToRemove.Empty();
+
+	Save->Decks[Save->ActiveDeckIndex] = ActiveDeck;
+
+	InteractingPlayer->WriteSave();
+
+}
+
+bool APlayerCustomiser::IsDeckPlayable(FDeckPersistentData Deck)
+{
+
+	FSegementDefinition* HeroSegmentPtr = SegmentDefinitions.Find(EDeckSegment::Hero);
+	FSegementDefinition* MainSegmentPtr = SegmentDefinitions.Find(EDeckSegment::MainEquipment);
+	FSegementDefinition* SecondarySegmentPtr = SegmentDefinitions.Find(EDeckSegment::SecondaryEquipment);
+
+	if (HeroSegmentPtr == nullptr || MainSegmentPtr == nullptr || SecondarySegmentPtr == nullptr) return false;
+
+	return Deck.Heroes.Num() == HeroSegmentPtr->Size && Deck.MainEquipment.Num() == MainSegmentPtr->Size && Deck.SecondaryEquipment.Num() == SecondarySegmentPtr->Size;
+}
+
+void APlayerCustomiser::SendDeckData()
+{
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(InteractingPlayer) == false"));
+		return;
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(Save) == false"));
+		return;
+	}
+	TArray<UTexture2D*> DeckIcons;
+
+	for (int i = 0; i < Save->UnlockedDecks; i++)
+	{
+		DeckIcons.Add(Save->Decks[i].UnitImage);
+	}
+	PlayerCustomisingWidget->InitDecks(Save->ActiveDeckIndex, DeckIcons);
+
+}
+
+void APlayerCustomiser::UseDeck()
+{
+	CleanseDeck();
+
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::UseDeck IsValid(InteractingPlayer) == false"));
+		return;
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::UseDeck IsValid(Save) == false"));
+		return;
+	}
+
+	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+
+	DisplayDeck(ActiveDeck);
+}
+
+void APlayerCustomiser::SwitchDeck(int DeckIndex)
+{
+	if (IsValid(InteractingPlayer) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::UseDeck IsValid(InteractingPlayer) == false"));
+		return;
+	}
+
+	USG_SaveGame* Save = InteractingPlayer->GetSave();
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::UseDeck IsValid(Save) == false"));
+		return;
+	}
+
+	//if (DeckIndex >= Save->UnlockedDecks) DeckIndex -= Save->UnlockedDecks;
+	//else if (DeckIndex < 0) DeckIndex += Save->UnlockedDecks;
+
+	Save->ActiveDeckIndex = DeckIndex;
+
+	UseDeck();
+}
+
 void APlayerCustomiser::UpdatePlayerReadiness(bool State)
 {
 	bIsPlayerReady = State;
@@ -481,18 +641,6 @@ void APlayerCustomiser::HideUI(bool bUsesAnimation)
 
 void APlayerCustomiser::ShowUI()
 {
-	if (IsValid(InteractingPlayer) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI IsValid(InteractingPlayer) == false"));
-		return;
-	}
-
-	if (!IsValid(ResourceTable))
-	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI One or more card data tables are invalid"));
-		return;
-	}
-
 	if (IsValid(GetParentActor()))
 	{
 		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
@@ -503,17 +651,6 @@ void APlayerCustomiser::ShowUI()
 			InteractingPlayer->bShowMouseCursor = true;
 		}
 	}
-
-	USG_SaveGame* Save = InteractingPlayer->GetSave();
-	if (IsValid(Save) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::ShowUI IsValid(Save) == false"));
-		return;
-	}
-
-	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
-
-	DisplayDeck(ActiveDeck);
 
 	PlayerCustomisingWidget->AddToViewport();
 }
