@@ -139,7 +139,6 @@ void UHittableComponent::OnHittableDestroyed()
 	}
 
 	ASC->CancelAllAbilities();
-	ASC->RemoveAllGameplayCues();
 	ASC->ExecuteGameplayCue(OnDestroyedGameplayCueTag);
 
 	if (GetOwner()->HasAuthority())
@@ -168,6 +167,11 @@ void UHittableComponent::OnHittableDestroyed()
 	{
 		GetOwner()->Destroy();
 	}
+}
+
+void UHittableComponent::SetCanDisplayDamageIndicator(bool NewValue)
+{
+	bCanDisplayDamageIndicator = NewValue;
 }
 
 

@@ -127,8 +127,6 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
-	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
 	UAbilitySystemComponent* Target = &(Data.Target);
 
 	AInGameCharacter* TargetCharacter;
