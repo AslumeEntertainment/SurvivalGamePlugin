@@ -42,6 +42,7 @@ void AGameManager::BeginPlay()
 	{
 		return;
 	}
+
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{

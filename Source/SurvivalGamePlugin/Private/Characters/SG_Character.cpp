@@ -321,7 +321,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	SetRepControlRotation(GetControlRotation());
 }
 
-void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
+void ASG_Character::AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction)
 {
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
@@ -331,7 +331,7 @@ void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
 	AbilitySystemComponent->AbilityInputPressed(InputTag);
 }
 
-void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
+void ASG_Character::AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction)
 {
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{

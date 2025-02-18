@@ -104,5 +104,8 @@ public:
 	virtual FText GetInteractableName() override;
 
 	FName GetItemDataRowName() const;
+
 	class UStaticMeshComponent* GetItemMesh();
+
+	FGameplayTagContainer GetItemAbilityTags();
 };

@@ -282,3 +282,8 @@ UStaticMeshComponent* AItemBase::GetItemMesh()
 	return StaticMesh;
 }
 
+FGameplayTagContainer AItemBase::GetItemAbilityTags()
+{
+	return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
+}
+

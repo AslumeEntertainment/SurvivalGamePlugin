@@ -128,8 +128,8 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
-	void AbilityInputPressed(FGameplayTag InputTag);
-	void AbilityInputReleased(FGameplayTag InputTag);
+	virtual void AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction);
+	virtual void AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction);
 
 
 protected:

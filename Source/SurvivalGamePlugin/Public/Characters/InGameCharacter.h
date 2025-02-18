@@ -13,7 +13,6 @@
 class UEquipmentComponent;
 class UHittableComponent;
 
-
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
 {
@@ -100,6 +99,9 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Landed(const FHitResult& Hit) override;
+
+	virtual void AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction) override;
+	virtual void AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction) override;
 
 	virtual void MainHandAction();
 	virtual void SecondaryHandAction();

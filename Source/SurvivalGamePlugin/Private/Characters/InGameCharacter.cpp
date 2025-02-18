@@ -18,6 +18,7 @@
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "UI/HUD/InGameHUD.h"
+#include "Headers/AbilityInputConfig.h"
 
 
 AInGameCharacter::AInGameCharacter()
@@ -50,8 +51,6 @@ void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 	{
 		Item->Destroy();
 	}
-
-	
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -175,6 +174,44 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
 	SendGameplayEventToSelf(EventTag, FGameplayEventData());
+}
+
+void AInGameCharacter::AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction)
+{
+	FGameplayTag RealInputTag = InputTag;
+	//UInputAction* RealInputAction = AbilityInputAction;
+
+	if (bIsRightHanded == false && (AbilityInputAction == UseMainHandItemAction || AbilityInputAction == UseSecondaryHandItemAction))
+	{
+		for (FAbilityInputData AbilityInputData : AbilityInputConfig->AbilityInputActions)
+		{
+			if ((AbilityInputAction == UseMainHandItemAction && AbilityInputData.InputAction == UseSecondaryHandItemAction) ||
+				(AbilityInputAction == UseSecondaryHandItemAction && AbilityInputData.InputAction == UseMainHandItemAction))
+			{
+				RealInputTag = AbilityInputData.InputTag;
+				//RealInputAction = AbilityInputData.InputAction;
+				break;
+			}
+		}
+	}
+
+	if (AbilityInputAction == UseMainHandItemAction && EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The player is about to use %s's ability"), 
+			*EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->GetName());
+	}
+	else if (AbilityInputAction == UseSecondaryHandItemAction && EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The player is about to use %s's ability"),
+			*EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetName());
+	}
+
+	Super::AbilityInputPressed(InputTag, AbilityInputAction);
+}
+
+void AInGameCharacter::AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction)
+{
+	Super::AbilityInputReleased(InputTag, AbilityInputAction);
 }
 
 void AInGameCharacter::MainHandAction()

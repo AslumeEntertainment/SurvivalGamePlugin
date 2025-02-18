@@ -11,8 +11,9 @@ UENUM(BlueprintType)
 enum class ESG_DamageType : uint8
 {
 	None,
-    Slash,
-    Pierce
+    Slashing,
+    Piercing,
+	Bludgeoning
 };
 
 
