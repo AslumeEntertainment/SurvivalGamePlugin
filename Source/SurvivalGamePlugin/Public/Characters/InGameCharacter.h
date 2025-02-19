@@ -12,6 +12,7 @@
 
 class UEquipmentComponent;
 class UHittableComponent;
+class USG_GameplayAbility;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
@@ -75,6 +76,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
+	TSubclassOf<USG_GameplayAbility> MainHandAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
+	TSubclassOf<USG_GameplayAbility> SecondaryHandAbility;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
@@ -100,13 +107,13 @@ protected:
 
 	virtual void Landed(const FHitResult& Hit) override;
 
-	virtual void AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction) override;
-	virtual void AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction) override;
-
 	virtual void MainHandAction();
+
 	virtual void SecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies();
+
+	virtual void InitCharacterDefaults() override;
 
 	UFUNCTION()
 	void OnRep_IsAlive();

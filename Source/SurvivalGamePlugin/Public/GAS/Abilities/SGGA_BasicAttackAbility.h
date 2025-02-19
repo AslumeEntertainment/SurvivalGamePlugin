@@ -3,31 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
+#include "GAS/Abilities/SGGA_MirrorableAnimatedAbility.h"
+
 #include "Headers/DamageGameplayEffectStruct.h"
+
 #include "SGGA_BasicAttackAbility.generated.h"
 
 class AInGameCharacter;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API USGGA_BasicAttackAbility : public USG_GameplayAbility
+class SURVIVALGAMEPLUGIN_API USGGA_BasicAttackAbility : public USGGA_MirrorableAnimatedAbility
 {
 	GENERATED_BODY()
 
 public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	FGameplayTagContainer GetMirroredAbilityDamageComponentTags();
+	bool DoesAbilityUseItems();
+
 
 protected:
-
-	UPROPERTY(EditAnywhere, Category = "Animation", meta = (ToolTip = "Should this ability's animation be mirrored when used by a different hand"))
-	bool bCanBeMirrored = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	UAnimMontage* AttackAnimationMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	FGameplayTagContainer ActiveDamageComponentTags; 
@@ -39,17 +37,5 @@ protected:
 	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;
 
 	AInGameCharacter* Player;
-
-	UFUNCTION()
-	void OnAnimMontageCompleted();
-
-	UFUNCTION()
-	void OnAnimMontageBlendOut();
-
-	UFUNCTION()
-	void OnAnimMontageInterrupted();
-
-	UFUNCTION()
-	void OnAnimMontageCanceled();
 
 };

@@ -67,11 +67,6 @@ void AInGameCharacter::BeginPlay()
 
 	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
-	if (bIsRightHanded == false)
-	{
-		EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
-	}
-
 	if (IsLocallyControlled())
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -148,8 +143,16 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
-		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+		if (bIsRightHanded)
+		{
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+		}
+		else
+		{
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		}
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -176,51 +179,13 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	SendGameplayEventToSelf(EventTag, FGameplayEventData());
 }
 
-void AInGameCharacter::AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction)
-{
-	FGameplayTag RealInputTag = InputTag;
-	//UInputAction* RealInputAction = AbilityInputAction;
-
-	if (bIsRightHanded == false && (AbilityInputAction == UseMainHandItemAction || AbilityInputAction == UseSecondaryHandItemAction))
-	{
-		for (FAbilityInputData AbilityInputData : AbilityInputConfig->AbilityInputActions)
-		{
-			if ((AbilityInputAction == UseMainHandItemAction && AbilityInputData.InputAction == UseSecondaryHandItemAction) ||
-				(AbilityInputAction == UseSecondaryHandItemAction && AbilityInputData.InputAction == UseMainHandItemAction))
-			{
-				RealInputTag = AbilityInputData.InputTag;
-				//RealInputAction = AbilityInputData.InputAction;
-				break;
-			}
-		}
-	}
-
-	if (AbilityInputAction == UseMainHandItemAction && EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag()))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("The player is about to use %s's ability"), 
-			*EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->GetName());
-	}
-	else if (AbilityInputAction == UseSecondaryHandItemAction && EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag()))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("The player is about to use %s's ability"),
-			*EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetName());
-	}
-
-	Super::AbilityInputPressed(InputTag, AbilityInputAction);
-}
-
-void AInGameCharacter::AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction)
-{
-	Super::AbilityInputReleased(InputTag, AbilityInputAction);
-}
-
 void AInGameCharacter::MainHandAction()
 {
-	FGameplayTag EventTag;
-	FGameplayEventData EventData;
-
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
+		FGameplayTag EventTag;
+		FGameplayEventData EventData;
+
 		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
@@ -229,26 +194,35 @@ void AInGameCharacter::MainHandAction()
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main");
 		}
+
+		SendGameplayEventToSelf(EventTag, EventData);
+		return;
+	}
+
+	FGameplayTagContainer MainAbilityTagContainer;
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
+	{
+		MainAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+	}
+	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())))
+	{
+		MainAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->GetItemAbilityTags();
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
-				IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
-		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
-		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
+		MainAbilityTagContainer = MainHandAbility.GetDefaultObject()->AbilityTags;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("MainHandAction - %s"), *EventTag.ToString());
 
-	SendGameplayEventToSelf(EventTag, EventData);
+	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
 }
 
 void AInGameCharacter::SecondaryHandAction()
 {
-	FGameplayTag EventTag;
-	FGameplayEventData EventData;
-
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
+		FGameplayTag EventTag;
+		FGameplayEventData EventData;
+
 		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
@@ -257,17 +231,26 @@ void AInGameCharacter::SecondaryHandAction()
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary");
 		}
+
+		SendGameplayEventToSelf(EventTag, EventData);
+		return;
+	}
+
+	FGameplayTagContainer SecondaryAbilityTagContainer;
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
+	{
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+	}
+	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
+	{
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetItemAbilityTags();
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) ||
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
-		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
-		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
+		SecondaryAbilityTagContainer = SecondaryHandAbility.GetDefaultObject()->AbilityTags;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("SecondaryHandAction - %s"), *EventTag.ToString());
 
-	SendGameplayEventToSelf(EventTag, EventData);
+	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -324,6 +307,14 @@ void AInGameCharacter::BindCallbacksToDependencies()
 			Client_OnUpdatePlayerMaxEnergy(Data.NewValue);
 		}
 	);
+}
+
+void AInGameCharacter::InitCharacterDefaults()
+{
+	Super::InitCharacterDefaults();
+
+	AbilitySystemComponent->AddAbility(MainHandAbility, 1, this);
+	AbilitySystemComponent->AddAbility(SecondaryHandAbility, 1, this);
 }
 
 void AInGameCharacter::OnRep_IsAlive()

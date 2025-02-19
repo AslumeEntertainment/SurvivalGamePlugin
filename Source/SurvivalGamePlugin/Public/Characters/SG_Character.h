@@ -128,8 +128,8 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
-	virtual void AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction);
-	virtual void AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction);
+	void AbilityInputPressed(FGameplayTag InputTag, UInputAction* AbilityInputAction);
+	void AbilityInputReleased(FGameplayTag InputTag, UInputAction* AbilityInputAction);
 
 
 protected:
@@ -149,7 +149,7 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	void InitCharacterDefaults();
+	virtual void InitCharacterDefaults();
 
 
 public:
