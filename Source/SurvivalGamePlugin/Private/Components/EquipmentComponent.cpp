@@ -6,6 +6,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
@@ -60,15 +61,41 @@ void UEquipmentComponent::OnRep_CachedEquipment()
 {
 	ReconstructEquipmentData(CachedEquipment);
 }
-	
-void UEquipmentComponent::SwapMainAndSecondaryEquipmentSlots()
+
+bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
 {
-	if (EquipmentSlots.Contains(GetMainEquipmentSlotTag()) && EquipmentSlots.Contains(GetSecondaryEquipmentSlotTag()))
+	if (IsValid(GetOwner()) == false)
 	{
-		FName Temp = EquipmentSockets[GetMainEquipmentSlotTag()];
-		EquipmentSockets[GetMainEquipmentSlotTag()] = EquipmentSockets[GetSecondaryEquipmentSlotTag()];
-		EquipmentSockets[GetSecondaryEquipmentSlotTag()] = Temp;
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::CanEquipItem IsValid(GetOwner()) == false"));
+		return false;
 	}
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::CanEquipItem IsValid(ASC) == false"));
+		return false;
+	}
+
+	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+	EWeight LastTorelableWeight;
+
+	for (EWeight Weight : TEnumRange<EWeight>())
+	{
+		if (UEnum::GetValueAsString(Weight).Compare("None") == 0) continue;
+
+		if (OwnerStrength < (uint8)Weight)
+		{
+			LastTorelableWeight = Weight;
+			break;
+		}
+	}
+	
+	if (Item->ItemData.ItemWeight > LastTorelableWeight)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void UEquipmentComponent::SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item)
@@ -122,12 +149,12 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 		return;
 	}
 
+	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
 	FGameplayTag EquipmentSlotTag = Item->ItemData.EquipmentSlotTag;
-
 	EWeight ItemWeight = Item->ItemData.ItemWeight;
 	TArray<EWeight> EquipedItemsWeights;
-
-	for (TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
+	
+	for (const TPair<FGameplayTag, AItemBase*> EquipmentSlot : EquipmentSlots)
 	{
 		if (IsValid(EquipmentSlot.Value))
 		{
@@ -135,19 +162,10 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 		}
 	}
 
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")))
-	{
-		ItemWeight = (EWeight)FMath::Clamp((uint8)ItemWeight - 1, 0, 3);
-		for (int i = 0; i < EquipedItemsWeights.Num(); i++)
-		{
-			EquipedItemsWeights[i] = (EWeight)FMath::Clamp((uint8)EquipedItemsWeights[i] - 1, 0, 3);
-		}
-	}
-
 	if (HasEquipmentSlotWithTag(MixedEquipmentSlotTag))
 	{
 		EquipmentSlotTag = MixedEquipmentSlotTag;
-		if (ItemWeight == EWeight::Heavy)
+		if ((uint8)ItemWeight > OwnerStrength)
 		{
 			return;
 		}
@@ -157,9 +175,13 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 		return;
 	}
 
-	if (ItemWeight == EWeight::Heavy || EquipedItemsWeights.Contains(EWeight::Heavy))
+	if ((uint8)ItemWeight > OwnerStrength)
 	{
 		UnequipAllItems();
+	}
+	for (EWeight EquipedItemWeight : EquipedItemsWeights)
+	{
+		if ((uint8)EquipedItemWeight > OwnerStrength) UnequipAllItems(); break;
 	}
 
 	if (IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))

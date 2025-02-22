@@ -245,23 +245,9 @@ bool AItemBase::bCanInteract(AController* InteractingCharacter)
 		return false;
 	}
 
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) == false)
+	if (EquipmentComp->CanEquipItem(this) == false)
 	{
-		if (ItemData.ItemWeight == EWeight::Giant)
-		{
-			return false;
-		}
-		if (ItemData.ItemWeight == EWeight::Heavy && EquipmentComp->GetEquipmentSlots().Num() == 1)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		if (ItemData.ItemWeight == EWeight::Giant && EquipmentComp->GetEquipmentSlots().Num() == 1)
-		{
-			return false;
-		}
+		return false;
 	}
 	
 	return !bIsAttached;

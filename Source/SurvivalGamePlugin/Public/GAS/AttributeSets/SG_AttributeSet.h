@@ -34,6 +34,8 @@ public:
 
 	void ClampAttributeOnMaxValueChanged(const FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const;
 
+	/*---------------------------------------------Health-----------------------------------------------*/
+
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Health);
@@ -42,7 +44,21 @@ public:
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxHealth);
 
-	/* Fire related attributes */
+	/*---------------------------------------------Resistances-----------------------------------------------*/
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceSlashing)
+	FGameplayAttributeData ResistanceSlashing;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceSlashing);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistancePiercing)
+	FGameplayAttributeData ResistancePiercing;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistancePiercing);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceBludgeoning)
+	FGameplayAttributeData ResistanceBludgeoning;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceBludgeoning);
+
+	/*---------------------------------------------Fire Related-----------------------------------------------*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_IgnitionThreshold)
 	FGameplayAttributeData IgnitionThreshold;
@@ -61,18 +77,27 @@ public:
 protected:
 
 	UFUNCTION()
-	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
+	virtual void OnRep_Health(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
+	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_IgnitionThreshold(const FGameplayAttributeData& OldIgnitionThreshold);
+	virtual void OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_FireDamageResistance(const FGameplayAttributeData& OldFireDamageResistance);
+	virtual void OnRep_ResistancePiercing(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_ExtinguishTime(const FGameplayAttributeData& OldExtinguishTime);
+	virtual void OnRep_ResistanceBludgeoning(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_FireDamageResistance(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_ExtinguishTime(const FGameplayAttributeData& OldValue);
 
 };

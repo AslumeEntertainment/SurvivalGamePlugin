@@ -36,11 +36,11 @@ inline void USG_EnhancedInputComponent::BindAbilityActions(UAbilityInputConfig* 
 
 		if (PressedFunc)
 		{
-			BindAction(AbilityInputAction.InputAction, ETriggerEvent::Started, Object, PressedFunc, AbilityInputAction.InputTag, AbilityInputAction.InputAction);
+			BindAction(AbilityInputAction.InputAction, ETriggerEvent::Started, Object, PressedFunc, AbilityInputAction.InputTag);
 		}
 		if (ReleasedFunc)
 		{
-			BindAction(AbilityInputAction.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, AbilityInputAction.InputTag, AbilityInputAction.InputAction);
+			BindAction(AbilityInputAction.InputAction, ETriggerEvent::Completed, Object, ReleasedFunc, AbilityInputAction.InputTag);
 		}
 	}
 }

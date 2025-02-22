@@ -90,7 +90,8 @@ public:
 	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
 	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
 
-	void SwapMainAndSecondaryEquipmentSlots();
+	UFUNCTION(BlueprintCallable)
+	bool CanEquipItem(AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable)
 	void EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);

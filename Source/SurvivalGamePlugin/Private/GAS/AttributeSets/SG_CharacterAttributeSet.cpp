@@ -19,6 +19,8 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Strength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Dexterity, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Attack, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, AttackSpeed, COND_None, REPNOTIFY_Always);
 
@@ -191,63 +193,73 @@ bool USG_CharacterAttributeSet::HasMaxEnergy() const
 	return GetEnergy() == GetMaxEnergy();
 }
 
-void USG_CharacterAttributeSet::OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldHealthRegenerationRate)
+void USG_CharacterAttributeSet::OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, OldHealthRegenerationRate);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldAttack)
+void USG_CharacterAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Attack, OldAttack);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Strength, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed)
+void USG_CharacterAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeed, OldAttackSpeed);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Dexterity, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldHunger)
+void USG_CharacterAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Hunger, OldHunger);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Attack, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_MaxHunger(const FGameplayAttributeData& OldMaxHunger)
+void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxHunger, OldMaxHunger);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeed, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_HungerDrainRate(const FGameplayAttributeData& OldHungerDrainRate)
+void USG_CharacterAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, HungerDrainRate, OldHungerDrainRate);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Hunger, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Energy(const FGameplayAttributeData& OldEnergy)
+void USG_CharacterAttributeSet::OnRep_MaxHunger(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Energy, OldEnergy);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxHunger, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_MaxEnergy(const FGameplayAttributeData& OldMaxEnergy)
+void USG_CharacterAttributeSet::OnRep_HungerDrainRate(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxEnergy, OldMaxEnergy);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, HungerDrainRate, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_EnergyRechargeRate(const FGameplayAttributeData& OldEnergyRechargeRate)
+void USG_CharacterAttributeSet::OnRep_Energy(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, EnergyRechargeRate, OldEnergyRechargeRate);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Energy, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_EnergyDrainRate(const FGameplayAttributeData& OldEnergyDrainRate)
+void USG_CharacterAttributeSet::OnRep_MaxEnergy(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, EnergyDrainRate, OldEnergyDrainRate);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxEnergy, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldSpeed)
+void USG_CharacterAttributeSet::OnRep_EnergyRechargeRate(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Speed, OldSpeed);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, EnergyRechargeRate, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity)
+void USG_CharacterAttributeSet::OnRep_EnergyDrainRate(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, JumpVelocity, OldJumpVelocity);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, EnergyDrainRate, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_Speed(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Speed, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_JumpVelocity(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, JumpVelocity, OldValue);
 }
 

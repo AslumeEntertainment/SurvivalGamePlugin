@@ -387,8 +387,6 @@ bool AInGameCharacter::IsRightHanded()
 void AInGameCharacter::SetIsRightHanded(bool NewValue)
 {
 	bIsRightHanded = NewValue;
-
-	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
 }
 
 void AInGameCharacter::SetIsAlive(bool NewValue)

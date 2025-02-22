@@ -31,6 +31,16 @@ public:
 	FGameplayAttributeData HealthRegenerationRate;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, HealthRegenerationRate);
 
+	/*---------------------------------------------Combat-----------------------------------------------*/
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Strength)
+	FGameplayAttributeData Strength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Strength);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Dexterity)
+	FGameplayAttributeData Dexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Dexterity);
+
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Attack)
 	FGameplayAttributeData Attack;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Attack);
@@ -38,6 +48,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeed)
 	FGameplayAttributeData AttackSpeed;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeed);
+
+	/*---------------------------------------------Hunger-----------------------------------------------*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Hunger)
 	FGameplayAttributeData Hunger;
@@ -50,6 +62,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_HungerDrainRate)
 	FGameplayAttributeData HungerDrainRate;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, HungerDrainRate);
+
+	/*---------------------------------------------Energy-----------------------------------------------*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Energy)
 	FGameplayAttributeData Energy;
@@ -67,6 +81,8 @@ public:
 	FGameplayAttributeData EnergyDrainRate;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, EnergyDrainRate);
 
+	/*---------------------------------------------Movement-----------------------------------------------*/
+
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Speed)
 	FGameplayAttributeData Speed;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Speed);
@@ -81,39 +97,45 @@ public:
 protected:
 
 	UFUNCTION()
-	virtual void OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldHealthRegenerationRate);
+	virtual void OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Attack(const FGameplayAttributeData& OldAttack);
+	virtual void OnRep_Strength(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed);
+	virtual void OnRep_Dexterity(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Hunger(const FGameplayAttributeData& OldHunger);
+	virtual void OnRep_Attack(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_MaxHunger(const FGameplayAttributeData& OldMaxHunger);
+	virtual void OnRep_AttackSpeed(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_HungerDrainRate(const FGameplayAttributeData& OldHungerDrainRate);
+	virtual void OnRep_Hunger(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Energy(const FGameplayAttributeData& OldEnergy);
+	virtual void OnRep_MaxHunger(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_MaxEnergy(const FGameplayAttributeData& OldMaxEnergy);
+	virtual void OnRep_HungerDrainRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_EnergyRechargeRate(const FGameplayAttributeData& OldEnergyRechargeRate);
+	virtual void OnRep_Energy(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_EnergyDrainRate(const FGameplayAttributeData& OldEnergyDrainRate);
+	virtual void OnRep_MaxEnergy(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Speed(const FGameplayAttributeData& OldSpeed);
+	virtual void OnRep_EnergyRechargeRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_JumpVelocity(const FGameplayAttributeData& OldJumpVelocity);
+	virtual void OnRep_EnergyDrainRate(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_Speed(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_JumpVelocity(const FGameplayAttributeData& OldValue);
 
 };
