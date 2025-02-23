@@ -80,7 +80,7 @@ void AItemBase::BeginPlay()
 
 	if (IsValid(DefaultAttributeEffect))
 	{
-		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 	}
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(

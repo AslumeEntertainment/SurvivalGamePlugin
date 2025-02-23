@@ -40,6 +40,7 @@ void UGEEC_CalculateFireDamage::Execute_Implementation(const FGameplayEffectCust
 		return;
 	}
 
-	TargetAbilitySystemComponent->AddEffectFromClass(DefaultBurningEffect, SourceActor);
+	AActor* Instigator = ExecutionParams.GetOwningSpec().GetEffectContext().GetInstigator();
+	TargetAbilitySystemComponent->AddEffectFromClass(DefaultBurningEffect, SourceActor, Instigator, Instigator);
 
 }

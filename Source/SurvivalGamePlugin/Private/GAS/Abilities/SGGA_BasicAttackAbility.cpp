@@ -42,12 +42,8 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 	Player->SetIsMirrored(bShouldMirrorAnimation);
 
-	/* Getting every damage dealing component that the user has */
-	TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;  
-	Player->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
-
 	/* Look at all Gameplay effects that are currently active on the user's ASC and determine if there are additional effect to be applied */
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ActorInfo->AbilitySystemComponent);
+	/*USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ActorInfo->AbilitySystemComponent);
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(ASC) == false"));
@@ -73,20 +69,10 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		InstigatedEffect.DamageValue = -ActiveSpec.GetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage"), false);
 
 		InstigatedEffects.Add(InstigatedEffect);
-	}
-
-	/* Does the ability use an item */
-	if (DoesAbilityUseItems())
-	{
-		TArray<ADamageDealingItem*> EquipedWeapons = EquipmentComp->GetAllEquipedWeapons();
-		for (ADamageDealingItem* Weapon : EquipedWeapons)
-		{
-			PlayerDamageDealingComponents.Add(Weapon->GetDamageDealingComponent());
-		}
-	}
+	}*/
 
 	/* Config Gameplay effects that are to be used by the active damage dealing components */
-	for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
+	/*for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
 	{
 		if (ActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
 		{
@@ -100,7 +86,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
 			}
 		}
-	}
+	}*/
 
 	float AttackSpeed = Player->GetAttackSpeed();
 
@@ -114,17 +100,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
-	{
-		if (IsValid(DamageDealingComponent))
-		{
-			DamageDealingComponent->ResetDamageEffects();
-			DamageDealingComponent->SetActivation(false);
-		}
-	}
-	Player->ActiveDamageDealingComponents.Empty();
 	Player->SetIsMirrored(false);
-
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 

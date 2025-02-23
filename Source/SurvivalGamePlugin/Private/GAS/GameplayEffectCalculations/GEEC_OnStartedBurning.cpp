@@ -59,7 +59,7 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 		int Amount = FMath::RandRange(1, 100);
 		if (Amount <= ChanceToSpread)
 		{
-			ASC->AddEffectFromClass(BurningEffect, TargetActor);
+			ASC->AddEffectFromClass(BurningEffect, TargetActor, TargetActor, TargetActor);
 		}
 	}
 }

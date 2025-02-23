@@ -115,7 +115,7 @@ void USGGA_ApplyEffectOnContact::AttemptHit(AActor* TargetActor)
 	}
 	for (TSubclassOf<UGameplayEffect> Effect : EffectsToApply)
 	{
-		ASC->AddEffectFromClass(Effect, AvatarActor);
+		ASC->AddEffectFromClass(Effect, AvatarActor, AvatarActor, AvatarActor);
 	}
 }
 

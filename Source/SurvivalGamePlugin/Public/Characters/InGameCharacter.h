@@ -28,6 +28,9 @@ private:
 	UPROPERTY(Replicated, ReplicatedUsing = OnRep_IsAlive)
 	bool bIsAlive = true;
 
+	UPROPERTY(Replicated)
+	bool bIsExhausted = false;
+
 	float OldHittableCompHalfHeight = 0.f;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
@@ -86,10 +89,7 @@ protected:
 	UEquipmentComponent* EquipmentComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* LeftHandDamageDealingComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* RightHandDamageDealingComponent;
+	UDamageDealingComponent* DamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UHittableComponent* HittableComponent;
@@ -120,8 +120,6 @@ protected:
 
 public:
 
-	TArray<UDamageDealingComponent*> ActiveDamageDealingComponents;
-
 	virtual void BroadcastInitialValues();
 
 	virtual void Crouch(bool bClientSimulation = false) override;
@@ -138,19 +136,25 @@ public:
 	void SetAttackSpeed(float NewValue);
 
 	UFUNCTION(BlueprintCallable)
-	float GetAttackSpeed() const;
-
-	UFUNCTION(BlueprintCallable)
-	bool IsRightHanded();
+	float GetAttackSpeed(AItemBase* HeldItem = nullptr) const;
 
 	UFUNCTION(BlueprintCallable)
 	void SetIsRightHanded(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
+	bool IsRightHanded() const;
+
+	UFUNCTION(BlueprintCallable)
 	void SetIsAlive(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
-	bool IsAlive();
+	bool IsAlive() const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetIsExhausted(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsExhausted() const;
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();

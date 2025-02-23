@@ -84,7 +84,7 @@ void USGGA_ConsumeItem::OnEventRecieved(FGameplayEventData Payload)
 			UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectsFromItemToSelf::OnEventRecieved EffectDataObject == nullptr"));
 			continue;
 		}
-		ASC->AddEffectFromClass(EffectDataObject->EffectClass, EffectDataObject, EffectDataObject->EffectLevel);
+		ASC->AddEffectFromClass(EffectDataObject->EffectClass, EffectDataObject, Player, ConsumableItem, EffectDataObject->EffectLevel);
 	}
 
 	ConsumableItem->LoseDurability(1.f);

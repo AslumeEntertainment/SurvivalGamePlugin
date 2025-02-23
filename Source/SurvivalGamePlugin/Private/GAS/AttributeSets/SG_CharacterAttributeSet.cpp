@@ -21,7 +21,6 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Strength, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Dexterity, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Attack, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, AttackSpeed, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Hunger, COND_None, REPNOTIFY_Always);
@@ -68,16 +67,6 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		return;
 	}
 
-	if (Attribute == GetAttackAttribute())
-	{
-		TArray<UDamageDealingComponent*> PlayerDamageDealingComponents;
-		AvatarActor->GetComponents<UDamageDealingComponent>(PlayerDamageDealingComponents, true);
-
-		for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
-		{
-			DamageDealingComponent->SetDefaultDamageValue(NewValue);
-		}
-	}
 	if (Attribute == GetAttackSpeedAttribute())
 	{
 		AvatarActor->SetAttackSpeed(NewValue);
@@ -206,11 +195,6 @@ void USG_CharacterAttributeSet::OnRep_Strength(const FGameplayAttributeData& Old
 void USG_CharacterAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Dexterity, OldValue);
-}
-
-void USG_CharacterAttributeSet::OnRep_Attack(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Attack, OldValue);
 }
 
 void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldValue)

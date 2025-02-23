@@ -11,6 +11,8 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_GameplayEffectContext.h"
 #include "GAS/SG_AbilitySystemGlobals.h"
+#include "Objects/DamageSource.h"
+
 
 UDamageDealingComponent::UDamageDealingComponent()
 {
@@ -22,7 +24,6 @@ void UDamageDealingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	AddActorToIgnored(GetOwner());
-	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
 }
 
 void UDamageDealingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -46,11 +47,11 @@ void UDamageDealingComponent::AttemptHit()
 
 	TArray<FHitResult> HitResults;
 
-	if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), DamageCapsuleRadius, DamageCapsuleHeight / 2, UEngineTypes::ConvertToTraceType(ECC_Camera),
+	/*if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), DamageCapsuleRadius, DamageCapsuleHeight / 2, UEngineTypes::ConvertToTraceType(ECC_Camera),
 		true, ActorsToIgnoreWhenActive, EDrawDebugTrace::ForOneFrame, HitResults, true) == false)
 	{
 		return;
-	}
+	}*/
 
 	for (const FHitResult HitResult : HitResults)
 	{
@@ -80,10 +81,46 @@ void UDamageDealingComponent::AttemptHit()
 		CueParams.Location = HitResult.ImpactPoint;
 		ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
 
-		HittableComp->OnHit(GameplayEffectSpecHandles);
+		//HittableComp->OnHit(GameplayEffectSpecHandles);
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
 		ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 	}
+}
+
+TMap<FGameplayTag, UDamageSource*> UDamageDealingComponent::GetDamageSources()
+{
+	return DamageSources;
+}
+
+void UDamageDealingComponent::AddDamageSource(UDamageSource* DamageSource, FGameplayTag DamageSourceTag)
+{
+	if (DamageSources.Contains(DamageSourceTag))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddDamageSource There is already a damage source with tag %s"), *DamageSourceTag.ToString());
+		return;
+	}
+	DamageSources.Add(DamageSourceTag, DamageSource);
+}
+
+void UDamageDealingComponent::RemoveDamageSource(FGameplayTag DamageSourceTag)
+{
+	if (DamageSources.Contains(DamageSourceTag) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::RemoveDamageSource DamageSources.Contains(DamageSourceTag) == false"));
+		return;
+	}
+	DamageSources.Remove(DamageSourceTag);
+}
+
+void UDamageDealingComponent::SetDamageSourceActivation(FGameplayTag DamageSourceTag, bool bShouldActivate)
+{
+	UDamageSource* DamageSource = DamageSources.FindRef(DamageSourceTag);
+	if (IsValid(DamageSource) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDamageSourceActivation IsValid(DamageSource) == false"));
+		return;
+	}
+	//add source to active sources
 }
 
 void UDamageDealingComponent::SetActivation(bool NewState)
@@ -115,75 +152,6 @@ void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 	ActorsToIgnore.Remove(ActorToUnignore);
 }
 
-void UDamageDealingComponent::ChangeDefaultDamageEffect(FDamageGameplayEffect NewGameplayEffect)
-{
-	DefaultDamageEffect = NewGameplayEffect;
-	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
-}
-
-void UDamageDealingComponent::SetDefaultDamageType(ESG_DamageType NewDamageType)
-{
-	if (DefaultGameplayEffectSpecHandle.IsValid() == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDefaultDamageType Damage Dealing Component #%s does not have a default damage effect!"), *DamageComponentTag.ToString());
-		return;
-	}
-	DefaultDamageEffect.DamageType = NewDamageType;
-	
-	FGameplayEffectContextHandle EffectContextHandle = DefaultGameplayEffectSpecHandle.Data.Get()->GetContext();
-	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
-	Context->SetDamageType(DefaultDamageEffect.DamageType);
-	DefaultGameplayEffectSpecHandle.Data.Get()->SetContext(EffectContextHandle);
-}
-
-void UDamageDealingComponent::SetDefaultDamageValue(float NewValue)
-{
-	if (DefaultGameplayEffectSpecHandle.IsValid() == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDefaultDamageValue Damage Dealing Component #%s does not have a default damage effect!"), *DamageComponentTag.ToString());
-		return;
-	}
-	DefaultDamageEffect.DamageValue = NewValue;
-	DefaultGameplayEffectSpecHandle.Data.Get()->SetSetByCallerMagnitude(DefaultDamageEffect.SetByCallerMagnitudeDataTag, -DefaultDamageEffect.DamageValue);
-}
-
-void UDamageDealingComponent::SetDefaultDamageEffectDuration(float NewValue)
-{
-	if (DefaultGameplayEffectSpecHandle.IsValid() == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDefaultDamageEffectDuration Damage Dealing Component #%s does not have a default damage effect!"), *DamageComponentTag.ToString());
-		return;
-	}
-	DefaultDamageEffect.DamageEffectDuration = NewValue;
-	DefaultGameplayEffectSpecHandle.Data.Get()->SetDuration(DefaultDamageEffect.DamageEffectDuration, false);
-}
-
-void UDamageDealingComponent::SetDefaultDamageEffectPeriod(float NewValue)
-{
-	if (DefaultGameplayEffectSpecHandle.IsValid() == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDefaultDamageEffectPeriod Damage Dealing Component #%s does not have a default damage effect!"), *DamageComponentTag.ToString());
-		return;
-	}
-	DefaultDamageEffect.DamageEffectPeriod = NewValue;
-	DefaultGameplayEffectSpecHandle.Data.Get()->Period = DefaultDamageEffect.DamageEffectPeriod;
-}
-
-void UDamageDealingComponent::SetDamageComponentTagSuffix(FString Suffix)
-{
-	if (DamageComponentTag.ToString().Contains(Suffix))
-	{
-		return;
-	}
-	FString NewTag = DamageComponentTag.ToString() + Suffix;
-	DamageComponentTag = DamageComponentTag.RequestGameplayTag(FName(NewTag));
-}
-
-void UDamageDealingComponent::ResetDamageComponentTagSuffix()
-{
-	DamageComponentTag = DamageComponentTag.RequestDirectParent();
-}
-
 FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FDamageGameplayEffect NewGameplayEffect)
 {
 	if (IsValid(NewGameplayEffect.DamageEffectClass) == false)
@@ -210,17 +178,6 @@ FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FD
 	EffectSpec->Period = NewGameplayEffect.DamageEffectPeriod;
 	EffectSpec->SetSetByCallerMagnitude(NewGameplayEffect.SetByCallerMagnitudeDataTag, -NewGameplayEffect.DamageValue);
 
-	GameplayEffectSpecHandles.Add(EffectSpecHandle);
 	return EffectSpecHandle;
 }
 
-void UDamageDealingComponent::ResetDamageEffects()
-{
-	GameplayEffectSpecHandles.Empty();
-	DefaultGameplayEffectSpecHandle = ConfigDamageGameplayEffect(DefaultDamageEffect);
-}
-
-FGameplayTag UDamageDealingComponent::GetDamageComponentTag()
-{
-	return DamageComponentTag;
-}

@@ -13,9 +13,9 @@ enum class ESG_DamageType : uint8
 	None,
     Slashing,
     Piercing,
-	Bludgeoning
+	Bludgeoning,
+	Fire
 };
-
 
 USTRUCT(BlueprintType)
 struct FDamageGameplayEffect

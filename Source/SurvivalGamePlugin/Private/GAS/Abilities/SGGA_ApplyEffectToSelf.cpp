@@ -26,7 +26,7 @@ void USGGA_ApplyEffectToSelf::ActivateAbility(const FGameplayAbilitySpecHandle H
 	
 	const AActor* Instigator = (TriggerEventData == nullptr) ? nullptr : TriggerEventData->Instigator;
 
-	ASC->AddEffectFromClass(EffectClass, Instigator);
+	ASC->AddEffectFromClass(EffectClass, Instigator, nullptr, nullptr);
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 

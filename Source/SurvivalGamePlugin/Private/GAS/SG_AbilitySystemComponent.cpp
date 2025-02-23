@@ -58,7 +58,7 @@ void USG_AbilitySystemComponent::AbilityInputReleased(const FGameplayTag& InputT
 	}
 }
 
-FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* Instigator, uint8 Level)
+FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* SourceObject, AActor* Instigator, AActor* EffectCauser, uint8 Level)
 {
 	FActiveGameplayEffectHandle GEHandle;
 	
@@ -69,7 +69,8 @@ FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubc
 	}
 
 	FGameplayEffectContextHandle EffectContext = MakeEffectContext();
-	EffectContext.AddSourceObject(Instigator);
+	EffectContext.AddInstigator(Instigator, EffectCauser);
+	EffectContext.AddSourceObject(SourceObject);
 
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingSpec(GameplayEffectClass, Level, EffectContext);
 
@@ -86,7 +87,7 @@ void USG_AbilitySystemComponent::RemoveEffectFromSpec(FActiveGameplayEffectHandl
 	RemoveActiveGameplayEffect(GameplayEffectSpecHandle, StacksToRemove);
 }
 
-FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates)
+FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates)
 {
 	if (bAllowDuplicates == false)
 	{
@@ -98,7 +99,7 @@ FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<US
 			}
 		}
 	}
-	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, Instigator);
+	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, SourceObject);
 
 	if (const USG_GameplayAbility* SG_Ability = Cast<USG_GameplayAbility>(Spec.Ability))
 	{
@@ -109,15 +110,15 @@ FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<US
 	return FGameplayAbilitySpecHandle();
 }
 
-void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates)
+void USG_AbilitySystemComponent::AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* SourceObject, bool bAllowDuplicates)
 {
 	for (const TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		AddAbility(Ability.Key, Ability.Value, Instigator, bAllowDuplicates);
+		AddAbility(Ability.Key, Ability.Value, SourceObject, bAllowDuplicates);
 	}
 }
 
-FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates)
+FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates)
 {
 	if (bAllowDuplicates == false)
 	{
@@ -130,15 +131,15 @@ FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddPassiveAbility(TSubcla
 		}
 	}
 	
-	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, Instigator);
+	FGameplayAbilitySpec Spec = FGameplayAbilitySpec(AbilityClass, Level, INDEX_NONE, SourceObject);
 	return GiveAbilityAndActivateOnce(Spec);
 }
 
-void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates)
+void USG_AbilitySystemComponent::AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* SourceObject, bool bAllowDuplicates)
 {
 	for (TPair<TSubclassOf<USG_GameplayAbility>, int> Ability : AbilityMap)
 	{
-		AddPassiveAbility(Ability.Key, Ability.Value, Instigator, bAllowDuplicates);
+		AddPassiveAbility(Ability.Key, Ability.Value, SourceObject, bAllowDuplicates);
 	}
 }
 

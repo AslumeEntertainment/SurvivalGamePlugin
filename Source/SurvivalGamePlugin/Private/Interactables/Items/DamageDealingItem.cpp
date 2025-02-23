@@ -11,8 +11,7 @@
 
 ADamageDealingItem::ADamageDealingItem()
 {
-    DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageOrigin"));
-    DamageDealingComponent->SetupAttachment(GetItemMesh());
+    DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
     DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
 }
 
@@ -39,16 +38,6 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
         return;
     }
 
-    if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded()
-        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded() == false)
-    {
-        DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
-    }
-    else if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded()
-        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded() == false)
-    {
-        DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
-    }
     DamageDealingComponent->AddActorToIgnored(PlayerOwner);
 }
 
@@ -60,7 +49,6 @@ void ADamageDealingItem::OnItemUnequiped()
         return;
     }
     
-    DamageDealingComponent->ResetDamageComponentTagSuffix();
     DamageDealingComponent->RemoveActorFromIgnored(PlayerOwner);
     
     Super::OnItemUnequiped();

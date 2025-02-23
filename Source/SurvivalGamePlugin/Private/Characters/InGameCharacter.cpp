@@ -25,11 +25,7 @@ AInGameCharacter::AInGameCharacter()
 {
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
-	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
-	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
-	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
 
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
 	HittableComponent->SetupAttachment(GetRootComponent());
@@ -59,6 +55,7 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, AttackSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, bIsAlive, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, bIsExhausted, COND_None, REPNOTIFY_OnChanged);
 }
 
 void AInGameCharacter::BeginPlay()
@@ -124,6 +121,8 @@ void AInGameCharacter::Client_OnUpdatePlayerMaxHunger_Implementation(float MaxHu
 
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
+	if (CurrentEnergy == MaxEnergy) SetIsExhausted(false);
+	if (CurrentEnergy == 0) SetIsExhausted(true);
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }
 
@@ -374,19 +373,29 @@ void AInGameCharacter::SetAttackSpeed(float NewValue)
 	AttackSpeed = NewValue;
 }
 
-float AInGameCharacter::GetAttackSpeed() const
+float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 {
-	return AttackSpeed;
-}
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GetAttackSpeed IsValid(AbilitySystemComponent) == false"));
+		return 1;
+	}
+	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
+	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
 
-bool AInGameCharacter::IsRightHanded()
-{
-	return bIsRightHanded;
+	float FinalAttackSpeed = (1 + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+
+	return FinalAttackSpeed;
 }
 
 void AInGameCharacter::SetIsRightHanded(bool NewValue)
 {
 	bIsRightHanded = NewValue;
+}
+
+bool AInGameCharacter::IsRightHanded() const
+{
+	return bIsRightHanded;
 }
 
 void AInGameCharacter::SetIsAlive(bool NewValue)
@@ -395,9 +404,19 @@ void AInGameCharacter::SetIsAlive(bool NewValue)
 	if(bIsAlive == false) OnCharacterDeath.Broadcast();
 }
 
-bool AInGameCharacter::IsAlive()
+bool AInGameCharacter::IsAlive() const
 {
 	return bIsAlive;
+}
+
+void AInGameCharacter::SetIsExhausted(bool NewValue)
+{
+	bIsExhausted = NewValue;
+}
+
+bool AInGameCharacter::IsExhausted() const
+{
+	return bIsExhausted;
 }
 
 void AInGameCharacter::ShowPlayerInfo()

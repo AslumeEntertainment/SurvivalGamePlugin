@@ -404,7 +404,7 @@ void ASG_Character::InitCharacterDefaults()
 		AbilitySystemComponent->AddPassiveAbility(Ability, 1, this);
 	}
 
-	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 
 	bAlreadySetUp = true;
 }
