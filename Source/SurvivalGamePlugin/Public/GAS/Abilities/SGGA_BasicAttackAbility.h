@@ -4,9 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GAS/Abilities/SGGA_MirrorableAnimatedAbility.h"
-
-#include "Headers/DamageGameplayEffectStruct.h"
-
 #include "SGGA_BasicAttackAbility.generated.h"
 
 class AInGameCharacter;
@@ -22,16 +19,8 @@ public:
 	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	bool DoesAbilityUseItems();
-
 
 protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	FGameplayTagContainer ActiveDamageComponentTags; 
-
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	TArray<FDamageGameplayEffect> AdditionalDamageEffects;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;

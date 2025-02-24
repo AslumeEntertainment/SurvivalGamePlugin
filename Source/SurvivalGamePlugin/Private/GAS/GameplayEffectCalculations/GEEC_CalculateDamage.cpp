@@ -8,9 +8,7 @@
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/SG_AbilitySystemGlobals.h"
-
+#include "GAS/DamageEffect.h"
 
 UGEEC_CalculateDamage::UGEEC_CalculateDamage()
 {
@@ -46,6 +44,13 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 
 	AActor* TargetActor = IsValid(TargetAbilitySystemComponent) ? TargetAbilitySystemComponent->GetOwner() : nullptr;
 
-	UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation Instigator: %s; Target: %s"), *InstigatorActor->GetName(), *TargetActor->GetName());
+	const UDamageEffect* DamageEffect = Cast<UDamageEffect>(ExecutionParams.GetOwningSpec().Def);
+	if (IsValid(DamageEffect) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageEffect) == false"));
+		return;
+	}
 
+	UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation Instigator: %s; Target: %s"), *InstigatorActor->GetName(), *TargetActor->GetName());
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -DamageEffect->BaseDamage));
 }

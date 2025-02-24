@@ -8,8 +8,6 @@
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/SG_AbilitySystemGlobals.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/LootTableComponent.h"
 #include "Characters/InGameCharacter.h"
@@ -24,29 +22,6 @@ UHittableComponent::UHittableComponent()
 void UHittableComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (IsValid(DamageEffectOnOverlap.DamageEffectClass) == false)
-	{
-		return;
-	}
-	if (IsValid(GetOwner()) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::BeginPlay IsValid(GetOwner()) == false"));
-		return;
-	}
-
-	FGameplayEffectContextHandle EffectContextHandle = FGameplayEffectContextHandle(USG_AbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
-	Context->SetDamageType(DamageEffectOnOverlap.DamageType);
-	EffectContextHandle.AddSourceObject(this);
-
-	EffectSpecHandle = UAbilitySystemBlueprintLibrary::MakeSpecHandle(DamageEffectOnOverlap.DamageEffectClass.GetDefaultObject(), GetOwner(), GetOwner());
-	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
-
-	EffectSpec->SetContext(EffectContextHandle);
-	EffectSpec->SetDuration(DamageEffectOnOverlap.DamageEffectDuration, false);
-	EffectSpec->Period = DamageEffectOnOverlap.DamageEffectPeriod;
-	EffectSpec->SetSetByCallerMagnitude(DamageEffectOnOverlap.SetByCallerMagnitudeDataTag, -DamageEffectOnOverlap.DamageValue);
 }
 
 void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -110,19 +85,19 @@ USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
 	return ASC;
 }
 
-void UHittableComponent::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-{
-	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHit IsValid(ASC) == false"));
-		return;
-	}
-	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-	{
-		ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
-}
+//void UHittableComponent::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
+//{
+//	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
+//	if (IsValid(ASC) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHit IsValid(ASC) == false"));
+//		return;
+//	}
+//	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
+//	{
+//		ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+//	}
+//}
 
 void UHittableComponent::OnHittableDestroyed()
 {

@@ -5,17 +5,19 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
+#include "Interfaces/DamageDealerInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
 
 #include "InGameCharacter.generated.h"
 
+class UDamageDealingComponent;
 class UEquipmentComponent;
 class UHittableComponent;
 class USG_GameplayAbility;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IDamageDealerInterface
 {
 	GENERATED_BODY()
 	
@@ -31,7 +33,11 @@ private:
 	UPROPERTY(Replicated)
 	bool bIsExhausted = false;
 
+	UPROPERTY()
 	float OldHittableCompHalfHeight = 0.f;
+
+	UPROPERTY()
+	TMap<FGameplayTag, UDamageDealingComponent*> DamageSources;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerHealth(float CurrentHealth, float MaxHealth);
@@ -88,8 +94,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UDamageDealingComponent* DamageDealingComponent;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	//UDamageDealingComponent* DamageDealingComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UHittableComponent* HittableComponent;
@@ -125,6 +131,14 @@ public:
 	virtual void Crouch(bool bClientSimulation = false) override;
 
 	virtual void UnCrouch(bool bClientSimulation = false) override;
+
+	void AddDamageSource(UDamageDealingComponent* NewDamageSource) override;
+
+	void RemoveDamageSourceByTag(FGameplayTag DamageSourceTag) override;
+
+	void SetDamageSourceActivenessByTag(FGameplayTag DamageSourceTag, bool ActivenessState) override;
+
+	void SetActivenessForAllDamageSources(bool ActivenessState) override;
 
 	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues();

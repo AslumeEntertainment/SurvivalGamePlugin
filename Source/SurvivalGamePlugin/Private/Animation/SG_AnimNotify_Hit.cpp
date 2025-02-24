@@ -3,9 +3,8 @@
 
 #include "Animation/SG_AnimNotify_Hit.h"
 
-#include "Components/DamageDealingComponent.h"
+#include "Interfaces/DamageDealerInterface.h"
 #include "Characters/InGameCharacter.h"
-#include "Animation/SG_AnimInstance.h"
 
 
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -16,16 +15,10 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(Player) == false"));
 		return;
 	}
-	UDamageDealingComponent* DamageDealingComponent = Player->GetComponentByClass<UDamageDealingComponent>();
-	if (IsValid(DamageDealingComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(DamageDealingComponent) == false"));
-		return;
-	}
 
-	FGameplayTag FinalDamageSourceTag = Player->IsMirrored() ? DamageSourceTag : GetMirroredNotifyDamageComponentTag();
+	FGameplayTag FinalDamageSourceTag = !Player->IsMirrored() ? DamageSourceTag : GetMirroredNotifyDamageComponentTag();
 
-	DamageDealingComponent->SetDamageSourceActivation(FinalDamageSourceTag, bShouldActivate);
+	Player->SetDamageSourceActivenessByTag(FinalDamageSourceTag, bShouldActivate);
 }
 
 FGameplayTag USG_AnimNotify_Hit::GetMirroredNotifyDamageComponentTag()

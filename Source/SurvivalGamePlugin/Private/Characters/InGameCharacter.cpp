@@ -25,7 +25,8 @@ AInGameCharacter::AInGameCharacter()
 {
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
-	DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
+	/*DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
+	DamageDealingComponent->SetupAttachment(GetMesh());*/
 
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
 	HittableComponent->SetupAttachment(GetRootComponent());
@@ -63,6 +64,15 @@ void AInGameCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
+
+	TArray<UDamageDealingComponent*> DamageDealingComponents;
+	GetComponents<UDamageDealingComponent>(DamageDealingComponents);
+
+	for (UDamageDealingComponent* DamageSource : DamageDealingComponents)
+	{
+		AddDamageSource(DamageSource);
+		DamageSource->ConfigDamageSource(this);
+	}
 
 	if (IsLocallyControlled())
 	{
@@ -360,6 +370,39 @@ void AInGameCharacter::UnCrouch(bool bClientSimulation)
 	if (HasAuthority())
 	{
 		NetMulticast_SetHittableCompHalfHeight(OldHittableCompHalfHeight);
+	}
+}
+
+void AInGameCharacter::AddDamageSource(UDamageDealingComponent* NewDamageSource)
+{
+	if (DamageSources.Contains(NewDamageSource->GetDamageSourceTag()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s already has a damage source with tag - %s"), *GetName(), *NewDamageSource->GetDamageSourceTag().ToString());
+		return;
+	}
+	DamageSources.Add(NewDamageSource->GetDamageSourceTag(), NewDamageSource);
+}
+
+void AInGameCharacter::RemoveDamageSourceByTag(FGameplayTag DamageSourceTag)
+{
+	DamageSources.Remove(DamageSourceTag);
+}
+
+void AInGameCharacter::SetDamageSourceActivenessByTag(FGameplayTag DamageSourceTag, bool ActivenessState)
+{
+	UDamageDealingComponent* DamageSource = DamageSources.FindRef(DamageSourceTag);
+	if (IsValid(DamageSource) == false)
+	{
+		return;
+	}
+	DamageSource->SetActiveness(ActivenessState);
+}
+
+void AInGameCharacter::SetActivenessForAllDamageSources(bool ActivenessState)
+{
+	for (TPair<FGameplayTag, UDamageDealingComponent*> DamageSource : DamageSources)
+	{
+		DamageSource.Value->SetActiveness(ActivenessState);
 	}
 }
 

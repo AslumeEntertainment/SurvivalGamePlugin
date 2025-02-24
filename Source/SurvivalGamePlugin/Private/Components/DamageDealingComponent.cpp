@@ -9,8 +9,7 @@
 #include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_GameplayEffectContext.h"
-#include "GAS/SG_AbilitySystemGlobals.h"
+#include "GAS/DamageEffect.h"
 #include "Objects/DamageSource.h"
 
 
@@ -47,11 +46,23 @@ void UDamageDealingComponent::AttemptHit()
 
 	TArray<FHitResult> HitResults;
 
-	/*if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), DamageCapsuleRadius, DamageCapsuleHeight / 2, UEngineTypes::ConvertToTraceType(ECC_Camera),
+	if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), HitTraceHalfWidth, HitTraceHalfHeight, UEngineTypes::ConvertToTraceType(ECC_Camera),
 		true, ActorsToIgnoreWhenActive, EDrawDebugTrace::ForOneFrame, HitResults, true) == false)
 	{
 		return;
-	}*/
+	}
+
+	ProcessHit(HitResults);
+}
+
+void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
+{
+	USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(DamageInstigator));
+	if (IsValid(InstigatorASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ProcessHit IsValid(InstigatorASC) == false"));
+		return;
+	}
 
 	for (const FHitResult HitResult : HitResults)
 	{
@@ -70,60 +81,39 @@ void UDamageDealingComponent::AttemptHit()
 			return;
 		}
 
-		USG_AbilitySystemComponent* ASC = HittableComp->GetOwnerAbilitySystemComponent();
-		if (IsValid(ASC) == false)
+		USG_AbilitySystemComponent* TargetASC = HittableComp->GetOwnerAbilitySystemComponent();
+		if (IsValid(TargetASC) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(ASC) == false"));
+			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
 			continue;
 		}
 
+		//This can be removed from here later
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;
-		ASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
+		TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
 
-		//HittableComp->OnHit(GameplayEffectSpecHandles);
+		for (UDamageEffect* DamageEffect : DamageEffects)
+		{
+			InstigatorASC->ApplyGameplayEffectToTarget(DamageEffect, TargetASC);
+		}
+
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
 		ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 	}
 }
 
-TMap<FGameplayTag, UDamageSource*> UDamageDealingComponent::GetDamageSources()
+FGameplayTag UDamageDealingComponent::GetDamageSourceTag()
 {
-	return DamageSources;
+	return DamageSourceTag;
 }
 
-void UDamageDealingComponent::AddDamageSource(UDamageSource* DamageSource, FGameplayTag DamageSourceTag)
+void UDamageDealingComponent::ConfigDamageSource(AActor* InDamageInstigator)
 {
-	if (DamageSources.Contains(DamageSourceTag))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::AddDamageSource There is already a damage source with tag %s"), *DamageSourceTag.ToString());
-		return;
-	}
-	DamageSources.Add(DamageSourceTag, DamageSource);
+	DamageInstigator = InDamageInstigator;
 }
 
-void UDamageDealingComponent::RemoveDamageSource(FGameplayTag DamageSourceTag)
-{
-	if (DamageSources.Contains(DamageSourceTag) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::RemoveDamageSource DamageSources.Contains(DamageSourceTag) == false"));
-		return;
-	}
-	DamageSources.Remove(DamageSourceTag);
-}
-
-void UDamageDealingComponent::SetDamageSourceActivation(FGameplayTag DamageSourceTag, bool bShouldActivate)
-{
-	UDamageSource* DamageSource = DamageSources.FindRef(DamageSourceTag);
-	if (IsValid(DamageSource) == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UDamageDealingComponent::SetDamageSourceActivation IsValid(DamageSource) == false"));
-		return;
-	}
-	//add source to active sources
-}
-
-void UDamageDealingComponent::SetActivation(bool NewState)
+void UDamageDealingComponent::SetActiveness(bool NewState)
 {
 	if (GetOwner()->HasAuthority() == false)
 	{
@@ -150,34 +140,5 @@ void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)
 void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 {
 	ActorsToIgnore.Remove(ActorToUnignore);
-}
-
-FGameplayEffectSpecHandle UDamageDealingComponent::ConfigDamageGameplayEffect(FDamageGameplayEffect NewGameplayEffect)
-{
-	if (IsValid(NewGameplayEffect.DamageEffectClass) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(NewGameplayEffect.DamageEffectClass) == false"));
-		return FGameplayEffectSpecHandle();
-	}
-	if (IsValid(GetOwner()) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ConfigDamageGameplayEffect IsValid(GetOwner()) == false"));
-		return FGameplayEffectSpecHandle();
-	}
-
-	FGameplayEffectContextHandle EffectContextHandle = FGameplayEffectContextHandle(USG_AbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	FSG_GameplayEffectContext* Context = static_cast<FSG_GameplayEffectContext*>(EffectContextHandle.Get());
-	Context->SetDamageType(NewGameplayEffect.DamageType);
-	EffectContextHandle.AddSourceObject(this);
-
-	FGameplayEffectSpecHandle EffectSpecHandle = UAbilitySystemBlueprintLibrary::MakeSpecHandle(NewGameplayEffect.DamageEffectClass.GetDefaultObject(), GetOwner(), GetOwner());
-	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
-
-	EffectSpec->SetContext(EffectContextHandle);
-	EffectSpec->SetDuration(NewGameplayEffect.DamageEffectDuration, false);
-	EffectSpec->Period = NewGameplayEffect.DamageEffectPeriod;
-	EffectSpec->SetSetByCallerMagnitude(NewGameplayEffect.SetByCallerMagnitudeDataTag, -NewGameplayEffect.DamageValue);
-
-	return EffectSpecHandle;
 }
 

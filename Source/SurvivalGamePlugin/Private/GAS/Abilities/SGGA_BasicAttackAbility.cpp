@@ -104,11 +104,3 @@ void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handl
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-bool USGGA_BasicAttackAbility::DoesAbilityUseItems()
-{
-	for (FGameplayTag DamageDealerTag : ActiveDamageComponentTags)
-	{
-		if (DamageDealerTag.ToString().Contains("Item")) return true;
-	}
-	return false;
-}

@@ -28,6 +28,7 @@ protected:
 public:
 
 	virtual void OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName) override;
+
 	virtual void OnItemUnequiped() override;
 
 	UDamageDealingComponent* GetDamageDealingComponent();

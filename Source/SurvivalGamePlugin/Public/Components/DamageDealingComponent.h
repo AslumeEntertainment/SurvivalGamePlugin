@@ -3,22 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 
-#include "Headers/DamageGameplayEffectStruct.h"
-#include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 
 #include "DamageDealingComponent.generated.h"
 
-class UGameplayEffect;
-class IHittableInterface;
-class UDamageSource;
+class UDamageEffect;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHitSucceedSignature, UObject*, HittableObject);
 
-UCLASS()
-class SURVIVALGAMEPLUGIN_API UDamageDealingComponent : public UActorComponent
+UENUM(BlueprintType)
+enum class EDamageSourceTraceType : uint8
+{
+	Box,
+	Sphere,
+	Capsule
+};
+
+UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class SURVIVALGAMEPLUGIN_API UDamageDealingComponent : public USceneComponent
 {
 	GENERATED_BODY()
 	
@@ -26,17 +30,16 @@ public:
 
 	UDamageDealingComponent();
 
-protected:
-
-	virtual void BeginPlay() override;
-
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 private:
 
 	void AttemptHit();
 
+	void ProcessHit(TArray<FHitResult> HitResults);
+
 protected:
+
+	UPROPERTY()
+	AActor* DamageInstigator = nullptr;
 
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnore;
@@ -44,33 +47,41 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnoreWhenActive;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSources")
-	TMap<FGameplayTag, UDamageSource*> DamageSources;
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	FGameplayTag DamageSourceTag;
+
+	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
+	TArray<UDamageEffect*> DamageEffects;
+
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
+	EDamageSourceTraceType TraceType;
+
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
+	float HitTraceHalfWidth = 22.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
+	float HitTraceHalfHeight = 44.f;
+	
+	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 public:
 
 	UFUNCTION(BlueprintCallable)
-	TMap<FGameplayTag, UDamageSource*> GetDamageSources();
+	FGameplayTag GetDamageSourceTag();
 
 	UFUNCTION(BlueprintCallable)
-	void AddDamageSource(UDamageSource* DamageSource, FGameplayTag DamageSourceTag);
+	void ConfigDamageSource(AActor* InDamageInstigator);
 
 	UFUNCTION(BlueprintCallable)
-	void RemoveDamageSource(FGameplayTag DamageSourceTag);
-
-	UFUNCTION(BlueprintCallable)
-	void SetDamageSourceActivation(FGameplayTag DamageSourceTag, bool bShouldActivate);
-
-	UFUNCTION(BlueprintCallable)
-	void SetActivation(bool NewState);
+	void SetActiveness(bool NewState);
 	
 	UFUNCTION(BlueprintCallable)
 	void AddActorToIgnored(AActor* ActorToIgnore);
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveActorFromIgnored(AActor* ActorToUnignore);
-
-	FGameplayEffectSpecHandle ConfigDamageGameplayEffect(FDamageGameplayEffect NewGameplayEffect);
 
 	FHitSucceedSignature OnHitLandedSuccessfully;
 };

@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/CapsuleComponent.h"
-#include "Headers/DamageGameplayEffectStruct.h"
 #include "HittableComponent.generated.h"
 
+class UDamageSource;
 class IHittableInterface;
 class USG_AbilitySystemComponent;
 
@@ -36,7 +36,7 @@ protected:
 	FGameplayTag OnDestroyedGameplayCueTag;
 
 	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
-	FDamageGameplayEffect DamageEffectOnOverlap;
+	UDamageSource* BodyDamageSource;
 
 	UFUNCTION()
 	void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -49,8 +49,8 @@ public:
 
 	USG_AbilitySystemComponent* GetOwnerAbilitySystemComponent();
 
-	UFUNCTION(BlueprintCallable)
-	void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles);
+	/*UFUNCTION(BlueprintCallable)
+	void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles);*/
 
 	UFUNCTION(BlueprintCallable)
 	void OnHittableDestroyed();

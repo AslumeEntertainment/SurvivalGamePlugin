@@ -12,6 +12,7 @@
 ADamageDealingItem::ADamageDealingItem()
 {
     DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
+    DamageDealingComponent->SetupAttachment(GetRootComponent());
     DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
 }
 
@@ -31,14 +32,10 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
     {
         return;
     }
-    UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
-    if (IsValid(EquipmentComp) == false)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ADamageDealingItem::OnItemEquiped IsValid(EquipmentComp) == false"));
-        return;
-    }
 
+    Player->AddDamageSource(DamageDealingComponent);
     DamageDealingComponent->AddActorToIgnored(PlayerOwner);
+    DamageDealingComponent->ConfigDamageSource(PlayerOwner);
 }
 
 void ADamageDealingItem::OnItemUnequiped()
@@ -49,7 +46,9 @@ void ADamageDealingItem::OnItemUnequiped()
         return;
     }
     
+    PlayerOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
     DamageDealingComponent->RemoveActorFromIgnored(PlayerOwner);
+    DamageDealingComponent->ConfigDamageSource(nullptr);
     
     Super::OnItemUnequiped();
 }
