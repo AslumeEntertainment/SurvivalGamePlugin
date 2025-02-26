@@ -59,7 +59,7 @@ public:
 	bool CanDisplayDamageIndicator() { return bCanDisplayDamageIndicator; }
 
 	UFUNCTION(BlueprintCallable)
-	bool CanEverReceiveGameplayEffects() { return bCanEverReceiveGameplayEffects; }
+	bool CanEverReceiveGameplayEffects();
 
 	UFUNCTION(BlueprintCallable)
 	void SetCanDisplayDamageIndicator(bool NewValue);

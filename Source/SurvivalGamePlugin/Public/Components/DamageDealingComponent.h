@@ -10,16 +10,10 @@
 #include "DamageDealingComponent.generated.h"
 
 class UDamageEffect;
+class USG_TraceEmitterBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHitSucceedSignature, UObject*, HittableObject);
 
-UENUM(BlueprintType)
-enum class EDamageSourceTraceType : uint8
-{
-	Box,
-	Sphere,
-	Capsule
-};
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SURVIVALGAMEPLUGIN_API UDamageDealingComponent : public USceneComponent
@@ -53,14 +47,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
 	TArray<UDamageEffect*> DamageEffects;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
-	EDamageSourceTraceType TraceType;
-
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
-	float HitTraceHalfWidth = 22.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults|HitTrace")
-	float HitTraceHalfHeight = 44.f;
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	USG_TraceEmitterBase* DamageTrace;
 	
 	virtual void BeginPlay() override;
 

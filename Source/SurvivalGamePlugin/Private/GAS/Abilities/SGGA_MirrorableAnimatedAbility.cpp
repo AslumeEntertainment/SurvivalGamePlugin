@@ -15,7 +15,7 @@ void USGGA_MirrorableAnimatedAbility::OnAnimMontageBlendOut()
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageInterrupted()
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageCanceled()

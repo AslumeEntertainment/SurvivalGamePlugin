@@ -11,6 +11,7 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/DamageEffect.h"
 #include "Objects/DamageSource.h"
+#include "Objects/SG_TraceEmitterBase.h"
 
 
 UDamageDealingComponent::UDamageDealingComponent()
@@ -37,21 +38,17 @@ void UDamageDealingComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UDamageDealingComponent::AttemptHit()
 {
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
+	if (IsValid(DamageTrace) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(DamageTrace) == false"));
 		return;
 	}
-
-	TArray<FHitResult> HitResults;
-
-	if (UKismetSystemLibrary::CapsuleTraceMulti(World, GetComponentLocation(), GetComponentLocation(), HitTraceHalfWidth, HitTraceHalfHeight, UEngineTypes::ConvertToTraceType(ECC_Camera),
-		true, ActorsToIgnoreWhenActive, EDrawDebugTrace::ForOneFrame, HitResults, true) == false)
+	
+	TArray<FHitResult> HitResults = DamageTrace->CastTrace(GetComponentTransform(), ActorsToIgnoreWhenActive, GetUpVector());
+	if (HitResults.IsEmpty())
 	{
 		return;
 	}
-
 	ProcessHit(HitResults);
 }
 

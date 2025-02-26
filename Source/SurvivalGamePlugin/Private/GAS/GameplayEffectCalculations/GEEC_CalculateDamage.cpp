@@ -51,6 +51,5 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 		return;
 	}
 
-	UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation Instigator: %s; Target: %s"), *InstigatorActor->GetName(), *TargetActor->GetName());
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -DamageEffect->BaseDamage));
 }

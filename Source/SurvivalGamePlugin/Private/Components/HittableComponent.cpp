@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/LootTableComponent.h"
@@ -142,6 +143,23 @@ void UHittableComponent::OnHittableDestroyed()
 	{
 		GetOwner()->Destroy();
 	}
+}
+
+bool UHittableComponent::CanEverReceiveGameplayEffects()
+{
+	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::CanEverReceiveGameplayEffects IsValid(ASC) == false"))
+		return false;
+	}
+	float OwnerHealth = ASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute());
+	if (OwnerHealth <= 0)
+	{
+		return false;
+	}
+
+	return bCanEverReceiveGameplayEffects;
 }
 
 void UHittableComponent::SetCanDisplayDamageIndicator(bool NewValue)
