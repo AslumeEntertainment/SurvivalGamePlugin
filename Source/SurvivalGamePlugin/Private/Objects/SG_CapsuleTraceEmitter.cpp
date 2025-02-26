@@ -17,22 +17,11 @@ TArray<FHitResult> USG_CapsuleTraceEmitter::CastTrace(FTransform TraceOrigin, TA
 		return HitResults;
 	}
 
-	/*FCollisionObjectQueryParams CollisionObjectQueryParams = FCollisionObjectQueryParams::DefaultObjectQueryParam;
-	FCollisionShape CollisionShape;
-	CollisionShape.MakeCapsule(FVector(CapsuleRadius, CapsuleRadius, CapsuleHalfHeight));
+	FVector TraceStart = (CapsuleHalfHeight == CapsuleRadius) ? TraceOrigin.GetLocation() : TraceOrigin.GetLocation() - UpVector * (CapsuleHalfHeight / 2 - CapsuleRadius);
+	FVector TraceEnd = (CapsuleHalfHeight == CapsuleRadius) ? TraceOrigin.GetLocation() :TraceOrigin.GetLocation() + UpVector * (CapsuleHalfHeight / 2);
 	
-	FCollisionQueryParams CQP;
-	CQP.TraceTag = TraceTag;
-	if (bShouldDrawDebug)
-	{
-		World->DebugDrawTraceTag = TraceTag;
-	}*/
-
-	FVector TraceStart = TraceOrigin.GetLocation() - UpVector * (CapsuleHalfHeight - CapsuleRadius);
-	FVector TraceEnd = TraceOrigin.GetLocation() + UpVector * (CapsuleHalfHeight);
-
 	UKismetSystemLibrary::SphereTraceMulti(World, TraceStart, TraceEnd, CapsuleRadius, ETraceTypeQuery::TraceTypeQuery1,
-		true, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResults, true);
+		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None, HitResults, true);
 		
 	return HitResults;
 }

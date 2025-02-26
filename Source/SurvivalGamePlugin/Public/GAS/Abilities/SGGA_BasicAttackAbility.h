@@ -22,9 +22,6 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	TMap<TSubclassOf<UGameplayEffect>, TSubclassOf<UGameplayEffect>> DamagingEffectPerPlayerEffectTable;
-
 	AInGameCharacter* Player;
 
 };

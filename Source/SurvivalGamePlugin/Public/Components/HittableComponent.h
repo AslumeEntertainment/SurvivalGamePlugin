@@ -49,9 +49,6 @@ public:
 
 	USG_AbilitySystemComponent* GetOwnerAbilitySystemComponent();
 
-	/*UFUNCTION(BlueprintCallable)
-	void OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles);*/
-
 	UFUNCTION(BlueprintCallable)
 	void OnHittableDestroyed();
 

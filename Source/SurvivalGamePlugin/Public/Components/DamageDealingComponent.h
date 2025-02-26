@@ -44,6 +44,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
 	FGameplayTag DamageSourceTag;
 
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	FGameplayTagContainer OnHitGameplayCueTags;
+
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
 	TArray<UDamageEffect*> DamageEffects;
 

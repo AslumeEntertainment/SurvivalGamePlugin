@@ -63,10 +63,10 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 
 	for (const FHitResult HitResult : HitResults)
 	{
-		if (ActorsToIgnoreWhenActive.Contains(HitResult.GetActor()))
+		/*if (ActorsToIgnoreWhenActive.Contains(HitResult.GetActor()))
 		{
 			continue;
-		}
+		}*/
 
 		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
 		if (IsValid(HittableComp) == false)
@@ -84,11 +84,13 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
 			continue;
 		}
-
-		//This can be removed from here later
+		
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;
-		TargetASC->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Hit.Regular"), CueParams);
+		for (FGameplayTag GameplayCueTag : OnHitGameplayCueTags)
+		{
+			TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
+		}
 
 		for (UDamageEffect* DamageEffect : DamageEffects)
 		{

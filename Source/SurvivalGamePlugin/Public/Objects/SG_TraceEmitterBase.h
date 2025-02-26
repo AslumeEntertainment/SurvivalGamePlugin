@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+
+#include "Kismet/KismetSystemLibrary.h"
+
 #include "SG_TraceEmitterBase.generated.h"
 
 
@@ -15,13 +18,10 @@ class SURVIVALGAMEPLUGIN_API USG_TraceEmitterBase : public UObject
 public:
 
 	UPROPERTY(EditAnywhere, Category = "TraceProperties")
-	FName TraceTag;
+	bool bOnlyCheckFirstHit = false;
 
 	UPROPERTY(EditAnywhere, Category = "TraceProperties")
 	bool bShouldDrawDebug = true;
-
-	UPROPERTY(EditAnywhere, Category = "TraceProperties")
-	bool bOnlyCheckFirstHit = false;
 
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FHitResult> CastTrace(FTransform TraceOrigin, TArray<AActor*> ActorsToIgnore, FVector UpVector = FVector(0,0,1)) 

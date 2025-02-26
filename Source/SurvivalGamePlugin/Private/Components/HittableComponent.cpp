@@ -86,20 +86,6 @@ USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
 	return ASC;
 }
 
-//void UHittableComponent::OnHit(TArray<FGameplayEffectSpecHandle> GameplayEffectSpecHandles)
-//{
-//	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
-//	if (IsValid(ASC) == false)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHit IsValid(ASC) == false"));
-//		return;
-//	}
-//	for (FGameplayEffectSpecHandle SpecHandle : GameplayEffectSpecHandles)
-//	{
-//		ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-//	}
-//}
-
 void UHittableComponent::OnHittableDestroyed()
 {
 	if (IsValid(GetOwner()) == false)

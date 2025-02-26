@@ -42,52 +42,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 	Player->SetIsMirrored(bShouldMirrorAnimation);
 
-	/* Look at all Gameplay effects that are currently active on the user's ASC and determine if there are additional effect to be applied */
-	/*USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ActorInfo->AbilitySystemComponent);
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility IsValid(ASC) == false"));
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
-	}
-	
-	TArray<FDamageGameplayEffect> InstigatedEffects;
-	TArray<FGameplayEffectSpec> ActiveGameplayEffectSpecs;
-	ASC->GetAllActiveGameplayEffectSpecs(ActiveGameplayEffectSpecs);
-
-	for (FGameplayEffectSpec ActiveSpec : ActiveGameplayEffectSpecs)
-	{
-		TSubclassOf<UGameplayEffect>* GameEffectPtr = DamagingEffectPerPlayerEffectTable.Find(ActiveSpec.Def.GetClass());
-		if (GameEffectPtr == nullptr)
-		{
-			continue;
-		}
-
-		FDamageGameplayEffect InstigatedEffect;
-		InstigatedEffect.DamageEffectClass = *GameEffectPtr;
-		InstigatedEffect.SetByCallerMagnitudeDataTag = FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage");
-		InstigatedEffect.DamageValue = -ActiveSpec.GetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Damage"), false);
-
-		InstigatedEffects.Add(InstigatedEffect);
-	}*/
-
-	/* Config Gameplay effects that are to be used by the active damage dealing components */
-	/*for (UDamageDealingComponent* DamageDealingComponent : PlayerDamageDealingComponents)
-	{
-		if (ActiveDamageComponentTags.HasTag(DamageDealingComponent->GetDamageComponentTag()))
-		{
-			Player->ActiveDamageDealingComponents.Add(DamageDealingComponent);
-			for (const FDamageGameplayEffect DamageEffect : AdditionalDamageEffects)
-			{
-				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
-			}
-			for (const FDamageGameplayEffect DamageEffect : InstigatedEffects)
-			{
-				DamageDealingComponent->ConfigDamageGameplayEffect(DamageEffect);
-			}
-		}
-	}*/
-
 	float AttackSpeed = Player->GetAttackSpeed();
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage, AttackSpeed);
@@ -101,6 +55,7 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Player->SetIsMirrored(false);
+	Player->SetActivenessForAllDamageSources(false);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
