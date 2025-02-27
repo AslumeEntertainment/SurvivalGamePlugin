@@ -10,7 +10,6 @@
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/DamageEffect.h"
-#include "Objects/DamageSource.h"
 #include "Objects/SG_TraceEmitterBase.h"
 
 
@@ -60,14 +59,16 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ProcessHit IsValid(InstigatorASC) == false"));
 		return;
 	}
+	FGameplayEffectContextHandle ContextHandle = InstigatorASC->MakeEffectContext();
+	ContextHandle.AddInstigator(DamageInstigator, GetOwner());
+	ContextHandle.AddSourceObject(this);
 
 	for (const FHitResult HitResult : HitResults)
 	{
-		/*if (ActorsToIgnoreWhenActive.Contains(HitResult.GetActor()))
+		if (IsValid(HitResult.GetActor()) == false)
 		{
 			continue;
-		}*/
-
+		}
 		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
 		if (IsValid(HittableComp) == false)
 		{
@@ -75,7 +76,7 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		}
 		if (HittableComp->CanEverReceiveGameplayEffects() == false)
 		{
-			return;
+			continue;
 		}
 
 		USG_AbilitySystemComponent* TargetASC = HittableComp->GetOwnerAbilitySystemComponent();
@@ -84,6 +85,8 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
 			continue;
 		}
+
+		ContextHandle.AddOrigin(HitResult.ImpactPoint);
 		
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;
@@ -94,7 +97,7 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 
 		for (UDamageEffect* DamageEffect : DamageEffects)
 		{
-			InstigatorASC->ApplyGameplayEffectToTarget(DamageEffect, TargetASC);
+			TargetASC->ApplyGameplayEffectToSelf(DamageEffect, DamageEffect->EffectLevel, ContextHandle);
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());

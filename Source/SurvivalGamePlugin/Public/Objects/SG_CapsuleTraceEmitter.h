@@ -15,10 +15,10 @@ class SURVIVALGAMEPLUGIN_API USG_CapsuleTraceEmitter : public USG_TraceEmitterBa
 public:
 
 	UPROPERTY(EditAnywhere, Category = "TraceProperties")
-	float CapsuleRadius = 20.f;
+	float CapsuleHalfHeight = 40.f;
 
 	UPROPERTY(EditAnywhere, Category = "TraceProperties")
-	float CapsuleHalfHeight = 40.f;
+	float CapsuleRadius = 20.f;
 
 	virtual TArray<FHitResult> CastTrace(FTransform TraceOrigin, TArray<AActor*> ActorsToIgnore, FVector UpVector) override;
 	

@@ -17,7 +17,7 @@
 UHittableComponent::UHittableComponent()
 {
 	OnComponentBeginOverlap.AddDynamic(this, &UHittableComponent::OnImpactReceived);
-	OnComponentBeginOverlap.AddDynamic(this, &UHittableComponent::OnActorBeginOverlap);
+	//OnComponentBeginOverlap.AddDynamic(this, &UHittableComponent::OnActorBeginOverlap);
 }
 
 void UHittableComponent::BeginPlay()
@@ -56,12 +56,6 @@ void UHittableComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComp
 	{
 		return;
 	}
-	FGameplayEffectSpec* Spec = EffectSpecHandle.Data.Get();
-	if (Spec == nullptr)
-	{
-		return;
-	}
-	ASC->ApplyGameplayEffectSpecToSelf(*Spec);
 }
 
 USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()

@@ -99,7 +99,8 @@ void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
 void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
 {
 	StaticMesh->SetSimulatePhysics(NewActorPhysics);
-	NewActorPhysics ? StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics) : StaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StaticMesh->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)

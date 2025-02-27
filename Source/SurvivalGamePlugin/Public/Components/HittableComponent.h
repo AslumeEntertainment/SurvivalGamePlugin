@@ -23,9 +23,6 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	FGameplayEffectSpecHandle EffectSpecHandle;
-
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	bool bCanDisplayDamageIndicator = true;
 
@@ -34,9 +31,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	FGameplayTag OnDestroyedGameplayCueTag;
-
-	UPROPERTY(EditDefaultsOnly, Category = "DamageEffect")
-	UDamageSource* BodyDamageSource;
 
 	UFUNCTION()
 	void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

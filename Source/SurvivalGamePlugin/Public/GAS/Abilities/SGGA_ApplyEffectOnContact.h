@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/Abilities/SG_GameplayAbility.h"
+#include "GAS/Abilities/SG_PassiveGameplayAbility.h"
 #include "SGGA_ApplyEffectOnContact.generated.h"
 
 class AStaticMeshActor;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectOnContact : public USG_GameplayAbility
+class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectOnContact : public USG_PassiveGameplayAbility
 {
 	GENERATED_BODY()
 	
@@ -32,20 +32,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	bool bShouldAffectUser = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TArray<TSubclassOf<UGameplayEffect>> EffectsToApply;
+
 	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
 	TSubclassOf<AStaticMeshActor> OverlayMeshActorClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
 	FName SocketToAttach;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	TArray<TSubclassOf<UGameplayEffect>> EffectsToApply;
-
 	UFUNCTION()
 	void SpawnOverlayMesh();
 
 	UFUNCTION()
-	void AttemptHit(AActor* TargetActor);
+	void AttemptHit(const AActor* TargetActor);
+
+	void OnHitEventReceived(FGameplayEventData Payload) override;
+
+	void OnHitEventDealt(FGameplayEventData Payload) override;
 
 	UFUNCTION()
 	void OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

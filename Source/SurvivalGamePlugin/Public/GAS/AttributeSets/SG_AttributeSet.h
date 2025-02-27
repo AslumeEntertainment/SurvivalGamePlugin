@@ -58,15 +58,15 @@ public:
 	FGameplayAttributeData ResistanceBludgeoning;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceBludgeoning);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceFire)
+	FGameplayAttributeData ResistanceFire;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceFire);
+
 	/*---------------------------------------------Fire Related-----------------------------------------------*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_IgnitionThreshold)
 	FGameplayAttributeData IgnitionThreshold;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, IgnitionThreshold);
-
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_FireDamageResistance)
-	FGameplayAttributeData FireDamageResistance;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, FireDamageResistance);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ExtinguishTime)
 	FGameplayAttributeData ExtinguishTime;
@@ -92,10 +92,10 @@ protected:
 	virtual void OnRep_ResistanceBludgeoning(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_ResistanceFire(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_FireDamageResistance(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_ExtinguishTime(const FGameplayAttributeData& OldValue);

@@ -3,15 +3,18 @@
 
 #include "GAS/Abilities/SGGA_ApplyEffectOnContact.h"
 
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Engine/StaticMeshActor.h"
 
-#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/HittableComponent.h"
 
 
 void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::ActivateAbility CommitAbility == false"));
@@ -39,6 +42,7 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 	}
 
 	HittableComp->OnComponentBeginOverlap.AddDynamic(this, &USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap);
+
 	if (bShouldApplyOnActivation == false)
 	{
 		return;
@@ -95,7 +99,7 @@ void USGGA_ApplyEffectOnContact::SpawnOverlayMesh()
 	OverlayMeshActor->AttachToComponent(AvatarMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, SocketToAttach);
 }
 
-void USGGA_ApplyEffectOnContact::AttemptHit(AActor* TargetActor)
+void USGGA_ApplyEffectOnContact::AttemptHit(const AActor* TargetActor)
 {
 	UHittableComponent* TargetHittableComp = TargetActor->GetComponentByClass<UHittableComponent>();
 	if (IsValid(TargetHittableComp) == false)
@@ -117,6 +121,16 @@ void USGGA_ApplyEffectOnContact::AttemptHit(AActor* TargetActor)
 	{
 		ASC->AddEffectFromClass(Effect, AvatarActor, AvatarActor, AvatarActor);
 	}
+}
+
+void USGGA_ApplyEffectOnContact::OnHitEventReceived(FGameplayEventData Payload)
+{
+	AttemptHit(Payload.Instigator);
+}
+
+void USGGA_ApplyEffectOnContact::OnHitEventDealt(FGameplayEventData Payload)
+{
+	AttemptHit(Payload.Target);
 }
 
 void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

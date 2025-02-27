@@ -6,6 +6,8 @@
 #include "GameplayEffect.h"
 #include "DamageEffect.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(DamageLog, Log, All);
+
 UENUM(BlueprintType)
 enum class ESG_DamageType : uint8
 {
@@ -31,6 +33,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	float Penetration = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
+	float EffectLevel = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<TSubclassOf<UGameplayEffect>, float> AdditionalEffects;

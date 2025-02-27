@@ -11,8 +11,8 @@ enum class EWeight : uint8
 	None = 0,
 	VeryLight = 1,
 	Light = 5,
-	Normal = 10,
-	Heavy = 20,
-	VeryHeavy = 30
+	Normal = 15,
+	Heavy = 30,
+	VeryHeavy = 50
 };
 ENUM_RANGE_BY_FIRST_AND_LAST(EWeight, EWeight::VeryLight, EWeight::VeryHeavy);

@@ -23,10 +23,6 @@ bool FPackagedEquipmentData::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& 
 UEquipmentComponent::UEquipmentComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
-	MainEquipmentSlotTag                 = FGameplayTag::RequestGameplayTag("EquipmentSlot.Main");
-	SecondaryEquipmentSlotTag            = FGameplayTag::RequestGameplayTag("EquipmentSlot.Secondary");
-	MixedEquipmentSlotTag                = FGameplayTag::RequestGameplayTag("EquipmentSlot.Mixed");
 }
 
 void UEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -77,19 +73,22 @@ bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
 	}
 
 	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
-	EWeight LastTorelableWeight;
+	if (EquipmentSlots.Num() == 1) OwnerStrength /= 2;
+	EWeight LastTorelableWeight = EWeight::None;
 
 	for (EWeight Weight : TEnumRange<EWeight>())
 	{
 		if (UEnum::GetValueAsString(Weight).Compare("None") == 0) continue;
 
-		if (OwnerStrength < (uint8)Weight)
+		if (OwnerStrength < (uint8)Weight || Weight == EWeight::VeryHeavy)
 		{
 			LastTorelableWeight = Weight;
 			break;
 		}
 	}
 	
+	//GEngine->AddOnScreenDebugMessage(10, 1, FColor::Emerald, FString::Printf(TEXT("Last tolerable weight - %d, Item weight - %d"), (uint8)LastTorelableWeight, (uint8)Item->ItemData.ItemWeight));
+
 	if (Item->ItemData.ItemWeight > LastTorelableWeight)
 	{
 		return false;
@@ -165,10 +164,10 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 	if (HasEquipmentSlotWithTag(MixedEquipmentSlotTag))
 	{
 		EquipmentSlotTag = MixedEquipmentSlotTag;
-		if ((uint8)ItemWeight > OwnerStrength)
+		/*if ((uint8)ItemWeight > OwnerStrength)
 		{
 			return;
-		}
+		}*/
 	}
 	if (bShouldSlotBeEmpty && IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
 	{

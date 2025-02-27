@@ -9,6 +9,11 @@
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/DamageEffect.h"
+#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/DamageDealingComponent.h"
+#include "Headers/PhysicalPropertyEnums.h"
+
+DEFINE_LOG_CATEGORY(DamageLog);
 
 UGEEC_CalculateDamage::UGEEC_CalculateDamage()
 {
@@ -51,5 +56,70 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 		return;
 	}
 
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -DamageEffect->BaseDamage));
+	/*UDamageDealingComponent* DamageSource = Cast<UDamageDealingComponent>(ExecutionParams.GetOwningSpec().GetEffectContext().GetSourceObject());
+	if (IsValid(DamageSource) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageSource) == false"));
+		return;
+	}*/
+	AActor* EffectCauser = ExecutionParams.GetOwningSpec().GetEffectContext().GetEffectCauser();
+	if (IsValid(EffectCauser) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(EffectCauser) == false"));
+		return;
+	}
+
+	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
+
+	EWeight EffectCauserWeight = EWeight::Normal;
+	if (IsValid(Cast<ADamageDealingItem>(EffectCauser)))
+	{
+		EffectCauserWeight = Cast<ADamageDealingItem>(EffectCauser)->ItemData.ItemWeight;
+	}
+
+	float StrengthMultiplier = InstigatorAbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute()) / (uint8)EffectCauserWeight;
+
+	float TargetResistance = 1;
+	switch (DamageEffect->DamageType)
+	{
+		case ESG_DamageType::Slashing: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistanceSlashingAttribute()); break;
+		case ESG_DamageType::Piercing: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistancePiercingAttribute()); break;
+		case ESG_DamageType::Bludgeoning: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistanceBludgeoningAttribute()); break;
+		case ESG_DamageType::Fire: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistanceFireAttribute());
+	}
+	if (TargetResistance <= 0) TargetResistance = 1;
+
+	float InstigatorVelocity = InstigatorActor->GetVelocity().Length() / 100;
+	float PenetrationMultiplier = (DamageEffect->Penetration + DamageEffect->Penetration * InstigatorVelocity / 100) / TargetResistance;
+	float FinalDamage = FMath::Floor(DamageEffect->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
+	
+	UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
+	UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageEffect->DamageType);
+	UE_LOG(DamageLog, Log, TEXT("StrengthMultiplier - %.2f"), StrengthMultiplier);
+	UE_LOG(DamageLog, Log, TEXT("InstigatorVelocity - %.2f m/s"), InstigatorVelocity);
+	UE_LOG(DamageLog, Log, TEXT("PenetrationMultiplier - %.2f"), PenetrationMultiplier);
+	UE_LOG(DamageLog, Log, TEXT("FinalDamage - %.f"), FinalDamage);
+
+	//---------------------------------------------------------//
+
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
+
+	int RandInt = FMath::RandRange(1, 100);
+	RandInt += InstigatorAbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute());
+
+	for (TPair<TSubclassOf<UGameplayEffect>, float> AdditionalEffect : DamageEffect->AdditionalEffects)
+	{
+		if (RandInt <= AdditionalEffect.Value)
+		{
+			TargetAbilitySystemComponent->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(AdditionalEffect.Key->GetDefaultObject()), DamageEffect->EffectLevel, ExecutionParams.GetOwningSpec().GetEffectContext());
+		}
+	}
+
+	FGameplayEventData EventData;
+	EventData.Target = TargetActor;
+	EventData.Instigator = InstigatorActor;
+
+	InstigatorAbilitySystemComponent->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Triggered"), &EventData);
+	TargetAbilitySystemComponent->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
+
 }

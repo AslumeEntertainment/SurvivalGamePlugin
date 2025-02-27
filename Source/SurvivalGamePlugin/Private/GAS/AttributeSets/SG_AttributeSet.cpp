@@ -29,9 +29,9 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceSlashing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistancePiercing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceBludgeoning, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceFire, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, IgnitionThreshold, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, FireDamageResistance, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ExtinguishTime, COND_None, REPNOTIFY_Always);
 }
 
@@ -161,14 +161,14 @@ void USG_AttributeSet::OnRep_ResistanceBludgeoning(const FGameplayAttributeData&
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistanceBludgeoning, OldValue);
 }
 
+void USG_AttributeSet::OnRep_ResistanceFire(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistanceFire, OldValue);
+}
+
 void USG_AttributeSet::OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, IgnitionThreshold, OldValue);
-}
-
-void USG_AttributeSet::OnRep_FireDamageResistance(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, FireDamageResistance, OldValue);
 }
 
 void USG_AttributeSet::OnRep_ExtinguishTime(const FGameplayAttributeData& OldValue)
