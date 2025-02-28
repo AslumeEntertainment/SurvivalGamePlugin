@@ -1,5 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+//===================================TO BE DELETED==========================
+
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -32,7 +35,7 @@ private:
 
 	FOnlineSessionSearchResult CurrentSessionToJoin;
 
-	ESessionState LocalSessionState = ESessionState::Idle;
+	ESessionState LocalSessionState = ESessionState::TempIdle;
 
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 

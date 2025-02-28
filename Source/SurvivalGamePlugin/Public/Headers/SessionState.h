@@ -6,7 +6,7 @@
 UENUM(BlueprintType)
 enum class ESessionState : uint8
 {
-	Hosting,
-	Joined,
-	Idle,
+	TempHosting,
+	TempJoined,
+	TempIdle,
 };

@@ -13,53 +13,17 @@ DEFINE_LOG_CATEGORY_STATIC(SessionSubsystem, Log, All);
 
 void USessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	Super::Initialize(Collection);
 
-	UWorld* World = GetWorld();
-
-	if (IsValid(World) == false)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("Initialize IsValid(World) == false"));
-		return;
-	}
-
-	IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(World);
-	if (OnlineSubsystem == nullptr)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("Initialize IsValid(OnlineSubsystem) == false"));
-		return;
-	}
-
-	SessionInterface = OnlineSubsystem->GetSessionInterface();
-
-	if (SessionInterface == nullptr)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("Initialize IsValid(SessionInterface) == false"));
-	}
-
-	SessionInterface->OnSessionUserInviteAcceptedDelegates.AddUObject(this, &USessionSubsystem::OnSessionUserInviteAccepted);
-	SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &USessionSubsystem::HandleCreateSessionComplete);
-	SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &USessionSubsystem::HandleDestroySessionComplete);
-	SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &USessionSubsystem::HandleJoinSessionComplete);
-
-	LocalSessionState = ESessionState::Idle;
 }
 
 void USessionSubsystem::Deinitialize()
 {
-	SessionInterface->ClearOnSessionUserInviteAcceptedDelegates(this);
-	SessionInterface->ClearOnCreateSessionCompleteDelegates(this);
-	SessionInterface->ClearOnDestroySessionCompleteDelegates(this);
-	SessionInterface->ClearOnJoinSessionCompleteDelegates(this);
-	SessionInterface = nullptr;
+
 }
 
 bool USessionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
-	if (GetClass()->IsInBlueprint() && Super::ShouldCreateSubsystem(Outer))
-	{
-		return true;
-	}
+
 	return false;
 }
 
@@ -74,7 +38,7 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Session Created"));
 
-	LocalSessionState = ESessionState::Hosting;
+	LocalSessionState = ESessionState::TempHosting;
 
 	UWorld* World = GetWorld();
 
@@ -92,20 +56,7 @@ void USessionSubsystem::HandleCreateSessionComplete(FName SessionName, bool bWas
 
 void USessionSubsystem::RegisterExistingPlayers()
 {
-	UWorld* World = GetWorld();
 
-	if (IsValid(World) == false)
-	{
-		UE_LOG(SessionSubsystem, Error, TEXT("RegisterExistingPlayers IsValid(World) == false"));
-		return;
-	}
-
-	for (auto It = World->GetPlayerControllerIterator(); It; ++It)
-	{
-		APlayerController* PlayerController = It->Get();
-
-		RegisterNewPlayer(PlayerController);
-	}
 }
 
 void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWasSuccessful)
@@ -129,7 +80,7 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 	}
 
 	UE_LOG(SessionSubsystem, Warning, TEXT("TURNING OFF LISTEN SERVER"));
-	LocalSessionState = ESessionState::Idle;
+	LocalSessionState = ESessionState::TempIdle;
 	World->GetGameInstance()->EnableListenServer(false, ConnectionPort);
 	World->ServerTravel(MainMenuMap, true); //e za tva se otnasq dolniq komentar
 
@@ -140,9 +91,9 @@ void USessionSubsystem::HandleDestroySessionComplete(FName SessionName, bool bWa
 		return;
 	}
 
-	/*if (bShouldStayIdle)
+	/*if (bShouldStayTempIdle)
 	{
-		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - Hosting local session"));
+		UE_LOG(SessionSubsystem, Display, TEXT("Session Abandoned - TempHosting local session"));
 		//World->ServerTravel(TransitionLoadingMap, true); //tva e s drugite komenatri
 		CreateSession();
 		return;
@@ -175,7 +126,7 @@ void USessionSubsystem::OnSessionUserInviteAccepted(bool bWasSuccessful, int Con
 	CurrentSessionToJoin = OnlineSessionSearchResult;
 
 	UE_LOG(SessionSubsystem, Display, TEXT("Abandoning current session in order to join new session..."));
-	if(LocalSessionState != ESessionState::Idle)
+	if(LocalSessionState != ESessionState::TempIdle)
 	{
 		DestroySession(false);
 		return;
@@ -205,7 +156,7 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 		return;
 	}
 
-	UE_LOG(SessionSubsystem, Display, TEXT("Session joined  -  traveling to server"));
+	UE_LOG(SessionSubsystem, Display, TEXT("Session TempJoined  -  traveling to server"));
 
 
 	APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
@@ -215,7 +166,7 @@ void USessionSubsystem::HandleJoinSessionComplete(FName SessionName, EOnJoinSess
 		return;
 	}
 
-	LocalSessionState = ESessionState::Joined;
+	LocalSessionState = ESessionState::TempJoined;
 
 	PC->ClientTravel(ConnectInfo, ETravelType::TRAVEL_Absolute);
 
@@ -234,6 +185,7 @@ bool USessionSubsystem::CreateSession()
 	TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
 	SessionSettings->bIsLANMatch = bIsLANMatch;
 	SessionSettings->NumPublicConnections = NumPublicConnections;
+	SessionSettings->NumPrivateConnections;
 	SessionSettings->bShouldAdvertise = bShouldAdvertise; // Set to true to make this session discoverable with FindSessions.
 	SessionSettings->bUsesPresence = bUsesPresence;
 	SessionSettings->bUseLobbiesIfAvailable = bUseLobbiesIfAvailable;
@@ -272,16 +224,16 @@ void USessionSubsystem::JoinSession()
 	UE_LOG(SessionSubsystem, Display, TEXT("Joining session..."));
 }
 
-void USessionSubsystem::DestroySession(bool InbShouldStayIdle)
+void USessionSubsystem::DestroySession(bool InbShouldStayTempIdle)
 {
 
-	bShouldStayIdle = InbShouldStayIdle;
+	bShouldStayIdle = InbShouldStayTempIdle;
 
 	ESessionState PrevState = LocalSessionState;
 
-	LocalSessionState = ESessionState::Idle;
+	LocalSessionState = ESessionState::TempIdle;
 
-	if (PrevState == ESessionState::Hosting)
+	if (PrevState == ESessionState::TempHosting)
 	{
 		OnHostedGameClosing.Broadcast();
 	}
@@ -299,7 +251,7 @@ void USessionSubsystem::RegisterNewPlayer(APlayerController* InPlayerController)
 {
 	UE_LOG(SessionSubsystem, Display, TEXT("Registering new player..."));
 
-	if (LocalSessionState != ESessionState::Hosting)
+	if (LocalSessionState != ESessionState::TempHosting)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("SESSION ALREADY CLOSED"));
 		return;
@@ -350,7 +302,7 @@ void USessionSubsystem::UnRegisterPlayer(APlayerController* InPlayerController)
 {
 	UE_LOG(SessionSubsystem, Display, TEXT("UnRegistering player..."));
 
-	if (LocalSessionState != ESessionState::Hosting)
+	if (LocalSessionState != ESessionState::TempHosting)
 	{
 		UE_LOG(SessionSubsystem, Display, TEXT("SESSION ALREADY CLOSED"));
 		return;

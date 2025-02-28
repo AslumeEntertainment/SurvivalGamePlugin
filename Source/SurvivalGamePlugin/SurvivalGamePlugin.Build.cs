@@ -26,8 +26,8 @@ public class SurvivalGamePlugin : ModuleRules
 			new string[]
 			{
 				"Core",
-                "OnlineSubsystem",
-                "OnlineSubsystemUtils",
+                "OnlineSubsystem",  //to be deleted
+                "OnlineSubsystemUtils", //to be deleted
                 "EnhancedInput",
 				"UMG",
 				"Foliage",
