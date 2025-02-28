@@ -46,14 +46,14 @@ void ASG_PlayerController::AcknowledgePossession(APawn* InPawn)
 
 	if (IsValid(ControlledCharacter) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("CANNOT ACKNOWEGE POSSESION "));
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::AcknowledgePossession IsValid(ControlledCharacter) == false"));
 		return;
 	}
 
 	AInGameHUD* HUD = Cast<AInGameHUD>(GetHUD());
 	if (IsValid(HUD) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("INVALID HUDDDDDDDDDDD "));
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::AcknowledgePossession IsValid(HUD) == false"));
 		return;
 	}
 

@@ -24,7 +24,6 @@ void AInGameHUD::BeginPlay()
 
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
 {
-
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{

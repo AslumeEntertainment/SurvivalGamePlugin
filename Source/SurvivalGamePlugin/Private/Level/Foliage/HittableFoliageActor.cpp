@@ -43,7 +43,7 @@ void AHittableFoliageActor::BeginPlay()
 		return;
 	}
 
-	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 }
 
 UAbilitySystemComponent* AHittableFoliageActor::GetAbilitySystemComponent() const

@@ -80,7 +80,7 @@ void AItemBase::BeginPlay()
 
 	if (IsValid(DefaultAttributeEffect))
 	{
-		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 	}
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
@@ -99,7 +99,8 @@ void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
 void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
 {
 	StaticMesh->SetSimulatePhysics(NewActorPhysics);
-	NewActorPhysics ? StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics) : StaticMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StaticMesh->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
@@ -245,23 +246,9 @@ bool AItemBase::bCanInteract(AController* InteractingCharacter)
 		return false;
 	}
 
-	if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasBarbarianStrength")) == false)
+	if (EquipmentComp->CanEquipItem(this) == false)
 	{
-		if (ItemData.ItemWeight == EWeight::Giant)
-		{
-			return false;
-		}
-		if (ItemData.ItemWeight == EWeight::Heavy && EquipmentComp->GetEquipmentSlots().Num() == 1)
-		{
-			return false;
-		}
-	}
-	else
-	{
-		if (ItemData.ItemWeight == EWeight::Giant && EquipmentComp->GetEquipmentSlots().Num() == 1)
-		{
-			return false;
-		}
+		return false;
 	}
 	
 	return !bIsAttached;
@@ -280,5 +267,10 @@ FName AItemBase::GetItemDataRowName() const
 UStaticMeshComponent* AItemBase::GetItemMesh()
 {
 	return StaticMesh;
+}
+
+FGameplayTagContainer AItemBase::GetItemAbilityTags()
+{
+	return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
 }
 

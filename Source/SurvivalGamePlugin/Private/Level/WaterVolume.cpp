@@ -49,7 +49,7 @@ void AWaterVolume::OnActorEnteringVolume(AActor* OverlappedActor, AActor* OtherA
 	{
 		if (Effect != nullptr)
 		{
-			ASC->AddEffectFromClass(Effect, this);
+			ASC->AddEffectFromClass(Effect, this, nullptr, nullptr);
 		}
 	}
 }

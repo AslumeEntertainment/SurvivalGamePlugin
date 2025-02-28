@@ -23,21 +23,21 @@ public:
 	void AbilityInputReleased(const FGameplayTag& InputTag);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* Instigator, uint8 Level = 1);
+	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* SourceObject, AActor* Instigator, AActor* EffectCauser, uint8 Level = 1);
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates = true);
+	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates = true);
+	void AddAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* SourceObject, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	FGameplayAbilitySpecHandle AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* Instigator, bool bAllowDuplicates = true);
+	FGameplayAbilitySpecHandle AddPassiveAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
-	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* Instigator, bool bAllowDuplicates = true);
+	void AddPassiveAbilitiesFromMap(TMap<TSubclassOf<USG_GameplayAbility>, int> AbilityMap, UObject* SourceObject, bool bAllowDuplicates = true);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);

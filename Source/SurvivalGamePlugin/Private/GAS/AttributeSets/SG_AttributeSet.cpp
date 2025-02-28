@@ -25,8 +25,13 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceSlashing, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistancePiercing, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceBludgeoning, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceFire, COND_None, REPNOTIFY_Always);
+
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, IgnitionThreshold, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, FireDamageResistance, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ExtinguishTime, COND_None, REPNOTIFY_Always);
 }
 
@@ -131,27 +136,42 @@ bool USG_AttributeSet::HasMaxHealth() const
 	return GetHealth() == GetMaxHealth();
 }
 
-void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Health, OldHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Health, OldValue);
 }
 
-void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
+void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldMaxHealth);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldValue);
 }
 
-void USG_AttributeSet::OnRep_IgnitionThreshold(const FGameplayAttributeData& OldIgnitionThreshold)
+void USG_AttributeSet::OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, IgnitionThreshold, OldIgnitionThreshold);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistanceSlashing, OldValue);
 }
 
-void USG_AttributeSet::OnRep_FireDamageResistance(const FGameplayAttributeData& OldFireDamageResistance)
+void USG_AttributeSet::OnRep_ResistancePiercing(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, FireDamageResistance, OldFireDamageResistance);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistancePiercing, OldValue);
 }
 
-void USG_AttributeSet::OnRep_ExtinguishTime(const FGameplayAttributeData& OldExtinguishTime)
+void USG_AttributeSet::OnRep_ResistanceBludgeoning(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ExtinguishTime, OldExtinguishTime);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistanceBludgeoning, OldValue);
+}
+
+void USG_AttributeSet::OnRep_ResistanceFire(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ResistanceFire, OldValue);
+}
+
+void USG_AttributeSet::OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, IgnitionThreshold, OldValue);
+}
+
+void USG_AttributeSet::OnRep_ExtinguishTime(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, ExtinguishTime, OldValue);
 }

@@ -79,11 +79,6 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 		}
 	}
 
-	if (Player->IsRightHanded() == false)
-	{
-		Player->SetIsMirrored(true);
-	}
-
 	FGameplayEffectSpecHandle EffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(SpeedReductionEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
 	FGameplayEffectSpec* EffectSpec = EffectSpecHandle.Data.Get();
 	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ItemForDisassemblyData->MovementSpeedMultiplier);
@@ -111,7 +106,6 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been completed, resetting speed"));
 
-	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -119,7 +113,6 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been canceled, resetting speed"));
 
-	Player->SetIsMirrored(false);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

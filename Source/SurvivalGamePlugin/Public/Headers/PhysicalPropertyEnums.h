@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "PhysicalPropertyEnums.generated.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class EWeight : uint8
 {
-	Light,
-	Normal,
-	Heavy,
-	Giant
+	None = 0,
+	VeryLight = 1,
+	Light = 5,
+	Normal = 15,
+	Heavy = 30,
+	VeryHeavy = 50
 };
+ENUM_RANGE_BY_FIRST_AND_LAST(EWeight, EWeight::VeryLight, EWeight::VeryHeavy);

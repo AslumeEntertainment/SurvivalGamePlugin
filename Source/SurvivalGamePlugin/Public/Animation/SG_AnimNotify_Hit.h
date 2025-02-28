@@ -16,7 +16,7 @@ class SURVIVALGAMEPLUGIN_API USG_AnimNotify_Hit : public UAnimNotify
 public:
 
 	UPROPERTY(EditAnywhere)
-	FGameplayTag DamageDealingComponentTag;
+	FGameplayTag DamageSourceTag;
 
 	UPROPERTY(EditAnywhere)
 	bool bShouldActivate = false;

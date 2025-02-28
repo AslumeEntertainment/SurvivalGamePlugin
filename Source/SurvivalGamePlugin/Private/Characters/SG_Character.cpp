@@ -58,7 +58,6 @@ ASG_Character::ASG_Character()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<USG_CharacterAttributeSet>(TEXT("AttributeSet"));
-
 }
 
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -404,7 +403,7 @@ void ASG_Character::InitCharacterDefaults()
 		AbilitySystemComponent->AddPassiveAbility(Ability, 1, this);
 	}
 
-	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this);
+	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 
 	bAlreadySetUp = true;
 }

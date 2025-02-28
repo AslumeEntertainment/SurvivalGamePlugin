@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
-#include "Headers/DamageGameplayEffectStruct.h"
 #include "GEEC_CalculateFireDamage.generated.h"
 
 

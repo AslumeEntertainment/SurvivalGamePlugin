@@ -149,7 +149,7 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	void InitCharacterDefaults();
+	virtual void InitCharacterDefaults();
 
 
 public:

@@ -18,17 +18,15 @@
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "UI/HUD/InGameHUD.h"
+#include "Headers/AbilityInputConfig.h"
 
 
 AInGameCharacter::AInGameCharacter()
 {
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
-	LeftHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("LeftHandDamageOrigin"));
-	LeftHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandDamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("RightHandDamageOrigin"));
-	RightHandDamageDealingComponent->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	/*DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
+	DamageDealingComponent->SetupAttachment(GetMesh());*/
 
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
 	HittableComponent->SetupAttachment(GetRootComponent());
@@ -50,8 +48,6 @@ void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 	{
 		Item->Destroy();
 	}
-
-	
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -60,6 +56,7 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, AttackSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, bIsAlive, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(AInGameCharacter, bIsExhausted, COND_None, REPNOTIFY_OnChanged);
 }
 
 void AInGameCharacter::BeginPlay()
@@ -68,9 +65,13 @@ void AInGameCharacter::BeginPlay()
 
 	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
-	if (bIsRightHanded == false)
+	TArray<UDamageDealingComponent*> DamageDealingComponents;
+	GetComponents<UDamageDealingComponent>(DamageDealingComponents);
+
+	for (UDamageDealingComponent* DamageSource : DamageDealingComponents)
 	{
-		EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
+		AddDamageSource(DamageSource);
+		DamageSource->ConfigDamageSource(this);
 	}
 
 	if (IsLocallyControlled())
@@ -130,6 +131,8 @@ void AInGameCharacter::Client_OnUpdatePlayerMaxHunger_Implementation(float MaxHu
 
 void AInGameCharacter::Client_OnUpdatePlayerEnergy_Implementation(float CurrentEnergy, float MaxEnergy)
 {
+	if (CurrentEnergy == MaxEnergy) SetIsExhausted(false);
+	if (CurrentEnergy == 0) SetIsExhausted(true);
 	OnEnergyPercentUpdated.Broadcast(CurrentEnergy / MaxEnergy);
 }
 
@@ -149,8 +152,16 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
-		EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+		if (bIsRightHanded)
+		{
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+		}
+		else
+		{
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		}
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -179,11 +190,11 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 
 void AInGameCharacter::MainHandAction()
 {
-	FGameplayTag EventTag;
-	FGameplayEventData EventData;
-
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
+		FGameplayTag EventTag;
+		FGameplayEventData EventData;
+
 		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
@@ -192,26 +203,35 @@ void AInGameCharacter::MainHandAction()
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Main");
 		}
+
+		SendGameplayEventToSelf(EventTag, EventData);
+		return;
+	}
+
+	FGameplayTagContainer MainAbilityTagContainer;
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
+	{
+		MainAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+	}
+	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())))
+	{
+		MainAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())->GetItemAbilityTags();
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())) || 
-				IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
-		FString MirroringSuffix = bIsRightHanded ? ".Right" : ".Left";
-		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Main" + ActionSuffix + MirroringSuffix));
+		MainAbilityTagContainer = MainHandAbility.GetDefaultObject()->AbilityTags;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("MainHandAction - %s"), *EventTag.ToString());
 
-	SendGameplayEventToSelf(EventTag, EventData);
+	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
 }
 
 void AInGameCharacter::SecondaryHandAction()
 {
-	FGameplayTag EventTag;
-	FGameplayEventData EventData;
-
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
 	{
+		FGameplayTag EventTag;
+		FGameplayEventData EventData;
+
 		if (EquipmentComponent->HasEquipmentSlotWithTag(EquipmentComponent->GetMixedEquipmentSlotTag()))
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Mixed");
@@ -220,17 +240,26 @@ void AInGameCharacter::SecondaryHandAction()
 		{
 			EventTag = FGameplayTag::RequestGameplayTag("PlayerAction.Unequip.Secondary");
 		}
+
+		SendGameplayEventToSelf(EventTag, EventData);
+		return;
+	}
+
+	FGameplayTagContainer SecondaryAbilityTagContainer;
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
+	{
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+	}
+	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
+	{
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())->GetItemAbilityTags();
 	}
 	else
 	{
-		FString ActionSuffix = IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())) ||
-			IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())) ? ".Item" : ".Attack";
-		FString MirroringSuffix = bIsRightHanded ? ".Left" : ".Right";
-		EventTag = FGameplayTag::RequestGameplayTag(FName("PlayerAction.Secondary" + ActionSuffix + MirroringSuffix));
+		SecondaryAbilityTagContainer = SecondaryHandAbility.GetDefaultObject()->AbilityTags;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("SecondaryHandAction - %s"), *EventTag.ToString());
 
-	SendGameplayEventToSelf(EventTag, EventData);
+	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -289,6 +318,14 @@ void AInGameCharacter::BindCallbacksToDependencies()
 	);
 }
 
+void AInGameCharacter::InitCharacterDefaults()
+{
+	Super::InitCharacterDefaults();
+
+	AbilitySystemComponent->AddAbility(MainHandAbility, 1, this);
+	AbilitySystemComponent->AddAbility(SecondaryHandAbility, 1, this);
+}
+
 void AInGameCharacter::OnRep_IsAlive()
 {
 	if (bIsAlive == false) OnCharacterDeath.Broadcast();
@@ -336,6 +373,39 @@ void AInGameCharacter::UnCrouch(bool bClientSimulation)
 	}
 }
 
+void AInGameCharacter::AddDamageSource(UDamageDealingComponent* NewDamageSource)
+{
+	if (DamageSources.Contains(NewDamageSource->GetDamageSourceTag()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s already has a damage source with tag - %s"), *GetName(), *NewDamageSource->GetDamageSourceTag().ToString());
+		return;
+	}
+	DamageSources.Add(NewDamageSource->GetDamageSourceTag(), NewDamageSource);
+}
+
+void AInGameCharacter::RemoveDamageSourceByTag(FGameplayTag DamageSourceTag)
+{
+	DamageSources.Remove(DamageSourceTag);
+}
+
+void AInGameCharacter::SetDamageSourceActivenessByTag(FGameplayTag DamageSourceTag, bool ActivenessState)
+{
+	UDamageDealingComponent* DamageSource = DamageSources.FindRef(DamageSourceTag);
+	if (IsValid(DamageSource) == false)
+	{
+		return;
+	}
+	DamageSource->SetActiveness(ActivenessState);
+}
+
+void AInGameCharacter::SetActivenessForAllDamageSources(bool ActivenessState)
+{
+	for (TPair<FGameplayTag, UDamageDealingComponent*> DamageSource : DamageSources)
+	{
+		DamageSource.Value->SetActiveness(ActivenessState);
+	}
+}
+
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 {
 	BroadcastInitialValues();
@@ -346,21 +416,29 @@ void AInGameCharacter::SetAttackSpeed(float NewValue)
 	AttackSpeed = NewValue;
 }
 
-float AInGameCharacter::GetAttackSpeed() const
+float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 {
-	return AttackSpeed;
-}
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GetAttackSpeed IsValid(AbilitySystemComponent) == false"));
+		return 1;
+	}
+	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
+	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
 
-bool AInGameCharacter::IsRightHanded()
-{
-	return bIsRightHanded;
+	float FinalAttackSpeed = (1 + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+
+	return FinalAttackSpeed;
 }
 
 void AInGameCharacter::SetIsRightHanded(bool NewValue)
 {
 	bIsRightHanded = NewValue;
+}
 
-	EquipmentComponent->SwapMainAndSecondaryEquipmentSlots();
+bool AInGameCharacter::IsRightHanded() const
+{
+	return bIsRightHanded;
 }
 
 void AInGameCharacter::SetIsAlive(bool NewValue)
@@ -369,9 +447,19 @@ void AInGameCharacter::SetIsAlive(bool NewValue)
 	if(bIsAlive == false) OnCharacterDeath.Broadcast();
 }
 
-bool AInGameCharacter::IsAlive()
+bool AInGameCharacter::IsAlive() const
 {
 	return bIsAlive;
+}
+
+void AInGameCharacter::SetIsExhausted(bool NewValue)
+{
+	bIsExhausted = NewValue;
+}
+
+bool AInGameCharacter::IsExhausted() const
+{
+	return bIsExhausted;
 }
 
 void AInGameCharacter::ShowPlayerInfo()

@@ -3,49 +3,32 @@
 
 #include "Animation/SG_AnimNotify_Hit.h"
 
-#include "Components/DamageDealingComponent.h"
+#include "Interfaces/DamageDealerInterface.h"
 #include "Characters/InGameCharacter.h"
-#include "Animation/SG_AnimInstance.h"
 
 
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	AInGameCharacter* Player = Cast<AInGameCharacter>(MeshComp->GetOwner());
-	if (!IsValid(Player))
+	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(Player) == false"));
 		return;
 	}
-	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(MeshComp->GetAnimInstance());
-	if (!IsValid(AnimInst))
-	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_Hit::Notify IsValid(AnimInst) == false"));
-		return;
-	}
 
-	FGameplayTag FinalDamageDealingComponentTag = DamageDealingComponentTag;
-	if (Player->IsMirrored())
-	{
-		FinalDamageDealingComponentTag = GetMirroredNotifyDamageComponentTag();
-	}
+	FGameplayTag FinalDamageSourceTag = !Player->IsMirrored() ? DamageSourceTag : GetMirroredNotifyDamageComponentTag();
 
-	for (UDamageDealingComponent* DamageDealingComponent : Player->ActiveDamageDealingComponents)
-	{
-		if (FinalDamageDealingComponentTag == DamageDealingComponent->GetDamageComponentTag())
-		{
-			DamageDealingComponent->SetActivation(bShouldActivate);
-		}
-	}
+	Player->SetDamageSourceActivenessByTag(FinalDamageSourceTag, bShouldActivate);
 }
 
 FGameplayTag USG_AnimNotify_Hit::GetMirroredNotifyDamageComponentTag()
 {
-	FString TagName = DamageDealingComponentTag.RequestDirectParent().ToString();
-	if (DamageDealingComponentTag.ToString().Contains(".Left"))
+	FString TagName = DamageSourceTag.RequestDirectParent().ToString();
+	if (DamageSourceTag.ToString().Contains(".Left"))
 	{
 		TagName = TagName + TEXT(".Right");
 	}
-	else if (DamageDealingComponentTag.ToString().Contains(".Right"))
+	else if (DamageSourceTag.ToString().Contains(".Right"))
 	{
 		TagName = TagName + TEXT(".Left");
 	}

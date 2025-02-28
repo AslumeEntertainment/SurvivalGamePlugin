@@ -24,8 +24,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float SpeedMultiplier;
 
-	UPROPERTY(EditDefaultsOnly)
-	float AttackSpeedMultiplier;
+	/*UPROPERTY(EditDefaultsOnly)
+	float AttackSpeedMultiplier;*/
 
 	UFUNCTION()
 	void OnEnergyRecharged(FGameplayEventData Payload);

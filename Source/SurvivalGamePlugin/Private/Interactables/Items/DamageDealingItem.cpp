@@ -11,8 +11,8 @@
 
 ADamageDealingItem::ADamageDealingItem()
 {
-    DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageOrigin"));
-    DamageDealingComponent->SetupAttachment(GetItemMesh());
+    DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
+    DamageDealingComponent->SetupAttachment(GetRootComponent());
     DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
 }
 
@@ -32,24 +32,10 @@ void ADamageDealingItem::OnItemEquiped(AInGameCharacter* PlayerOwner, FName Sock
     {
         return;
     }
-    UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
-    if (IsValid(EquipmentComp) == false)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ADamageDealingItem::OnItemEquiped IsValid(EquipmentComp) == false"));
-        return;
-    }
 
-    if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded()
-        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded() == false)
-    {
-        DamageDealingComponent->SetDamageComponentTagSuffix(".Right");
-    }
-    else if (SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()) && Player->IsRightHanded()
-        || SocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()) && Player->IsRightHanded() == false)
-    {
-        DamageDealingComponent->SetDamageComponentTagSuffix(".Left");
-    }
+    Player->AddDamageSource(DamageDealingComponent);
     DamageDealingComponent->AddActorToIgnored(PlayerOwner);
+    DamageDealingComponent->ConfigDamageSource(PlayerOwner);
 }
 
 void ADamageDealingItem::OnItemUnequiped()
@@ -60,8 +46,9 @@ void ADamageDealingItem::OnItemUnequiped()
         return;
     }
     
-    DamageDealingComponent->ResetDamageComponentTagSuffix();
+    PlayerOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
     DamageDealingComponent->RemoveActorFromIgnored(PlayerOwner);
+    DamageDealingComponent->ConfigDamageSource(nullptr);
     
     Super::OnItemUnequiped();
 }

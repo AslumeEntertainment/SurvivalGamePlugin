@@ -55,7 +55,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length()));
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("%s damage - %f"), *DamageContextString, Damage));
 
-		TargetAbilitySystemComponent->AddEffectFromClass(InvincibilityEffectClass, nullptr);
+		TargetAbilitySystemComponent->AddEffectFromClass(InvincibilityEffectClass, nullptr, nullptr, nullptr);
 		TargetAbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.RecieveDamage"));
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
 	}

@@ -7,6 +7,7 @@
 
 #include "Headers/GeneralDelegates.h"
 #include "Headers/GameManagingStructs.h"
+#include "Headers/GameManagingPersistentStructs.h"
 #include "Headers/DeckSegmentsEnum.h"
 
 #include "PlayerCustomiser.generated.h"
