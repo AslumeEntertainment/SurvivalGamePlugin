@@ -31,14 +31,14 @@ bool UGC_OnDestroyed::OnExecute_Implementation(AActor* MyTarget, const FGameplay
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, OnDestroyedEffect, MyTarget->GetActorLocation(),
 		MyTarget->GetActorRotation(), MyTarget->GetActorScale3D());
 
-	ASG_Character* Character = Cast<ASG_Character>(MyTarget);
+	/*ASG_Character* Character = Cast<ASG_Character>(MyTarget);
 	if (IsValid(Character))
 	{
 		Character->GetCapsuleComponent()->SetCollisionProfileName(FName("NoCollision"));
 		Character->GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
 		Character->GetMesh()->SetSimulatePhysics(true);
 		Character->UnPossessed();
-	}
+	}*/
 
 	return true;
 }

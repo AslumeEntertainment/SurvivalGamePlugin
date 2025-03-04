@@ -58,12 +58,6 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 	ContextHandle.AddInstigator(DamageInstigator, GetOwner());
 	ContextHandle.AddSourceObject(this);
 
-	//USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(DamageInstigator));
-	//if (IsValid(InstigatorASC))
-	//{
-	//	//ContextHandle = InstigatorASC->MakeEffectContext();
-	//}
-
 	for (const FHitResult HitResult : HitResults)
 	{
 		if (IsValid(HitResult.GetActor()) == false)

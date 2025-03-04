@@ -21,7 +21,7 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Strength, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Dexterity, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, AttackSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, AttackSpeedPercentIncrease, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Hunger, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxHunger, COND_None, REPNOTIFY_Always);
@@ -67,10 +67,6 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		return;
 	}
 
-	if (Attribute == GetAttackSpeedAttribute())
-	{
-		AvatarActor->SetAttackSpeed(NewValue);
-	}
 	if (Attribute == GetMaxHungerAttribute())
 	{
 		ClampAttributeOnMaxValueChanged(Hunger, MaxHunger, NewValue, GetHungerAttribute());
@@ -197,9 +193,9 @@ void USG_CharacterAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& Ol
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Dexterity, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_AttackSpeed(const FGameplayAttributeData& OldValue)
+void USG_CharacterAttributeSet::OnRep_AttackSpeedPercentIncrease(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeed, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, AttackSpeedPercentIncrease, OldValue);
 }
 
 void USG_CharacterAttributeSet::OnRep_Hunger(const FGameplayAttributeData& OldValue)

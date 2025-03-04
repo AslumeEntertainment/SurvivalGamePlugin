@@ -83,7 +83,7 @@ void ULootTableComponent::DropLoot(bool bWasDestroyedSafely, bool bWasDestroyedU
 				{
 					NewActorLocation = CurrentSpawningPoint;
 					UStaticMeshComponent* DroppedActorMesh = DroppedActor->GetComponentByClass<UStaticMeshComponent>();
-					if (!IsValid(DroppedActorMesh))
+					if (IsValid(DroppedActorMesh) == false)
 					{
 						continue;
 					}

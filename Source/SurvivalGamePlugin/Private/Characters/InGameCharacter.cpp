@@ -11,9 +11,10 @@
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Components/HittableComponent.h"
 #include "Components/DamageDealingComponent.h"
+#include "Components/LootTableComponent.h"
 #include "Components/EquipmentComponent.h"
+#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -25,8 +26,7 @@ AInGameCharacter::AInGameCharacter()
 {
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
-	/*DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
-	DamageDealingComponent->SetupAttachment(GetMesh());*/
+	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
 	HittableComponent->SetupAttachment(GetRootComponent());
@@ -38,16 +38,17 @@ AInGameCharacter::AInGameCharacter()
 
 void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
 {
+	if (NewValue < HittableComponent->GetUnscaledCapsuleHalfHeight())
+	{
+		return;
+	}
 	HittableComponent->SetCapsuleHalfHeight(NewValue);
 }
 
 void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
 {
-	TArray<AItemBase*> Equipment = EquipmentComponent->GetAllEquipedItems();
-	for (AItemBase* Item : Equipment)
-	{
-		Item->Destroy();
-	}
+	EquipmentComponent->UnequipAllItems();
+	OnCharacterDeath.Broadcast();
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -225,6 +226,10 @@ void AInGameCharacter::MainHandAction()
 	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
 }
 
+void AInGameCharacter::CancelMainHandAction()
+{
+}
+
 void AInGameCharacter::SecondaryHandAction()
 {
 	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.IsUnequiping")))
@@ -260,6 +265,10 @@ void AInGameCharacter::SecondaryHandAction()
 	}
 
 	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
+}
+
+void AInGameCharacter::CancelSecondaryHandAction()
+{
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -425,8 +434,9 @@ float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 	}
 	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
 	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
+	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetAttackSpeedPercentIncreaseAttribute()) / 100;
 
-	float FinalAttackSpeed = (1 + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+	float FinalAttackSpeed = (1 + AttributeMultiplier + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
 
 	return FinalAttackSpeed;
 }

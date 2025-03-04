@@ -14,7 +14,15 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 {
 	GENERATED_BODY()
 
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	TMap<FGameplayAttribute, float> StartingAttributeSetData;
+
 public:
+
+	UFUNCTION()
+	void SetStartingAttributeValues();
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AbilityInputPressed(const FGameplayTag& InputTag);

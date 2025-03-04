@@ -21,13 +21,13 @@ public:
 
 protected:
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly/*, Category = "Damage", meta = (AllowPrivateAccess = "true")*/)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UBoxComponent* BoxComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly/*, Category = "Damage", meta = (AllowPrivateAccess = "true")*/)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* StaticMeshComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly/*, Category = "Damage", meta = (AllowPrivateAccess = "true")*/)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UDamageDealingComponent* DamageDealingComponent;
 
 	virtual void BeginPlay() override;

@@ -9,6 +9,14 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 
 
+void USG_AbilitySystemComponent::SetStartingAttributeValues()
+{
+	for (TPair<FGameplayAttribute, float> StartingAttributeData : StartingAttributeSetData)
+	{
+		SetNumericAttributeBase(StartingAttributeData.Key, StartingAttributeData.Value);
+	}
+}
+
 void USG_AbilitySystemComponent::AbilityInputPressed(const FGameplayTag& InputTag)
 {
 	if (InputTag.IsValid() == false)

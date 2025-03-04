@@ -13,6 +13,7 @@
 
 class UDamageDealingComponent;
 class UEquipmentComponent;
+class ULootTableComponent;
 class UHittableComponent;
 class USG_GameplayAbility;
 
@@ -94,11 +95,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	//UDamageDealingComponent* DamageDealingComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
 	UHittableComponent* HittableComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	ULootTableComponent* LootTableComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -115,7 +116,11 @@ protected:
 
 	virtual void MainHandAction();
 
+	virtual void CancelMainHandAction();
+
 	virtual void SecondaryHandAction();
+
+	virtual void CancelSecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies();
 

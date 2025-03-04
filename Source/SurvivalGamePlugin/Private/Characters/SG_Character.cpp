@@ -404,6 +404,7 @@ void ASG_Character::InitCharacterDefaults()
 	}
 
 	AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
+	AbilitySystemComponent->SetStartingAttributeValues();
 
 	bAlreadySetUp = true;
 }

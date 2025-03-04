@@ -97,23 +97,7 @@ void UHittableComponent::OnHittableDestroyed()
 		}
 	}
 
-	AInGameCharacter* Character = Cast<AInGameCharacter>(GetOwner());
-	if (IsValid(Character))
-	{
-		UEquipmentComponent* EquipmentComp = Character->GetComponentByClass<UEquipmentComponent>();
-		if (IsValid(EquipmentComp) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHittableDestroyed IsValid(EquipmentComp) == false"));
-			return;
-		}
-		EquipmentComp->UnequipAllItems();
-
-		Character->SetIsAlive(false);
-	}
-	else
-	{
-		GetOwner()->Destroy();
-	}
+	GetOwner()->Destroy();
 }
 
 bool UHittableComponent::CanEverReceiveGameplayEffects()
