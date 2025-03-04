@@ -4,6 +4,7 @@
 #include "Components/DamageDealingComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemGlobals.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 #include "Components/HittableComponent.h"
@@ -53,15 +54,15 @@ void UDamageDealingComponent::AttemptHit()
 
 void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 {
-	USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(DamageInstigator));
-	if (IsValid(InstigatorASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ProcessHit IsValid(InstigatorASC) == false"));
-		return;
-	}
-	FGameplayEffectContextHandle ContextHandle = InstigatorASC->MakeEffectContext();
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
 	ContextHandle.AddInstigator(DamageInstigator, GetOwner());
 	ContextHandle.AddSourceObject(this);
+
+	//USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(DamageInstigator));
+	//if (IsValid(InstigatorASC))
+	//{
+	//	//ContextHandle = InstigatorASC->MakeEffectContext();
+	//}
 
 	for (const FHitResult HitResult : HitResults)
 	{
@@ -69,11 +70,13 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		{
 			continue;
 		}
+
 		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
 		if (IsValid(HittableComp) == false)
 		{
 			continue;
 		}
+
 		if (HittableComp->CanEverReceiveGameplayEffects() == false)
 		{
 			continue;
@@ -101,13 +104,9 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
-		ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
-	}
-}
 
-FGameplayTag UDamageDealingComponent::GetDamageSourceTag()
-{
-	return DamageSourceTag;
+		if (bShouldOnlyHitOnce) ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
+	}
 }
 
 void UDamageDealingComponent::ConfigDamageSource(AActor* InDamageInstigator)

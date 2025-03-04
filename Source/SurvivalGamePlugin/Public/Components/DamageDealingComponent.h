@@ -50,6 +50,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
 	TArray<UDamageEffect*> DamageEffects;
 
+	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
+	bool bShouldOnlyHitOnce = true;
+
 	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
 	USG_TraceEmitterBase* DamageTrace;
 	
@@ -60,7 +63,10 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetDamageSourceTag();
+	FGameplayTag GetDamageSourceTag() { return DamageSourceTag; };
+
+	UFUNCTION(BlueprintCallable)
+	bool ShouldOnlyHitOnce() { return bShouldOnlyHitOnce; };
 
 	UFUNCTION(BlueprintCallable)
 	void ConfigDamageSource(AActor* InDamageInstigator);

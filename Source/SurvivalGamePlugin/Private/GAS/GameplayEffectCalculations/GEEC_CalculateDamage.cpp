@@ -56,12 +56,6 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 		return;
 	}
 
-	/*UDamageDealingComponent* DamageSource = Cast<UDamageDealingComponent>(ExecutionParams.GetOwningSpec().GetEffectContext().GetSourceObject());
-	if (IsValid(DamageSource) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageSource) == false"));
-		return;
-	}*/
 	AActor* EffectCauser = ExecutionParams.GetOwningSpec().GetEffectContext().GetEffectCauser();
 	if (IsValid(EffectCauser) == false)
 	{

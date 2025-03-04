@@ -49,15 +49,6 @@ void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedCompone
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventTag, EventData);
 }
 
-void UHittableComponent::OnActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	UAbilitySystemComponent* ASC = USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
-	if (IsValid(ASC) == false)
-	{
-		return;
-	}
-}
-
 USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
 {
 	if (IsValid(GetOwner()) == false)
