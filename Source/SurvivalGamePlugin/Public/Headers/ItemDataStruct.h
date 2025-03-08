@@ -45,6 +45,7 @@ struct FItemDataStruct : public FTableRowBase
 		ItemName = FText::FromString("None");
 		ItemMaxDurability = 0.f;
 		ItemAbility = nullptr;
+		ItemSecondaryAbility = nullptr;
 	}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -58,6 +59,9 @@ struct FItemDataStruct : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<USG_GameplayAbility> ItemAbility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<USG_GameplayAbility> ItemSecondaryAbility;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FGameplayTag EquipmentSlotTag;

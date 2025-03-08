@@ -48,6 +48,9 @@ protected:
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
+	UPROPERTY()
+	FGameplayAbilitySpecHandle SecondaryAbilitySpecHandle;
+
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
 
@@ -105,7 +108,9 @@ public:
 
 	FName GetItemDataRowName() const;
 
-	class UStaticMeshComponent* GetItemMesh();
+	UStaticMeshComponent* GetItemMesh();
 
 	FGameplayTagContainer GetItemAbilityTags();
+
+	FGameplayTagContainer GetItemSecondaryAbilityTags();
 };

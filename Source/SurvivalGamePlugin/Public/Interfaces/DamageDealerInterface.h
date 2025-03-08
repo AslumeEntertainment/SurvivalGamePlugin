@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "GameplayTagContainer.h"
 #include "DamageDealerInterface.generated.h"
 
 class UDamageDealingComponent;

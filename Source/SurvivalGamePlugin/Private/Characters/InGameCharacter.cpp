@@ -157,11 +157,17 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
 			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelMainHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelSecondaryHandAction);
 		}
 		else
 		{
 			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
 			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelSecondaryHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelMainHandAction);
 		}
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -223,11 +229,26 @@ void AInGameCharacter::MainHandAction()
 		MainAbilityTagContainer = MainHandAbility.GetDefaultObject()->AbilityTags;
 	}
 
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
+	{
+		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag());
+
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
+
+		if ((uint8)ItemWeight > CurrentStrength)
+		{
+			MainAbilityTagContainer = ItemRef->GetItemSecondaryAbilityTags();
+		}
+	}
+	
+
 	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
 }
 
 void AInGameCharacter::CancelMainHandAction()
 {
+	UE_LOG(LogTemp, Error, TEXT("Cancel main"));
 }
 
 void AInGameCharacter::SecondaryHandAction()
@@ -253,7 +274,7 @@ void AInGameCharacter::SecondaryHandAction()
 	FGameplayTagContainer SecondaryAbilityTagContainer;
 	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
 	{
-		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemSecondaryAbilityTags();
 	}
 	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
 	{
@@ -264,11 +285,26 @@ void AInGameCharacter::SecondaryHandAction()
 		SecondaryAbilityTagContainer = SecondaryHandAbility.GetDefaultObject()->AbilityTags;
 	}
 
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())))
+	{
+		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag());
+
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
+
+		if ((uint8)ItemWeight > CurrentStrength)
+		{
+			SecondaryAbilityTagContainer = ItemRef->GetItemSecondaryAbilityTags();
+		}
+	}
+	
+
 	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
 }
 
 void AInGameCharacter::CancelSecondaryHandAction()
 {
+	UE_LOG(LogTemp, Error, TEXT("Cancel secondary"));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()

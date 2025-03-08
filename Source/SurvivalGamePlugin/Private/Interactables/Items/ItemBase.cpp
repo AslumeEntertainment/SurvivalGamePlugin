@@ -51,7 +51,8 @@ void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
+	//HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
+	NetMulticast_SetActorPhysics(true);
 
 	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
 	if (TempItemData == nullptr)
@@ -83,6 +84,8 @@ void AItemBase::BeginPlay()
 		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
 	}
 	AbilitySystemComponent->SetStartingAttributeValues();
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
@@ -153,11 +156,18 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
 	StaticMesh->SetOverlayMaterial(nullptr);
 
+	FGameplayAbilitySpec Spec;
 	if (HasAuthority() && IsValid(ItemData.ItemAbility))
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
+		Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
 		Spec.DynamicAbilityTags.AddTag(ItemData.ItemAbility.GetDefaultObject()->InputTag);
 		AbilitySpecHandle = ASC->GiveAbility(Spec);
+	}
+	if (HasAuthority() && IsValid(ItemData.ItemSecondaryAbility))
+	{
+		Spec = FGameplayAbilitySpec(ItemData.ItemSecondaryAbility, 1, INDEX_NONE, PlayerOwner);
+		Spec.DynamicAbilityTags.AddTag(ItemData.ItemSecondaryAbility.GetDefaultObject()->InputTag);
+		SecondaryAbilitySpecHandle = ASC->GiveAbility(Spec);
 	}
 	
 	bIsAttached = true;
@@ -166,7 +176,7 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 void AItemBase::OnItemUnequiped()
 {
 	ASG_Character* PlayerOwner = Cast<ASG_Character>(GetAttachParentActor());
-	if (!IsValid(PlayerOwner))
+	if (IsValid(PlayerOwner) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(PlayerOwner) == false"));
 		return;
@@ -179,6 +189,8 @@ void AItemBase::OnItemUnequiped()
 		return;
 	}
 
+	PlayerOwner->DisablePlayerInput(0.01f);
+
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
 	SetActorRotation(PlayerOwner->GetActorRotation());
@@ -188,6 +200,7 @@ void AItemBase::OnItemUnequiped()
 	if (HasAuthority())
 	{
 		ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
+		ASC->RemoveAbilityFromSpec(SecondaryAbilitySpecHandle);
 	}
 	
 	bIsAttached = false;
@@ -272,6 +285,19 @@ UStaticMeshComponent* AItemBase::GetItemMesh()
 
 FGameplayTagContainer AItemBase::GetItemAbilityTags()
 {
-	return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
+	if (IsValid(ItemData.ItemAbility))
+	{
+		return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
+	}
+	return FGameplayTagContainer();
+}
+
+FGameplayTagContainer AItemBase::GetItemSecondaryAbilityTags()
+{
+	if (IsValid(ItemData.ItemSecondaryAbility))
+	{
+		return ItemData.ItemSecondaryAbility.GetDefaultObject()->AbilityTags;
+	}
+	return GetItemAbilityTags();
 }
 
