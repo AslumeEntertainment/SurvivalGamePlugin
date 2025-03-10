@@ -24,35 +24,19 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME(AItemBase, CurrentDurability);
 }
 
-// Sets default values
+
 AItemBase::AItemBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	SetRootComponent(StaticMesh);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());
-
-	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
-
-	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
-
-	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
 }
 
-// Called when the game starts or when spawned
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
-	NetMulticast_SetActorPhysics(true);
 
 	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
 	if (TempItemData == nullptr)
@@ -68,6 +52,8 @@ void AItemBase::BeginPlay()
 		return;
 	}
 
+	NetMulticast_SetActorPhysics(true);
+
 	if (IsValid(AbilitySystemComponent) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay IsValid(AbilitySystemComponent) == false"));
@@ -79,11 +65,6 @@ void AItemBase::BeginPlay()
 		return;
 	}
 
-	if (IsValid(DefaultAttributeEffect))
-	{
-		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
-	}
-	AbilitySystemComponent->SetStartingAttributeValues();
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 
@@ -102,8 +83,8 @@ void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
 
 void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
 {
-	StaticMesh->SetSimulatePhysics(NewActorPhysics);
-	StaticMesh->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
+	StaticMeshComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
@@ -154,7 +135,7 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
 
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
-	StaticMesh->SetOverlayMaterial(nullptr);
+	StaticMeshComponent->SetOverlayMaterial(nullptr);
 
 	FGameplayAbilitySpec Spec;
 	if (HasAuthority() && IsValid(ItemData.ItemAbility))
@@ -278,12 +259,7 @@ FName AItemBase::GetItemDataRowName() const
 	return ItemDataRow.RowName;
 }
 
-UStaticMeshComponent* AItemBase::GetItemMesh()
-{
-	return StaticMesh;
-}
-
-FGameplayTagContainer AItemBase::GetItemAbilityTags()
+FGameplayTagContainer AItemBase::GetItemAbilityTags() const
 {
 	if (IsValid(ItemData.ItemAbility))
 	{
@@ -292,7 +268,7 @@ FGameplayTagContainer AItemBase::GetItemAbilityTags()
 	return FGameplayTagContainer();
 }
 
-FGameplayTagContainer AItemBase::GetItemSecondaryAbilityTags()
+FGameplayTagContainer AItemBase::GetItemSecondaryAbilityTags() const
 {
 	if (IsValid(ItemData.ItemSecondaryAbility))
 	{

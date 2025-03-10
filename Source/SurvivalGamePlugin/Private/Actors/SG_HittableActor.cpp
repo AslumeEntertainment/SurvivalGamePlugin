@@ -3,25 +3,72 @@
 
 #include "Actors/SG_HittableActor.h"
 
-// Sets default values
+#include "Components/StaticMeshComponent.h"
+#include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
+
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/LootTableComponent.h"
+#include "Components/HittableComponent.h"
+
+
 ASG_HittableActor::ASG_HittableActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	SetRootComponent(StaticMeshComponent);
+
+	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("HittableComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());
+
+	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
+
+	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
 
 }
 
-// Called when the game starts or when spawned
 void ASG_HittableActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	if (IsValid(InitializingEffect))
+	{
+		AbilitySystemComponent->AddEffectFromClass(InitializingEffect, this, this, this);
+	}
+	AbilitySystemComponent->SetStartingAttributeValues();
 }
 
-// Called every frame
-void ASG_HittableActor::Tick(float DeltaTime)
+UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const
 {
-	Super::Tick(DeltaTime);
-
+	return AbilitySystemComponent;
 }
+
+UStaticMeshComponent* ASG_HittableActor::GetStaticMeshComponent()
+{
+	return StaticMeshComponent;
+}
+
+UHittableComponent* ASG_HittableActor::GetHittableComponent()
+{
+	return HittableComponent;
+}
+
+ULootTableComponent* ASG_HittableActor::GetLootTableComponent()
+{
+	return LootTableComponent;
+}
+
 
