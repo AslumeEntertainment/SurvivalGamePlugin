@@ -114,13 +114,14 @@ void UDamageDealingComponent::SetActiveness(bool NewState)
 	{
 		return;
 	}
+
+	SetComponentTickEnabled(NewState);
+
 	if (NewState)
 	{
 		ActorsToIgnoreWhenActive.Empty();
 		ActorsToIgnoreWhenActive = ActorsToIgnore;
 	}
-
-	SetComponentTickEnabled(NewState);
 }
 
 void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)

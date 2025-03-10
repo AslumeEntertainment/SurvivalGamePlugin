@@ -32,8 +32,6 @@ AInGameCharacter::AInGameCharacter()
 	HittableComponent->SetupAttachment(GetRootComponent());
 	
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
-
-	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
 }
 
 void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
@@ -45,10 +43,13 @@ void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(flo
 	HittableComponent->SetCapsuleHalfHeight(NewValue);
 }
 
-void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
+void AInGameCharacter::OnInGameCharacterDeath()
 {
-	EquipmentComponent->UnequipAllItems();
 	OnCharacterDeath.Broadcast();
+
+	EquipmentComponent->UnequipAllItems();
+	LootTableComponent->DropLoot();
+	Destroy();
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -323,6 +324,7 @@ void AInGameCharacter::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
+			if (Data.NewValue <= 0) OnInGameCharacterDeath();
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
 		}
 	);

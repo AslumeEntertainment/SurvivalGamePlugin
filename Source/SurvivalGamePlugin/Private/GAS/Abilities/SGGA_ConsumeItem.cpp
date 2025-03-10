@@ -87,5 +87,5 @@ void USGGA_ConsumeItem::OnEventRecieved(FGameplayEventData Payload)
 		ASC->AddEffectFromClass(EffectDataObject->EffectClass, EffectDataObject, Player, ConsumableItem, EffectDataObject->EffectLevel);
 	}
 
-	ConsumableItem->LoseDurability(1.f);
+	ConsumableItem->LoseDurability(1.f, true);
 }

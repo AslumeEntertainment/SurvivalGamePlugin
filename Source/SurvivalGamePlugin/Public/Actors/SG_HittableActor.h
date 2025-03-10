@@ -55,4 +55,7 @@ public:
 
 	ULootTableComponent* GetLootTableComponent();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void DestroyHittableActor(bool bSafeDestruct = false);
+
 };

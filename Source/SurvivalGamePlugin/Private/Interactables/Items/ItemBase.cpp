@@ -21,7 +21,6 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
-	DOREPLIFETIME(AItemBase, CurrentDurability);
 }
 
 
@@ -45,7 +44,6 @@ void AItemBase::BeginPlay()
 		return;
 	}
 	ItemData = *TempItemData;
-	CurrentDurability = ItemData.ItemMaxDurability;
 
 	if (HasAuthority() == false)
 	{
@@ -66,14 +64,7 @@ void AItemBase::BeginPlay()
 	}
 
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			SetDurability(Data.NewValue);
-		}
-	);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), ItemData.ItemMaxDurability);
 }
 
 void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
@@ -88,23 +79,24 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
-void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
+void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)
 {
-	LoseDurability(LostDurability);
+	LoseDurability(LostDurability, bSafeDurabilityLoss);
 }
 
-void AItemBase::LoseDurability(float LostDurability)
+void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 {
 	if (HasAuthority() == false)
 	{
-		Server_LoseDurability(LostDurability);
+		Server_LoseDurability(LostDurability, bSafeDurabilityLoss);
 		return;
 	}
+	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) - LostDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 
-	CurrentDurability -= LostDurability;
-	if (CurrentDurability <= 0)
+	if (AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) <= 0)
 	{
-		DestroyItem();
+		DestroyHittableActor(bSafeDurabilityLoss);
 	}
 }
 
@@ -115,12 +107,12 @@ UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const
 
 float AItemBase::GetDurability() const
 {
-	return CurrentDurability;
+	return AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute());
 }
 
 void AItemBase::SetDurability(float InDurability)
 {
-	CurrentDurability = InDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), InDurability);
 }
 
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
@@ -187,12 +179,34 @@ void AItemBase::OnItemUnequiped()
 	bIsAttached = false;
 }
 
-void AItemBase::DestroyItem()
+void AItemBase::DestroyHittableActor(bool bSafeDestruct)
 {
-	if (IsValid(GetAttachParentActor()))
+	if (HasAuthority() == false)
 	{
-		OnItemUnequiped();
+		return;
 	}
+
+	TArray<AActor*> DroppedLoot = LootTableComponent->DropLoot(bSafeDestruct);
+
+	AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
+	if (IsValid(ItemOwner) == false)
+	{
+		Destroy();
+		return;
+	}
+	UEquipmentComponent* EquipmentComp = ItemOwner->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
+		return;
+	}
+	EquipmentComp->UnequipItem(this);
+
+	for (AActor* DroppedActor : DroppedLoot)
+	{
+		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
+	}
+
 	Destroy();
 }
 

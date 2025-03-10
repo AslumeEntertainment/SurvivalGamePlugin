@@ -20,9 +20,11 @@ ASG_HittableActor::ASG_HittableActor()
 	bReplicates = true;
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMeshComponent->SetGenerateOverlapEvents(false);
 	SetRootComponent(StaticMeshComponent);
 
 	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("HittableComponent"));
+	HittableComponent->SetGenerateOverlapEvents(true);
 	HittableComponent->SetupAttachment(GetRootComponent());
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
@@ -49,6 +51,13 @@ void ASG_HittableActor::BeginPlay()
 		AbilitySystemComponent->AddEffectFromClass(InitializingEffect, this, this, this);
 	}
 	AbilitySystemComponent->SetStartingAttributeValues();
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+		[this](const FOnAttributeChangeData& Data)
+		{
+			if (Data.NewValue <= 0) DestroyHittableActor();
+		}
+	);
 }
 
 UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const
@@ -69,6 +78,17 @@ UHittableComponent* ASG_HittableActor::GetHittableComponent()
 ULootTableComponent* ASG_HittableActor::GetLootTableComponent()
 {
 	return LootTableComponent;
+}
+
+void ASG_HittableActor::DestroyHittableActor(bool bSafeDestruct)
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	LootTableComponent->DropLoot(bSafeDestruct);
+	Destroy();
 }
 
 

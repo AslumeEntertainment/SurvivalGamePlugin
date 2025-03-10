@@ -65,7 +65,7 @@ private:
 	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
 
 	UFUNCTION()
-	void OnInGameCharacterDestroyed(AActor* RefToSelf);
+	void OnInGameCharacterDeath();
 
 protected:
 

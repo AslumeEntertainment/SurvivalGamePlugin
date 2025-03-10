@@ -17,7 +17,7 @@
 UHittableComponent::UHittableComponent()
 {
 	OnComponentBeginOverlap.AddDynamic(this, &UHittableComponent::OnImpactReceived);
-	//OnComponentBeginOverlap.AddDynamic(this, &UHittableComponent::OnActorBeginOverlap);
+	OnComponentHit.AddDynamic(this, &UHittableComponent::OnComponentHitReceived);
 }
 
 void UHittableComponent::BeginPlay()
@@ -47,6 +47,11 @@ void UHittableComponent::OnImpactReceived(UPrimitiveComponent* OverlappedCompone
 	EventData.Instigator = OtherActor;
 
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), EventTag, EventData);
+}
+
+void UHittableComponent::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s hit %s at %s"), *GetOwner()->GetName(), *OtherActor->GetName(), *OtherComp->GetName());
 }
 
 USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
@@ -88,7 +93,7 @@ void UHittableComponent::OnHittableDestroyed()
 	ASC->CancelAllAbilities();
 	ASC->ExecuteGameplayCue(OnDestroyedGameplayCueTag);
 
-	if (GetOwner()->HasAuthority())
+	/*if (GetOwner()->HasAuthority())
 	{
 		ULootTableComponent* LootTableComponent = GetOwner()->GetComponentByClass<ULootTableComponent>();
 		if (IsValid(LootTableComponent))
@@ -97,7 +102,7 @@ void UHittableComponent::OnHittableDestroyed()
 		}
 	}
 
-	GetOwner()->Destroy();
+	GetOwner()->Destroy();*/
 }
 
 bool UHittableComponent::CanEverReceiveGameplayEffects()

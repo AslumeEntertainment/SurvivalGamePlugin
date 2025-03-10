@@ -33,7 +33,7 @@ public:
 private:
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_LoseDurability(float LostDurability);
+	void Server_LoseDurability(float LostDurability, bool bSafeDurabilityLoss);
 
 protected:
 	
@@ -41,9 +41,6 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
-
-	UPROPERTY(Replicated)
-	float CurrentDurability;
 
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
@@ -65,7 +62,7 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	virtual void LoseDurability(float LostDurability);
+	virtual void LoseDurability(float LostDurability, bool bSafeDurabilityLoss = false);
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -81,8 +78,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemUnequiped(); 
 
-	UFUNCTION(BlueprintCallable)
-	virtual void DestroyItem();
+	virtual void DestroyHittableActor(bool bSafeDestruct = false) override;
 
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;

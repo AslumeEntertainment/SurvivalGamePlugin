@@ -147,9 +147,4 @@ struct FDisassemblyProcessDataStruct : public FTableRowBase
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EItemDisassembleRequirement DisassembleRequirement;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<AItemBase> MainParentItem;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<AItemBase> IngredientParentItem;
 };

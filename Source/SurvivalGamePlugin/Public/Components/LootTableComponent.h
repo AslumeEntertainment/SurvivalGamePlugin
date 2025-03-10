@@ -49,9 +49,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DropData")
 	FDataTableRowHandle SafeDestructLootTable;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DropData")
-	FDataTableRowHandle UnsafeDestructLootTable;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Distribution", meta = (ToolTip = "Should dropped actors be arranged vertically or spread out normally"))
 	bool bShouldStackDropsVertically = false;
 
@@ -73,6 +70,6 @@ protected:
 		
 public:
 
-	void DropLoot(bool bWasDestroyedSafely = false, bool bWasDestroyedUnsafely = false);
+	TArray<AActor*> DropLoot(bool bWasDestroyedSafely = false);
 
 };
