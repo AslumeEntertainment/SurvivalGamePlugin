@@ -60,26 +60,20 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 
 	for (const FHitResult HitResult : HitResults)
 	{
-		if (IsValid(HitResult.GetActor()) == false)
+		AActor* HitActor = HitResult.GetActor();
+		if (IsValid(HitActor) == false)
 		{
 			continue;
 		}
 
-		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
-		if (IsValid(HittableComp) == false)
-		{
-			continue;
-		}
-
-		if (HittableComp->CanEverReceiveGameplayEffects() == false)
-		{
-			continue;
-		}
-
-		USG_AbilitySystemComponent* TargetASC = HittableComp->GetOwnerAbilitySystemComponent();
+		USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
 		if (IsValid(TargetASC) == false)
 		{
 			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
+			continue;
+		}
+		if (TargetASC->bCanEverReceiveDamageFromEffects == false)
+		{
 			continue;
 		}
 

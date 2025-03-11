@@ -54,79 +54,27 @@ void UHittableComponent::OnComponentHitReceived(UPrimitiveComponent* HitComponen
 	UE_LOG(LogTemp, Warning, TEXT("%s hit %s at %s"), *GetOwner()->GetName(), *OtherActor->GetName(), *OtherComp->GetName());
 }
 
-USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
-{
-	if (IsValid(GetOwner()) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent IsValid(GetOwner()) == false"));
-		return nullptr;
-	}
-	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner());
-	if(ASI == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent ASI == nullptr"));
-		return nullptr;
-	}
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent IsValid(ASC) == false"));
-		return nullptr;
-	}
-	return ASC;
-}
-
-void UHittableComponent::OnHittableDestroyed()
-{
-	if (IsValid(GetOwner()) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHittableDestroyed IsValid(GetOwner()) == false"));
-		return;
-	}
-	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::OnHittableDestroyed IsValid(ASC) == false"));
-		return;
-	}
-
-	ASC->CancelAllAbilities();
-	ASC->ExecuteGameplayCue(OnDestroyedGameplayCueTag);
-
-	/*if (GetOwner()->HasAuthority())
-	{
-		ULootTableComponent* LootTableComponent = GetOwner()->GetComponentByClass<ULootTableComponent>();
-		if (IsValid(LootTableComponent))
-		{
-			LootTableComponent->DropLoot();
-		}
-	}
-
-	GetOwner()->Destroy();*/
-}
-
-bool UHittableComponent::CanEverReceiveGameplayEffects()
-{
-	USG_AbilitySystemComponent* ASC = GetOwnerAbilitySystemComponent();
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::CanEverReceiveGameplayEffects IsValid(ASC) == false"))
-		return false;
-	}
-	float OwnerHealth = ASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute());
-	if (OwnerHealth <= 0)
-	{
-		return false;
-	}
-
-	return bCanEverReceiveGameplayEffects;
-}
-
-void UHittableComponent::SetCanDisplayDamageIndicator(bool NewValue)
-{
-	bCanDisplayDamageIndicator = NewValue;
-}
-
+//USG_AbilitySystemComponent* UHittableComponent::GetOwnerAbilitySystemComponent()
+//{
+//	if (IsValid(GetOwner()) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent IsValid(GetOwner()) == false"));
+//		return nullptr;
+//	}
+//	IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner());
+//	if(ASI == nullptr)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent ASI == nullptr"));
+//		return nullptr;
+//	}
+//	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI->GetAbilitySystemComponent());
+//	if (IsValid(ASC) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("UHittableComponent::GetOwnerAbilitySystemComponent IsValid(ASC) == false"));
+//		return nullptr;
+//	}
+//	return ASC;
+//}
 
 
 

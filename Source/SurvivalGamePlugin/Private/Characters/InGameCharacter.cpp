@@ -43,14 +43,14 @@ void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(flo
 	HittableComponent->SetCapsuleHalfHeight(NewValue);
 }
 
-void AInGameCharacter::OnInGameCharacterDeath()
-{
-	OnCharacterDeath.Broadcast();
-
-	EquipmentComponent->UnequipAllItems();
-	LootTableComponent->DropLoot();
-	Destroy();
-}
+//void AInGameCharacter::OnInGameCharacterDeath()
+//{
+//	OnCharacterDeath.Broadcast();
+//
+//	EquipmentComponent->UnequipAllItems();
+//	LootTableComponent->DropLoot();
+//	Destroy();
+//}
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -324,7 +324,6 @@ void AInGameCharacter::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			if (Data.NewValue <= 0) OnInGameCharacterDeath();
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
 		}
 	);
@@ -587,6 +586,20 @@ void AInGameCharacter::ShowPlayerInfo()
 
 		i++;
 	}
+}
+
+void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
+{
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	OnCharacterDeath.Broadcast();
+
+	EquipmentComponent->UnequipAllItems();
+	LootTableComponent->DropLoot();
+	Destroy();
 }
 
 

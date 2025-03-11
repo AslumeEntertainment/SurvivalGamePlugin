@@ -23,14 +23,14 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
+	/*UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	bool bCanDisplayDamageIndicator = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
 	bool bCanEverReceiveGameplayEffects = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HittableDefaults")
-	FGameplayTag OnDestroyedGameplayCueTag;
+	FGameplayTag OnDestroyedGameplayCueTag;*/
 
 	UFUNCTION()
 	void OnImpactReceived(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -41,17 +41,6 @@ protected:
 
 public:
 
-	USG_AbilitySystemComponent* GetOwnerAbilitySystemComponent();
+	//USG_AbilitySystemComponent* GetOwnerAbilitySystemComponent();
 
-	UFUNCTION(BlueprintCallable)
-	void OnHittableDestroyed();
-
-	UFUNCTION(BlueprintCallable)
-	bool CanDisplayDamageIndicator() { return bCanDisplayDamageIndicator; }
-
-	UFUNCTION(BlueprintCallable)
-	bool CanEverReceiveGameplayEffects();
-
-	UFUNCTION(BlueprintCallable)
-	void SetCanDisplayDamageIndicator(bool NewValue);
 };

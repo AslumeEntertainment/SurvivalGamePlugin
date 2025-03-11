@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
+#include "Interfaces/Hittable.h"
 #include "Interfaces/DamageDealerInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
@@ -18,7 +19,7 @@ class UHittableComponent;
 class USG_GameplayAbility;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IDamageDealerInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface
 {
 	GENERATED_BODY()
 	
@@ -64,8 +65,8 @@ private:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
 
-	UFUNCTION()
-	void OnInGameCharacterDeath();
+	/*UFUNCTION()
+	void OnInGameCharacterDeath();*/
 
 protected:
 
@@ -177,6 +178,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();
+
+	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
 	FVoidDataTransferSignature OnCharacterDeath;
 

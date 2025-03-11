@@ -41,10 +41,10 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnoreWhenActive;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "DamageDealer"))
 	FGameplayTag DamageSourceTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "GameplayCue"))
 	FGameplayTagContainer OnHitGameplayCueTags;
 
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")

@@ -4,6 +4,7 @@
 #include "GAS/Abilities/SGGA_ApplyEffectOnContact.h"
 
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystemInterface.h"
 #include "Engine/StaticMeshActor.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
@@ -101,22 +102,25 @@ void USGGA_ApplyEffectOnContact::SpawnOverlayMesh()
 
 void USGGA_ApplyEffectOnContact::AttemptHit(const AActor* TargetActor)
 {
-	UHittableComponent* TargetHittableComp = TargetActor->GetComponentByClass<UHittableComponent>();
-	if (IsValid(TargetHittableComp) == false)
+	const IAbilitySystemInterface* ASI_Actor = Cast<IAbilitySystemInterface>(TargetActor);
+	if (ASI_Actor == nullptr)
 	{
-		return;
-	}
-	if (TargetHittableComp->CanEverReceiveGameplayEffects() == false)
-	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit ASI_Actor == nullptr"));
 		return;
 	}
 
-	USG_AbilitySystemComponent* ASC = TargetHittableComp->GetOwnerAbilitySystemComponent();
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI_Actor->GetAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit IsValid(ASC) == false"));
 		return;
 	}
+
+	if (ASC->bCanEverReceiveDamageFromEffects == false)
+	{
+		return;
+	}
+
 	for (TSubclassOf<UGameplayEffect> Effect : EffectsToApply)
 	{
 		ASC->AddEffectFromClass(Effect, AvatarActor, AvatarActor, AvatarActor);

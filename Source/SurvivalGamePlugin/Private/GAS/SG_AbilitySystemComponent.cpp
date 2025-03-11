@@ -7,7 +7,43 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Misc/DamageIndicator.h"
 
+
+USG_AbilitySystemComponent::USG_AbilitySystemComponent()
+{
+	OnOwnerDestroyed.AddDynamic(this, &USG_AbilitySystemComponent::OwnerDestroyed);
+}
+
+void USG_AbilitySystemComponent::OwnerDestroyed()
+{
+	CancelAllAbilities();
+	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
+}
+
+TSubclassOf<ADamageIndicator> USG_AbilitySystemComponent::GetDamageIndicatorClass()
+{
+	return DamageIndicatorClass;
+}
+
+void USG_AbilitySystemComponent::ShowDamageIndicator(float Value)
+{
+	if (IsValid(DamageIndicatorClass) == false)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::ShowDamageIndicator IsValid(World) == false"));
+		return;
+	}
+	
+	ADamageIndicator* DamageIndicator = World->SpawnActorDeferred<ADamageIndicator>(DamageIndicatorClass, GetOwner()->GetActorTransform());
+	DamageIndicator->Damage = Value;
+	DamageIndicator->FinishSpawning(GetOwner()->GetActorTransform());
+}
 
 void USG_AbilitySystemComponent::SetStartingAttributeValues()
 {

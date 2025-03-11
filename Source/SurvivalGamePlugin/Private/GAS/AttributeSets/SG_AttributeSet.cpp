@@ -8,11 +8,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "FunctionLibraries/DamageFunctionLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/HittableComponent.h"
 #include "Characters/InGameCharacter.h"
-
+#include "Interfaces/Hittable.h"
 
 USG_AttributeSet::USG_AttributeSet()
 {
@@ -47,7 +46,29 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 
 void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
 {
-	//keeping this method just in case
+	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
+		return;
+	}
+	IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
+	if (HittableOwner == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
+		return;
+	}
+
+	if (Attribute == GetHealthAttribute())
+	{
+		if (NewValue == 0.f)
+		{
+			ASC->OnOwnerDestroyed.Broadcast();
+			HittableOwner->DestroyHittable();
+		}
+	}
 }
 
 void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -71,22 +92,9 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
-		UHittableComponent* HittableComp = GetOwningActor()->GetComponentByClass<UHittableComponent>();
-		if (IsValid(HittableComp) == false)
+		if (Data.EvaluatedData.Magnitude <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(HittableComp) == false"));
-			return;
-		}
-
-		if (Data.EvaluatedData.Magnitude <= 0 && HittableComp->CanDisplayDamageIndicator())
-		{
-			UWorld* World = GetWorld();
-			if (IsValid(World) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(World) == false"));
-				return;
-			}
-			UDamageFunctionLibrary::ShowDamageIndicator(World, FMath::Abs(Data.EvaluatedData.Magnitude), GetOwningActor());
+			ASC->ShowDamageIndicator(FMath::Abs(Data.EvaluatedData.Magnitude));
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
@@ -100,12 +108,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		{
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
-		}
-		if (GetHealth() == 0.f)
-		{
-			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
-			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
-			HittableComp->OnHittableDestroyed();
 		}
 	}
 }

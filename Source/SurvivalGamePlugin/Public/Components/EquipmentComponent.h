@@ -53,13 +53,13 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CachedEquipment)
 	FPackagedEquipmentData CachedEquipment;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags", meta = (Categories = "EquipmentSlot"))
 	FGameplayTag MainEquipmentSlotTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags", meta = (Categories = "EquipmentSlot"))
 	FGameplayTag SecondaryEquipmentSlotTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags")
+	UPROPERTY(EditDefaultsOnly, Category = "CharacterDefaultTags", meta = (Categories = "EquipmentSlot"))
 	FGameplayTag MixedEquipmentSlotTag;
 
 	void PackageEquipment(FPackagedEquipmentData& OutEquipment);
@@ -72,10 +72,10 @@ private:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment", meta = (Categories = "EquipmentSlot"))
 	TMap<FGameplayTag, AItemBase*> EquipmentSlots;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment", meta = (Categories = "EquipmentSlot"))
 	TMap<FGameplayTag, FName> EquipmentSockets;
 
 	UFUNCTION(BlueprintCallable)

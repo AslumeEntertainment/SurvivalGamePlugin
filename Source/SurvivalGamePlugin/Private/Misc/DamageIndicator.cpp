@@ -22,11 +22,8 @@ ADamageIndicator::ADamageIndicator()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> DamageIndicatorWidgetClass(TEXT("/Game/Blueprints/UI/Widgets/InGame/BP_DamageIndicatorWidget"));
-
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	WidgetComponent->SetWidgetClass(DamageIndicatorWidgetClass.Class);
 	SetRootComponent(WidgetComponent);
 
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));

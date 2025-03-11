@@ -78,7 +78,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemUnequiped(); 
 
-	virtual void DestroyHittableActor(bool bSafeDestruct = false) override;
+	virtual void DestroyHittable(bool bSafeDestruct = false) override;
+
+	//virtual void DestroyHittableActor(bool bSafeDestruct = false) override;
 
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;

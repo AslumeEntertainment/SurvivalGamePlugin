@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "Interfaces/Hittable.h"
 #include "AbilitySystemInterface.h"
+
 #include "SG_HittableActor.generated.h"
 
 class UStaticMeshComponent;
@@ -15,7 +18,7 @@ class UAbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API ASG_HittableActor : public AActor, public IAbilitySystemInterface
+class SURVIVALGAMEPLUGIN_API ASG_HittableActor : public AActor, public IHittable, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -55,7 +58,9 @@ public:
 
 	ULootTableComponent* GetLootTableComponent();
 
-	UFUNCTION(BlueprintCallable)
-	virtual void DestroyHittableActor(bool bSafeDestruct = false);
+	virtual void DestroyHittable(bool bSafeDestruct = false) override;
+
+	/*UFUNCTION(BlueprintCallable)
+	virtual void DestroyHittableActor(bool bSafeDestruct = false);*/
 
 };

@@ -4,24 +4,48 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Headers/GeneralDelegates.h"
 #include "SG_AbilitySystemComponent.generated.h"
 
 class UGameplayEffect;
 class USG_GameplayAbility;
+class ADamageIndicator;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 
+public:
+
+	USG_AbilitySystemComponent();
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	TMap<FGameplayAttribute, float> StartingAttributeSetData;
 
-public:
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults", meta = (Categories = "GameplayCue"))
+	FGameplayTag OnDestroyedGameplayCueTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	TSubclassOf<ADamageIndicator> DamageIndicatorClass = nullptr;
 
 	UFUNCTION()
+	void OwnerDestroyed();
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	bool bCanEverReceiveDamageFromEffects = true;
+
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<ADamageIndicator> GetDamageIndicatorClass();
+
+	UFUNCTION(BlueprintCallable)
+	void ShowDamageIndicator(float Value);
+
+	UFUNCTION(BlueprintCallable)
 	void SetStartingAttributeValues();
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
@@ -49,5 +73,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
+
+	FVoidDataTransferSignature OnOwnerDestroyed;
 
 };

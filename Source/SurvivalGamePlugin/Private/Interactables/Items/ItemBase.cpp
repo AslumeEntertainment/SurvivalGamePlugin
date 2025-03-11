@@ -96,7 +96,7 @@ void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 
 	if (AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) <= 0)
 	{
-		DestroyHittableActor(bSafeDurabilityLoss);
+		DestroyHittable(bSafeDurabilityLoss);
 	}
 }
 
@@ -179,7 +179,7 @@ void AItemBase::OnItemUnequiped()
 	bIsAttached = false;
 }
 
-void AItemBase::DestroyHittableActor(bool bSafeDestruct)
+void AItemBase::DestroyHittable(bool bSafeDestruct)
 {
 	if (HasAuthority() == false)
 	{
@@ -209,6 +209,37 @@ void AItemBase::DestroyHittableActor(bool bSafeDestruct)
 
 	Destroy();
 }
+
+//void AItemBase::DestroyHittableActor(bool bSafeDestruct)
+//{
+//	if (HasAuthority() == false)
+//	{
+//		return;
+//	}
+//
+//	TArray<AActor*> DroppedLoot = LootTableComponent->DropLoot(bSafeDestruct);
+//
+//	AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
+//	if (IsValid(ItemOwner) == false)
+//	{
+//		Destroy();
+//		return;
+//	}
+//	UEquipmentComponent* EquipmentComp = ItemOwner->GetEquipmentComponent();
+//	if (IsValid(EquipmentComp) == false)
+//	{
+//		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
+//		return;
+//	}
+//	EquipmentComp->UnequipItem(this);
+//
+//	for (AActor* DroppedActor : DroppedLoot)
+//	{
+//		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
+//	}
+//
+//	Destroy();
+//}
 
 bool AItemBase::InteractRequest(AController* InteractingCharacter)
 {
