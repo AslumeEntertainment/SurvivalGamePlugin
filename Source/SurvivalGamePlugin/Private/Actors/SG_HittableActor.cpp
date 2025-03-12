@@ -84,15 +84,5 @@ void ASG_HittableActor::DestroyHittable(bool bSafeDestruct)
 	Destroy();
 }
 
-//void ASG_HittableActor::DestroyHittableActor(bool bSafeDestruct)
-//{
-//	if (HasAuthority() == false)
-//	{
-//		return;
-//	}
-//
-//	LootTableComponent->DropLoot(bSafeDestruct);
-//	Destroy();
-//}
 
 

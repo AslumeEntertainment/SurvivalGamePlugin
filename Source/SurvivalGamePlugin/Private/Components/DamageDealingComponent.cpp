@@ -7,11 +7,11 @@
 #include "AbilitySystemGlobals.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/DamageEffect.h"
+#include "Components/HittableComponent.h"
 #include "Objects/SG_TraceEmitterBase.h"
+#include "Objects/DamageSourceData.h"
 
 
 UDamageDealingComponent::UDamageDealingComponent()
@@ -56,7 +56,6 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 {
 	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
 	ContextHandle.AddInstigator(DamageInstigator, GetOwner());
-	ContextHandle.AddSourceObject(this);
 
 	for (const FHitResult HitResult : HitResults)
 	{
@@ -86,9 +85,14 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
 		}
 
-		for (UDamageEffect* DamageEffect : DamageEffects)
+		for (UDamageSourceData* DamageEffectData : DamageEffectsData)
 		{
-			TargetASC->ApplyGameplayEffectToSelf(DamageEffect, DamageEffect->EffectLevel, ContextHandle);
+			ContextHandle.AddSourceObject(DamageEffectData);
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectData->DamageEffect, DamageEffectData->EffectLevel, ContextHandle);
+			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			
+			/*TargetASC->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(DamageEffectData->DamageEffect->StaticClass()->GetDefaultObject()),
+				DamageEffectData->EffectLevel, ContextHandle);*/
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());

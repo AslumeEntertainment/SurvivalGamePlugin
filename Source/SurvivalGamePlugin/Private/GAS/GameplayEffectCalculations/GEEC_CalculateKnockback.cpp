@@ -7,15 +7,15 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/DamageEffect.h"
+#include "Objects/DamageSourceData.h"
 #include "Characters/SG_Character.h"
 
 void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
-	const UDamageEffect* DamageEffect = Cast<UDamageEffect>(ExecutionParams.GetOwningSpec().Def);
-	if (IsValid(DamageEffect) == false)
+	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(ExecutionParams.GetOwningSpec().GetContext().GetSourceObject());
+	if (IsValid(DamageSourceData) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(DamageEffect) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(DamageSourceData) == false"));
 		return;
 	}
 	AActor* InstigatorActor = ExecutionParams.GetOwningSpec().GetEffectContext().GetInstigator();
@@ -37,7 +37,7 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 		return;
 	}
 	
-	FVector KnockbackForce =  InstigatorActor->GetActorUpVector() * DamageEffect->BaseDamage;
+	FVector KnockbackForce =  InstigatorActor->GetActorUpVector() * DamageSourceData->BaseDamage;
 
 	ASG_Character* TargetCharacter = Cast<ASG_Character>(TargetActor);
 	if (IsValid(TargetCharacter))

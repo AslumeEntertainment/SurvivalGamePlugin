@@ -18,4 +18,7 @@ public:
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
+	UPROPERTY(EditAnywhere)
+	bool bShouldPrintDebug = true;
+
 };

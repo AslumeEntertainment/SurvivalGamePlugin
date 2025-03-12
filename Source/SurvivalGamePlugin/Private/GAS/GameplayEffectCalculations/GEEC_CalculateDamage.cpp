@@ -8,10 +8,10 @@
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/DamageEffect.h"
 #include "Interactables/Items/DamageDealingItem.h"
 #include "Components/DamageDealingComponent.h"
 #include "Headers/PhysicalPropertyEnums.h"
+#include "Objects/DamageSourceData.h"
 
 DEFINE_LOG_CATEGORY(DamageLog);
 
@@ -49,10 +49,10 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 
 	AActor* TargetActor = IsValid(TargetAbilitySystemComponent) ? TargetAbilitySystemComponent->GetOwner() : nullptr;
 
-	const UDamageEffect* DamageEffect = Cast<UDamageEffect>(ExecutionParams.GetOwningSpec().Def);
-	if (IsValid(DamageEffect) == false)
+	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(ExecutionParams.GetOwningSpec().GetContext().GetSourceObject());
+	if (IsValid(DamageSourceData) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageEffect) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageSourceData) == false"));
 		return;
 	}
 
@@ -74,7 +74,7 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 	float StrengthMultiplier = InstigatorAbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute()) / (uint8)EffectCauserWeight;
 
 	float TargetResistance = 1;
-	switch (DamageEffect->DamageType)
+	switch (DamageSourceData->DamageType)
 	{
 		case ESG_DamageType::Slashing: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistanceSlashingAttribute()); break;
 		case ESG_DamageType::Piercing: TargetResistance = TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetResistancePiercingAttribute()); break;
@@ -84,15 +84,18 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 	if (TargetResistance <= 0) TargetResistance = 1;
 
 	float InstigatorVelocity = InstigatorActor->GetVelocity().Length() / 100;
-	float PenetrationMultiplier = (DamageEffect->Penetration + DamageEffect->Penetration * InstigatorVelocity / 100) / TargetResistance;
-	float FinalDamage = FMath::Floor(DamageEffect->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
+	float PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;
+	float FinalDamage = FMath::Floor(DamageSourceData->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
 	
-	UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
-	UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageEffect->DamageType);
-	UE_LOG(DamageLog, Log, TEXT("StrengthMultiplier - %.2f"), StrengthMultiplier);
-	UE_LOG(DamageLog, Log, TEXT("InstigatorVelocity - %.2f m/s"), InstigatorVelocity);
-	UE_LOG(DamageLog, Log, TEXT("PenetrationMultiplier - %.2f"), PenetrationMultiplier);
-	UE_LOG(DamageLog, Log, TEXT("FinalDamage - %.f"), FinalDamage);
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
+		UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageSourceData->DamageType);
+		UE_LOG(DamageLog, Log, TEXT("StrengthMultiplier - %.2f"), StrengthMultiplier);
+		UE_LOG(DamageLog, Log, TEXT("InstigatorVelocity - %.2f m/s"), InstigatorVelocity);
+		UE_LOG(DamageLog, Log, TEXT("PenetrationMultiplier - %.2f"), PenetrationMultiplier);
+		UE_LOG(DamageLog, Log, TEXT("FinalDamage - %.f"), FinalDamage);
+	}
 
 	//---------------------------------------------------------//
 
@@ -101,11 +104,11 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 	int RandInt = FMath::RandRange(1, 100);
 	RandInt += InstigatorAbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute());
 
-	for (TPair<TSubclassOf<UGameplayEffect>, float> AdditionalEffect : DamageEffect->AdditionalEffects)
+	for (TPair<TSubclassOf<UGameplayEffect>, float> AdditionalEffect : DamageSourceData->AdditionalEffects)
 	{
 		if (RandInt <= AdditionalEffect.Value)
 		{
-			TargetAbilitySystemComponent->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(AdditionalEffect.Key->GetDefaultObject()), DamageEffect->EffectLevel, ExecutionParams.GetOwningSpec().GetEffectContext());
+			TargetAbilitySystemComponent->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(AdditionalEffect.Key->GetDefaultObject()), DamageSourceData->EffectLevel, ExecutionParams.GetOwningSpec().GetEffectContext());
 		}
 	}
 
