@@ -90,9 +90,6 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			ContextHandle.AddSourceObject(DamageEffectData);
 			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectData->DamageEffect, DamageEffectData->EffectLevel, ContextHandle);
 			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-			
-			/*TargetASC->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(DamageEffectData->DamageEffect->StaticClass()->GetDefaultObject()),
-				DamageEffectData->EffectLevel, ContextHandle);*/
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());

@@ -194,6 +194,7 @@ void AItemBase::DestroyHittable(bool bSafeDestruct)
 		Destroy();
 		return;
 	}
+
 	UEquipmentComponent* EquipmentComp = ItemOwner->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
@@ -204,42 +205,22 @@ void AItemBase::DestroyHittable(bool bSafeDestruct)
 
 	for (AActor* DroppedActor : DroppedLoot)
 	{
+		AItemBase* DroppedItemActor = Cast<AItemBase>(DroppedActor);
+		if (IsValid(DroppedItemActor) == false)
+		{
+			continue;
+		}
+
+		float DurabilityPercent = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) / 
+			AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute());
+		
+		DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() * ((DurabilityPercent <= 0.f) ? 0.5f : DurabilityPercent));
+
 		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
 	}
 
 	Destroy();
 }
-
-//void AItemBase::DestroyHittableActor(bool bSafeDestruct)
-//{
-//	if (HasAuthority() == false)
-//	{
-//		return;
-//	}
-//
-//	TArray<AActor*> DroppedLoot = LootTableComponent->DropLoot(bSafeDestruct);
-//
-//	AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
-//	if (IsValid(ItemOwner) == false)
-//	{
-//		Destroy();
-//		return;
-//	}
-//	UEquipmentComponent* EquipmentComp = ItemOwner->GetEquipmentComponent();
-//	if (IsValid(EquipmentComp) == false)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
-//		return;
-//	}
-//	EquipmentComp->UnequipItem(this);
-//
-//	for (AActor* DroppedActor : DroppedLoot)
-//	{
-//		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
-//	}
-//
-//	Destroy();
-//}
 
 bool AItemBase::InteractRequest(AController* InteractingCharacter)
 {

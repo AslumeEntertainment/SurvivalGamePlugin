@@ -549,6 +549,7 @@ void AInGameCharacter::ShowPlayerInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
 	}
+
 	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentComponent->GetEquipmentSlots().Num());
 	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentComponent->GetEquipmentSockets().Num());
 
@@ -582,6 +583,31 @@ void AInGameCharacter::ShowPlayerInfo()
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s %s does not have an associated equipment socket!"), *Prefix, *(Slot.Key.ToString()));
+		}
+
+		i++;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s Player possesses %d damage sources"), *Prefix, DamageSources.Num());
+
+	i = 0;
+	for (TPair<FGameplayTag, UDamageDealingComponent*> DamageSource : DamageSources)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s Damage Source #%d - %s"), *Prefix, i, *DamageSource.Value->GetDamageSourceTag().ToString());
+		if (IsValid(DamageSource.Value))
+		{
+			if (IsValid(DamageSource.Value->GetOwner()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s Damage Source owner actor - %s"), *Prefix, *DamageSource.Value->GetOwner()->GetName());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s Damage Source doesn't have a valid owner actor!"), *Prefix);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s Damage Source is invalid!"), *Prefix);
 		}
 
 		i++;

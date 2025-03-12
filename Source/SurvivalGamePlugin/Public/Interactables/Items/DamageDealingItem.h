@@ -23,6 +23,9 @@ protected:
 	UDamageDealingComponent* DamageDealingComponent;
 
 	UFUNCTION()
+	void OnItemDestroyed(AActor* DestroyedActor);
+
+	UFUNCTION()
 	void CalculateDurabilityLost(UObject* HitObject);
 
 public:

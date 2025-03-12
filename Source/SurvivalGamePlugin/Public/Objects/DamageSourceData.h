@@ -39,10 +39,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	float EffectLevel = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	TMap<TSubclassOf<UGameplayEffect>, float> AdditionalEffects;
 	
 };
