@@ -92,12 +92,13 @@ void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 		return;
 	}
 	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) - LostDurability;
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 
-	if (AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) <= 0)
+	if (CurrentDurability <= 0)
 	{
 		DestroyHittable(bSafeDurabilityLoss);
+		return;
 	}
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 }
 
 UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const

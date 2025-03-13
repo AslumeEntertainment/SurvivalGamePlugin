@@ -17,18 +17,12 @@ TArray<AActor*> ULootTableComponent::DropLoot(bool bWasDestroyedSafely)
 	TArray<AActor*> DroppedActors;
 	FLootTableData* DropData = nullptr;
 
-	if (bWasDestroyedSafely)
-	{
-		DropData = SafeDestructLootTable.GetRow<FLootTableData>("");
-	}
-	else
-	{
-		DropData = StandartDestructLootTable.GetRow<FLootTableData>("");
-	}
+	DropData = (bWasDestroyedSafely) ? SafeDestructLootTable.GetRow<FLootTableData>("") : StandartDestructLootTable.GetRow<FLootTableData>("");
 
 	if (DropData == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ULootTableComponent::DropLoot DropData == nullptr"));
+		if(bWasDestroyedSafely) UE_LOG(LogTemp, Log, TEXT("%s:Unspecified drop data for safe destruct"), *GetOwner()->GetName());
+		if (!bWasDestroyedSafely) UE_LOG(LogTemp, Log, TEXT("%s:Unspecified drop data for standart destruct"), *GetOwner()->GetName());
 		return DroppedActors;
 	}
 
