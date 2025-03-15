@@ -68,7 +68,6 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
 		if (IsValid(TargetASC) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
 			continue;
 		}
 		if (TargetASC->bCanEverReceiveDamageFromEffects == false)

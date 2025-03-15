@@ -6,6 +6,9 @@
 #include "GameplayEffectExecutionCalculation.h"
 #include "GEEC_CalculateDamage.generated.h"
 
+class AActor;
+class UDamageSourceData;
+class USG_AbilitySystemComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UGEEC_CalculateDamage : public UGameplayEffectExecutionCalculation
@@ -18,7 +21,17 @@ public:
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
+protected:
+
 	UPROPERTY(EditAnywhere)
 	bool bShouldPrintDebug = true;
+
+	float GetStrengthMultiplier(USG_AbilitySystemComponent* InstigatorASC, AActor* EffectCauser) const;
+
+	float GetInstigatorVelocity_MetersPerSec(AActor* InstigatorActor) const;
+
+	float GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const;
+
+	bool IsTargetGuarding(AActor* TargetActor, UAbilitySystemComponent* TargetASC, FVector HitLocation) const;
 
 };
