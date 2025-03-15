@@ -23,8 +23,9 @@ void ADamageDealingItem::OnItemDestroyed(AActor* DestroyedActor)
     AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
     if (IsValid(ItemOwner) == false)
     {
-        ItemOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
+        return;
     }
+    ItemOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
 }
 
 void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)

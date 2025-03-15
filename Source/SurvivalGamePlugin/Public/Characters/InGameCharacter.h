@@ -177,6 +177,9 @@ public:
 	bool IsExhausted() const;
 
 	UFUNCTION(BlueprintCallable)
+	bool IsGuarding() const;
+
+	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;

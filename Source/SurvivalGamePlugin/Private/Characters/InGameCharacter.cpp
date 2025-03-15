@@ -509,6 +509,11 @@ bool AInGameCharacter::IsExhausted() const
 	return bIsExhausted;
 }
 
+bool AInGameCharacter::IsGuarding() const
+{
+	return AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard")));
+}
+
 void AInGameCharacter::ShowPlayerInfo()
 {
 	FString Prefix;

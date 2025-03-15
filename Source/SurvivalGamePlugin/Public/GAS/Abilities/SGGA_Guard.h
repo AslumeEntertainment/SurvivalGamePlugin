@@ -22,11 +22,14 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "AbilityDeafults")
-	TSubclassOf<UGameplayEffect> AbilityEffect = nullptr;
+	TSubclassOf<UGameplayEffect> GuardEffect = nullptr;
+
+	UFUNCTION()
+	void OnGuardEnded(float TimeHeld);
 
 private:
 
 	AInGameCharacter* Player;
 
-	FActiveGameplayEffectHandle AbilityEffectHandle;
+	FActiveGameplayEffectHandle GuardEffectHandle;
 };
