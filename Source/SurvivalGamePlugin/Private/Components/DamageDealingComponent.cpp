@@ -9,7 +9,6 @@
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/HittableComponent.h"
 #include "Objects/SG_TraceEmitterBase.h"
 #include "Objects/DamageSourceData.h"
 

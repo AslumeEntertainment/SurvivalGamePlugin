@@ -17,6 +17,12 @@ class SURVIVALGAMEPLUGIN_API IHittable
 {
 	GENERATED_BODY()
 
+protected:
+
+	UFUNCTION()
+	virtual void OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+
 public:
 
 	UFUNCTION()

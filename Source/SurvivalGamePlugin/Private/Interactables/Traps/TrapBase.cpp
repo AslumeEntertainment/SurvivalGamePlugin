@@ -7,7 +7,7 @@
 #include "Components/BoxComponent.h"
 
 #include "Components/DamageDealingComponent.h"
-#include "Components/HittableComponent.h"
+#include "Interfaces/Hittable.h"
 
 ATrapBase::ATrapBase()
 {
@@ -36,7 +36,7 @@ void ATrapBase::BeginPlay()
 
 void ATrapBase::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsValid(OtherActor->GetComponentByClass<UHittableComponent>()) == false)
+	if (OtherActor->GetClass()->ImplementsInterface(UHittable::StaticClass()) == false)
 	{
 		return;
 	}
@@ -85,7 +85,7 @@ bool ATrapBase::IsBoxStillOverlapping()
 
 	for (AActor* OverlappingActor : OverlappingActors)
 	{
-		if (IsValid(OverlappingActor->GetComponentByClass<UHittableComponent>()))
+		if (OverlappingActor->GetClass()->ImplementsInterface(UHittable::StaticClass()))
 		{
 			return true;
 		}

@@ -28,29 +28,22 @@ AInGameCharacter::AInGameCharacter()
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());
+	/*HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
+	HittableComponent->SetupAttachment(GetRootComponent());*/
 	
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
+
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
 }
 
 void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
 {
-	if (NewValue < HittableComponent->GetUnscaledCapsuleHalfHeight())
+	/*if (NewValue < HittableComponent->GetUnscaledCapsuleHalfHeight())
 	{
 		return;
 	}
-	HittableComponent->SetCapsuleHalfHeight(NewValue);
+	HittableComponent->SetCapsuleHalfHeight(NewValue);*/
 }
-
-//void AInGameCharacter::OnInGameCharacterDeath()
-//{
-//	OnCharacterDeath.Broadcast();
-//
-//	EquipmentComponent->UnequipAllItems();
-//	LootTableComponent->DropLoot();
-//	Destroy();
-//}
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -65,7 +58,7 @@ void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
+	//OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
 	TArray<UDamageDealingComponent*> DamageDealingComponents;
 	GetComponents<UDamageDealingComponent>(DamageDealingComponents);

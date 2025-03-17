@@ -17,7 +17,7 @@ TArray<FHitResult> USG_BoxTraceEmitter::CastTrace(FTransform TraceOrigin, TArray
 		return HitResults;
 	}
 
-	UKismetSystemLibrary::BoxTraceMulti(World, TraceOrigin.GetLocation(), TraceOrigin.GetLocation(), BoxExtend, TraceOrigin.Rotator(), ETraceTypeQuery::TraceTypeQuery1,
+	UKismetSystemLibrary::BoxTraceMulti(World, TraceOrigin.GetLocation(), TraceOrigin.GetLocation(), BoxExtend, TraceOrigin.Rotator(), ETraceTypeQuery::TraceTypeQuery2,
 		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None, HitResults, true);
 
 	return HitResults;

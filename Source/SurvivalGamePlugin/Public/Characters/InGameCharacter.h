@@ -65,8 +65,6 @@ private:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
 
-	/*UFUNCTION()
-	void OnInGameCharacterDeath();*/
 
 protected:
 
@@ -96,8 +94,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
+	UHittableComponent* HittableComponent;*/
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
