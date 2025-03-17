@@ -9,7 +9,7 @@
 #include "Net/UnrealNetwork.h"
 
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/HittableComponent.h"
+#include "Interactables/Items/ItemBase.h"
 #include "Characters/InGameCharacter.h"
 #include "Interfaces/Hittable.h"
 
@@ -48,7 +48,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 {
 	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	/*USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
@@ -68,7 +68,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 			ASC->OnOwnerDestroyed.Broadcast();
 			HittableOwner->DestroyHittable();
 		}
-	}
+	}*/
 }
 
 void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -108,6 +108,17 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		{
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
+		}
+		if (GetHealth() == 0.f)
+		{
+			ASC->OnOwnerDestroyed.Broadcast();
+			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
+			if (HittableOwner == nullptr || IsValid(Cast<AItemBase>(HittableOwner)))
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute HittableOwner == nullptr"));
+				return;
+			}
+			HittableOwner->DestroyHittable();
 		}
 	}
 }

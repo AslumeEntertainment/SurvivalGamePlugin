@@ -8,7 +8,6 @@
 #include "HittableFoliageActor.generated.h"
 
 class UStaticMeshComponent;
-class UHittableComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
@@ -31,9 +30,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* StaticMesh;
-
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;

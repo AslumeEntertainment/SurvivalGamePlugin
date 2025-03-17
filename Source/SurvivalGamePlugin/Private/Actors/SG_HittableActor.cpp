@@ -4,6 +4,7 @@
 #include "Actors/SG_HittableActor.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
@@ -11,7 +12,6 @@
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/LootTableComponent.h"
-#include "Components/HittableComponent.h"
 
 
 ASG_HittableActor::ASG_HittableActor()
@@ -23,9 +23,9 @@ ASG_HittableActor::ASG_HittableActor()
 	StaticMeshComponent->SetGenerateOverlapEvents(false);
 	SetRootComponent(StaticMeshComponent);
 
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("HittableComponent"));
-	HittableComponent->SetGenerateOverlapEvents(true);
-	HittableComponent->SetupAttachment(GetRootComponent());
+	CollisionCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
+	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
+	CollisionCapsuleComponent->SetupAttachment(StaticMeshComponent);
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -61,11 +61,6 @@ UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const
 UStaticMeshComponent* ASG_HittableActor::GetStaticMeshComponent()
 {
 	return StaticMeshComponent;
-}
-
-UHittableComponent* ASG_HittableActor::GetHittableComponent()
-{
-	return HittableComponent;
 }
 
 ULootTableComponent* ASG_HittableActor::GetLootTableComponent()

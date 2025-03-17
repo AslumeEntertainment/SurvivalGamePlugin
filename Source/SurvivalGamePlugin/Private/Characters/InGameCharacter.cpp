@@ -5,6 +5,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -14,12 +15,11 @@
 #include "Components/DamageDealingComponent.h"
 #include "Components/LootTableComponent.h"
 #include "Components/EquipmentComponent.h"
-#include "Components/HittableComponent.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
-#include "UI/HUD/InGameHUD.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Headers/AbilityInputConfig.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 AInGameCharacter::AInGameCharacter()
@@ -27,22 +27,10 @@ AInGameCharacter::AInGameCharacter()
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
-
-	/*HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());*/
 	
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
-}
-
-void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
-{
-	/*if (NewValue < HittableComponent->GetUnscaledCapsuleHalfHeight())
-	{
-		return;
-	}
-	HittableComponent->SetCapsuleHalfHeight(NewValue);*/
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -57,8 +45,6 @@ void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
 
 	TArray<UDamageDealingComponent*> DamageDealingComponents;
 	GetComponents<UDamageDealingComponent>(DamageDealingComponents);
@@ -172,6 +158,29 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	UMeshComponent* OtherMesh = Cast<UMeshComponent>(OtherComp);
+	if (IsValid(OtherMesh) == false)
+	{
+		return;
+	}
+
+	FVector MinLocalBounds = GetMesh()->GetLocalBounds().GetBox().Min;
+	FVector ActorBottom = GetActorLocation() + GetActorUpVector() * MinLocalBounds.Z;
+
+	if (Hit.Location.Z <= ActorBottom.Z + GetCharacterMovement()->MaxStepHeight)
+	{
+		return;
+	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.Instigator = OtherActor;
+
+	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
 
 void AInGameCharacter::Landed(const FHitResult& Hit)
@@ -292,7 +301,6 @@ void AInGameCharacter::SecondaryHandAction()
 		}
 	}
 	
-
 	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
 }
 
@@ -395,21 +403,11 @@ void AInGameCharacter::BroadcastInitialValues()
 void AInGameCharacter::Crouch(bool bClientSimulation)
 {
 	Super::Crouch(bClientSimulation);
-	
-	if (HasAuthority())
-	{
-		NetMulticast_SetHittableCompHalfHeight(HittableCompOnCrouchedHalfHeight);
-	}
 }
 
 void AInGameCharacter::UnCrouch(bool bClientSimulation)
 {
 	Super::UnCrouch(bClientSimulation);
-	
-	if (HasAuthority())
-	{
-		NetMulticast_SetHittableCompHalfHeight(OldHittableCompHalfHeight);
-	}
 }
 
 void AInGameCharacter::AddDamageSource(UDamageDealingComponent* NewDamageSource)
@@ -500,11 +498,6 @@ void AInGameCharacter::SetIsExhausted(bool NewValue)
 bool AInGameCharacter::IsExhausted() const
 {
 	return bIsExhausted;
-}
-
-bool AInGameCharacter::IsGuarding() const
-{
-	return AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard")));
 }
 
 void AInGameCharacter::ShowPlayerInfo()

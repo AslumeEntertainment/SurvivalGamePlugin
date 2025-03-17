@@ -36,9 +36,6 @@ private:
 	bool bIsExhausted = false;
 
 	UPROPERTY()
-	float OldHittableCompHalfHeight = 0.f;
-
-	UPROPERTY()
 	TMap<FGameplayTag, UDamageDealingComponent*> DamageSources;
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
@@ -61,9 +58,6 @@ private:
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
 
 
 protected:
@@ -94,9 +88,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
-	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;*/
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
 
@@ -110,6 +101,8 @@ protected:
 	UInputAction* JumpAction;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual void OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
 	virtual void Landed(const FHitResult& Hit) override;
 
@@ -173,9 +166,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsExhausted() const;
-
-	UFUNCTION(BlueprintCallable)
-	bool IsGuarding() const;
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();

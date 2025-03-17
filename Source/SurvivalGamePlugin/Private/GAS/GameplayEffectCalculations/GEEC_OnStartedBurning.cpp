@@ -5,7 +5,6 @@
 
 #include "AbilitySystemInterface.h"
 
-#include "Components/HittableComponent.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 
@@ -27,15 +26,12 @@ void UGEEC_OnStartedBurning::Execute_Implementation(const FGameplayEffectCustomE
 		return;
 	}
 
-	UHittableComponent* TargetHittableComp = TargetActor->GetComponentByClass<UHittableComponent>();
-	if (IsValid(TargetHittableComp) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_OnStartedBurning::ActivateAbility IsValid(TargetHittableComp) == false"));
-		return;
-	}
+	/*
+	To be fixed
+	*/
 
 	TArray<AActor*> OverlappingActors;
-	TargetHittableComp->GetOverlappingActors(OverlappingActors);
+	TargetActor->GetOverlappingActors(OverlappingActors);
 
 	for (AActor* Actor : OverlappingActors)
 	{

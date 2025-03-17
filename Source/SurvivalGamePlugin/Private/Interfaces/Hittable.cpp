@@ -3,9 +3,11 @@
 
 #include "Interfaces/Hittable.h"
 
+#include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 void IHittable::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -14,6 +16,7 @@ void IHittable::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor
 	if (IsValid(Self) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("IHittable::OnComponentHitReceived IsValid(Self) == false"));
+		return;
 	}
 
 	if (Cast<UMeshComponent>(OtherComp) == nullptr)
@@ -28,4 +31,18 @@ void IHittable::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor
 	EventData.Instigator = OtherActor;
 
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(Self, EventTag, EventData);
+}
+
+bool IHittable::IsGuarding() const
+{
+	const IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(this);
+	if (ASI == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("IHittable::IsGuarding ASI == nullptr"));
+		return false;
+	}
+
+	UAbilitySystemComponent* ASC = ASI->GetAbilitySystemComponent();
+
+	return ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard")));
 }

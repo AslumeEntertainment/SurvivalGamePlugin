@@ -20,7 +20,7 @@ TArray<FHitResult> USG_CapsuleTraceEmitter::CastTrace(FTransform TraceOrigin, TA
 	FVector TraceStart = (CapsuleHalfHeight == CapsuleRadius) ? TraceOrigin.GetLocation() : TraceOrigin.GetLocation() - UpVector * (CapsuleHalfHeight - CapsuleRadius);
 	FVector TraceEnd = (CapsuleHalfHeight == CapsuleRadius) ? TraceOrigin.GetLocation() : TraceOrigin.GetLocation() + UpVector * (CapsuleHalfHeight - CapsuleRadius);
 
-	UKismetSystemLibrary::SphereTraceMulti(World, TraceStart, TraceEnd, CapsuleRadius, ETraceTypeQuery::TraceTypeQuery1,
+	UKismetSystemLibrary::SphereTraceMulti(World, TraceStart, TraceEnd, CapsuleRadius, ETraceTypeQuery::TraceTypeQuery2,
 		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None, HitResults, true);
 		
 	return HitResults;

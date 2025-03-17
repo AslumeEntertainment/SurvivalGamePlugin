@@ -11,7 +11,6 @@
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Components/LootTableComponent.h"
-#include "Components/HittableComponent.h"
 
 
 AHittableFoliageActor::AHittableFoliageActor()
@@ -21,9 +20,6 @@ AHittableFoliageActor::AHittableFoliageActor()
 
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	SetRootComponent(StaticMesh);
-
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 

@@ -11,7 +11,6 @@
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/LootTableComponent.h"
-#include "Components/HittableComponent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
@@ -23,14 +22,12 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 	DOREPLIFETIME(AItemBase, bIsAttached);
 }
 
-
 AItemBase::AItemBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
 }
 
 void AItemBase::BeginPlay()
@@ -76,7 +73,6 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 {
 	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
 	StaticMeshComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
-	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)
@@ -91,14 +87,15 @@ void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 		Server_LoseDurability(LostDurability, bSafeDurabilityLoss);
 		return;
 	}
+
 	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) - LostDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 
 	if (CurrentDurability <= 0)
 	{
 		DestroyHittable(bSafeDurabilityLoss);
 		return;
 	}
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
 }
 
 UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const
@@ -215,7 +212,10 @@ void AItemBase::DestroyHittable(bool bSafeDestruct)
 		float DurabilityPercent = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) / 
 			AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute());
 		
-		DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() * ((DurabilityPercent <= 0.f) ? 0.5f : DurabilityPercent));
+		UE_LOG(LogTemp, Warning, TEXT("DurabilityPercent - %.2f"), DurabilityPercent);
+		
+		if (DurabilityPercent <= 0.f) DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() / 2.f);
+		else DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() * DurabilityPercent);
 
 		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
 	}

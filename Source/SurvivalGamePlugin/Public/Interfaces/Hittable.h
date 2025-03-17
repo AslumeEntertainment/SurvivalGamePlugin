@@ -7,7 +7,7 @@
 #include "Hittable.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, Meta = (CannotImplementInterfaceInBlueprint))
 class UHittable : public UInterface
 {
 	GENERATED_BODY()
@@ -27,5 +27,8 @@ public:
 
 	UFUNCTION()
 	virtual void DestroyHittable(bool bSafeDestruct = false) = 0;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsGuarding() const;
 
 };

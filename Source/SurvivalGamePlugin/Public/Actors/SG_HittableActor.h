@@ -11,7 +11,7 @@
 #include "SG_HittableActor.generated.h"
 
 class UStaticMeshComponent;
-class UHittableComponent;
+class UCapsuleComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class UAbilitySystemComponent;
@@ -37,7 +37,7 @@ protected:
 	UStaticMeshComponent* StaticMeshComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;
+	UCapsuleComponent *CollisionCapsuleComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
@@ -54,13 +54,8 @@ public:
 
 	UStaticMeshComponent* GetStaticMeshComponent();
 
-	UHittableComponent* GetHittableComponent();
-
 	ULootTableComponent* GetLootTableComponent();
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
-
-	/*UFUNCTION(BlueprintCallable)
-	virtual void DestroyHittableActor(bool bSafeDestruct = false);*/
 
 };
