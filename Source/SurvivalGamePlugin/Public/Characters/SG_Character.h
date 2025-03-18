@@ -26,8 +26,14 @@ class UDamageDealingComponent;
 class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
 
-
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+UENUM(BlueprintType)
+enum class EMovementType : uint8
+{
+	UEDefault,
+	FirstPerson
+};
 
 UCLASS(config = Game)
 class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
@@ -46,6 +52,8 @@ private:
 	float CurrentInteractionRange;
 
 	FTimeline CameraViewResetTimeline;
+
+	FTimerHandle CameraRotationTimer;
 
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
@@ -72,16 +80,23 @@ protected:
 	UPROPERTY(Replicated)
 	FRotator ControlRotation;
 
-	//---remove that when you clean the movement: line 135--
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCameraMovementConstrained = false;
-	//-----------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float InteractionRange = 200;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	UMaterialInterface* InteractableOverlayMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	float TargetingDistance = 650.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	float TargetingTraceRadius = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	float CameraInterpSpeed = 20.f;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
 	TArray<TSubclassOf<class USG_GameplayAbility>> DefaultAbilities;
@@ -125,8 +140,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* CameraModeToggleAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* TargetAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	EMovementType MovementType;
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+
+	void StartTarget();
+
+	void StopTarget();
+
+	UFUNCTION()
+	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
 
 	void AbilityInputPressed(FGameplayTag InputTag);
 	void AbilityInputReleased(FGameplayTag InputTag);

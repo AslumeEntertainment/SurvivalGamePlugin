@@ -96,6 +96,13 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
 
+	FGameplayCueParameters CueParams = FGameplayCueParameters();
+	CueParams.SourceObject = DamageSourceData;
+	CueParams.RawMagnitude = FinalDamage;
+	CueParams.Location = HitLocation;
+
+	TargetASC->ExecuteGameplayCue(DamageIndicatorGameplayCueTag, CueParams);
+
 	int RandInt = FMath::RandRange(1, 100);
 	if (IsValid(InstigatorASC))
 	{
@@ -179,8 +186,8 @@ float UGEEC_CalculateDamage::GetPenetrationMultiplier(const UDamageSourceData* D
 
 	if (IsTargetGuarding(TargetASC->GetOwner(), TargetASC, HitLocation))
 	{
-		UE_LOG(DamageLog, Warning, TEXT("The hit is being blocked by the target"));
-		TargetResistance *= 2;
+		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
+		TargetResistance *= TargetASC->GetNumericAttribute(USG_AttributeSet::GetGuardProficiencyAttribute());
 	}
 
 	PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;

@@ -26,6 +26,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	bool bShouldPrintDebug = true;
 
+	UPROPERTY(EditAnywhere)
+	FGameplayTag DamageIndicatorGameplayCueTag;
+
 	float GetStrengthMultiplier(USG_AbilitySystemComponent* InstigatorASC, AActor* EffectCauser) const;
 
 	float GetInstigatorVelocity_MetersPerSec(AActor* InstigatorActor) const;

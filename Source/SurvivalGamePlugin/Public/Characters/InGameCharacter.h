@@ -70,9 +70,6 @@ protected:
 
 	void PossessedBy(AController* NewController) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OnCrouched", meta = (ForceUnits = cm))
-	float HittableCompOnCrouchedHalfHeight = 60.f;
-
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
 

@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "Objects/DamageSourceData.h"
+
 #include "DamageIndicator.generated.h"
 
 class UWidgetComponent;
@@ -20,6 +23,9 @@ public:
 
 protected:
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
+	TMap<ESG_DamageType, FSlateFontInfo> DamageIndicatorFontForDamageType;
+
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* WidgetComponent;
 
@@ -35,5 +41,8 @@ public:
 
 	UPROPERTY(Replicated)
 	float Damage = 0.f;
+
+	UPROPERTY()
+	ESG_DamageType DamageType;
 
 };

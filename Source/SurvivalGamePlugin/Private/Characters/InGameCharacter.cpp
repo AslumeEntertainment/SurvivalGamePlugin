@@ -29,6 +29,7 @@ AInGameCharacter::AInGameCharacter()
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 	
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
+	GetCapsuleComponent()->SetUseCCD(true);
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
 }
@@ -60,7 +61,6 @@ void AInGameCharacter::BeginPlay()
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (IsValid(PlayerController) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(PlayerController) == false"));
 			return;
 		}
 		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());

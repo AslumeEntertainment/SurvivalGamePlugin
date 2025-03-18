@@ -48,7 +48,12 @@ void ADamageIndicator::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("ADamageIndicator::BeginPlay IsValid(DamageIndicatorWidget) == false"));
 		return;
 	}
+
 	DamageIndicatorWidget->SetDamageText(Damage);
+	if (DamageIndicatorFontForDamageType.Contains(DamageType))
+	{
+		DamageIndicatorWidget->SetFont(DamageIndicatorFontForDamageType[DamageType]);
+	}
 
 	FVector Direction = FVector(FMath::RandRange(-0.25f, 0.25f), FMath::RandRange(-0.25f, 0.25f), 1);
 	MovementComponent->Velocity = Direction * 100;

@@ -8,6 +8,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/LocalPlayer.h"
@@ -246,6 +247,9 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
 
+		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Started, this, &ASG_Character::StartTarget);
+		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Completed, this, &ASG_Character::StopTarget);
+
 		if (IsValid(AbilityInputConfig) == false)
 		{
 			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SetupPlayerInputComponent IsValid(AbilityInputConfig) == false"))
@@ -292,13 +296,11 @@ void ASG_Character::Move(const FInputActionValue& Value)
 	if (bIsCameraMovementConstrained)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
-		if (!IsValid(PlayerController))
+		if (IsValid(PlayerController))
 		{
-			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::Move IsValid(PlayerController) == false"));
-			return;
+			PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
+			PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 		}
-		PlayerController->PlayerCameraManager->ViewYawMin = GetActorRotation().Yaw - 80;
-		PlayerController->PlayerCameraManager->ViewYawMax = GetActorRotation().Yaw + 80;
 	}
 	
 	AddMovementInput(ForwardDirection, MovementVector.Y);
@@ -308,6 +310,11 @@ void ASG_Character::Move(const FInputActionValue& Value)
 
 void ASG_Character::Look(const FInputActionValue& Value)
 {
+	if (GetWorldTimerManager().IsTimerActive(CameraRotationTimer))
+	{
+		return;
+	}
+
 	FVector2D LookAxisVector = Value.Get<FVector2D>(); 
 
 	if (Controller == nullptr)
@@ -318,6 +325,87 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(LookAxisVector.Y);
 
 	SetRepControlRotation(GetControlRotation());
+}
+
+void ASG_Character::StartTarget()
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::StartTarget IsValid(World) == false"));
+		return;
+	}
+
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = (FirstPersonCamera->GetForwardVector() * TargetingDistance) + TraceStart;
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+
+	TArray<FHitResult> HitResults;
+
+	if (UKismetSystemLibrary::SphereTraceMultiForObjects(World, TraceStart, TraceEnd, TargetingTraceRadius, ObjectTypes, false,
+		ActorsToIgnore, EDrawDebugTrace::None, HitResults, true) == false)
+	{
+		ResetCameraView();
+		return;
+	}
+
+	for (FHitResult HitResult : HitResults)
+	{
+		if (IsValid(HitResult.GetActor()))
+		{
+			PointCameraTowardsActor(World, HitResult.GetActor());
+			return;
+		}
+	}
+}
+
+void ASG_Character::StopTarget()
+{
+	GetWorldTimerManager().ClearTimer(CameraRotationTimer);
+}
+
+void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
+{
+	if (IsValid(GetController()) == false)
+	{
+		return;
+	}
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(World) == false"));
+		return;
+	}
+	if (IsValid(TargetActor) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(TargetActor) == false"));
+		return;
+	}
+
+	if (UKismetMathLibrary::Vector_Distance(GetActorLocation(), TargetActor->GetActorLocation()) > TargetingDistance)
+	{
+		StopTarget();
+	}
+
+	FVector NormalizedLocation = TargetActor->GetActorLocation() - FirstPersonCamera->GetComponentLocation();
+	UKismetMathLibrary::Vector_Normalize(NormalizedLocation);
+
+	float DotProduct = FVector::DotProduct(NormalizedLocation, FirstPersonCamera->GetForwardVector());
+
+	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), TargetActor->GetActorLocation());
+	FRotator InterpRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), LookAtRotation, World->DeltaTimeSeconds, CameraInterpSpeed);
+
+	GetController()->SetControlRotation(InterpRotation);
+	SetActorRotation(FRotator(GetActorRotation().Pitch, InterpRotation.Yaw, GetActorRotation().Roll));
+
+	FTimerDelegate CameraRotationTimerDelegate;
+
+	CameraRotationTimerDelegate.BindUFunction(this, FName("PointCameraTowardsActor"), World, TargetActor);
+	GetWorldTimerManager().SetTimer(CameraRotationTimer, CameraRotationTimerDelegate, 0.01f, false);
 }
 
 void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)

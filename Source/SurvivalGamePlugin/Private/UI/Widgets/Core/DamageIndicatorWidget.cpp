@@ -17,3 +17,8 @@ void UDamageIndicatorWidget::SetDamageText(float Damage)
 
 	DamageText->SetColorAndOpacity(FLinearColor(RedColorValue, GreenColorValue, BlueColorValue));
 }
+
+void UDamageIndicatorWidget::SetFont(FSlateFontInfo FontInfo)
+{
+	DamageText->SetFont(FontInfo);
+}

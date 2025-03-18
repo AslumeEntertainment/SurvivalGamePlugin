@@ -31,8 +31,6 @@ void ADamageDealingItem::OnItemDestroyed(AActor* DestroyedActor)
 void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
 {
     float DurabilityLost = 10;
-    
-    UE_LOG(LogTemp, Log, TEXT("%s: Durability loss"), *GetName());
 
     LoseDurability(DurabilityLost);
 }

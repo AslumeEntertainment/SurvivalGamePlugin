@@ -13,10 +13,6 @@
 #include "Characters/InGameCharacter.h"
 #include "Interfaces/Hittable.h"
 
-USG_AttributeSet::USG_AttributeSet()
-{
-	
-}
 
 void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -25,6 +21,7 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, GuardProficiency, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceSlashing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistancePiercing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceBludgeoning, COND_None, REPNOTIFY_Always);
@@ -48,16 +45,10 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 {
 	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 
-	/*USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
-		return;
-	}
-	IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
-	if (HittableOwner == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
 		return;
 	}
 
@@ -66,9 +57,19 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 		if (NewValue == 0.f)
 		{
 			ASC->OnOwnerDestroyed.Broadcast();
+			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
+			if (HittableOwner == nullptr)
+			{
+					UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
+					return;
+			}
+			if (IsValid(Cast<AItemBase>(HittableOwner)))
+			{
+				return;
+			}
 			HittableOwner->DestroyHittable();
 		}
-	}*/
+	}
 }
 
 void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -92,11 +93,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
-		if (Data.EvaluatedData.Magnitude <= 0)
-		{
-			ASC->ShowDamageIndicator(FMath::Abs(Data.EvaluatedData.Magnitude));
-		}
-
 		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
 
 		if (HasMaxHealth())
@@ -108,17 +104,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		{
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
-		}
-		if (GetHealth() == 0.f)
-		{
-			ASC->OnOwnerDestroyed.Broadcast();
-			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
-			if (HittableOwner == nullptr || IsValid(Cast<AItemBase>(HittableOwner)))
-			{
-				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute HittableOwner == nullptr"));
-				return;
-			}
-			HittableOwner->DestroyHittable();
 		}
 	}
 }
@@ -157,6 +142,11 @@ void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldValue);
+}
+
+void USG_AttributeSet::OnRep_GuardProficiency(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, GuardProficiency, OldValue);
 }
 
 void USG_AttributeSet::OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue)

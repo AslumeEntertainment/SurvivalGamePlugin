@@ -63,6 +63,10 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 		{
 			continue;
 		}
+		if (ActorsToIgnoreWhenActive.Contains(HitActor))
+		{
+			continue;
+		}
 
 		USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
 		if (IsValid(TargetASC) == false)

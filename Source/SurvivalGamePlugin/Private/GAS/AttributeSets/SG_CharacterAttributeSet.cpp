@@ -77,11 +77,18 @@ void USG_CharacterAttributeSet::PostAttributeChange(const FGameplayAttribute& At
 		{
 			AvatarActor->SendGameplayEventToSelf(FGameplayTag::RequestGameplayTag("Bool.HasFull.Energy"), FGameplayEventData());
 		}
-		else if (NewValue == 0.f)
+		
+		if (NewValue == 0.f)
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
 		}
+		else if(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy"))))
+		{
+			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
+			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Energy")));
+		}
+		
 	}
 	if (Attribute == GetMaxEnergyAttribute())
 	{

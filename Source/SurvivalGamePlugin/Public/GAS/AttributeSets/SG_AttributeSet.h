@@ -20,8 +20,6 @@ class SURVIVALGAMEPLUGIN_API USG_AttributeSet : public UAttributeSet
 	
 public:
 
-	USG_AttributeSet();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
@@ -45,6 +43,10 @@ public:
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxHealth);
 
 	/*---------------------------------------------Resistances-----------------------------------------------*/
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_GuardProficiency)
+	FGameplayAttributeData GuardProficiency;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, GuardProficiency);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceSlashing)
 	FGameplayAttributeData ResistanceSlashing;
@@ -81,6 +83,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_GuardProficiency(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue);

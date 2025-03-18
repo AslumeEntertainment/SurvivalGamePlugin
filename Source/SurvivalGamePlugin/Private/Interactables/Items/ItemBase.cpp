@@ -4,6 +4,7 @@
 #include "Interactables/Items/ItemBase.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -73,6 +74,7 @@ void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics
 {
 	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
 	StaticMeshComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	CollisionCapsuleComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)
