@@ -63,7 +63,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 					UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
 					return;
 			}
-			if (IsValid(Cast<AItemBase>(HittableOwner)))
+			if (IsValid(Cast<AItemBase>(HittableOwner)) && IsValid(Cast<AItemBase>(HittableOwner)->GetAttachParentActor()))
 			{
 				return;
 			}

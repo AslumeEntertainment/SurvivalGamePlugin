@@ -48,20 +48,15 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 	FVector LaunchDirection;
 	if (KnockbackEffectData->bUseHitDirection)
 	{
-		UMeshComponent* TargetActorMesh = TargetActor->GetComponentByClass<UMeshComponent>();
-		if (IsValid(TargetActorMesh) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(TargetActorMesh) == false"));
-			return;
-		}
-		LaunchDirection = GetHitDirection(ExecutionParams.GetOwningSpec().GetEffectContext().GetOrigin(), TargetActorMesh->GetCenterOfMass());
+		LaunchDirection = ExecutionParams.GetOwningSpec().GetEffectContext().GetHitResult()->ImpactNormal * -1;
 	}
 	else
 	{
 		LaunchDirection = InstigatorActor->GetActorUpVector();
 	}
+	UE_LOG(LogTemp, Log, TEXT("%s was launched in this direction - %s"), *TargetActor->GetName(), *LaunchDirection.ToString());
 
-	FVector KnockbackForce = InstigatorActor->GetActorUpVector() * KnockbackEffectData->KnockbackPower * KnockbackEffectData->EffectLevel;
+	FVector KnockbackForce = LaunchDirection * KnockbackEffectData->KnockbackPower * KnockbackEffectData->EffectLevel;
 
 	if (HittableTarget->IsGuarding())
 	{
@@ -75,15 +70,10 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 	}
 	else
 	{
-		UMeshComponent* TargetActorMesh = TargetActor->GetComponentByClass<UMeshComponent>();
-		if (IsValid(TargetActorMesh))
+		UPrimitiveComponent* TargetRoot = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
+		if (IsValid(TargetRoot))
 		{
-			TargetActorMesh->AddImpulse(KnockbackForce);
+			TargetRoot->AddImpulse(KnockbackForce);
 		}
 	}
-}
-
-FVector UGEEC_CalculateKnockback::GetHitDirection(FVector HitLocation, FVector TargetCenter) const
-{
-	return (TargetCenter-HitLocation).GetSafeNormal();
 }

@@ -30,42 +30,32 @@ UGEEC_CalculateDamage::UGEEC_CalculateDamage()
 
 void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
-	//USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InstigatorActor));
+	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
 
-	/*if (IsValid(InstigatorAbilitySystemComponent) == false)
+	AActor* InstigatorActor = EffectContext.GetInstigator();
+	USG_AbilitySystemComponent* InstigatorASC = IsValid(InstigatorActor) ? Cast<USG_AbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InstigatorActor)) : nullptr;
+	
+	USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetTargetAbilitySystemComponent());
+	if (IsValid(TargetASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(InstigatorAbilitySystemComponent) == false"));
-		return;
-	}*/
-	/*if (IsValid(TargetAbilitySystemComponent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(TargetAbilitySystemComponent) == false"));
-		return;
-	}*/
-	/*
-	AActor* InstigatorActor = ExecutionParams.GetOwningSpec().GetEffectContext().GetInstigator();
-	if (IsValid(InstigatorActor) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(InstigatorActor) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(TargetASC) == false"));
 		return;
 	}
-	*/
+	AActor* TargetActor = TargetASC->GetOwner();
+	if (IsValid(TargetActor) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(TargetActor) == false"));
+		return;
+	}
 
-	AActor* InstigatorActor = ExecutionParams.GetOwningSpec().GetEffectContext().GetInstigator();
-
-	USG_AbilitySystemComponent* InstigatorASC = IsValid(InstigatorActor) ? Cast<USG_AbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InstigatorActor)) : nullptr;
-	USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetTargetAbilitySystemComponent());
-
-	AActor* TargetActor = IsValid(TargetASC) ? TargetASC->GetOwner() : nullptr;
-
-	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(ExecutionParams.GetOwningSpec().GetContext().GetSourceObject());
+	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(EffectContext.GetSourceObject());
 	if (IsValid(DamageSourceData) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageSourceData) == false"));
 		return;
 	}
 
-	AActor* EffectCauser = ExecutionParams.GetOwningSpec().GetEffectContext().GetEffectCauser();
+	AActor* EffectCauser = EffectContext.GetEffectCauser();
 	if (IsValid(EffectCauser) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(EffectCauser) == false"));
@@ -74,7 +64,7 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 
 	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
 
-	FVector HitLocation = ExecutionParams.GetOwningSpec().GetContext().GetOrigin();
+	FVector HitLocation = EffectContext.GetHitResult()->ImpactPoint;
 
 	float StrengthMultiplier = GetStrengthMultiplier(InstigatorASC, EffectCauser);
 	float InstigatorVelocity = GetInstigatorVelocity_MetersPerSec(InstigatorActor);
@@ -109,11 +99,28 @@ void UGEEC_CalculateDamage::Execute_Implementation(const FGameplayEffectCustomEx
 		RandInt += InstigatorASC->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute());
 	}
 	
-	for (TPair<TSubclassOf<UGameplayEffect>, float> AdditionalEffect : DamageSourceData->AdditionalEffects)
+	FGameplayEffectContextHandle NewEffectContext = EffectContext;
+
+	for (FAdditionalEffectDataStruct AdditionalEffect : DamageSourceData->AdditionalEffects)
 	{
-		if (RandInt <= AdditionalEffect.Value)
+		if (RandInt <= AdditionalEffect.ChanceToApply)
 		{
-			TargetASC->ApplyGameplayEffectToSelf(Cast<UGameplayEffect>(AdditionalEffect.Key->GetDefaultObject()), DamageSourceData->EffectLevel, ExecutionParams.GetOwningSpec().GetEffectContext());
+			if (IsValid(AdditionalEffect.AdditionalEffectData) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(AdditionalEffect.AdditionalEffectData) == false"));
+				continue;
+			}
+			if (IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false"));
+				continue;
+			}
+
+			NewEffectContext.AddSourceObject(AdditionalEffect.AdditionalEffectData);
+			UE_LOG(LogTemp, Error, TEXT("AdditionalEffect.AdditionalEffectData - %s"), *NewEffectContext.GetSourceObject()->GetName());
+
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(AdditionalEffect.AdditionalEffectData->DamageEffect, AdditionalEffect.AdditionalEffectData->EffectLevel, NewEffectContext);
+			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
 
@@ -168,13 +175,16 @@ float UGEEC_CalculateDamage::GetInstigatorVelocity_MetersPerSec(AActor* Instigat
 float UGEEC_CalculateDamage::GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const
 {
 	float PenetrationMultiplier = 1.f;
-
-	if (IsValid(TargetASC) == false)
+	
+	IHittable* HittableTarget = Cast<IHittable>(TargetASC->GetOwner());
+	if (HittableTarget == nullptr)
 	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::GetPenetrationMultiplier HittableTarget == nullptr"));
 		return PenetrationMultiplier;
 	}
-
+	
 	float TargetResistance = 1;
+
 	switch (DamageSourceData->DamageType)
 	{
 	case ESG_DamageType::Slashing: TargetResistance = TargetASC->GetNumericAttribute(USG_AttributeSet::GetResistanceSlashingAttribute()); break;
@@ -182,9 +192,10 @@ float UGEEC_CalculateDamage::GetPenetrationMultiplier(const UDamageSourceData* D
 	case ESG_DamageType::Bludgeoning: TargetResistance = TargetASC->GetNumericAttribute(USG_AttributeSet::GetResistanceBludgeoningAttribute()); break;
 	case ESG_DamageType::Fire: TargetResistance = TargetASC->GetNumericAttribute(USG_AttributeSet::GetResistanceFireAttribute());
 	}
+
 	if (TargetResistance <= 0) TargetResistance = 1;
 
-	if (IsTargetGuarding(TargetASC->GetOwner(), TargetASC, HitLocation))
+	if (HittableTarget->IsHitGuarded(HitLocation))
 	{
 		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
 		TargetResistance *= TargetASC->GetNumericAttribute(USG_AttributeSet::GetGuardProficiencyAttribute());
@@ -193,45 +204,4 @@ float UGEEC_CalculateDamage::GetPenetrationMultiplier(const UDamageSourceData* D
 	PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;
 
 	return PenetrationMultiplier;
-}
-
-bool UGEEC_CalculateDamage::IsTargetGuarding(AActor* TargetActor, UAbilitySystemComponent* TargetASC, FVector HitLocation) const
-{
-	AInGameCharacter* TargetCharacter = Cast<AInGameCharacter>(TargetActor);
-	if (IsValid(TargetCharacter) == false)
-	{
-		UE_LOG(DamageLog, Warning, TEXT("Target is not a character"));
-		return false;
-	}
-	if (TargetASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard"))) == false)
-	{
-		UE_LOG(DamageLog, Warning, TEXT("Target is not blocking"));
-		return false;
-	}
-
-	UMeshComponent* TargetMesh = TargetCharacter->GetComponentByClass<UMeshComponent>();
-	if (IsValid(TargetMesh) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::bIsTargetGuarding IsValid(TargetMesh) == false"));
-		return false;
-	}
-
-	FVector TargetMeshCenter = TargetMesh->GetLocalBounds().GetBox().GetCenter();
-
-	UE_LOG(DamageLog, Warning, TEXT("Hit point - %s; Target center - %s"), *HitLocation.ToString(), *TargetMeshCenter.ToString());
-
-	if (TargetMeshCenter.Z > HitLocation.Z)
-	{
-		UE_LOG(DamageLog, Warning, TEXT("The hit is below the blocking range"));
-		return false;
-	}
-
-	FVector TargetForwardVector = TargetMesh->GetForwardVector();
-	FVector HitDirectionVector = UKismetMathLibrary::Normal(HitLocation - TargetActor->GetActorLocation());
-
-	float DotProduct = UKismetMathLibrary::Dot_VectorVector(TargetForwardVector, HitDirectionVector);
-	UE_LOG(DamageLog, Warning, TEXT("DotProduct - %f"), DotProduct);
-
-	return (DotProduct > 0);
-
 }

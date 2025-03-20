@@ -35,6 +35,4 @@ protected:
 
 	float GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const;
 
-	bool IsTargetGuarding(AActor* TargetActor, UAbilitySystemComponent* TargetASC, FVector HitLocation) const;
-
 };

@@ -16,8 +16,4 @@ public:
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
-protected:
-
-	FVector GetHitDirection(FVector HitLocation, FVector TargetCenter) const;
-
 };

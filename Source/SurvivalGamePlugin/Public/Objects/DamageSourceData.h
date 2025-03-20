@@ -20,6 +20,19 @@ enum class ESG_DamageType : uint8
 	Fire
 };
 
+USTRUCT(BlueprintType)
+struct FAdditionalEffectDataStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UGameplayEffectData* AdditionalEffectData = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
+	float ChanceToApply = 0.f;
+
+};
+
 UCLASS(EditInlineNew, DefaultToInstanced, CollapseCategories)
 class SURVIVALGAMEPLUGIN_API UDamageSourceData : public UGameplayEffectData
 {
@@ -37,6 +50,6 @@ public:
 	float Penetration = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
-	TMap<TSubclassOf<UGameplayEffect>, float> AdditionalEffects;
+	TArray<FAdditionalEffectDataStruct> AdditionalEffects;
 	
 };

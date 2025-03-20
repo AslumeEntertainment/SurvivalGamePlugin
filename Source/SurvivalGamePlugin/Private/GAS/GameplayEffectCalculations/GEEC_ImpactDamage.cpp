@@ -46,7 +46,6 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		DamageContextString = "Impact";
 	}
 
-	// Damage *= Actor.Vulnerability
 	Damage = FMath::Clamp<float>(Damage, 0, TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
 	Damage = FMath::CeilToFloat(Damage);
 

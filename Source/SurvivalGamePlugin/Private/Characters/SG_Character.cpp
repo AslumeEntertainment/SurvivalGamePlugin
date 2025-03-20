@@ -46,7 +46,7 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetMesh(), FName(TEXT("head")));
+	CameraBoom->SetupAttachment(GetMesh()/*, FName(TEXT("head"))*/);
 	CameraBoom->TargetArmLength = 0.f; 
 	CameraBoom->bUsePawnControlRotation = false;
 
@@ -196,23 +196,6 @@ void ASG_Character::BeginPlay()
 		CameraViewResetTimeline.AddInterpFloat(CameraViewResetCurve, ProgressUpdate);
 		CameraViewResetTimeline.SetLooping(false);
 	}
-
-	/*if (IsLocallyControlled() && HasAuthority())
-	{
-		APlayerController* PlayerController = Cast<APlayerController>(Controller);
-		if (IsValid(PlayerController) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(PlayerController) == false"));
-			return;
-		}
-		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
-		if (IsValid(HUD) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(HUD) == false"));
-			return;
-		}
-		HUD->SetInteractionOverlayBindings(this);
-	}*/
 }
 
 void ASG_Character::Tick(float DeltaTime)
@@ -325,6 +308,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(LookAxisVector.Y);
 
 	SetRepControlRotation(GetControlRotation());
+
 }
 
 void ASG_Character::StartTarget()
@@ -576,6 +560,11 @@ void ASG_Character::EnablePlayerInput()
 
 	InputSystem->AddMappingContext(DefaultMappingContext, 0);
 	UE_LOG(LogTemp, Log, TEXT("ASG_Character::EnablePlayerInput - %s"), *GetName());
+}
+
+bool ASG_Character::IsMoving()
+{
+	return (GetVelocity().Length() != 0);
 }
 
 bool ASG_Character::IsMirrored()

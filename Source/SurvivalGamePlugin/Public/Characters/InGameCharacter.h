@@ -167,6 +167,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();
 
+	virtual bool IsHitGuarded(FVector HitLocation) const override;
+
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
 	FVoidDataTransferSignature OnCharacterDeath;

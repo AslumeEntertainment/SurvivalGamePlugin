@@ -605,6 +605,32 @@ void AInGameCharacter::ShowPlayerInfo()
 	}
 }
 
+bool AInGameCharacter::IsHitGuarded(FVector HitLocation) const
+{
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard"))) == false)
+	{
+		return false;
+	}
+
+	FVector CharacterCenterPoint = GetMesh()->GetLocalBounds().GetBox().GetCenter();
+
+	UE_LOG(LogTemp, Warning, TEXT("Hit point - %s; Target center - %s"), *HitLocation.ToString(), *CharacterCenterPoint.ToString());
+
+	if (CharacterCenterPoint.Z > HitLocation.Z)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The hit is below the blocking range"));
+		return false;
+	}
+
+	FVector TargetForwardVector = GetMesh()->GetForwardVector();
+	FVector HitDirectionVector = UKismetMathLibrary::Normal(HitLocation - GetActorLocation());
+
+	float DotProduct = UKismetMathLibrary::Dot_VectorVector(TargetForwardVector, HitDirectionVector);
+	UE_LOG(LogTemp, Warning, TEXT("DotProduct - %f"), DotProduct);
+
+	return (DotProduct > 0);
+}
+
 void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 {
 	if (HasAuthority() == false)

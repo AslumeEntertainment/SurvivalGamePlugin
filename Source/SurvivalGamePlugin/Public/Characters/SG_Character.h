@@ -207,6 +207,9 @@ public:
 	void EnablePlayerInput();
 
 	UFUNCTION(BlueprintCallable)
+	bool IsMoving();
+
+	UFUNCTION(BlueprintCallable)
 	bool IsMirrored();
 
 	UFUNCTION(BlueprintCallable)

@@ -6,6 +6,8 @@
 #include "UObject/Interface.h"
 #include "Hittable.generated.h"
 
+class USG_AbilitySystemComponent;
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Meta = (CannotImplementInterfaceInBlueprint))
 class UHittable : public UInterface
@@ -25,10 +27,16 @@ protected:
 
 public:
 
+	UFUNCTION(BlueprintCallable)
+	virtual USG_AbilitySystemComponent* GetSG_AbilitySystemComponent() const;
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool IsGuarding() const;
+
 	UFUNCTION()
 	virtual void DestroyHittable(bool bSafeDestruct = false) = 0;
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool IsGuarding() const;
+	virtual bool IsHitGuarded(FVector HitLocation) const;
 
 };

@@ -78,7 +78,7 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			continue;
 		}
 
-		ContextHandle.AddOrigin(HitResult.ImpactPoint);
+		ContextHandle.AddHitResult(HitResult);
 		
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;

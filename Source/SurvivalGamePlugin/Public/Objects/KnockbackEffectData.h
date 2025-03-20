@@ -20,4 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KnockbackEffectProperties")
 	bool bUseHitDirection = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "KnockbackEffectProperties")
+	bool bIgnoreGuard = false;
+
 };
