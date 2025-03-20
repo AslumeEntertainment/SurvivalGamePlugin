@@ -87,10 +87,20 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
 		}
 
-		for (UDamageSourceData* DamageEffectData : DamageEffectsData)
+		for (UGameplayEffectData* GameplayEffectData : GameplayEffectsData)
 		{
-			ContextHandle.AddSourceObject(DamageEffectData);
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(DamageEffectData->DamageEffect, DamageEffectData->EffectLevel, ContextHandle);
+			if (IsValid(GameplayEffectData) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData) == false"));
+				continue;
+			}
+			if (IsValid(GameplayEffectData->DamageEffect) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData->DamageEffect) == false"));
+				continue;
+			}
+			ContextHandle.AddSourceObject(GameplayEffectData);
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectData->DamageEffect, GameplayEffectData->EffectLevel, ContextHandle);
 			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 

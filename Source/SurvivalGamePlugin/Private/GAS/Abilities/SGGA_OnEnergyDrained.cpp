@@ -36,6 +36,6 @@ void USGGA_OnEnergyDrained::ActivateAbility(const FGameplayAbilitySpecHandle Han
 void USGGA_OnEnergyDrained::OnEnergyRecharged(FGameplayEventData Payload)
 {
 	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) / SpeedMultiplier);
-	
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }

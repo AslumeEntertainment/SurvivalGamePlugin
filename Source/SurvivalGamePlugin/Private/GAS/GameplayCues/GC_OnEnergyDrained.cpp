@@ -23,8 +23,11 @@ bool UGC_OnEnergyDrained::OnExecute_Implementation(AActor* MyTarget, const FGame
 		return false;
 	}
 
-	if (ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyAttribute()) > 0) return false;
-
+	if (ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyAttribute()) > 0)
+	{
+		return false;
+	}
+	
 	ASC->AddPassiveAbility(OnEnergyDrainedPassiveAbility, 1, nullptr);
 
 	return true;

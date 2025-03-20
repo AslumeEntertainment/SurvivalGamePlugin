@@ -9,7 +9,7 @@
 
 #include "DamageDealingComponent.generated.h"
 
-class UDamageSourceData;
+class UGameplayEffectData;
 class USG_TraceEmitterBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHitSucceedSignature, UObject*, HittableObject);
@@ -48,7 +48,7 @@ protected:
 	FGameplayTagContainer OnHitGameplayCueTags;
 
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
-	TArray<UDamageSourceData*> DamageEffectsData;
+	TArray<UGameplayEffectData*> GameplayEffectsData;
 
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
 	bool bShouldOnlyHitOnce = true;

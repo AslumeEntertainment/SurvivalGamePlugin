@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "Objects/GameplayEffectData.h"
 #include "DamageSourceData.generated.h"
 
 class UGameplayEffect;
@@ -21,7 +21,7 @@ enum class ESG_DamageType : uint8
 };
 
 UCLASS(EditInlineNew, DefaultToInstanced, CollapseCategories)
-class SURVIVALGAMEPLUGIN_API UDamageSourceData : public UObject
+class SURVIVALGAMEPLUGIN_API UDamageSourceData : public UGameplayEffectData
 {
 	GENERATED_BODY()
 
@@ -35,12 +35,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	float Penetration = 0.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
-	float EffectLevel = 1.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
-	TSubclassOf<UGameplayEffect> DamageEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	TMap<TSubclassOf<UGameplayEffect>, float> AdditionalEffects;

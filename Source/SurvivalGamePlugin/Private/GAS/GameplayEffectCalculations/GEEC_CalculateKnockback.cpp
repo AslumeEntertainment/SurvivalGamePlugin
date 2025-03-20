@@ -7,15 +7,17 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/DamageSourceData.h"
+#include "Objects/KnockbackEffectData.h"
 #include "Characters/SG_Character.h"
+#include "Interfaces/Hittable.h"
+
 
 void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
-	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(ExecutionParams.GetOwningSpec().GetContext().GetSourceObject());
-	if (IsValid(DamageSourceData) == false)
+	const UKnockbackEffectData* KnockbackEffectData = Cast<UKnockbackEffectData>(ExecutionParams.GetOwningSpec().GetContext().GetSourceObject());
+	if (IsValid(KnockbackEffectData) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(DamageSourceData) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(KnockbackEffectData) == false"));
 		return;
 	}
 	AActor* InstigatorActor = ExecutionParams.GetOwningSpec().GetEffectContext().GetInstigator();
@@ -36,8 +38,35 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(TargetActor) == false"));
 		return;
 	}
+	IHittable* HittableTarget = Cast<IHittable>(TargetActor);
+	if (HittableTarget == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation HittableTarget == nullptr"));
+		return;
+	}
 	
-	FVector KnockbackForce =  InstigatorActor->GetActorUpVector() * DamageSourceData->BaseDamage;
+	FVector LaunchDirection;
+	if (KnockbackEffectData->bUseHitDirection)
+	{
+		UMeshComponent* TargetActorMesh = TargetActor->GetComponentByClass<UMeshComponent>();
+		if (IsValid(TargetActorMesh) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateKnockback::Execute_Implementation IsValid(TargetActorMesh) == false"));
+			return;
+		}
+		LaunchDirection = GetHitDirection(ExecutionParams.GetOwningSpec().GetEffectContext().GetOrigin(), TargetActorMesh->GetCenterOfMass());
+	}
+	else
+	{
+		LaunchDirection = InstigatorActor->GetActorUpVector();
+	}
+
+	FVector KnockbackForce = InstigatorActor->GetActorUpVector() * KnockbackEffectData->KnockbackPower * KnockbackEffectData->EffectLevel;
+
+	if (HittableTarget->IsGuarding())
+	{
+		KnockbackForce /= TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetGuardProficiencyAttribute());
+	}
 
 	ASG_Character* TargetCharacter = Cast<ASG_Character>(TargetActor);
 	if (IsValid(TargetCharacter))
@@ -52,4 +81,9 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 			TargetActorMesh->AddImpulse(KnockbackForce);
 		}
 	}
+}
+
+FVector UGEEC_CalculateKnockback::GetHitDirection(FVector HitLocation, FVector TargetCenter) const
+{
+	return (TargetCenter-HitLocation).GetSafeNormal();
 }
