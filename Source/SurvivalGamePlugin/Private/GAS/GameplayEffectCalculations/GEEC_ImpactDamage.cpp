@@ -17,21 +17,21 @@ UGEEC_ImpactDamage::UGEEC_ImpactDamage()
 
 void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
-	USG_AbilitySystemComponent* TargetAbilitySystemComponent = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetTargetAbilitySystemComponent());
-	if (IsValid(TargetAbilitySystemComponent) == false)
+	USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetTargetAbilitySystemComponent());
+	if (IsValid(TargetASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation IsValid(TargetAbilitySystemComponent) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation IsValid(TargetASC) == false"));
 		return;
 	}
-	AActor* Target = TargetAbilitySystemComponent->GetAvatarActor();
-	if (IsValid(Target) == false)
+	AActor* TargetActor = TargetASC->GetAvatarActor();
+	if (IsValid(TargetActor) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation IsValid(Target) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation IsValid(TargetActor) == false"));
 		return;
 	}
 
 	float Damage = 0;
-	FVector Velocity = Target->GetVelocity();
+	FVector Velocity = TargetActor->GetVelocity();
 	FVector NormalVelocity = UKismetMathLibrary::Normal(Velocity);
 	FString DamageContextString;
 
@@ -46,17 +46,29 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		DamageContextString = "Impact";
 	}
 
-	Damage = FMath::Clamp<float>(Damage, 0, TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
+	Damage = FMath::Clamp<float>(Damage, 0, TargetASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
 	Damage = FMath::CeilToFloat(Damage);
+	Damage -= TargetASC->GetNumericAttribute(USG_AttributeSet::GetResistanceBludgeoningAttribute());
 
-	if (Damage > 0.f)
+	if (Damage <= 0.f)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length()));
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Orange, FString::Printf(TEXT("%s damage - %f"), *DamageContextString, Damage));
-
-		TargetAbilitySystemComponent->AddEffectFromClass(InvincibilityEffectClass, nullptr, nullptr, nullptr);
-		TargetAbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.RecieveDamage"));
-		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
+		return;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length());
+	UE_LOG(LogTemp, Warning, TEXT("%s damage - %f"), *DamageContextString, Damage);
+	
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
+
+	FGameplayCueParameters CueParams = FGameplayCueParameters();
+
+	CueParams.Location = TargetActor->GetActorLocation();
+	CueParams.RawMagnitude = Damage;
+
+	TriggerGameplayCues(TargetASC, CueParams);
+
+	FGameplayEventData EventData;
+	EventData.Target = TargetActor;
+
+	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
 }

@@ -33,16 +33,11 @@ bool UGC_ShowDamageIndicator::OnExecute_Implementation(AActor* MyTarget, const F
 		return false;
 	}
 	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(Parameters.GetSourceObject());
-	if (IsValid(DamageSourceData) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(DamageSourceData) == false"));
-		return false;
-	}
 
 	ADamageIndicator* DamageIndicator = World->SpawnActorDeferred<ADamageIndicator>(DamageIndicatorClass, MyTarget->GetActorTransform());
 
 	DamageIndicator->Damage = Parameters.RawMagnitude;
-	DamageIndicator->DamageType = DamageSourceData->DamageType;
+	DamageIndicator->DamageType = IsValid(DamageSourceData) ? DamageSourceData->DamageType : ESG_DamageType::None;
 	DamageIndicator->FinishSpawning(MyTarget->GetActorTransform());
 	DamageIndicator->SetActorLocation(FVector(Parameters.Location));
 

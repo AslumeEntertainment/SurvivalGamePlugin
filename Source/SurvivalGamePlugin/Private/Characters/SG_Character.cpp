@@ -181,6 +181,8 @@ void ASG_Character::BeginPlay()
 
 	CurrentInteractionRange = InteractionRange;
 	
+	GetCharacterMovement()->bOrientRotationToMovement = !bUsesEightDirectionalMovement;
+
 	if (IsValid(GetAbilitySystemComponent()) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::BeginPlay IsValid(GetAbilitySystemComponent()) == false"))

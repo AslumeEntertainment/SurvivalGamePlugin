@@ -21,31 +21,6 @@ void USG_AbilitySystemComponent::OwnerDestroyed()
 	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
 }
 
-//TSubclassOf<ADamageIndicator> USG_AbilitySystemComponent::GetDamageIndicatorClass()
-//{
-//	return DamageIndicatorClass;
-//}
-
-//void USG_AbilitySystemComponent::ShowDamageIndicator(float Value, FVector Location)
-//{
-//	if (IsValid(DamageIndicatorClass) == false)
-//	{
-//		return;
-//	}
-//
-//	UWorld* World = GetWorld();
-//	if (IsValid(World) == false)
-//	{
-//		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::ShowDamageIndicator IsValid(World) == false"));
-//		return;
-//	}
-//	
-//	ADamageIndicator* DamageIndicator = World->SpawnActorDeferred<ADamageIndicator>(DamageIndicatorClass, GetOwner()->GetActorTransform());
-//	DamageIndicator->Damage = Value;
-//	DamageIndicator->FinishSpawning(GetOwner()->GetActorTransform());
-//	DamageIndicator->SetActorLocation(Location);
-//}
-
 void USG_AbilitySystemComponent::SetStartingAttributeValues()
 {
 	for (TPair<FGameplayAttribute, float> StartingAttributeData : StartingAttributeSetData)

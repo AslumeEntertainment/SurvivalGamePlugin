@@ -28,13 +28,6 @@ class USG_CharacterAttributeSet;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UENUM(BlueprintType)
-enum class EMovementType : uint8
-{
-	UEDefault,
-	FirstPerson
-};
-
 UCLASS(config = Game)
 class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface
 {
@@ -143,10 +136,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* TargetAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	EMovementType MovementType;
-
 	void Move(const FInputActionValue& Value);
+
 	void Look(const FInputActionValue& Value);
 
 	void StartTarget();
@@ -182,7 +173,10 @@ protected:
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Developer")
+	bool bUsesEightDirectionalMovement = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool bShouldDrawDebug = true;
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }

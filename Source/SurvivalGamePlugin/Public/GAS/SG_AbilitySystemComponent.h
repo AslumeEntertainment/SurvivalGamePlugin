@@ -42,12 +42,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	bool bCanDisplayDamageIndicator = true;
 
-	/*UFUNCTION(BlueprintCallable)
-	TSubclassOf<ADamageIndicator> GetDamageIndicatorClass();*/
-
-	/*UFUNCTION(BlueprintCallable)
-	void ShowDamageIndicator(float Value, FVector Location);*/
-
 	UFUNCTION(BlueprintCallable)
 	void SetStartingAttributeValues();
 
