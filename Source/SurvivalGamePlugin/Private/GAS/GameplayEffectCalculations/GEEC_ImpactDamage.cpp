@@ -13,6 +13,7 @@
 UGEEC_ImpactDamage::UGEEC_ImpactDamage()
 {
 	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().ResistanceBludgeoningDef);
 }
 
 void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -30,6 +31,9 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		return;
 	}
 
+	FAggregatorEvaluateParameters EvaluateParameters;
+	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
+
 	float Damage = 0;
 	FVector Velocity = TargetActor->GetVelocity();
 	FVector NormalVelocity = UKismetMathLibrary::Normal(Velocity);
@@ -46,9 +50,10 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		DamageContextString = "Impact";
 	}
 
-	Damage = FMath::Clamp<float>(Damage, 0, TargetASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
-	Damage = FMath::CeilToFloat(Damage);
-	Damage -= TargetASC->GetNumericAttribute(USG_AttributeSet::GetResistanceBludgeoningAttribute());
+	float TargetResistanceBludgeoning = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistanceBludgeoning);
+
+	Damage = FMath::Floor(Damage - TargetResistanceBludgeoning);
 
 	if (Damage <= 0.f)
 	{
@@ -59,6 +64,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	UE_LOG(LogTemp, Warning, TEXT("%s damage - %f"), *DamageContextString, Damage);
 	
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
+	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
 

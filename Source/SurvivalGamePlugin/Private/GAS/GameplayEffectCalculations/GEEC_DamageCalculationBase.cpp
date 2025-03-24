@@ -36,16 +36,21 @@ float UGEEC_DamageCalculationBase::GetStrengthMultiplier(USG_AbilitySystemCompon
 
 float UGEEC_DamageCalculationBase::GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const
 {
+	if (IsTargetImmuneToDamageType(TargetASC, DamageSourceData->DamageType))
+	{
+		return 0.f;
+	}
+
 	float PenetrationMultiplier = 1.f;
 
 	IHittable* HittableTarget = Cast<IHittable>(TargetASC->GetOwner());
 	if (HittableTarget == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::GetPenetrationMultiplier HittableTarget == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculationBase::GetPenetrationMultiplier HittableTarget == nullptr"));
 		return PenetrationMultiplier;
 	}
 
-	float TargetResistance = 1;
+	float TargetResistance = 1.f;
 
 	switch (DamageSourceData->DamageType)
 	{
@@ -68,6 +73,22 @@ float UGEEC_DamageCalculationBase::GetPenetrationMultiplier(const UDamageSourceD
 	return PenetrationMultiplier;
 }
 
+bool UGEEC_DamageCalculationBase::IsTargetImmuneToDamageType(USG_AbilitySystemComponent* TargetASC, ESG_DamageType DamageType) const
+{
+	for (TPair<FGameplayTag,ESG_DamageType> DamageImmunityEntry : DamageImmunityForTagsOwned)
+	{
+		if (TargetASC->HasMatchingGameplayTag(DamageImmunityEntry.Key) == false)
+		{
+			continue;
+		}
+		if (DamageImmunityEntry.Value == DamageType)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void UGEEC_DamageCalculationBase::TriggerGameplayCues(USG_AbilitySystemComponent* TargetASC, FGameplayCueParameters CueParams) const
 {
 	if (bShouldTriggerCuesOnZeroMagnitude == false && CueParams.RawMagnitude == 0.f)
@@ -78,5 +99,35 @@ void UGEEC_DamageCalculationBase::TriggerGameplayCues(USG_AbilitySystemComponent
 	for (FGameplayTag GameplayCueTag : GameplayCuesToExecuteOnSuccess)
 	{
 		TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
+	}
+}
+
+void UGEEC_DamageCalculationBase::ApplyAdditionalEffects(USG_AbilitySystemComponent* TargetASC, TArray<FAdditionalEffectDataStruct> AdditionalEffectsData, FGameplayEffectContextHandle EffectContext, float InstigatorDexterity) const
+{
+	int RandInt = FMath::RandRange(1, 100) + InstigatorDexterity;
+
+	FGameplayEffectContextHandle NewEffectContext = EffectContext;
+
+	for (FAdditionalEffectDataStruct AdditionalEffect : AdditionalEffectsData)
+	{
+		if (RandInt > AdditionalEffect.ChanceToApply)
+		{
+			continue;
+		}
+		if (IsValid(AdditionalEffect.AdditionalEffectData) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculationBase::Execute_Implementation IsValid(AdditionalEffect.AdditionalEffectData) == false"));
+			continue;
+		}
+		if (IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculationBase::Execute_Implementation IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false"));
+			continue;
+		}
+
+		NewEffectContext.AddSourceObject(AdditionalEffect.AdditionalEffectData);
+
+		FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(AdditionalEffect.AdditionalEffectData->DamageEffect, AdditionalEffect.AdditionalEffectData->EffectLevel, NewEffectContext);
+		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }

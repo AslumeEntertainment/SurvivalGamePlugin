@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
 
+#include "Objects/DamageSourceData.h"
 #include "GameplayTagContainer.h"
 
 #include "GEEC_DamageCalculationBase.generated.h"
@@ -25,13 +26,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
 	bool bShouldTriggerCuesOnZeroMagnitude = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues", meta = (Categories = "Bool"))
+	TMap<FGameplayTag, ESG_DamageType> DamageImmunityForTagsOwned;
+
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues", meta = (Categories = "GameplayCue"))
 	FGameplayTagContainer GameplayCuesToExecuteOnSuccess;
-
 
 	float GetStrengthMultiplier(USG_AbilitySystemComponent* InstigatorASC, AActor* EffectCauser) const;
 
 	float GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const;
 
+	bool IsTargetImmuneToDamageType(USG_AbilitySystemComponent* TargetASC, ESG_DamageType DamageType) const;
+
 	void TriggerGameplayCues(USG_AbilitySystemComponent* TargetASC, FGameplayCueParameters CueParams) const;
+
+	void ApplyAdditionalEffects(USG_AbilitySystemComponent* TargetASC, TArray<FAdditionalEffectDataStruct> AdditionalEffectsData, FGameplayEffectContextHandle EffectContext, float InstigatorDexterity = 0.f) const;
 };

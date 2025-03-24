@@ -51,5 +51,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	TArray<FAdditionalEffectDataStruct> AdditionalEffects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
+	bool bUseHitResultImpactLocation = true;
 	
 };

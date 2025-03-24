@@ -4,6 +4,7 @@
 #include "GAS/GameplayCues/GC_SpreadEffect.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+#include "AbilitySystemGlobals.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -15,6 +16,12 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 	if (IsValid(MyTarget) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(MyTarget) == false"));
+		return false;
+	}
+	USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(MyTarget));
+	if (IsValid(TargetASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(TargetASC) == false"));
 		return false;
 	}
 	USceneComponent* TargetRoot = MyTarget->GetRootComponent();
@@ -30,23 +37,29 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 		return false;
 	}
 
-	FVector TraceCenter = MyTarget->GetActorLocation() + TargetRoot->GetLocalBounds().GetBox().GetCenter(); 
+	FVector MinLocalBounds = TargetRoot->GetLocalBounds().GetBox().Min;
+	FVector MaxLocalBounds = TargetRoot->GetLocalBounds().GetBox().Max;
+
+	FVector ActorBottom = MyTarget->GetActorLocation() + MyTarget->GetActorUpVector() * MinLocalBounds.Z;
+	FVector ActorTop = MyTarget->GetActorLocation() + MyTarget->GetActorUpVector() * MaxLocalBounds.Z;
+
+	FVector TraceCenter = (ActorTop + ActorBottom) / 2;
 	FVector TraceExtent = TargetRoot->GetLocalBounds().GetBox().GetExtent() + ExtentFromTargetBounds;
 
-	UE_LOG(LogTemp, Error, TEXT("TraceCenter - %s, TraceExtend - %s"), *TraceCenter.ToString(), *TraceExtent.ToString());
+	UE_LOG(LogTemp, Log, TEXT("UGC_SpreadEffect::OnExecute_Implementation: TraceCenter - %s, TraceExtend - %s"), *TraceCenter.ToString(), *TraceExtent.ToString());
 
 	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(MyTarget);
+	if(bShouldIgnoreSelf) ActorsToIgnore.Add(MyTarget);
 
 	TArray<FHitResult> HitResults;
 
 	if (UKismetSystemLibrary::BoxTraceMulti(World, TraceCenter, TraceCenter, TraceExtent, MyTarget->GetActorRotation(), ETraceTypeQuery::TraceTypeQuery2,
-		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None, HitResults, true) == false)
+		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, HitResults, true) == false)
 	{
 		return true;
 	}
 
-	FGameplayEffectContextHandle EffectContext = Parameters.EffectContext;
+	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
 
 	for (FHitResult HitResult : HitResults)
 	{
@@ -60,8 +73,8 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 			continue;
 		}
 
-		USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
-		if (IsValid(TargetASC) == false)
+		USG_AbilitySystemComponent* HitActorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
+		if (IsValid(HitActorASC) == false)
 		{
 			continue;
 		}
@@ -74,12 +87,14 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 				return false;
 			}
 
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectToSpread->DamageEffect, GameplayEffectToSpread->EffectLevel, EffectContext);
-			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			ContextHandle.AddSourceObject(GameplayEffectToSpread);
+
+			FGameplayEffectSpecHandle SpecHandle = HitActorASC->MakeOutgoingSpec(GameplayEffectToSpread->DamageEffect, GameplayEffectToSpread->EffectLevel, ContextHandle);
+			HitActorASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 		else
 		{
-			UGameplayEffectData* ActiveGameplayEffectData = Cast<UGameplayEffectData>(EffectContext.GetSourceObject());
+			UGameplayEffectData* ActiveGameplayEffectData = Cast<UGameplayEffectData>(ContextHandle.GetSourceObject());
 			if (IsValid(ActiveGameplayEffectData) == false)
 			{
 				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(ActiveGameplayEffectData) == false"));
@@ -91,8 +106,8 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 				return false;
 			}
 
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(ActiveGameplayEffectData->DamageEffect, ActiveGameplayEffectData->EffectLevel, EffectContext);
-			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			FGameplayEffectSpecHandle SpecHandle = HitActorASC->MakeOutgoingSpec(ActiveGameplayEffectData->DamageEffect, ActiveGameplayEffectData->EffectLevel, ContextHandle);
+			HitActorASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 
 		ActorsToIgnore.Add(HitActor);

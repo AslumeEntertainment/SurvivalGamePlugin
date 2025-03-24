@@ -38,27 +38,27 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(ExecutionParams.GetTargetAbilitySystemComponent());
 	if (IsValid(TargetASC) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(TargetASC) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(TargetASC) == false"));
 		return;
 	}
 	AActor* TargetActor = TargetASC->GetOwner();
 	if (IsValid(TargetActor) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(TargetActor) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(TargetActor) == false"));
 		return;
 	}
 
 	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(EffectContext.GetSourceObject());
 	if (IsValid(DamageSourceData) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(DamageSourceData) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(DamageSourceData) == false"));
 		return;
 	}
 
 	AActor* EffectCauser = EffectContext.GetEffectCauser();
 	if (IsValid(EffectCauser) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_CalculateDamage::Execute_Implementation IsValid(EffectCauser) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(EffectCauser) == false"));
 		return;
 	}
 
@@ -85,46 +85,19 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	//---------------------------------------------------------//
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
+	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
+
+	float Dexterity = IsValid(InstigatorASC) ? InstigatorASC->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) : 0.f;
+
+	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
-
-	CueParams.Location = EffectContext.GetHitResult()->GetActor() == TargetActor ? HitLocation : TargetActor->GetActorLocation();
+	CueParams.Location = DamageSourceData->bUseHitResultImpactLocation ? HitLocation : TargetActor->GetActorLocation();
 	CueParams.EffectContext = EffectContext;
 	CueParams.SourceObject = DamageSourceData;
 	CueParams.RawMagnitude = FinalDamage;
 
 	TriggerGameplayCues(TargetASC, CueParams);
-
-	int RandInt = FMath::RandRange(1, 100);
-	if (IsValid(InstigatorASC))
-	{
-		RandInt += InstigatorASC->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute());
-	}
-	
-	FGameplayEffectContextHandle NewEffectContext = EffectContext;
-
-	for (FAdditionalEffectDataStruct AdditionalEffect : DamageSourceData->AdditionalEffects)
-	{
-		if (RandInt <= AdditionalEffect.ChanceToApply)
-		{
-			if (IsValid(AdditionalEffect.AdditionalEffectData) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(AdditionalEffect.AdditionalEffectData) == false"));
-				continue;
-			}
-			if (IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(AdditionalEffect.AdditionalEffectData->DamageEffect) == false"));
-				continue;
-			}
-
-			NewEffectContext.AddSourceObject(AdditionalEffect.AdditionalEffectData);
-			UE_LOG(LogTemp, Error, TEXT("AdditionalEffect.AdditionalEffectData - %s"), *NewEffectContext.GetSourceObject()->GetName());
-
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(AdditionalEffect.AdditionalEffectData->DamageEffect, AdditionalEffect.AdditionalEffectData->EffectLevel, NewEffectContext);
-			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-		}
-	}
 
 	FGameplayEventData EventData;
 	EventData.Target = TargetActor;

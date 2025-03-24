@@ -12,9 +12,11 @@ struct FSG_DamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Dexterity);
 
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(GuardProficiency);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceSlashing);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistancePiercing);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceBludgeoning);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceFire);
 
 	FSG_DamageStatics()
 	{
@@ -22,9 +24,11 @@ struct FSG_DamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, Dexterity, Source, true);
 
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, Health, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, GuardProficiency, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceSlashing, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistancePiercing, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceBludgeoning, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceFire, Target, false);
 	}
 };
 

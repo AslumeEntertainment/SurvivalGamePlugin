@@ -25,6 +25,9 @@ protected:
 	float ExtentFromTargetBounds = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	bool bShouldIgnoreSelf = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
 	bool bShouldDrawDebug = true;
 
 	virtual bool OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;

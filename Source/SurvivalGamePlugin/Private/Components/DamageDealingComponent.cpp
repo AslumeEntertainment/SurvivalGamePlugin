@@ -3,9 +3,8 @@
 
 #include "Components/DamageDealingComponent.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemGlobals.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "AbilitySystemGlobals.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
