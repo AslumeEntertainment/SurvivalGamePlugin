@@ -6,6 +6,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "GameplayEffectTypes.h"
+
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -75,9 +77,7 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	EventData.Target = TargetActor;
 	EventData.Instigator = InstigatorActor;
 
-	if (IsValid(InstigatorASC))
-	{
-		InstigatorASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Triggered"), &EventData);
-	}
-	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
+	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
+
+	return;
 }

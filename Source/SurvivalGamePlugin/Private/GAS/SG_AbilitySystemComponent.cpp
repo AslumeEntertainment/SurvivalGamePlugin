@@ -17,8 +17,19 @@ USG_AbilitySystemComponent::USG_AbilitySystemComponent()
 
 void USG_AbilitySystemComponent::OwnerDestroyed()
 {
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("USG_AbilitySystemComponent::OwnerDestroyed IsValid(GetOwner()) == false"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - started"), *GetOwner()->GetName());
 	CancelAllAbilities();
+	RemoveActiveEffectsWithTags(FGameplayTagContainer());
 	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
+	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - all abilities, effects and cues have been canceled"), *GetOwner()->GetName());
+	
+	DestroyComponent();
 }
 
 void USG_AbilitySystemComponent::SetStartingAttributeValues()

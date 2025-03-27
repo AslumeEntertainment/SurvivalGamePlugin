@@ -40,6 +40,9 @@ public:
 private:
 
 	bool bIsFirstPerson = true;
+
+	bool bIsInputEnabled = true;
+
 	bool bAlreadySetUp = false;
 
 	float CurrentInteractionRange;
@@ -199,6 +202,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EnablePlayerInput();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsPlayerInputEnabled();
 
 	UFUNCTION(BlueprintCallable)
 	bool IsMoving();

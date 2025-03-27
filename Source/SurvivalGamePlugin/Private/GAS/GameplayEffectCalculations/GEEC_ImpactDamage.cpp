@@ -76,5 +76,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	FGameplayEventData EventData;
 	EventData.Target = TargetActor;
 
-	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
+	AcknowledgeHit(nullptr, TargetASC, EventData);
+
+	return;
 }

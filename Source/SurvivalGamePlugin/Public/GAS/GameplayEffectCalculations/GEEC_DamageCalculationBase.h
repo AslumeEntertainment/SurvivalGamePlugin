@@ -41,4 +41,6 @@ protected:
 	void TriggerGameplayCues(USG_AbilitySystemComponent* TargetASC, FGameplayCueParameters CueParams) const;
 
 	void ApplyAdditionalEffects(USG_AbilitySystemComponent* TargetASC, TArray<FAdditionalEffectDataStruct> AdditionalEffectsData, FGameplayEffectContextHandle EffectContext, float InstigatorDexterity = 0.f) const;
+
+	void AcknowledgeHit(USG_AbilitySystemComponent* InstigatorASC, USG_AbilitySystemComponent* TargetASC, FGameplayEventData EventData) const;
 };

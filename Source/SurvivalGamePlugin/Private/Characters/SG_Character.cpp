@@ -22,7 +22,6 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "UI/HUD/InGameHUD.h"
 
-
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ASG_Character::ASG_Character()
@@ -514,24 +513,21 @@ void ASG_Character::ResetCameraView()
 
 void ASG_Character::DisablePlayerInput(float Duration)
 {
-	if (IsLocallyControlled() == false)
+	if (IsLocallyControlled() == false || bIsInputEnabled == false)
 	{
 		return;
 	}
+
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
 		return;
 	}
-	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
-	if (IsValid(InputSystem) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(InputSystem) == false"));
-		return;
-	}
 
-	InputSystem->ClearAllMappings();
+	DisableInput(PlayerCont);
+	bIsInputEnabled = false;
+
 	if (Duration > 0.f)
 	{
 		FTimerHandle EnableInputTimer;
@@ -543,25 +539,27 @@ void ASG_Character::DisablePlayerInput(float Duration)
 
 void ASG_Character::EnablePlayerInput()
 {
-	if (IsLocallyControlled() == false)
+	if (IsLocallyControlled() == false || bIsInputEnabled)
 	{
 		return;
 	}
+
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::EnablePlayerInput IsValid(PlayerCont) == false"));
 		return;
 	}
-	UEnhancedInputLocalPlayerSubsystem* InputSystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerCont->GetLocalPlayer());
-	if (IsValid(InputSystem) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::EnablePlayerInput IsValid(InputSystem) == false"));
-		return;
-	}
 
-	InputSystem->AddMappingContext(DefaultMappingContext, 0);
+	EnableInput(PlayerCont);
+	bIsInputEnabled = true;
+
 	UE_LOG(LogTemp, Log, TEXT("ASG_Character::EnablePlayerInput - %s"), *GetName());
+}
+
+bool ASG_Character::IsPlayerInputEnabled()
+{
+	return bIsInputEnabled;
 }
 
 bool ASG_Character::IsMoving()

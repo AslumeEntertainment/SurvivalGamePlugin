@@ -77,7 +77,7 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			continue;
 		}
 
-		ContextHandle.AddHitResult(HitResult);
+		ContextHandle.AddHitResult(HitResult, true);
 		
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;
@@ -99,8 +99,15 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 				continue;
 			}
 			ContextHandle.AddSourceObject(GameplayEffectData);
+			
 			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectData->DamageEffect, GameplayEffectData->EffectLevel, ContextHandle);
-			TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
+			if (Spec == nullptr)
+			{
+				continue;
+			}
+
+			TargetASC->ApplyGameplayEffectSpecToSelf(*Spec);
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());

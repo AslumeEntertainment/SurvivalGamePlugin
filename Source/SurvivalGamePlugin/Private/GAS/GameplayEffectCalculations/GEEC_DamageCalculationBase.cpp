@@ -131,3 +131,15 @@ void UGEEC_DamageCalculationBase::ApplyAdditionalEffects(USG_AbilitySystemCompon
 		TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 	}
 }
+
+void UGEEC_DamageCalculationBase::AcknowledgeHit(USG_AbilitySystemComponent* InstigatorASC, USG_AbilitySystemComponent* TargetASC, FGameplayEventData EventData) const
+{
+	if (IsValid(InstigatorASC))
+	{
+		InstigatorASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Triggered"), &EventData);
+	}
+	if (IsValid(TargetASC))
+	{
+		TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
+	}
+}

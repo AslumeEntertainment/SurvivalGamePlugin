@@ -15,7 +15,7 @@
 AWaterVolume::AWaterVolume()
 {
 	WaterBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WaterBox"));
-	WaterBox->SetupAttachment(GetRootComponent());
+	SetRootComponent(WaterBox);
 
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComponent"));
 	PostProcessComponent->SetupAttachment(WaterBox);

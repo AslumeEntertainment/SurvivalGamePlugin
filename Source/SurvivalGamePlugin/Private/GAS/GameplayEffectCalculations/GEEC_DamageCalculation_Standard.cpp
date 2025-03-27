@@ -61,9 +61,15 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(EffectCauser) == false"));
 		return;
 	}
+	const FHitResult* HitResult = EffectContext.GetHitResult();
+	if (HitResult == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation HitResult == nullptr"));
+		return;
+	}
 
 	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
-
+	
 	FVector HitLocation = EffectContext.GetHitResult()->ImpactPoint;
 
 	float StrengthMultiplier = GetStrengthMultiplier(InstigatorASC, EffectCauser);
@@ -103,11 +109,13 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	EventData.Target = TargetActor;
 	EventData.Instigator = InstigatorActor;
 
-	if (IsValid(InstigatorASC))
+
+	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
+	/*if (IsValid(InstigatorASC))
 	{
 		InstigatorASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Triggered"), &EventData);
 	}
-	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
+	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);*/
 
 }
 

@@ -15,6 +15,7 @@ bool UGC_ShowDamageIndicator::OnExecute_Implementation(AActor* MyTarget, const F
 		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(MyTarget) == false"));
 		return false;
 	}
+
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(MyTarget));
 	if (IsValid(ASC) == false)
 	{
