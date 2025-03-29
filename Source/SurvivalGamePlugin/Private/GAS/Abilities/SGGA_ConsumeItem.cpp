@@ -7,7 +7,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
-#include "Objects/ConsumableItemEffectDataObject.h"
+#include "Objects/GameplayEffectDataObjects/ConsumableItemEffectDataObject.h"
 #include "Interactables/Items/ConsumableItem.h"
 #include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"

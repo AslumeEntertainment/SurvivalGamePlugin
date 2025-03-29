@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -13,7 +14,6 @@
 #include "Components/DamageDealingComponent.h"
 #include "Headers/PhysicalPropertyEnums.h"
 #include "Characters/InGameCharacter.h"
-#include "Objects/DamageSourceData.h"
 
 DEFINE_LOG_CATEGORY(DamageLog);
 
@@ -23,6 +23,7 @@ UGEEC_DamageCalculation_Standard::UGEEC_DamageCalculation_Standard()
 	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
 
 	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().GuardProficiencyDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ResistanceSlashingDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ResistancePiercingDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ResistanceBludgeoningDef);
@@ -41,10 +42,18 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(TargetASC) == false"));
 		return;
 	}
+
 	AActor* TargetActor = TargetASC->GetOwner();
 	if (IsValid(TargetActor) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(TargetActor) == false"));
+		return;
+	}
+
+	IHittable* HittableTarget = Cast<IHittable>(TargetActor);
+	if (HittableTarget == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation HittableTarget == nullptr"));
 		return;
 	}
 
@@ -61,6 +70,7 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation IsValid(EffectCauser) == false"));
 		return;
 	}
+
 	const FHitResult* HitResult = EffectContext.GetHitResult();
 	if (HitResult == nullptr)
 	{
@@ -68,32 +78,50 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 		return;
 	}
 
+	FAggregatorEvaluateParameters EvaluateParameters;
+	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
+
 	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
 	
 	FVector HitLocation = EffectContext.GetHitResult()->ImpactPoint;
 
-	float StrengthMultiplier = GetStrengthMultiplier(InstigatorASC, EffectCauser);
-	float InstigatorVelocity = IsValid(InstigatorActor) ? InstigatorActor->GetVelocity().Length() / 100 : 0;
-	float PenetrationMultiplier = GetPenetrationMultiplier(DamageSourceData, InstigatorVelocity, TargetASC, HitLocation);
-
-	float FinalDamage = FMath::Floor(DamageSourceData->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
+	float FinalDamage = 0.f;
 	
-	if (bShouldPrintDebug)
+	if (IsTargetImmuneToDamageType(TargetASC, DamageSourceData->DamageType) == false)
 	{
-		UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
-		UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageSourceData->DamageType);
-		UE_LOG(DamageLog, Log, TEXT("StrengthMultiplier - %.2f"), StrengthMultiplier);
-		UE_LOG(DamageLog, Log, TEXT("InstigatorVelocity - %.2f m/s"), InstigatorVelocity);
-		UE_LOG(DamageLog, Log, TEXT("PenetrationMultiplier - %.2f"), PenetrationMultiplier);
-		UE_LOG(DamageLog, Log, TEXT("FinalDamage - %.f"), FinalDamage);
-	}
+		float StrengthMultiplier = GetStrengthMultiplier(ExecutionParams, EvaluateParameters, EffectCauser);
+		float InstigatorVelocity = IsValid(InstigatorActor) ? InstigatorActor->GetVelocity().Length() / 100 : 0;
+		float PenetrationMultiplier = GetPenetrationMultiplier(ExecutionParams, EvaluateParameters, DamageSourceData, InstigatorVelocity, HittableTarget->IsHitGuarded(HitLocation));
 
+		FinalDamage = FMath::Floor(DamageSourceData->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
+
+		if (bShouldPrintDebug)
+		{
+			UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
+			UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageSourceData->DamageType);
+			UE_LOG(DamageLog, Log, TEXT("StrengthMultiplier - %.2f"), StrengthMultiplier);
+			UE_LOG(DamageLog, Log, TEXT("InstigatorVelocity - %.2f m/s"), InstigatorVelocity);
+			UE_LOG(DamageLog, Log, TEXT("PenetrationMultiplier - %.2f"), PenetrationMultiplier);
+			UE_LOG(DamageLog, Log, TEXT("FinalDamage - %.f"), FinalDamage);
+		}
+	}
+	else
+	{
+		if (bShouldPrintDebug)
+		{
+			UE_LOG(DamageLog, Log, TEXT("%s deals damage to %s using %s"), *InstigatorActor->GetName(), *TargetActor->GetName(), *EffectCauser->GetName());
+			UE_LOG(DamageLog, Log, TEXT("Damage Type - %d (Slashing, Piercing, Bludgeoning, Fire)"), (uint8)DamageSourceData->DamageType);
+			UE_LOG(DamageLog, Log, TEXT("Target is immune to damage type, 0 damage dealt"));
+		}
+	}
+	
 	//---------------------------------------------------------//
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
-	float Dexterity = IsValid(InstigatorASC) ? InstigatorASC->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) : 0.f;
+	float Dexterity = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DexterityDef, EvaluateParameters, Dexterity);
 
 	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 
@@ -109,13 +137,71 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	EventData.Target = TargetActor;
 	EventData.Instigator = InstigatorActor;
 
-
 	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
-	/*if (IsValid(InstigatorASC))
-	{
-		InstigatorASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Triggered"), &EventData);
-	}
-	TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);*/
 
 }
+
+float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const AActor* EffectCauser) const
+{
+	float StrengthMultiplier = 1.f;
+
+	float Strength = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().StrengthDef, EvaluateParameters, Strength);
+	if (Strength <= 0.f)
+	{
+		return StrengthMultiplier;
+	}
+
+	if (IsValid(EffectCauser) == false)
+	{
+		return StrengthMultiplier;
+	}
+
+	EWeight EffectCauserWeight = EWeight::Normal;
+	if (IsValid(Cast<ADamageDealingItem>(EffectCauser)))
+	{
+		EffectCauserWeight = Cast<ADamageDealingItem>(EffectCauser)->ItemData.ItemWeight;
+	}
+
+	StrengthMultiplier = Strength / (uint8)EffectCauserWeight;
+
+	return StrengthMultiplier;
+}
+
+float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const UDamageSourceData* DamageSourceData, float InstigatorVelocity, bool bIsHitGuarded) const
+{
+	float PenetrationMultiplier = 1.f;
+
+	float TargetResistance = 1.f;
+
+	switch (DamageSourceData->DamageType)
+	{
+	case ESG_DamageType::Slashing: 
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceSlashingDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Piercing: 
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistancePiercingDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Bludgeoning: 
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Fire: 
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, TargetResistance);
+	}
+
+	if (TargetResistance <= 0) TargetResistance = 1;
+
+	if (bIsHitGuarded)
+	{
+		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
+		
+		float GuardProficiency = 1.f;
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().GuardProficiencyDef, EvaluateParameters, GuardProficiency);
+		TargetResistance *= GuardProficiency;
+	}
+
+	PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;
+
+	return PenetrationMultiplier;
+}
+
+
+
 

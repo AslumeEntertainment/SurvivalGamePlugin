@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/SG_TraceEmitterBase.h"
+#include "Objects/TraceEmitters/SG_TraceEmitterBase.h"
 #include "SG_BoxTraceEmitter.generated.h"
 
 

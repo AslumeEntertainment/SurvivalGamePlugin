@@ -4,11 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/Items/ItemBase.h"
-
-#include "Objects/ConsumableitemEffectDataObject.h"
-
 #include "ConsumableItem.generated.h"
 
+class UConsumableItemEffectDataObject;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase

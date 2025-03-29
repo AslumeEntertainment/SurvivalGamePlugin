@@ -3,9 +3,9 @@
 
 #include "Interactables/Items/FluidContainerItem.h"
 
+#include "Objects/TraceEmitters/SG_TraceEmitterBase.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/FluidDataComponent.h"
-#include "Objects/SG_TraceEmitterBase.h"
 #include "Characters/InGameCharacter.h"
 
 

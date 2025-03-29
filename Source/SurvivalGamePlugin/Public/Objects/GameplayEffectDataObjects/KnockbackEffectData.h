@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Objects/GameplayEffectData.h"
+#include "Objects/GameplayEffectDataObjects/GameplayEffectData.h"
 #include "KnockbackEffectData.generated.h"
 
 

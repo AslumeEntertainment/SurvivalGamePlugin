@@ -3,9 +3,9 @@
 
 #include "GAS/GameplayCues/GC_ShowDamageIndicator.h"
 
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/DamageSourceData.h"
 #include "Misc/DamageIndicator.h"
 
 bool UGC_ShowDamageIndicator::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const

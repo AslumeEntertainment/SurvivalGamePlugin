@@ -8,14 +8,16 @@
 
 #include "GameplayEffectTypes.h"
 
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/DamageSourceData.h"
 
 
 UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
 {
+	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
+
 	RelevantAttributesToCapture.Add(DamageStatics().ResistanceFireDef);
 }
 
@@ -62,7 +64,9 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
-	float Dexterity = IsValid(InstigatorASC) ? InstigatorASC->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) : 0.f;
+	float Dexterity = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DexterityDef, EvaluateParameters, Dexterity);
+
 	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
@@ -79,5 +83,4 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 
 	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
 
-	return;
 }

@@ -6,10 +6,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemGlobals.h"
 
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
+#include "Objects/TraceEmitters/SG_TraceEmitterBase.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/SG_TraceEmitterBase.h"
-#include "Objects/DamageSourceData.h"
 
 
 UDamageDealingComponent::UDamageDealingComponent()
@@ -93,14 +93,14 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData) == false"));
 				continue;
 			}
-			if (IsValid(GameplayEffectData->DamageEffect) == false)
+			if (IsValid(GameplayEffectData->EffectClass) == false)
 			{
 				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData->DamageEffect) == false"));
 				continue;
 			}
 			ContextHandle.AddSourceObject(GameplayEffectData);
 			
-			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectData->DamageEffect, GameplayEffectData->EffectLevel, ContextHandle);
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectData->EffectClass, GameplayEffectData->EffectLevel, ContextHandle);
 			FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
 			if (Spec == nullptr)
 			{

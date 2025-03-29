@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Objects/SG_BoxTraceEmitter.h"
+#include "Objects/TraceEmitters/SG_BoxTraceEmitter.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 

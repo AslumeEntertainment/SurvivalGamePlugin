@@ -5,9 +5,9 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 
+#include "Objects/GameplayEffectDataObjects/KnockbackEffectData.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/KnockbackEffectData.h"
 #include "Characters/SG_Character.h"
 #include "Interfaces/Hittable.h"
 
@@ -58,7 +58,7 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 
 	FVector KnockbackForce = LaunchDirection * KnockbackEffectData->KnockbackPower * KnockbackEffectData->EffectLevel;
 
-	if (HittableTarget->IsGuarding())
+	if (HittableTarget->IsGuarding() && KnockbackEffectData->bIgnoreGuard == false)
 	{
 		KnockbackForce /= TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetGuardProficiencyAttribute());
 	}

@@ -6,9 +6,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemGlobals.h"
 
+#include "Objects/GameplayEffectDataObjects/GameplayEffectData.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Objects/GameplayEffectData.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
 
 
 bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
@@ -68,10 +69,10 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 		{
 			continue;
 		}
-		/*if (ActorsToIgnore.Contains(HitActor))
+		if (ActorsToIgnore.Contains(HitActor))
 		{
 			continue;
-		}*/
+		}
 
 		USG_AbilitySystemComponent* HitActorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
 		if (IsValid(HitActorASC) == false)
@@ -83,33 +84,32 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 
 		const UGameplayEffectData* ActiveGameplayEffectData = Cast<UGameplayEffectData>(Parameters.GetSourceObject());
 
-		if (IsValid(ActiveGameplayEffectData))
+		if (IsValid(GameplayEffectToSpread))
 		{
-			if (IsValid(ActiveGameplayEffectData->DamageEffect) == false)
+			if (IsValid(GameplayEffectToSpread->EffectClass) == false)
 			{
-				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(ActiveGameplayEffectData->DamageEffect) == false"));
-				return false;
-			}
-
-			ContextHandle.AddSourceObject(ActiveGameplayEffectData);
-			SpecHandle = HitActorASC->MakeOutgoingSpec(ActiveGameplayEffectData->DamageEffect, ActiveGameplayEffectData->EffectLevel, ContextHandle);
-		}
-		else
-		{
-			if (IsValid(GameplayEffectToSpread) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(GameplayEffectToSpread) == false"));
-				return false;
-			}
-
-			if (IsValid(GameplayEffectToSpread->DamageEffect) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(GameplayEffectToSpread->DamageEffect) == false"));
+				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(GameplayEffectToSpread->EffectClass) == false"));
 				return false;
 			}
 
 			ContextHandle.AddSourceObject(GameplayEffectToSpread);
-			SpecHandle = HitActorASC->MakeOutgoingSpec(GameplayEffectToSpread->DamageEffect, GameplayEffectToSpread->EffectLevel, ContextHandle);
+			SpecHandle = HitActorASC->MakeOutgoingSpec(GameplayEffectToSpread->EffectClass, GameplayEffectToSpread->EffectLevel, ContextHandle);
+		}
+		else
+		{
+			if (IsValid(ActiveGameplayEffectData))
+			{
+				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(ActiveGameplayEffectData) == false"));
+				return false;
+			}
+			if (IsValid(ActiveGameplayEffectData->EffectClass) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UGC_SpreadEffect::OnExecute_Implementation IsValid(ActiveGameplayEffectData->EffectClass) == false"));
+				return false;
+			}
+
+			ContextHandle.AddSourceObject(ActiveGameplayEffectData);
+			SpecHandle = HitActorASC->MakeOutgoingSpec(ActiveGameplayEffectData->EffectClass, ActiveGameplayEffectData->EffectLevel, ContextHandle);
 		}
 
 		FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
@@ -119,6 +119,12 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 		}
 
 		HitActorASC->ApplyGameplayEffectSpecToSelf(*Spec);
+		UE_LOG(LogTemp, Warning, TEXT("UGC_SpreadEffect::OnExecute_Implementation Spreading effect from %s to %s"), *MyTarget->GetName(), *HitActor->GetName());
+		if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute()) <= 0.f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s has 0 health, this cue should not exist!!!"), *MyTarget->GetName());
+		}
+		
 		ActorsToIgnore.Add(HitActor);
 	}
 

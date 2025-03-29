@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Objects/DamageSourceData.h"
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 
 #include "DamageIndicator.generated.h"
 

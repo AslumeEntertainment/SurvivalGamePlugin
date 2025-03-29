@@ -4,9 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayCueNotify_Static.h"
-
-#include "Objects/DamageSourceData.h"
-
 #include "GC_ShowDamageIndicator.generated.h"
 
 class ADamageIndicator;

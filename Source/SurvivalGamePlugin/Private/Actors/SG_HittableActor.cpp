@@ -70,6 +70,13 @@ ULootTableComponent* ASG_HittableActor::GetLootTableComponent()
 
 void ASG_HittableActor::DestroyHittable(bool bSafeDestruct)
 {
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_HittableActor::DestroyHittable IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	AbilitySystemComponent->OnOwnerDestroyed();
+
 	if (HasAuthority() == false)
 	{
 		return;

@@ -12,10 +12,9 @@
 
 USG_AbilitySystemComponent::USG_AbilitySystemComponent()
 {
-	OnOwnerDestroyed.AddDynamic(this, &USG_AbilitySystemComponent::OwnerDestroyed);
 }
 
-void USG_AbilitySystemComponent::OwnerDestroyed()
+void USG_AbilitySystemComponent::OnOwnerDestroyed()
 {
 	if (IsValid(GetOwner()) == false)
 	{
@@ -29,7 +28,7 @@ void USG_AbilitySystemComponent::OwnerDestroyed()
 	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
 	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - all abilities, effects and cues have been canceled"), *GetOwner()->GetName());
 	
-	DestroyComponent();
+	//DestroyComponent();
 }
 
 void USG_AbilitySystemComponent::SetStartingAttributeValues()

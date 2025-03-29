@@ -3,25 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "Objects/GameplayEffectDataObjects/GameplayEffectData.h"
 #include "ConsumableItemEffectDataObject.generated.h"
 
 class UGameplayEffect;
 
 UCLASS(EditInlineNew, DefaultToInstanced, CollapseCategories)
-class SURVIVALGAMEPLUGIN_API UConsumableItemEffectDataObject : public UObject
+class SURVIVALGAMEPLUGIN_API UConsumableItemEffectDataObject : public UGameplayEffectData
 {
 	GENERATED_BODY()
 	
 public:
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> EffectClass;
-
-	UPROPERTY(EditDefaultsOnly)
 	float EffectValue;
-
-	UPROPERTY(EditDefaultsOnly)
-	uint8 EffectLevel;
 
 };

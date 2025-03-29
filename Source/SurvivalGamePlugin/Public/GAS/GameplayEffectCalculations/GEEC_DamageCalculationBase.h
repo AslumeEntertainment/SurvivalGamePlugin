@@ -5,13 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
 
-#include "Objects/DamageSourceData.h"
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GameplayTagContainer.h"
 
 #include "GEEC_DamageCalculationBase.generated.h"
 
 class USG_AbilitySystemComponent;
 class UDamageSourceData;
+
+DECLARE_LOG_CATEGORY_EXTERN(DamageLog, Log, All);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UGEEC_DamageCalculationBase : public UGameplayEffectExecutionCalculation
@@ -31,10 +33,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues", meta = (Categories = "GameplayCue"))
 	FGameplayTagContainer GameplayCuesToExecuteOnSuccess;
-
-	float GetStrengthMultiplier(USG_AbilitySystemComponent* InstigatorASC, AActor* EffectCauser) const;
-
-	float GetPenetrationMultiplier(const UDamageSourceData* DamageSourceData, float InstigatorVelocity, USG_AbilitySystemComponent* TargetASC, FVector HitLocation) const;
 
 	bool IsTargetImmuneToDamageType(USG_AbilitySystemComponent* TargetASC, ESG_DamageType DamageType) const;
 

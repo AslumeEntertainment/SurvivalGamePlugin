@@ -54,21 +54,7 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 
 	if (Attribute == GetHealthAttribute())
 	{
-		if (NewValue == 0.f)
-		{
-			ASC->OnOwnerDestroyed.Broadcast();
-			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
-			if (HittableOwner == nullptr)
-			{
-					UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
-					return;
-			}
-			if (IsValid(Cast<AItemBase>(HittableOwner)) && IsValid(Cast<AItemBase>(HittableOwner)->GetAttachParentActor()))
-			{
-				return;
-			}
-			HittableOwner->DestroyHittable();
-		}
+		
 	}
 }
 
@@ -104,6 +90,21 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		{
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
+		}
+
+		if (GetHealth() == 0.f)
+		{
+			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
+			if (HittableOwner == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
+				return;
+			}
+			/*if (IsValid(Cast<AItemBase>(HittableOwner)) && IsValid(Cast<AItemBase>(HittableOwner)->GetAttachParentActor()))
+			{
+				return;
+			}*/
+			HittableOwner->DestroyHittable();
 		}
 	}
 }

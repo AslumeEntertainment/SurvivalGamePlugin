@@ -31,10 +31,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	TSubclassOf<ADamageIndicator> DamageIndicatorClass = nullptr;
 
-	UFUNCTION()
-	void OwnerDestroyed();
 
 public:
+
+	UFUNCTION()
+	void OnOwnerDestroyed();
 
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	bool bCanEverReceiveDamageFromEffects = true;
@@ -70,7 +71,5 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
-
-	FVoidDataTransferSignature OnOwnerDestroyed;
 
 };
