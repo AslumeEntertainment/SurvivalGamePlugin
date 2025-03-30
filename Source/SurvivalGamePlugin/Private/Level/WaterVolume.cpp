@@ -5,6 +5,7 @@
 
 #include "Components/PostProcessComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/FluidDataComponent.h"
 #include "Components/BoxComponent.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
@@ -14,7 +15,7 @@
 AWaterVolume::AWaterVolume()
 {
 	WaterBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WaterBox"));
-	WaterBox->SetupAttachment(GetRootComponent());
+	SetRootComponent(WaterBox);
 
 	PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcessComponent"));
 	PostProcessComponent->SetupAttachment(WaterBox);
@@ -24,6 +25,8 @@ AWaterVolume::AWaterVolume()
 	WaterSurfaceMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WaterSurfaceMesh"));
 	WaterSurfaceMesh->SetupAttachment(WaterBox);
 	WaterSurfaceMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	FluidDataComponent = CreateDefaultSubobject<UFluidDataComponent>(TEXT("FluidData"));
 
 	OnActorBeginOverlap.AddDynamic(this, &AWaterVolume::OnActorEnteringVolume);
 	OnActorEndOverlap.AddDynamic(this, &AWaterVolume::OnActorLeavingVolume);

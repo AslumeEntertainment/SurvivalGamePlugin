@@ -164,10 +164,6 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 	if (HasEquipmentSlotWithTag(MixedEquipmentSlotTag))
 	{
 		EquipmentSlotTag = MixedEquipmentSlotTag;
-		/*if ((uint8)ItemWeight > OwnerStrength)
-		{
-			return;
-		}*/
 	}
 	if (bShouldSlotBeEmpty && IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
 	{

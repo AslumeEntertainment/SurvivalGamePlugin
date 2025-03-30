@@ -41,9 +41,9 @@ public:
 	FGameplayAttributeData Dexterity;
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Dexterity);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeed)
-	FGameplayAttributeData AttackSpeed;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeed);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeedPercentIncrease)
+	FGameplayAttributeData AttackSpeedPercentIncrease;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeedPercentIncrease);
 
 	/*---------------------------------------------Hunger-----------------------------------------------*/
 
@@ -102,7 +102,7 @@ protected:
 	virtual void OnRep_Dexterity(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_AttackSpeed(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_AttackSpeedPercentIncrease(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_Hunger(const FGameplayAttributeData& OldValue);

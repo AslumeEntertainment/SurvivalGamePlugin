@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayEffectExecutionCalculation.h"
+#include "GAS/GameplayEffectCalculations/GEEC_DamageCalculationBase.h"
 #include "GEEC_ImpactDamage.generated.h"
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UGEEC_ImpactDamage : public UGameplayEffectExecutionCalculation
+class SURVIVALGAMEPLUGIN_API UGEEC_ImpactDamage : public UGEEC_DamageCalculationBase
 {
 	GENERATED_BODY()
 	
@@ -17,10 +17,5 @@ public:
 	UGEEC_ImpactDamage();
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
-
-protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> InvincibilityEffectClass;
 
 };

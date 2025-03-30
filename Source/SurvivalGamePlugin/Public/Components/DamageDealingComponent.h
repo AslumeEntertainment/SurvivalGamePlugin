@@ -9,7 +9,7 @@
 
 #include "DamageDealingComponent.generated.h"
 
-class UDamageEffect;
+class UGameplayEffectData;
 class USG_TraceEmitterBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHitSucceedSignature, UObject*, HittableObject);
@@ -41,14 +41,17 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> ActorsToIgnoreWhenActive;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "DamageDealer"))
 	FGameplayTag DamageSourceTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
+	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "GameplayCue"))
 	FGameplayTagContainer OnHitGameplayCueTags;
 
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
-	TArray<UDamageEffect*> DamageEffects;
+	TArray<UGameplayEffectData*> GameplayEffectsData;
+
+	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
+	bool bShouldOnlyHitOnce = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults")
 	USG_TraceEmitterBase* DamageTrace;
@@ -60,7 +63,10 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable)
-	FGameplayTag GetDamageSourceTag();
+	FGameplayTag GetDamageSourceTag() { return DamageSourceTag; };
+
+	UFUNCTION(BlueprintCallable)
+	bool ShouldOnlyHitOnce() { return bShouldOnlyHitOnce; };
 
 	UFUNCTION(BlueprintCallable)
 	void ConfigDamageSource(AActor* InDamageInstigator);

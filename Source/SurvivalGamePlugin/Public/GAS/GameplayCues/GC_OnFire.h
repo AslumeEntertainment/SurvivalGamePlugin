@@ -18,12 +18,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
 	UMaterialInterface* FireOverlay;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
-	UAnimMontage* HurtAnimation;
-
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
-
-	virtual bool OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
 
 	virtual bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
 };

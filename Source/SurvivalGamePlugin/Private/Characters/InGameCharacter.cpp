@@ -5,49 +5,33 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Interactables/Items/DamageDealingItem.h"
-#include "Components/HittableComponent.h"
 #include "Components/DamageDealingComponent.h"
+#include "Components/LootTableComponent.h"
 #include "Components/EquipmentComponent.h"
-#include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
-#include "UI/HUD/InGameHUD.h"
+#include "GAS/SG_AbilitySystemBlueprintLibrary.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Headers/AbilityInputConfig.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 AInGameCharacter::AInGameCharacter()
 {
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
 
-	/*DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
-	DamageDealingComponent->SetupAttachment(GetMesh());*/
-
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());
+	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 	
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
+	GetCapsuleComponent()->SetUseCCD(true);
+
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
-
-	OnDestroyed.AddDynamic(this, &AInGameCharacter::OnInGameCharacterDestroyed);
-}
-
-void AInGameCharacter::NetMulticast_SetHittableCompHalfHeight_Implementation(float NewValue)
-{
-	HittableComponent->SetCapsuleHalfHeight(NewValue);
-}
-
-void AInGameCharacter::OnInGameCharacterDestroyed(AActor* RefToSelf)
-{
-	TArray<AItemBase*> Equipment = EquipmentComponent->GetAllEquipedItems();
-	for (AItemBase* Item : Equipment)
-	{
-		Item->Destroy();
-	}
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -63,8 +47,6 @@ void AInGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OldHittableCompHalfHeight = HittableComponent->GetUnscaledCapsuleHalfHeight();
-
 	TArray<UDamageDealingComponent*> DamageDealingComponents;
 	GetComponents<UDamageDealingComponent>(DamageDealingComponents);
 
@@ -79,7 +61,6 @@ void AInGameCharacter::BeginPlay()
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
 		if (IsValid(PlayerController) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::BeginPlay IsValid(PlayerController) == false"));
 			return;
 		}
 		AInGameHUD* HUD = Cast<AInGameHUD>(PlayerController->GetHUD());
@@ -156,11 +137,17 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		{
 			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
 			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
+
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelMainHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelSecondaryHandAction);
 		}
 		else
 		{
 			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::SecondaryHandAction);
 			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Triggered, this, &AInGameCharacter::MainHandAction);
+		
+			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelSecondaryHandAction);
+			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelMainHandAction);
 		}
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -171,6 +158,29 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
+}
+
+void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	UMeshComponent* OtherMesh = Cast<UMeshComponent>(OtherComp);
+	if (IsValid(OtherMesh) == false)
+	{
+		return;
+	}
+
+	FVector MinLocalBounds = GetMesh()->GetLocalBounds().GetBox().Min;
+	FVector ActorBottom = GetActorLocation() + GetActorUpVector() * MinLocalBounds.Z;
+
+	if (Hit.Location.Z <= ActorBottom.Z + GetCharacterMovement()->MaxStepHeight)
+	{
+		return;
+	}
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.Instigator = OtherActor;
+
+	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
 
 void AInGameCharacter::Landed(const FHitResult& Hit)
@@ -222,7 +232,26 @@ void AInGameCharacter::MainHandAction()
 		MainAbilityTagContainer = MainHandAbility.GetDefaultObject()->AbilityTags;
 	}
 
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
+	{
+		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag());
+
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
+
+		if ((uint8)ItemWeight > CurrentStrength)
+		{
+			MainAbilityTagContainer = ItemRef->GetItemSecondaryAbilityTags();
+		}
+	}
+	
+
 	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
+}
+
+void AInGameCharacter::CancelMainHandAction()
+{
+	UE_LOG(LogTemp, Error, TEXT("Cancel main"));
 }
 
 void AInGameCharacter::SecondaryHandAction()
@@ -248,7 +277,7 @@ void AInGameCharacter::SecondaryHandAction()
 	FGameplayTagContainer SecondaryAbilityTagContainer;
 	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())))
 	{
-		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemAbilityTags();
+		SecondaryAbilityTagContainer = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMixedEquipmentSlotTag())->GetItemSecondaryAbilityTags();
 	}
 	else if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag())))
 	{
@@ -259,7 +288,25 @@ void AInGameCharacter::SecondaryHandAction()
 		SecondaryAbilityTagContainer = SecondaryHandAbility.GetDefaultObject()->AbilityTags;
 	}
 
+	if (IsValid(EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag())))
+	{
+		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag());
+
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
+
+		if ((uint8)ItemWeight > CurrentStrength)
+		{
+			SecondaryAbilityTagContainer = ItemRef->GetItemSecondaryAbilityTags();
+		}
+	}
+	
 	AbilitySystemComponent->TryActivateAbilitiesByTag(SecondaryAbilityTagContainer);
+}
+
+void AInGameCharacter::CancelSecondaryHandAction()
+{
+	UE_LOG(LogTemp, Error, TEXT("Cancel secondary"));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -356,21 +403,11 @@ void AInGameCharacter::BroadcastInitialValues()
 void AInGameCharacter::Crouch(bool bClientSimulation)
 {
 	Super::Crouch(bClientSimulation);
-	
-	if (HasAuthority())
-	{
-		NetMulticast_SetHittableCompHalfHeight(HittableCompOnCrouchedHalfHeight);
-	}
 }
 
 void AInGameCharacter::UnCrouch(bool bClientSimulation)
 {
 	Super::UnCrouch(bClientSimulation);
-	
-	if (HasAuthority())
-	{
-		NetMulticast_SetHittableCompHalfHeight(OldHittableCompHalfHeight);
-	}
 }
 
 void AInGameCharacter::AddDamageSource(UDamageDealingComponent* NewDamageSource)
@@ -425,8 +462,9 @@ float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 	}
 	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
 	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
+	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetAttackSpeedPercentIncreaseAttribute()) / 100;
 
-	float FinalAttackSpeed = (1 + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+	float FinalAttackSpeed = (1 + AttributeMultiplier + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
 
 	return FinalAttackSpeed;
 }
@@ -502,6 +540,7 @@ void AInGameCharacter::ShowPlayerInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s FocusedInteractableObject == nullptr"), *Prefix);
 	}
+
 	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment slots"), *Prefix, EquipmentComponent->GetEquipmentSlots().Num());
 	UE_LOG(LogTemp, Warning, TEXT("%s Player has %d equipment sockets"), *Prefix, EquipmentComponent->GetEquipmentSockets().Num());
 
@@ -539,6 +578,78 @@ void AInGameCharacter::ShowPlayerInfo()
 
 		i++;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s Player possesses %d damage sources"), *Prefix, DamageSources.Num());
+
+	i = 0;
+	for (TPair<FGameplayTag, UDamageDealingComponent*> DamageSource : DamageSources)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s Damage Source #%d - %s"), *Prefix, i, *DamageSource.Value->GetDamageSourceTag().ToString());
+		if (IsValid(DamageSource.Value))
+		{
+			if (IsValid(DamageSource.Value->GetOwner()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s Damage Source owner actor - %s"), *Prefix, *DamageSource.Value->GetOwner()->GetName());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("%s Damage Source doesn't have a valid owner actor!"), *Prefix);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s Damage Source is invalid!"), *Prefix);
+		}
+
+		i++;
+	}
+}
+
+bool AInGameCharacter::IsHitGuarded(FVector HitLocation) const
+{
+	if (AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(TEXT("Bool.HasState.Guard"))) == false)
+	{
+		return false;
+	}
+
+	FVector CharacterCenterPoint = GetMesh()->GetLocalBounds().GetBox().GetCenter();
+
+	UE_LOG(LogTemp, Warning, TEXT("Hit point - %s; Target center - %s"), *HitLocation.ToString(), *CharacterCenterPoint.ToString());
+
+	if (CharacterCenterPoint.Z > HitLocation.Z)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("The hit is below the blocking range"));
+		return false;
+	}
+
+	FVector TargetForwardVector = GetMesh()->GetForwardVector();
+	FVector HitDirectionVector = UKismetMathLibrary::Normal(HitLocation - GetActorLocation());
+
+	float DotProduct = UKismetMathLibrary::Dot_VectorVector(TargetForwardVector, HitDirectionVector);
+	UE_LOG(LogTemp, Warning, TEXT("DotProduct - %f"), DotProduct);
+
+	return (DotProduct > 0);
+}
+
+void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
+{
+	if (IsValid(AbilitySystemComponent) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::DestroyHittable IsValid(AbilitySystemComponent) == false"));
+		return;
+	}
+	AbilitySystemComponent->OnOwnerDestroyed();
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	OnCharacterDeath.Broadcast();
+
+	EquipmentComponent->UnequipAllItems();
+	LootTableComponent->DropLoot();
+	Destroy();
 }
 
 

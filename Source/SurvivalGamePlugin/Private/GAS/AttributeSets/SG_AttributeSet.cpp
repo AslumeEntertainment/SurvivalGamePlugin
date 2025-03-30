@@ -8,16 +8,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "FunctionLibraries/DamageFunctionLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Components/HittableComponent.h"
+#include "Interactables/Items/ItemBase.h"
 #include "Characters/InGameCharacter.h"
+#include "Interfaces/Hittable.h"
 
-
-USG_AttributeSet::USG_AttributeSet()
-{
-	
-}
 
 void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -26,6 +21,7 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
 
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, GuardProficiency, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceSlashing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistancePiercing, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, ResistanceBludgeoning, COND_None, REPNOTIFY_Always);
@@ -47,7 +43,19 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 
 void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const
 {
-	//keeping this method just in case
+	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
+
+	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
+		return;
+	}
+
+	if (Attribute == GetHealthAttribute())
+	{
+		
+	}
 }
 
 void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -71,24 +79,6 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
-		UHittableComponent* HittableComp = GetOwningActor()->GetComponentByClass<UHittableComponent>();
-		if (IsValid(HittableComp) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(HittableComp) == false"));
-			return;
-		}
-
-		if (Data.EvaluatedData.Magnitude <= 0 && HittableComp->CanDisplayDamageIndicator())
-		{
-			UWorld* World = GetWorld();
-			if (IsValid(World) == false)
-			{
-				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostGameplayEffectExecute IsValid(World) == false"));
-				return;
-			}
-			UDamageFunctionLibrary::ShowDamageIndicator(World, FMath::Abs(Data.EvaluatedData.Magnitude), GetOwningActor());
-		}
-
 		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
 
 		if (HasMaxHealth())
@@ -101,11 +91,20 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			ASC->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
+
 		if (GetHealth() == 0.f)
 		{
-			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
-			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasNone.Health")));
-			HittableComp->OnHittableDestroyed();
+			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
+			if (HittableOwner == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange HittableOwner == nullptr"));
+				return;
+			}
+			/*if (IsValid(Cast<AItemBase>(HittableOwner)) && IsValid(Cast<AItemBase>(HittableOwner)->GetAttachParentActor()))
+			{
+				return;
+			}*/
+			HittableOwner->DestroyHittable();
 		}
 	}
 }
@@ -144,6 +143,11 @@ void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
 void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldValue);
+}
+
+void USG_AttributeSet::OnRep_GuardProficiency(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, GuardProficiency, OldValue);
 }
 
 void USG_AttributeSet::OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue)

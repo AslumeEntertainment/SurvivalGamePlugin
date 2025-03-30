@@ -22,4 +22,5 @@ public:
 
 	void SetDamageText(float Damage);
 
+	void SetFont(FSlateFontInfo FontInfo);
 };

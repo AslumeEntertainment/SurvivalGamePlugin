@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
+#include "Interfaces/Hittable.h"
 #include "Interfaces/DamageDealerInterface.h"
 #include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
@@ -13,11 +14,12 @@
 
 class UDamageDealingComponent;
 class UEquipmentComponent;
+class ULootTableComponent;
 class UHittableComponent;
 class USG_GameplayAbility;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IDamageDealerInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface
 {
 	GENERATED_BODY()
 	
@@ -32,9 +34,6 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bIsExhausted = false;
-
-	UPROPERTY()
-	float OldHittableCompHalfHeight = 0.f;
 
 	UPROPERTY()
 	TMap<FGameplayTag, UDamageDealingComponent*> DamageSources;
@@ -60,11 +59,6 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
 
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void NetMulticast_SetHittableCompHalfHeight(float NewValue);
-
-	UFUNCTION()
-	void OnInGameCharacterDestroyed(AActor* RefToSelf);
 
 protected:
 
@@ -75,9 +69,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	void PossessedBy(AController* NewController) override;
-
-	UPROPERTY(EditDefaultsOnly, Category = "OnCrouched", meta = (ForceUnits = cm))
-	float HittableCompOnCrouchedHalfHeight = 60.f;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
 	float AttackSpeed = 1;
@@ -94,11 +85,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
 	UEquipmentComponent* EquipmentComponent;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	//UDamageDealingComponent* DamageDealingComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage", meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	ULootTableComponent* LootTableComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -111,11 +99,17 @@ protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
+
 	virtual void Landed(const FHitResult& Hit) override;
 
 	virtual void MainHandAction();
 
+	virtual void CancelMainHandAction();
+
 	virtual void SecondaryHandAction();
+
+	virtual void CancelSecondaryHandAction();
 
 	virtual void BindCallbacksToDependencies();
 
@@ -172,6 +166,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ShowPlayerInfo();
+
+	virtual bool IsHitGuarded(FVector HitLocation) const override;
+
+	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
 	FVoidDataTransferSignature OnCharacterDeath;
 

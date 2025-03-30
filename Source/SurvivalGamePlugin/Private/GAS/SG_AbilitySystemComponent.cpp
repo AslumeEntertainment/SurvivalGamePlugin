@@ -7,7 +7,46 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+#include "Misc/DamageIndicator.h"
 
+
+USG_AbilitySystemComponent::USG_AbilitySystemComponent()
+{
+}
+
+void USG_AbilitySystemComponent::OnOwnerDestroyed()
+{
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("USG_AbilitySystemComponent::OwnerDestroyed IsValid(GetOwner()) == false"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - started"), *GetOwner()->GetName());
+	
+	CancelAllAbilities();
+	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
+	
+	TArray<FActiveGameplayEffectHandle> ActiveEffectSpecs = ActiveGameplayEffects.GetAllActiveEffectHandles();
+	
+	for (FActiveGameplayEffectHandle ActiveEffectSpec : ActiveEffectSpecs)
+	{
+		RemoveEffectFromSpec(ActiveEffectSpec);
+	}
+	
+
+	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - all abilities, effects and cues have been canceled"), *GetOwner()->GetName());
+	
+	//DestroyComponent();
+}
+
+void USG_AbilitySystemComponent::SetStartingAttributeValues()
+{
+	for (TPair<FGameplayAttribute, float> StartingAttributeData : StartingAttributeSetData)
+	{
+		SetNumericAttributeBase(StartingAttributeData.Key, StartingAttributeData.Value);
+	}
+}
 
 void USG_AbilitySystemComponent::AbilityInputPressed(const FGameplayTag& InputTag)
 {

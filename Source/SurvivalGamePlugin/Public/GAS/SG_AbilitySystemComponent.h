@@ -4,10 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Headers/GeneralDelegates.h"
 #include "SG_AbilitySystemComponent.generated.h"
 
 class UGameplayEffect;
 class USG_GameplayAbility;
+class ADamageIndicator;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemComponent
@@ -15,6 +17,34 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 	GENERATED_BODY()
 
 public:
+
+	USG_AbilitySystemComponent();
+
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	TMap<FGameplayAttribute, float> StartingAttributeSetData;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults", meta = (Categories = "GameplayCue"))
+	FGameplayTag OnDestroyedGameplayCueTag;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	TSubclassOf<ADamageIndicator> DamageIndicatorClass = nullptr;
+
+
+public:
+
+	UFUNCTION()
+	void OnOwnerDestroyed();
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	bool bCanEverReceiveDamageFromEffects = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
+	bool bCanDisplayDamageIndicator = true;
+
+	UFUNCTION(BlueprintCallable)
+	void SetStartingAttributeValues();
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void AbilityInputPressed(const FGameplayTag& InputTag);

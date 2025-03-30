@@ -12,45 +12,31 @@ ULootTableComponent::ULootTableComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void ULootTableComponent::DropLoot(bool bWasDestroyedSafely, bool bWasDestroyedUnsafely)
+TArray<AActor*> ULootTableComponent::DropLoot(bool bWasDestroyedSafely)
 {
-	if (bWasDestroyedSafely && bWasDestroyedUnsafely)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ULootTableComponent::DropLoot bWasDestroyedSafely and bWasDestroyedUnsafely are both true"));
-		return;
-	}
-
+	TArray<AActor*> DroppedActors;
 	FLootTableData* DropData = nullptr;
-	if (bWasDestroyedSafely)
-	{
-		DropData = SafeDestructLootTable.GetRow<FLootTableData>("");
-	}
-	else if (bWasDestroyedUnsafely)
-	{
-		DropData = UnsafeDestructLootTable.GetRow<FLootTableData>("");
-	}
-	else
-	{
-		DropData = StandartDestructLootTable.GetRow<FLootTableData>("");
-	}
+
+	DropData = (bWasDestroyedSafely) ? SafeDestructLootTable.GetRow<FLootTableData>("") : StandartDestructLootTable.GetRow<FLootTableData>("");
 
 	if (DropData == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ULootTableComponent::DropLoot DropData == nullptr"));
-		return;
+		if(bWasDestroyedSafely) UE_LOG(LogTemp, Log, TEXT("%s:Unspecified drop data for safe destruct"), *GetOwner()->GetName());
+		if (!bWasDestroyedSafely) UE_LOG(LogTemp, Log, TEXT("%s:Unspecified drop data for standart destruct"), *GetOwner()->GetName());
+		return DroppedActors;
 	}
 
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ULootTableComponent::DropLoot IsValid(World) == false"));
-		return;
+		return DroppedActors;
 	}
 	UMeshComponent* OwnerMesh = Cast<UMeshComponent>(GetOwner()->GetComponentByClass<UMeshComponent>());
 	if (IsValid(OwnerMesh) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ULootTableComponent::DropLoot IsValid(OwnerMesh) == false"));
-		return;
+		return DroppedActors;
 	}
 
 	FVector MinLocalBounds = OwnerMesh->GetLocalBounds().GetBox().Min;
@@ -83,10 +69,12 @@ void ULootTableComponent::DropLoot(bool bWasDestroyedSafely, bool bWasDestroyedU
 				{
 					NewActorLocation = CurrentSpawningPoint;
 					UStaticMeshComponent* DroppedActorMesh = DroppedActor->GetComponentByClass<UStaticMeshComponent>();
-					if (!IsValid(DroppedActorMesh))
+					
+					if (IsValid(DroppedActorMesh) == false)
 					{
 						continue;
 					}
+
 					FVector NewActorMinBounds, NewActorMaxBounds;
 					DroppedActorMesh->GetLocalBounds(NewActorMinBounds, NewActorMaxBounds);
 					CurrentSpawningPoint += GetOwner()->GetActorUpVector() * (NewActorMaxBounds.Z - NewActorMinBounds.Z);
@@ -100,9 +88,11 @@ void ULootTableComponent::DropLoot(bool bWasDestroyedSafely, bool bWasDestroyedU
 				NewActorLocation.Y += FMath::RandRange(MinLocalBounds.Y, MaxLocalBounds.Y) * Spread;
 
 				DroppedActor->SetActorLocation(NewActorLocation, false, nullptr, ETeleportType::ResetPhysics);
+				DroppedActors.Add(DroppedActor);
 			}
 		}
 	}
+	return DroppedActors;
 }
 
 

@@ -118,50 +118,7 @@ void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
 
 void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
 {
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Gameplay Event recieved"));
-	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyItem();
-
-	if (HasAuthority(&CurrentActivationInfo) == false)
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_AttemptDisassembleItem::SpawnNewItems IsValid(World) == false"));
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		return;
-	}
-
-	float ItemDurabilityPercent = EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetDurability() /
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->ItemData.ItemMaxDurability;
-
-	MainItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->MainParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(MainItemActor))
-	{
-		MainItemActor->SetDurability(MainItemActor->GetDurability() * ItemDurabilityPercent);
-		EquipmentComp->EquipItem(MainItemActor);
-
-		//MainItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()));
-		//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), MainItemActor);
-	}
-
-	IngredientItemActor = World->SpawnActor<AItemBase>(ItemForDisassemblyData->IngredientParentItem, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
-	if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())) == false)
-	{
-		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
-		EquipmentComp->EquipItem(IngredientItemActor);
-		
-		//IngredientItemActor->OnItemEquiped(Player, EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()));
-		//EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), IngredientItemActor);
-	}
-	else if (IsValid(IngredientItemActor) && IsValid(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())))
-	{
-		IngredientItemActor->SetDurability(IngredientItemActor->GetDurability() * ItemDurabilityPercent);
-		IngredientItemActor->SetActorLocation(Player->GetPlayerLookAtLocation(100.f));
-		IngredientItemActor->SetActorRotation(Player->GetActorRotation());
-	}
+	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyHittable(true);
 	
 	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Disassembly process finished!"));
 }

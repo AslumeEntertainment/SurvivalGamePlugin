@@ -9,6 +9,7 @@
 
 class UBoxComponent;
 class UGameplayEffect;
+class UFluidDataComponent;
 class UStaticMeshComponent;
 class UPostProcessComponent;
 
@@ -31,6 +32,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* WaterBox;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UFluidDataComponent* FluidDataComponent;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UPostProcessComponent* PostProcessComponent;

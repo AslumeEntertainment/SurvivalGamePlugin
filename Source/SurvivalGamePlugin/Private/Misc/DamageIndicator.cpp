@@ -22,11 +22,8 @@ ADamageIndicator::ADamageIndicator()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> DamageIndicatorWidgetClass(TEXT("/Game/Blueprints/UI/Widgets/InGame/BP_DamageIndicatorWidget"));
-
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	WidgetComponent->SetWidgetClass(DamageIndicatorWidgetClass.Class);
 	SetRootComponent(WidgetComponent);
 
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
@@ -51,7 +48,12 @@ void ADamageIndicator::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("ADamageIndicator::BeginPlay IsValid(DamageIndicatorWidget) == false"));
 		return;
 	}
+
 	DamageIndicatorWidget->SetDamageText(Damage);
+	if (DamageIndicatorFontForDamageType.Contains(DamageType))
+	{
+		DamageIndicatorWidget->SetFont(DamageIndicatorFontForDamageType[DamageType]);
+	}
 
 	FVector Direction = FVector(FMath::RandRange(-0.25f, 0.25f), FMath::RandRange(-0.25f, 0.25f), 1);
 	MovementComponent->Velocity = Direction * 100;

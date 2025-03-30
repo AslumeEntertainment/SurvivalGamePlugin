@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Actors/SG_HittableActor.h"
 
 #include "Headers/ItemDataStruct.h"
 #include "Interfaces/InteractableInterface.h"
@@ -22,7 +22,7 @@ class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AItemBase : public AActor, public IInteractableInterface, public IAbilitySystemInterface
+class SURVIVALGAMEPLUGIN_API AItemBase : public ASG_HittableActor, public IInteractableInterface
 {
 	GENERATED_BODY()
 	
@@ -33,7 +33,7 @@ public:
 private:
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_LoseDurability(float LostDurability);
+	void Server_LoseDurability(float LostDurability, bool bSafeDurabilityLoss);
 
 protected:
 	
@@ -42,32 +42,14 @@ protected:
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
 
-	UPROPERTY(Replicated)
-	float CurrentDurability;
-
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;
 
+	UPROPERTY()
+	FGameplayAbilitySpecHandle SecondaryAbilitySpecHandle;
+
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
-
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* StaticMesh;
-
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	UHittableComponent* HittableComponent;
-
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
-	ULootTableComponent* LootTableComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USG_AbilitySystemComponent* AbilitySystemComponent;
-
-	UPROPERTY(Transient)
-	USG_AttributeSet* AttributeSet;
 
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetActorPhysics(bool NewActorPhysics);
@@ -80,7 +62,7 @@ public:
 	UPROPERTY()
 	FItemDataStruct ItemData;
 
-	virtual void LoseDurability(float LostDurability);
+	virtual void LoseDurability(float LostDurability, bool bSafeDurabilityLoss = false);
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -96,8 +78,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemUnequiped(); 
 
-	UFUNCTION(BlueprintCallable)
-	virtual void DestroyItem();
+	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
 	virtual bool bCanInteract(AController* InteractingCharacter) override;
@@ -105,7 +86,7 @@ public:
 
 	FName GetItemDataRowName() const;
 
-	class UStaticMeshComponent* GetItemMesh();
+	FGameplayTagContainer GetItemAbilityTags() const;
 
-	FGameplayTagContainer GetItemAbilityTags();
+	FGameplayTagContainer GetItemSecondaryAbilityTags() const;
 };

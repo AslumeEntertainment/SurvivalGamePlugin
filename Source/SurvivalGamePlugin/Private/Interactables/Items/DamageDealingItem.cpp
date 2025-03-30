@@ -14,12 +14,24 @@ ADamageDealingItem::ADamageDealingItem()
     DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
     DamageDealingComponent->SetupAttachment(GetRootComponent());
     DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
+
+    OnDestroyed.AddDynamic(this, &ADamageDealingItem::OnItemDestroyed);
+}
+
+void ADamageDealingItem::OnItemDestroyed(AActor* DestroyedActor)
+{
+    AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
+    if (IsValid(ItemOwner) == false)
+    {
+        return;
+    }
+    ItemOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
 }
 
 void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
 {
-    float DurabilityLost = 20;
-    //calculating...
+    float DurabilityLost = 10;
+
     LoseDurability(DurabilityLost);
 }
 

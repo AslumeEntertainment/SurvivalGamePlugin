@@ -7,12 +7,12 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
-#include "Objects/ConsumableItemEffectDataObject.h"
+#include "Objects/GameplayEffectDataObjects/ConsumableItemEffectDataObject.h"
 #include "Interactables/Items/ConsumableItem.h"
 #include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
-#include "Animation/SG_AnimInstance.h"
+
 
 void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -87,5 +87,5 @@ void USGGA_ConsumeItem::OnEventRecieved(FGameplayEventData Payload)
 		ASC->AddEffectFromClass(EffectDataObject->EffectClass, EffectDataObject, Player, ConsumableItem, EffectDataObject->EffectLevel);
 	}
 
-	ConsumableItem->LoseDurability(1.f);
+	ConsumableItem->LoseDurability(1.f, true);
 }

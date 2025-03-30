@@ -3,14 +3,13 @@
 
 #include "Components/DamageDealingComponent.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "AbilitySystemGlobals.h"
 
-#include "Components/HittableComponent.h"
+#include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
+#include "Objects/TraceEmitters/SG_TraceEmitterBase.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "GAS/DamageEffect.h"
-#include "Objects/SG_TraceEmitterBase.h"
 
 
 UDamageDealingComponent::UDamageDealingComponent()
@@ -53,40 +52,32 @@ void UDamageDealingComponent::AttemptHit()
 
 void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 {
-	USG_AbilitySystemComponent* InstigatorASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(DamageInstigator));
-	if (IsValid(InstigatorASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ProcessHit IsValid(InstigatorASC) == false"));
-		return;
-	}
-	FGameplayEffectContextHandle ContextHandle = InstigatorASC->MakeEffectContext();
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
 	ContextHandle.AddInstigator(DamageInstigator, GetOwner());
-	ContextHandle.AddSourceObject(this);
 
 	for (const FHitResult HitResult : HitResults)
 	{
-		if (IsValid(HitResult.GetActor()) == false)
+		AActor* HitActor = HitResult.GetActor();
+		if (IsValid(HitActor) == false)
 		{
 			continue;
 		}
-		UHittableComponent* HittableComp = HitResult.GetActor()->GetComponentByClass<UHittableComponent>();
-		if (IsValid(HittableComp) == false)
-		{
-			continue;
-		}
-		if (HittableComp->CanEverReceiveGameplayEffects() == false)
+		if (ActorsToIgnoreWhenActive.Contains(HitActor))
 		{
 			continue;
 		}
 
-		USG_AbilitySystemComponent* TargetASC = HittableComp->GetOwnerAbilitySystemComponent();
+		USG_AbilitySystemComponent* TargetASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor));
 		if (IsValid(TargetASC) == false)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(TargetASC) == false"));
+			continue;
+		}
+		if (TargetASC->bCanEverReceiveDamageFromEffects == false)
+		{
 			continue;
 		}
 
-		ContextHandle.AddOrigin(HitResult.ImpactPoint);
+		ContextHandle.AddHitResult(HitResult, true);
 		
 		FGameplayCueParameters CueParams = FGameplayCueParameters();
 		CueParams.Location = HitResult.ImpactPoint;
@@ -95,19 +86,34 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 			TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
 		}
 
-		for (UDamageEffect* DamageEffect : DamageEffects)
+		for (UGameplayEffectData* GameplayEffectData : GameplayEffectsData)
 		{
-			TargetASC->ApplyGameplayEffectToSelf(DamageEffect, DamageEffect->EffectLevel, ContextHandle);
+			if (IsValid(GameplayEffectData) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData) == false"));
+				continue;
+			}
+			if (IsValid(GameplayEffectData->EffectClass) == false)
+			{
+				UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::AttemptHit IsValid(GameplayEffectData->DamageEffect) == false"));
+				continue;
+			}
+			ContextHandle.AddSourceObject(GameplayEffectData);
+			
+			FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectData->EffectClass, GameplayEffectData->EffectLevel, ContextHandle);
+			FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
+			if (Spec == nullptr)
+			{
+				continue;
+			}
+
+			TargetASC->ApplyGameplayEffectSpecToSelf(*Spec);
 		}
 
 		OnHitLandedSuccessfully.Broadcast(HitResult.GetActor());
-		ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
-	}
-}
 
-FGameplayTag UDamageDealingComponent::GetDamageSourceTag()
-{
-	return DamageSourceTag;
+		if (bShouldOnlyHitOnce) ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
+	}
 }
 
 void UDamageDealingComponent::ConfigDamageSource(AActor* InDamageInstigator)
@@ -121,13 +127,14 @@ void UDamageDealingComponent::SetActiveness(bool NewState)
 	{
 		return;
 	}
+
+	SetComponentTickEnabled(NewState);
+
 	if (NewState)
 	{
 		ActorsToIgnoreWhenActive.Empty();
 		ActorsToIgnoreWhenActive = ActorsToIgnore;
 	}
-
-	SetComponentTickEnabled(NewState);
 }
 
 void UDamageDealingComponent::AddActorToIgnored(AActor* ActorToIgnore)

@@ -231,11 +231,11 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 {
 	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->DestroyItem();
+		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->Destroy();
 	}
 	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->GetItemDataRowName()))
 	{
-		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyItem();
+		EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->Destroy();
 	}
 
 	if (HasAuthority(&CurrentActivationInfo) == false)
@@ -269,18 +269,6 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 	ProductItem = World->SpawnActor<AItemBase>(ProductItemData->ItemActorClass, Player->GetPlayerLookAtLocation(100.f), Player->GetActorRotation());
 	if (IsValid(ProductItem))
 	{
-		/*if (ProductItemSocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetMainEquipmentSlotTag()))
-		{
-			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag(), ProductItem);
-		}
-		else if (ProductItemSocketName == EquipmentComp->GetEquipmentSocketWithTag(EquipmentComp->GetSecondaryEquipmentSlotTag()))
-		{
-			EquipmentComp->SetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag(), ProductItem);
-		}
-		if (Player->GetMesh()->DoesSocketExist(ProductItemSocketName))
-		{
-			ProductItem->OnItemEquiped(Player, ProductItemSocketName);
-		}*/
 		ProductItem->SetDurability(ProductItemDurabilityPercent * ProductItem->ItemData.ItemMaxDurability);
 		EquipmentComp->EquipItem(ProductItem);
 		

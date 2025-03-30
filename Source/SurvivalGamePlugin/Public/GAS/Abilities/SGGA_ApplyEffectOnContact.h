@@ -7,6 +7,7 @@
 #include "SGGA_ApplyEffectOnContact.generated.h"
 
 class AStaticMeshActor;
+class UGameplayEffectData;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectOnContact : public USG_PassiveGameplayAbility
@@ -33,7 +34,7 @@ protected:
 	bool bShouldAffectUser = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	TArray<TSubclassOf<UGameplayEffect>> EffectsToApply;
+	TArray<UGameplayEffectData*> EffectsToApply;
 
 	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
 	TSubclassOf<AStaticMeshActor> OverlayMeshActorClass = nullptr;
@@ -41,17 +42,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "OverlayMesh")
 	FName SocketToAttach;
 
+	void OnHitEventReceived(FGameplayEventData Payload) override;
+
+	void OnHitEventDealt(FGameplayEventData Payload) override;
+
 	UFUNCTION()
 	void SpawnOverlayMesh();
 
 	UFUNCTION()
 	void AttemptHit(const AActor* TargetActor);
 
-	void OnHitEventReceived(FGameplayEventData Payload) override;
-
-	void OnHitEventDealt(FGameplayEventData Payload) override;
-
 	UFUNCTION()
-	void OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnAvatarActorBeginOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 };

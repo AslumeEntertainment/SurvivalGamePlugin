@@ -4,6 +4,7 @@
 #include "Interactables/Items/ItemBase.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -11,7 +12,6 @@
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/LootTableComponent.h"
-#include "Components/HittableComponent.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
@@ -21,37 +21,19 @@ void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AItemBase, bIsAttached);
-	DOREPLIFETIME(AItemBase, CurrentDurability);
 }
 
-// Sets default values
 AItemBase::AItemBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
-	StaticMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	SetRootComponent(StaticMesh);
-
-	HittableComponent = CreateDefaultSubobject<UHittableComponent>(TEXT("PassiveDamageDealingComponent"));
-	HittableComponent->SetupAttachment(GetRootComponent());
-
-	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
-
-	AbilitySystemComponent = CreateDefaultSubobject<USG_AbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
-
-	AttributeSet = CreateDefaultSubobject<USG_AttributeSet>(TEXT("AttributeSet"));
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
-// Called when the game starts or when spawned
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	HasAuthority() ? Server_SetActorPhysics(true) : NetMulticast_SetActorPhysics(true);
 
 	FItemDataStruct* TempItemData = ItemDataRow.GetRow<FItemDataStruct>("");
 	if (TempItemData == nullptr)
@@ -60,12 +42,13 @@ void AItemBase::BeginPlay()
 		return;
 	}
 	ItemData = *TempItemData;
-	CurrentDurability = ItemData.ItemMaxDurability;
 
 	if (HasAuthority() == false)
 	{
 		return;
 	}
+
+	NetMulticast_SetActorPhysics(true);
 
 	if (IsValid(AbilitySystemComponent) == false)
 	{
@@ -78,17 +61,8 @@ void AItemBase::BeginPlay()
 		return;
 	}
 
-	if (IsValid(DefaultAttributeEffect))
-	{
-		AbilitySystemComponent->AddEffectFromClass(DefaultAttributeEffect, this, this, this);
-	}
-
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
-		[this](const FOnAttributeChangeData& Data)
-		{
-			SetDurability(Data.NewValue);
-		}
-	);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), ItemData.ItemMaxDurability);
 }
 
 void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
@@ -98,28 +72,31 @@ void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
 
 void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
 {
-	StaticMesh->SetSimulatePhysics(NewActorPhysics);
-	StaticMesh->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
-	HittableComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
+	StaticMeshComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	CollisionCapsuleComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 }
 
-void AItemBase::Server_LoseDurability_Implementation(float LostDurability)
+void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)
 {
-	LoseDurability(LostDurability);
+	LoseDurability(LostDurability, bSafeDurabilityLoss);
 }
 
-void AItemBase::LoseDurability(float LostDurability)
+void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 {
 	if (HasAuthority() == false)
 	{
-		Server_LoseDurability(LostDurability);
+		Server_LoseDurability(LostDurability, bSafeDurabilityLoss);
 		return;
 	}
 
-	CurrentDurability -= LostDurability;
+	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) - LostDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
+
 	if (CurrentDurability <= 0)
 	{
-		DestroyItem();
+		DestroyHittable(bSafeDurabilityLoss);
+		return;
 	}
 }
 
@@ -130,12 +107,12 @@ UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const
 
 float AItemBase::GetDurability() const
 {
-	return CurrentDurability;
+	return AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute());
 }
 
 void AItemBase::SetDurability(float InDurability)
 {
-	CurrentDurability = InDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), InDurability);
 }
 
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
@@ -150,13 +127,20 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 	HasAuthority() ? Server_SetActorPhysics(false) : NetMulticast_SetActorPhysics(false);
 
 	AttachToComponent(PlayerOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SocketName);
-	StaticMesh->SetOverlayMaterial(nullptr);
+	StaticMeshComponent->SetOverlayMaterial(nullptr);
 
+	FGameplayAbilitySpec Spec;
 	if (HasAuthority() && IsValid(ItemData.ItemAbility))
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
+		Spec = FGameplayAbilitySpec(ItemData.ItemAbility, 1, INDEX_NONE, PlayerOwner);
 		Spec.DynamicAbilityTags.AddTag(ItemData.ItemAbility.GetDefaultObject()->InputTag);
 		AbilitySpecHandle = ASC->GiveAbility(Spec);
+	}
+	if (HasAuthority() && IsValid(ItemData.ItemSecondaryAbility))
+	{
+		Spec = FGameplayAbilitySpec(ItemData.ItemSecondaryAbility, 1, INDEX_NONE, PlayerOwner);
+		Spec.DynamicAbilityTags.AddTag(ItemData.ItemSecondaryAbility.GetDefaultObject()->InputTag);
+		SecondaryAbilitySpecHandle = ASC->GiveAbility(Spec);
 	}
 	
 	bIsAttached = true;
@@ -165,7 +149,7 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 void AItemBase::OnItemUnequiped()
 {
 	ASG_Character* PlayerOwner = Cast<ASG_Character>(GetAttachParentActor());
-	if (!IsValid(PlayerOwner))
+	if (IsValid(PlayerOwner) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::OnItemUnequiped IsValid(PlayerOwner) == false"));
 		return;
@@ -178,6 +162,8 @@ void AItemBase::OnItemUnequiped()
 		return;
 	}
 
+	PlayerOwner->DisablePlayerInput(0.01f);
+
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorLocation(PlayerOwner->GetPlayerLookAtLocation(100.f));
 	SetActorRotation(PlayerOwner->GetActorRotation());
@@ -187,17 +173,62 @@ void AItemBase::OnItemUnequiped()
 	if (HasAuthority())
 	{
 		ASC->RemoveAbilityFromSpec(AbilitySpecHandle);
+		ASC->RemoveAbilityFromSpec(SecondaryAbilitySpecHandle);
 	}
 	
 	bIsAttached = false;
 }
 
-void AItemBase::DestroyItem()
+void AItemBase::DestroyHittable(bool bSafeDestruct)
 {
-	if (IsValid(GetAttachParentActor()))
+	if (IsValid(AbilitySystemComponent) == false)
 	{
-		OnItemUnequiped();
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::DestroyHittable IsValid(AbilitySystemComponent) == false"));
+		return;
 	}
+	AbilitySystemComponent->OnOwnerDestroyed();
+
+	if (HasAuthority() == false)
+	{
+		return;
+	}
+
+	TArray<AActor*> DroppedLoot = LootTableComponent->DropLoot(bSafeDestruct);
+
+	AInGameCharacter* ItemOwner = Cast<AInGameCharacter>(GetAttachParentActor());
+	if (IsValid(ItemOwner) == false)
+	{
+		Destroy();
+		return;
+	}
+
+	UEquipmentComponent* EquipmentComp = ItemOwner->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::InteractRequest IsValid(EquipmentComp) == false"));
+		return;
+	}
+	EquipmentComp->UnequipItem(this);
+
+	for (AActor* DroppedActor : DroppedLoot)
+	{
+		AItemBase* DroppedItemActor = Cast<AItemBase>(DroppedActor);
+		if (IsValid(DroppedItemActor) == false)
+		{
+			continue;
+		}
+
+		float DurabilityPercent = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) / 
+			AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute());
+		
+		UE_LOG(LogTemp, Warning, TEXT("DurabilityPercent - %.2f"), DurabilityPercent);
+		
+		if (DurabilityPercent <= 0.f) DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() / 2.f);
+		else DroppedItemActor->SetDurability(DroppedItemActor->GetDurability() * DurabilityPercent);
+
+		EquipmentComp->EquipItem(Cast<AItemBase>(DroppedActor), true);
+	}
+
 	Destroy();
 }
 
@@ -264,13 +295,21 @@ FName AItemBase::GetItemDataRowName() const
 	return ItemDataRow.RowName;
 }
 
-UStaticMeshComponent* AItemBase::GetItemMesh()
+FGameplayTagContainer AItemBase::GetItemAbilityTags() const
 {
-	return StaticMesh;
+	if (IsValid(ItemData.ItemAbility))
+	{
+		return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
+	}
+	return FGameplayTagContainer();
 }
 
-FGameplayTagContainer AItemBase::GetItemAbilityTags()
+FGameplayTagContainer AItemBase::GetItemSecondaryAbilityTags() const
 {
-	return ItemData.ItemAbility.GetDefaultObject()->AbilityTags;
+	if (IsValid(ItemData.ItemSecondaryAbility))
+	{
+		return ItemData.ItemSecondaryAbility.GetDefaultObject()->AbilityTags;
+	}
+	return GetItemAbilityTags();
 }
 
