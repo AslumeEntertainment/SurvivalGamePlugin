@@ -72,18 +72,18 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	}
 
 	const FHitResult* HitResult = EffectContext.GetHitResult();
-	if (HitResult == nullptr)
+	/*if (HitResult == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation HitResult == nullptr"));
 		return;
-	}
+	}*/
 
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
 	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
 	
-	FVector HitLocation = EffectContext.GetHitResult()->ImpactPoint;
+	FVector HitLocation = (HitResult != nullptr) ? FVector(HitResult->ImpactPoint) : TargetActor->GetActorLocation();
 
 	float FinalDamage = 0.f;
 	
@@ -133,11 +133,19 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 
 	TriggerGameplayCues(TargetASC, CueParams);
 
+	if (DamageSourceData->bShouldTriggerHitResponce == false)
+	{
+		return;
+	}
+
 	FGameplayEventData EventData;
 	EventData.Target = TargetActor;
 	EventData.Instigator = InstigatorActor;
+	EventData.ContextHandle = EffectContext;
 
 	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
+
+	return;
 
 }
 

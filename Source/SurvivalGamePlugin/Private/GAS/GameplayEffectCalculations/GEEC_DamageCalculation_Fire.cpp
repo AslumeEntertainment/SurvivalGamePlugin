@@ -77,9 +77,15 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 
 	TriggerGameplayCues(TargetASC, CueParams);
 
+	if (DamageSourceData->bShouldTriggerHitResponce == false)
+	{
+		return;
+	}
+
 	FGameplayEventData EventData;
 	EventData.Target = TargetActor;
 	EventData.Instigator = InstigatorActor;
+	EventData.ContextHandle = EffectContext;
 
 	AcknowledgeHit(InstigatorASC, TargetASC, EventData);
 

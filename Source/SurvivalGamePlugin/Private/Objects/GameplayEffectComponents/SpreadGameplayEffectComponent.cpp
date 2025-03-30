@@ -25,6 +25,12 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 		UE_LOG(LogTemp, Error, TEXT("USpreadGameplayEffectComponent::OnGameplayEffectExecuted IsValid(TargetASC) == false"));
 		return;
 	}
+
+	if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute()) <= 0.f)
+	{
+		return;
+	}
+
 	AActor* Target = TargetASC->GetOwner();
 	if (IsValid(Target) == false)
 	{
@@ -49,7 +55,7 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 
 	FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
 
-	for (FHitResult HitResult : HitResults)
+	for (const FHitResult HitResult : HitResults)
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (IsValid(HitActor) == false)
@@ -105,14 +111,9 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 			continue;
 		}
 
-		HitActorASC->ApplyGameplayEffectSpecToSelf(*Spec);
-		UE_LOG(LogTemp, Warning, TEXT("UGC_SpreadEffect::OnExecute_Implementation Spreading effect from %s to %s"), *Target->GetName(), *HitActor->GetName());
-		
-		if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute()) <= 0.f)
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s has 0 health, this effect should not exist!!!"), *Target->GetName());
-		}
+		//UE_LOG(LogTemp, Warning, TEXT("UGC_SpreadEffect::OnExecute_Implementation Spreading effect from %s to %s"), *Target->GetName(), *HitActor->GetName());
 
+		HitActorASC->ApplyGameplayEffectSpecToSelf(*Spec);
 		ActorsToIgnore.Add(HitActor);
 	}
 }

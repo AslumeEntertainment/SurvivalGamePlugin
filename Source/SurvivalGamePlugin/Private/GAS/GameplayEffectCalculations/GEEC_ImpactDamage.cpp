@@ -31,6 +31,8 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		return;
 	}
 
+	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
+
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
@@ -75,6 +77,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 
 	FGameplayEventData EventData;
 	EventData.Target = TargetActor;
+	EventData.ContextHandle = EffectContext;
 
 	AcknowledgeHit(nullptr, TargetASC, EventData);
 

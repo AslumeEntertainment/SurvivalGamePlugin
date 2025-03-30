@@ -23,9 +23,18 @@ void USG_AbilitySystemComponent::OnOwnerDestroyed()
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - started"), *GetOwner()->GetName());
+	
 	CancelAllAbilities();
-	RemoveActiveEffectsWithTags(FGameplayTagContainer());
 	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
+	
+	TArray<FActiveGameplayEffectHandle> ActiveEffectSpecs = ActiveGameplayEffects.GetAllActiveEffectHandles();
+	
+	for (FActiveGameplayEffectHandle ActiveEffectSpec : ActiveEffectSpecs)
+	{
+		RemoveEffectFromSpec(ActiveEffectSpec);
+	}
+	
+
 	UE_LOG(LogTemp, Warning, TEXT("%s: USG_AbilitySystemComponent::OwnerDestroyed - all abilities, effects and cues have been canceled"), *GetOwner()->GetName());
 	
 	//DestroyComponent();

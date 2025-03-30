@@ -37,5 +37,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
 	bool bUseHitResultImpactLocation = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DamageEffectProperties")
+	bool bShouldTriggerHitResponce = true;
 	
 };

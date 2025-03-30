@@ -7,9 +7,12 @@
 #include "Components/ShapeComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Engine/StaticMeshActor.h"
+#include "AbilitySystemGlobals.h"
 
+#include "Objects/GameplayEffectDataObjects/GameplayEffectData.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interfaces/Hittable.h"
 
 
 void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -72,6 +75,16 @@ void USGGA_ApplyEffectOnContact::EndAbility(const FGameplayAbilitySpecHandle Han
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
+void USGGA_ApplyEffectOnContact::OnHitEventReceived(FGameplayEventData Payload)
+{
+	AttemptHit(Payload.Instigator);
+}
+
+void USGGA_ApplyEffectOnContact::OnHitEventDealt(FGameplayEventData Payload)
+{
+	AttemptHit(Payload.Target);
+}
+
 void USGGA_ApplyEffectOnContact::SpawnOverlayMesh()
 {
 	if (HasAuthority(&CurrentActivationInfo) == false)
@@ -102,39 +115,33 @@ void USGGA_ApplyEffectOnContact::SpawnOverlayMesh()
 
 void USGGA_ApplyEffectOnContact::AttemptHit(const AActor* TargetActor)
 {
-	const IAbilitySystemInterface* ASI_Actor = Cast<IAbilitySystemInterface>(TargetActor);
-	if (ASI_Actor == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit ASI_Actor == nullptr"));
-		return;
-	}
-
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(ASI_Actor->GetAbilitySystemComponent());
-	if (IsValid(ASC) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit IsValid(ASC) == false"));
-		return;
-	}
-
-	if (ASC->bCanEverReceiveDamageFromEffects == false)
+	const IHittable* HittableActor = Cast<IHittable>(TargetActor);
+	if (HittableActor == nullptr)
 	{
 		return;
 	}
 
-	for (TSubclassOf<UGameplayEffect> Effect : EffectsToApply)
+	USG_AbilitySystemComponent* TargetASC = HittableActor->GetSG_AbilitySystemComponent();
+	if (IsValid(TargetASC) == false)
 	{
-		ASC->AddEffectFromClass(Effect, AvatarActor, AvatarActor, AvatarActor);
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit IsValid(TargetASC) == false"));
+		return;
 	}
-}
 
-void USGGA_ApplyEffectOnContact::OnHitEventReceived(FGameplayEventData Payload)
-{
-	AttemptHit(Payload.Instigator);
-}
+	if (TargetASC->bCanEverReceiveDamageFromEffects == false || EffectsToApply.IsEmpty())
+	{
+		return;
+	}
 
-void USGGA_ApplyEffectOnContact::OnHitEventDealt(FGameplayEventData Payload)
-{
-	AttemptHit(Payload.Target);
+	for (UGameplayEffectData* EffectToApply : EffectsToApply)
+	{
+		if (IsValid(EffectToApply) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::AttemptHit IsValid(EffectToApply) == false"));
+			continue;
+		}
+		TargetASC->AddEffectFromClass(EffectToApply->EffectClass, EffectToApply, AvatarActor, AvatarActor, EffectToApply->EffectLevel);
+	}
 }
 
 void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
