@@ -9,6 +9,7 @@
 
 #include "SGGA_ApplyEffectToSelf.generated.h"
 
+class UGameplayEffectData;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ApplyEffectToSelf : public USG_GameplayAbility
@@ -22,6 +23,6 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effect")
-	TSubclassOf<UGameplayEffect> EffectClass;
+	UGameplayEffectData* EffectData;
 
 };

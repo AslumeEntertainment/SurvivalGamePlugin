@@ -5,6 +5,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemGlobals.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
@@ -177,8 +178,14 @@ void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent,
 	}
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	ContextHandle.AddHitResult(Hit);
+	ContextHandle.AddInstigator(OtherActor, OtherActor);
+
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.Instigator = OtherActor;
+	EventData.ContextHandle = ContextHandle;
 
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
@@ -195,7 +202,14 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	}
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
-	SendGameplayEventToSelf(EventTag, FGameplayEventData());
+
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	ContextHandle.AddHitResult(Hit);
+	
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.ContextHandle = ContextHandle;
+
+	SendGameplayEventToSelf(EventTag, EventData);
 }
 
 void AInGameCharacter::MainHandAction()

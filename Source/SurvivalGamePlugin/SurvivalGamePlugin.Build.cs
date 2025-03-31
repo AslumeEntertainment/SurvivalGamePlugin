@@ -33,6 +33,9 @@ public class SurvivalGamePlugin : ModuleRules
 				"Foliage",
                 "MoviePlayer",
                 "Niagara",
+				"AIModule",
+				"GameplayTasks",
+				"NavigationSystem"
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }

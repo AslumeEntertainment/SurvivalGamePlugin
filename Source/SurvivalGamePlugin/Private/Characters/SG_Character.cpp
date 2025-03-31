@@ -533,7 +533,7 @@ void ASG_Character::DisablePlayerInput(float Duration)
 		FTimerHandle EnableInputTimer;
 		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
 	}
-
+	
 	UE_LOG(LogTemp, Log, TEXT("ASG_Character::DisablePlayerInput - %s"), *GetName());
 }
 
