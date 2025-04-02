@@ -5,6 +5,7 @@
 
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
 #include "Characters/InGameCharacter.h"
@@ -18,6 +19,7 @@ ASG_AIController::ASG_AIController()
     PerceptionComp->ConfigureSense(*SightConfig);
     PerceptionComp->SetDominantSense(SightConfig->GetSenseImplementation());
     PerceptionComp->OnTargetPerceptionUpdated.AddDynamic(this, &ASG_AIController::OnTargetDetected);
+    PerceptionComp->OnTargetPerceptionForgotten.AddDynamic(this, &ASG_AIController::OnTargetForgotten);
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -46,9 +48,33 @@ void ASG_AIController::OnPossess(APawn* InPawn)
 
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
 {
+    if (IsValid(Actor) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(Actor) == false"));
+        return;
+    }
+
+    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", Stimulus.WasSuccessfullySensed());
+
+    CurrentTarget = Stimulus.WasSuccessfullySensed() ? Actor : nullptr;
+    UE_LOG(LogTemp, Log, TEXT("%s: CurrentTarget - %s"), *GetName(), (IsValid(CurrentTarget) ? *CurrentTarget->GetName() : TEXT("NULL")));
+}
+
+void ASG_AIController::OnTargetForgotten(AActor* Actor)
+{
+    if (IsValid(Actor) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetForgotten IsValid(Actor) == false"));
+        return;
+    }
 }
 
 UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 {
     return BehaviorTree;
+}
+
+AActor* ASG_AIController::GetCurrentTarget()
+{
+    return CurrentTarget;
 }

@@ -3,6 +3,8 @@
 
 #include "Characters/InGameCharacter.h"
 
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemGlobals.h"
@@ -31,6 +33,10 @@ AInGameCharacter::AInGameCharacter()
 	
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
 	GetCapsuleComponent()->SetUseCCD(true);
+
+	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimulusSource"));
+	StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+	StimulusSource->RegisterWithPerceptionSystem();
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
 }

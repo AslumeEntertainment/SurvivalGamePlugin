@@ -21,6 +21,11 @@ public:
 
 	ASG_AIController();
 
+private:
+
+	UPROPERTY()
+	AActor* CurrentTarget = nullptr;
+
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI")
@@ -37,9 +42,15 @@ protected:
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);
 
+	UFUNCTION()
+	void OnTargetForgotten(AActor* Actor);
+
 public:
 
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTree* GetBehaviorTree() const;
+
+	UFUNCTION(BlueprintCallable)
+	AActor* GetCurrentTarget();
 
 };
