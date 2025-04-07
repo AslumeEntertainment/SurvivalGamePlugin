@@ -6,8 +6,7 @@
 #include "Kismet/GameplayStatics.h" 
 #include "Net/UnrealNetwork.h"
 
-#include "GameFoundation/GameInstance/SessionSubsystem.h"
-#include "GameFoundation/GameInstance/UserCloudSubsystem.h"
+//#include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
 #include "UI/HUD/InGameHUD.h"
@@ -22,18 +21,6 @@ void ASG_PlayerController::BeginPlay()
 	{
 		return;
 	}
-
-	UUserCloudSubsystem* UserCloudSubsystemPtr = GetGameInstance()->GetSubsystem<UUserCloudSubsystem>();
-	if (IsValid(UserCloudSubsystemPtr) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::BeginPlay (IsValid(UserCloudSubsystemPtr) == false"));
-		return;
-	}
-
-	UserCloudSubsystemPtr->OnGameRead.AddDynamic(this, &ASG_PlayerController::ReceiveReadSave);
-	//UserCloudSubsystemPtr->OnWriteFinished.AddDynamic(this, &ASG_PlayerController::ReadSave);  -  commented so that all clinet side changes are preditions only and send to the cloud
-	OnReadSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::ReadSaveFile);
-	OnWriteSaveRequested.AddDynamic(UserCloudSubsystemPtr, &UUserCloudSubsystem::WriteSaveFile);
 
 	ReadSave();
 }
@@ -77,12 +64,12 @@ void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMo
 
 void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 {
-	USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
-	if (IsValid(SessionSubsystemPtr) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(SessionSubsystem) == false"));
-		return;
-	}
+	//USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
+	//if (IsValid(SessionSubsystemPtr) == false)
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(SessionSubsystem) == false"));
+	//	return;
+	//}
 
 	UGlobalWidgetSubsystem* GlobalWidgetSubsystemPtr = GetGameInstance()->GetSubsystem<UGlobalWidgetSubsystem>();
 	if (IsValid(GlobalWidgetSubsystemPtr) == false)
@@ -91,7 +78,7 @@ void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 		return;
 	}
 	GlobalWidgetSubsystemPtr->ShowCoverupWidget();
-	SessionSubsystemPtr->DestroySession();
+	//SessionSubsystemPtr->DestroySession();
 
 }
 
