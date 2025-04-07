@@ -6,9 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 
-#include "GameFoundation/GameInstance/SessionSubsystem.h"
+//#include "GameFoundation/GameInstance/SessionSubsystem.h"
 #include "GameFoundation/PlayerControllers/SG_PlayerController.h"
-#include "GameFoundation/GameInstance/SG_GameInstance.h"
+//#include "GameFoundation/GameInstance/SG_GameInstance.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
 #include "UI/Widgets/Lobby/Logistics/CampaignChooserWidgetBase.h"
 #include "UI/Widgets/Lobby/Logistics/LobbyManagingWidgetBase.h"
@@ -43,12 +43,12 @@ void ALobbyManager::OpenPlaySpace()
 		return;
 	}
 
-	USG_GameInstance* GameInstance = Cast<USG_GameInstance>(GetGameInstance());
-	if (IsValid(GameInstance) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ALobbyManager::CreateLobby IsValid(GameInstance) == false - GameInstance may not be of class USG_GameInstance"));
-		return;
-	}
+	//USG_GameInstance* GameInstance = Cast<USG_GameInstance>(GetGameInstance());
+	//if (IsValid(GameInstance) == false)
+	//{
+	//	UE_LOG(LogTemp, Error, TEXT("ALobbyManager::CreateLobby IsValid(GameInstance) == false - GameInstance may not be of class USG_GameInstance"));
+	//	return;
+	//}
 
 	uint8 NumConnections;
 	switch (NumPlayers)

@@ -58,6 +58,7 @@ public class SurvivalGamePlugin : ModuleRules
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
+				"OnlineSubsystemSteam"
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
