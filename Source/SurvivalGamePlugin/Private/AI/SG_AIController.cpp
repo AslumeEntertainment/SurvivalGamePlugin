@@ -3,23 +3,27 @@
 
 #include "AI/SG_AIController.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
+#include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
 
 
 ASG_AIController::ASG_AIController()
 {
-    SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-   
     PerceptionComp = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
-    PerceptionComp->ConfigureSense(*SightConfig);
-    PerceptionComp->SetDominantSense(SightConfig->GetSenseImplementation());
     PerceptionComp->OnTargetPerceptionUpdated.AddDynamic(this, &ASG_AIController::OnTargetDetected);
     PerceptionComp->OnTargetPerceptionForgotten.AddDynamic(this, &ASG_AIController::OnTargetForgotten);
+}
+
+void ASG_AIController::OnTargetDestroyed(AActor* Target)
+{
+    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", false);
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -32,11 +36,19 @@ void ASG_AIController::OnPossess(APawn* InPawn)
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnPossess IsValid(PossesedCharacter) == false"));
         return;
     }
+    UAbilitySystemComponent* ASC = PossesedCharacter->GetAbilitySystemComponent();
+    if (IsValid(ASC) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnPossess IsValid(ASC) == false"));
+        return;
+    }
     if (IsValid(BehaviorTree) == false)
     {
         UE_LOG(LogTemp, Log, TEXT("ASG_AIController::OnPossess IsValid(BehaviorTree) == false"));
         return;
     }
+
+    PossesedCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute()) / 2;
 
     UBlackboardComponent* BlackBoardComp = nullptr;
     UseBlackboard(BehaviorTree->BlackboardAsset, BlackBoardComp);
@@ -53,11 +65,37 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(Actor) == false"));
         return;
     }
+    ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
+    if (IsValid(OwnerCharacter) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(OwnerCharacter) == false"));
+        return;
+    }
+    UAbilitySystemComponent* ASC = OwnerCharacter->GetAbilitySystemComponent();
+    if (IsValid(ASC) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(ASC) == false"));
+        return;
+    }
 
     GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", Stimulus.WasSuccessfullySensed());
 
-    CurrentTarget = Stimulus.WasSuccessfullySensed() ? Actor : nullptr;
-    UE_LOG(LogTemp, Log, TEXT("%s: CurrentTarget - %s"), *GetName(), (IsValid(CurrentTarget) ? *CurrentTarget->GetName() : TEXT("NULL")));
+    if (Stimulus.WasSuccessfullySensed())
+    {
+        CurrentTarget = Actor;
+        CurrentTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
+        OwnerCharacter->PointCameraTowardsActor(GetWorld(), Actor);
+        OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute());
+    }
+    else
+    {
+        CurrentTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
+        CurrentTarget = nullptr;
+        OwnerCharacter->StopTarget();
+        OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute()) / 2;
+    }
+    
+    UE_LOG(LogTemp, Warning, TEXT("%s: CurrentTarget - %s"), *GetName(), (IsValid(CurrentTarget) ? *CurrentTarget->GetName() : TEXT("NULL")));
 }
 
 void ASG_AIController::OnTargetForgotten(AActor* Actor)

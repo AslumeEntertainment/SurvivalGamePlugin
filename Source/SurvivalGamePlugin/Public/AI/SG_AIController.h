@@ -26,6 +26,9 @@ private:
 	UPROPERTY()
 	AActor* CurrentTarget = nullptr;
 
+	UFUNCTION()
+	void OnTargetDestroyed(AActor* Target);
+
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI")

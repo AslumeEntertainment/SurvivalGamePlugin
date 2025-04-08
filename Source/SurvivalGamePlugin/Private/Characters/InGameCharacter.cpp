@@ -35,8 +35,6 @@ AInGameCharacter::AInGameCharacter()
 	GetCapsuleComponent()->SetUseCCD(true);
 
 	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimulusSource"));
-	StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
-	StimulusSource->RegisterWithPerceptionSystem();
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
 }

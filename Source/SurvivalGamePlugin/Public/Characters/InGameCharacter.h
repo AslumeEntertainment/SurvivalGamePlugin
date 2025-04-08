@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
+#include "GenericTeamAgentInterface.h"
+
 #include "Interfaces/Hittable.h"
 #include "Interfaces/DamageDealerInterface.h"
 #include "Headers/GeneralDelegates.h"
@@ -20,7 +22,7 @@ class USG_GameplayAbility;
 class UAIPerceptionStimuliSourceComponent;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 	

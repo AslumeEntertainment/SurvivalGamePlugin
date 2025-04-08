@@ -32,7 +32,7 @@ EBTNodeResult::Type UBTTask_GetTargetLocation::ExecuteTask(UBehaviorTreeComponen
 	AActor* Target = Controller->GetCurrentTarget();
 	if (IsValid(Target) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UBTTask_GetTargetLocation::ExecuteTask IsValid(Controller) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UBTTask_GetTargetLocation::ExecuteTask IsValid(Target) == false"));
 		return EBTNodeResult::Failed;
 	}
 	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(World);
