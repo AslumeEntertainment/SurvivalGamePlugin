@@ -82,6 +82,7 @@ void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 
 }
 
+//TO BE DELETED - use ReadSave
 void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 {
 	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::ReceiveReadSave Read save complete"));
@@ -103,13 +104,23 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 void ASG_PlayerController::ReadSave()
 {
 	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::ReadSave Requesting Read"));
-	OnReadSaveRequested.Broadcast();
+	Save = Cast<USG_SaveGame>(UGameplayStatics::LoadGameFromSlot("Save", 0));
+	if (IsValid(Save) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::ReadSave Reading failed"));
+		Cheat_ClearAccount();
+	}
+	OnSaveUpdated.Broadcast();
 }
 
 void ASG_PlayerController::WriteSave()
 {
 	UE_LOG(LogTemp, Display, TEXT("ASG_PlayerController::WriteSave Requesting Write"));
-	OnWriteSaveRequested.Broadcast(Save);
+	if (UGameplayStatics::SaveGameToSlot(Save, "Save", 0) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::WriteSave Writing failed"));
+	}
+	//OnWriteSaveRequested.Broadcast(Save);
 }
 
 void ASG_PlayerController::SpawnItemInFrontOfPlayer(bool bShouldEquip, TSubclassOf<AItemBase> ItemClass, FItemDataStruct ItemData)
