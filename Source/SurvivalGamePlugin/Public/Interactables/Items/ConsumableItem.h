@@ -4,16 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/Items/ItemBase.h"
-
-#include "GenericTeamAgentInterface.h"
-
 #include "ConsumableItem.generated.h"
 
 class UConsumableItemEffectDataObject;
 class UAIPerceptionStimuliSourceComponent;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase, public IGenericTeamAgentInterface
+class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase
 {
 	GENERATED_BODY()
 

@@ -179,6 +179,9 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
+	float GetInteractionRange() const { return CurrentInteractionRange; }
+
+	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
 
 	UFUNCTION(BlueprintCallable)

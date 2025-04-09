@@ -58,6 +58,41 @@ void ASG_AIController::OnPossess(APawn* InPawn)
     UE_LOG(LogTemp, Warning, TEXT("%s: It's AI-ing time!"), *PossesedCharacter->GetName());
 }
 
+void ASG_AIController::RegisterNewTarget(AActor* NewTarget)
+{
+    ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
+    if (IsValid(OwnerCharacter) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::RegisterNewTarget IsValid(OwnerCharacter) == false"));
+        return;
+    }
+
+    NewTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
+
+    if (Targets.IsEmpty())
+    {
+        Targets.Add(NewTarget);
+        OwnerCharacter->PointCameraTowardsActor(GetWorld(), NewTarget);
+        return;
+    }
+
+    Targets.Add(NewTarget);
+
+    /*for (int i = 0; i < Targets.Num(); i++)
+    {
+        if (TargetPriorityMap[Targets[i]->StaticClass()] > TargetPriorityMap[NewTarget->StaticClass()])
+        {
+            Targets.Insert(NewTarget, i);
+            return;
+        }
+        if (i == Targets.Num())
+        {
+            Targets.Add(NewTarget);
+            return;
+        }
+    }*/
+}
+
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
 {
     if (IsValid(Actor) == false)
@@ -65,37 +100,42 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(Actor) == false"));
         return;
     }
-    ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
+
+    AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
     if (IsValid(OwnerCharacter) == false)
     {
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(OwnerCharacter) == false"));
         return;
     }
-    UAbilitySystemComponent* ASC = OwnerCharacter->GetAbilitySystemComponent();
-    if (IsValid(ASC) == false)
+
+    FString TargetAttitude;
+    switch (OwnerCharacter->GetTeamAttitudeTowards(*Actor))
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(ASC) == false"));
-        return;
+        case ETeamAttitude::Friendly: UE_LOG(LogTemp, Warning, TEXT("%s is friendly"), *Actor->GetName()); return;
+        case ETeamAttitude::Neutral: TargetAttitude = "Neutral"; break;
+        case ETeamAttitude::Hostile: TargetAttitude = "Hostile";
     }
 
     GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", Stimulus.WasSuccessfullySensed());
 
-    if (Stimulus.WasSuccessfullySensed())
+    FString TargetName;
+    
+    if (Stimulus.WasSuccessfullySensed() /*&& TargetPriorityMap.Contains(Actor->StaticClass())*/)
     {
-        CurrentTarget = Actor;
-        CurrentTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
-        OwnerCharacter->PointCameraTowardsActor(GetWorld(), Actor);
-        OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute());
+        RegisterNewTarget(Actor);
+        
+        TargetName = Actor->GetName();
     }
-    else
+    else if(Targets.Contains(Actor))
     {
-        CurrentTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
-        CurrentTarget = nullptr;
-        OwnerCharacter->StopTarget();
-        OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute()) / 2;
+        Targets.Remove(Actor);
+        Actor->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
+
+        TargetName = "NULL";
+        OwnerCharacter->StopTarget(); 
     }
     
-    UE_LOG(LogTemp, Warning, TEXT("%s: CurrentTarget - %s"), *GetName(), (IsValid(CurrentTarget) ? *CurrentTarget->GetName() : TEXT("NULL")));
+    UE_LOG(LogTemp, Warning, TEXT("%s: CurrentTarget - %s - %s"), *GetName(), *TargetName, *TargetAttitude);
 }
 
 void ASG_AIController::OnTargetForgotten(AActor* Actor)
@@ -114,5 +154,5 @@ UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 
 AActor* ASG_AIController::GetCurrentTarget()
 {
-    return CurrentTarget;
+    return Targets.IsEmpty() ? nullptr : Targets[0];
 }

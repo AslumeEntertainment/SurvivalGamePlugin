@@ -79,6 +79,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FGenericTeamId TeamId;
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
 	TSubclassOf<USG_GameplayAbility> MainHandAbility;
 
@@ -176,6 +179,8 @@ public:
 	virtual bool IsHitGuarded(FVector HitLocation) const override;
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
+
+	FGenericTeamId GetGenericTeamId() const override{ return TeamId; }
 
 	FVoidDataTransferSignature OnCharacterDeath;
 

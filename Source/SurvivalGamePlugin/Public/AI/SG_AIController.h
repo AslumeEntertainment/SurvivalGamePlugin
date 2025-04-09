@@ -24,15 +24,19 @@ public:
 private:
 
 	UPROPERTY()
-	AActor* CurrentTarget = nullptr;
+	TArray<AActor*> Targets;
 
 	UFUNCTION()
 	void OnTargetDestroyed(AActor* Target);
+
 
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	TMap<TSubclassOf<AActor>, int> TargetPriorityMap;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAISenseConfig_Sight* SightConfig = nullptr;
@@ -41,6 +45,8 @@ protected:
 	UAIPerceptionComponent* PerceptionComp = nullptr;
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	void RegisterNewTarget(AActor* NewTarget);
 
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);

@@ -61,6 +61,8 @@ void AInGameCharacter::BeginPlay()
 		DamageSource->ConfigDamageSource(this);
 	}
 
+	SetGenericTeamId(TeamId);
+
 	if (IsLocallyControlled())
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Controller);
