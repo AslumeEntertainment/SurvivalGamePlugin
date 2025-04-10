@@ -35,9 +35,9 @@ protected:
 	ASG_PlayerController* PlayerCont;
 	UEquipmentComponent* EquipmentComp;
 
-	TArray<FResourseCardPersistentData*> EquipedItemsData;
-	TArray<FResourseCardPersistentData*> MainItemsData;
-	TArray<FResourseCardPersistentData*> SecondaryItemsData;
+	TArray<FResourseCardPersistentData> EquipedItemsData;
+	TArray<FResourseCardPersistentData> MainItemsData;
+	TArray<FResourseCardPersistentData> SecondaryItemsData;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Widgets")
 	TSubclassOf<UInGameDeck> InGameDeckWidgetClass;
