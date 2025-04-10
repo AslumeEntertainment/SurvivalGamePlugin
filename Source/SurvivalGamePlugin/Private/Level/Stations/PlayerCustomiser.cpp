@@ -131,6 +131,22 @@ void APlayerCustomiser::StopInteracting()
 	Server_StopInteracting();
 }
 
+void APlayerCustomiser::RequestSaveWrite()
+{
+	HasAuthority() ? WriteSave() : Clinet_WriteSave();
+
+}
+
+void APlayerCustomiser::WriteSave()
+{
+	if(InteractingPlayer != nullptr) InteractingPlayer->WriteSave();
+}
+
+void APlayerCustomiser::Clinet_WriteSave_Implementation()
+{
+	WriteSave();
+}
+
 void APlayerCustomiser::Server_StopInteracting_Implementation()
 {
 	OnPlayerStopInteracting.Broadcast(this);

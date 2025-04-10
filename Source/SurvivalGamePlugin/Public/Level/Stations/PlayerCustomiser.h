@@ -151,6 +151,19 @@ public:
 	virtual FText GetInteractableName() override { return FText::FromString("Join Table"); }
 
 	UFUNCTION()
+	void RequestSaveWrite();
+
+protected:
+
+	UFUNCTION()
+	void WriteSave();
+
+	UFUNCTION(Client, Reliable)
+	void Clinet_WriteSave();
+
+public:
+
+	UFUNCTION()
 	void SetIsActive_Server(bool State);
 
 	UFUNCTION()
