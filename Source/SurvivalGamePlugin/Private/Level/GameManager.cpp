@@ -195,7 +195,7 @@ void AGameManager::StartGame()
 void AGameManager::CheckGameFinishingRules(APlayerCustomiser* Player)
 {
 	//some logic here
-	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, 3);
+	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, 10);
 }
 
 void AGameManager::FinishGame()
@@ -204,13 +204,9 @@ void AGameManager::FinishGame()
 
 	for (TPair<APlayerCustomiser*, bool> Player : PlayerCustomisers)
 	{
-		PlayersToUpdate.Add(Player.Key);
+		PlayerCustomisers.Emplace(Player.Key, false);
 		Player.Key->UpdatePlayerReadiness(false);
-	}
-
-	for (APlayerCustomiser* PlayerToUpdate : PlayersToUpdate)
-	{
-		PlayerCustomisers.Emplace(PlayerToUpdate, false);
+		Player.Key->RequestSaveWrite();
 	}
 
 	OnGameEnd.Broadcast();
