@@ -464,7 +464,7 @@ bool APlayerCustomiser::IsDeckPlayable(FDeckPersistentData Deck)
 
 	if (HeroSegmentPtr == nullptr || MainSegmentPtr == nullptr || SecondarySegmentPtr == nullptr) return false;
 
-	return Deck.Heroes.Num() == HeroSegmentPtr->Size && Deck.MainEquipment.Num() == MainSegmentPtr->Size && Deck.SecondaryEquipment.Num() == SecondarySegmentPtr->Size;
+	return Deck.Heroes.Num() == HeroSegmentPtr->Size;
 }
 
 void APlayerCustomiser::SendDeckData()

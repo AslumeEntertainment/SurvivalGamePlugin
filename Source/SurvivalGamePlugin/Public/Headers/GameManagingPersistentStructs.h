@@ -97,6 +97,11 @@ struct FResourseCardPersistentData : public FPersistentDataUnit
     UPROPERTY(EditAnywhere)
     uint16 Value = 10;
 
+    friend bool operator==(const FResourseCardPersistentData& current, const FResourseCardPersistentData& other)
+    {
+        return current.RepresentedItem == other.RepresentedItem && current.RepresentedItemClass == other.RepresentedItemClass && current.Value == other.Value;
+    }
+
 };
 
 USTRUCT(BlueprintType)
