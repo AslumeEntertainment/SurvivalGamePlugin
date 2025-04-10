@@ -53,6 +53,8 @@ TMap<uint16, FResourseCardPersistentData*> UDeckFunctionLibrary::GetPlayerResour
 
 FResourseCardPersistentData UDeckFunctionLibrary::GenerateCardWithID(UDataTable* DataTable, uint16 ID)
 {
+	if (ID == 0) return FResourseCardPersistentData();
+
 	FResourseCardPersistentData* SavedResourceDataPtr = DataTable->FindRow<FResourseCardPersistentData>(FName(FString::FromInt(ID)), "Generating Card");
 	if (SavedResourceDataPtr == nullptr)
 	{
