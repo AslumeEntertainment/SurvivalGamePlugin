@@ -604,11 +604,16 @@ void APlayerCustomiser::DespawnHero()
 
 void APlayerCustomiser::PossessMainPawn()
 {
-	GamePawn->Cliet_UnbindOverlayDelegates();
+	if (GamePawn != nullptr)
+	{
+		GamePawn->Cliet_UnbindOverlayDelegates();
+	}
 	InteractingPlayer->Possess(MainPawn);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 	Client_ShowUI();
 	Client_SetInGameOverlayVisibility(false);
+	RequestSaveWrite();
+	UseDeck();
 	DespawnHero();
 }
 
