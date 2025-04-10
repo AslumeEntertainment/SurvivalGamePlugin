@@ -206,7 +206,6 @@ void AGameManager::FinishGame()
 	{
 		PlayerCustomisers.Emplace(Player.Key, false);
 		Player.Key->UpdatePlayerReadiness(false);
-		Player.Key->RequestSaveWrite();
 	}
 
 	OnGameEnd.Broadcast();
