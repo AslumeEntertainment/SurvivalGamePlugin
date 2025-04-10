@@ -225,11 +225,14 @@ void APlayerCustomiser::OpenCardSelector(EDeckSegment Segment)
 		TArray<uint16> AlredySelectedCards;
 		switch (Segment)
 		{
-		case EDeckSegment::Hero: AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].Heroes;
+		case EDeckSegment::Hero: 
+			for (int i : Save->Decks[Save->ActiveDeckIndex].Heroes) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
-		case EDeckSegment::MainEquipment: AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].MainEquipment;
+		case EDeckSegment::MainEquipment: //AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].MainEquipment;
+			for (int i : Save->Decks[Save->ActiveDeckIndex].MainEquipment) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
-		case EDeckSegment::SecondaryEquipment: AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment;
+		case EDeckSegment::SecondaryEquipment: //AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment;
+			for (int i : Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
 		}
 		CardSelector->ConfigCardSelector(Segment, DefinitionPtr->Size, AlredySelectedCards);
@@ -414,7 +417,7 @@ void APlayerCustomiser::CleanseDeck()
 
 	TMap<uint16, FResourseCardPersistentData*> SavedCards = UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, ResourceTable, TArray<uint16>());
 
-	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+	/*FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
 
 	//Cleasing Hero Cards
 	TArray<int> IndexesToRemove;
@@ -465,7 +468,7 @@ void APlayerCustomiser::CleanseDeck()
 	
 	IndexesToRemove.Empty();
 
-	Save->Decks[Save->ActiveDeckIndex] = ActiveDeck;
+	Save->Decks[Save->ActiveDeckIndex] = ActiveDeck;*/
 
 	InteractingPlayer->WriteSave();
 
@@ -487,14 +490,14 @@ void APlayerCustomiser::SendDeckData()
 {
 	if (IsValid(InteractingPlayer) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(InteractingPlayer) == false"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::SendDeckData IsValid(InteractingPlayer) == false"));
 		return;
 	}
 
 	USG_SaveGame* Save = InteractingPlayer->GetSave();
 	if (IsValid(Save) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::CleanseDeck IsValid(Save) == false"));
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::SendDeckData IsValid(Save) == false"));
 		return;
 	}
 	TArray<UTexture2D*> DeckIcons;

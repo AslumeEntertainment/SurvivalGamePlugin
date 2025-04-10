@@ -62,8 +62,6 @@ void USGGA_ManageDeckInGame::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 void USGGA_ManageDeckInGame::OpenDeckManager()
 {
-	UE_LOG(LogTemp, Error, TEXT("----------------------UNREAL E NAI PEDALSKIQ ENGINE NQKOGA. BUKVALNO FEMBOY AHH GEY SHIT-----------------------------------------"));
-
 	if (IsLocallyControlled() == false)
 	{
 		return;
@@ -114,24 +112,30 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 	MainItemsData.Empty();
 	for (uint16 i : Save->Decks[Save->ActiveDeckIndex].MainEquipment)
 	{
-		MainItemsData.Add(i !=0 ? UDeckFunctionLibrary::GenerateCardWithID(MainHandResourceTable, Save->ResourceCards[i].ID) : FResourseCardPersistentData());
+		MainItemsData.Add(UDeckFunctionLibrary::GenerateCardWithID(MainHandResourceTable, Save->ResourceCards[i].ID));
+		UE_LOG(LogTemp, Error, TEXT("Imam v main-a: %d koito e ot indeks %d"), Save->ResourceCards[i].ID, i);
+
 	}
 	for (int i = MainItemsData.Num(); i < 3; i++)
 	{
 		MainItemsData.Add(FResourseCardPersistentData());
+		UE_LOG(LogTemp, Error, TEXT("Imam v main + prazno"));
 	}
 	InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	RefreshMainCards();
 	
 	//TArray<FResourseCardPersistentData*> SecondaryResourceDataRows;
 	//UDeckFunctionLibrary::GetPlayerResourceSaveData(Save, SecondaryHandResourceTable, TArray<uint16>()).GenerateValueArray(SecondaryResourceDataRows);
+	SecondaryItemsData.Empty();
 	for (int i : Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment)
 	{
-		SecondaryItemsData.Add(i != 0 ? UDeckFunctionLibrary::GenerateCardWithID(MainHandResourceTable, Save->ResourceCards[i].ID) : FResourseCardPersistentData());
+		SecondaryItemsData.Add(UDeckFunctionLibrary::GenerateCardWithID(MainHandResourceTable, Save->ResourceCards[i].ID));
+		UE_LOG(LogTemp, Error, TEXT("Imam v secondary-a: %d koito e ot indeks %d"), Save->ResourceCards[i].ID, i);
 	}
 	for (int i = SecondaryItemsData.Num(); i < 3; i++)
 	{
 		SecondaryItemsData.Add(FResourseCardPersistentData());
+		UE_LOG(LogTemp, Error, TEXT("Imam v secondary + prazno"));
 	}
 	InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	RefreshSecondaryCards();
@@ -315,12 +319,14 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld(UCardSlotWidget*
 	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		MainItemsData[CardIndex] = FResourseCardPersistentData();
-		Save->Decks[Save->ActiveDeckIndex].MainEquipment[CardIndex] = 0;
+		uint16 ResourseCardIndx = Save->Decks[Save->ActiveDeckIndex].MainEquipment[CardIndex];
+		Save->ResourceCards[ResourseCardIndx] = FProgressiveDataHelperStruct();
 	}
 	if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		SecondaryItemsData[CardIndex] = FResourseCardPersistentData();
-		Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment[CardIndex] = 0;
+		uint16 ResourseCardIndx = Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment[CardIndex];
+		Save->ResourceCards[ResourseCardIndx] = FProgressiveDataHelperStruct();
 	}
 	
 	return true;
@@ -387,12 +393,14 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment(UCardSlotWid
 	if (InGameDeckWidget->GetMainCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		MainItemsData[CardIndex] = FResourseCardPersistentData();
-		Save->Decks[Save->ActiveDeckIndex].MainEquipment[CardIndex] = 0;
+		uint16 ResourseCardIndx = Save->Decks[Save->ActiveDeckIndex].MainEquipment[CardIndex];
+		Save->ResourceCards[ResourseCardIndx] = FProgressiveDataHelperStruct();
 	}
 	else if (InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->ContainsSlot(Slot))
 	{
 		SecondaryItemsData[CardIndex] = FResourseCardPersistentData();
-		Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment[CardIndex] = 0;
+		uint16 ResourseCardIndx = Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment[CardIndex];
+		Save->ResourceCards[ResourseCardIndx] = FProgressiveDataHelperStruct();
 	}
 
 	if (HasAuthority(&CurrentActivationInfo))
