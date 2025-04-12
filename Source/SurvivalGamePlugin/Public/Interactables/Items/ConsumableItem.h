@@ -7,7 +7,7 @@
 #include "ConsumableItem.generated.h"
 
 class UConsumableItemEffectDataObject;
-class UAIPerceptionStimuliSourceComponent;
+
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase
@@ -22,9 +22,6 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Effects")
     TArray<UConsumableItemEffectDataObject*> Effects;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-    UAIPerceptionStimuliSourceComponent* StimulusSource;
 
 public:
 

@@ -19,7 +19,7 @@ class UEquipmentComponent;
 class ULootTableComponent;
 class UHittableComponent;
 class USG_GameplayAbility;
-class UAIPerceptionStimuliSourceComponent;
+class USG_AIPerceptionStimuliSourceComp;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface, public IGenericTeamAgentInterface
@@ -95,7 +95,7 @@ protected:
 	ULootTableComponent* LootTableComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UAIPerceptionStimuliSourceComponent* StimulusSource;
+	USG_AIPerceptionStimuliSourceComp* StimulusSource;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;

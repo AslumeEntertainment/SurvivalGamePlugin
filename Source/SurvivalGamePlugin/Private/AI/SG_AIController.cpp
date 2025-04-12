@@ -9,6 +9,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
+#include "Components/SG_AIPerceptionStimuliSourceComp.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
@@ -23,7 +24,9 @@ ASG_AIController::ASG_AIController()
 
 void ASG_AIController::OnTargetDestroyed(AActor* Target)
 {
-    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", false);
+    UnregisterTarget(Target);
+
+    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -58,8 +61,10 @@ void ASG_AIController::OnPossess(APawn* InPawn)
     UE_LOG(LogTemp, Warning, TEXT("%s: It's AI-ing time!"), *PossesedCharacter->GetName());
 }
 
-void ASG_AIController::RegisterNewTarget(AActor* NewTarget)
+void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)
 {
+    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", true);
+
     ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
     if (IsValid(OwnerCharacter) == false)
     {
@@ -67,30 +72,73 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget)
         return;
     }
 
+    FAITarget AITarget = FAITarget(NewTarget, TargetPriorityMap[StimuliSourceComp->GetStimuliSourceTag()]);
     NewTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
 
     if (Targets.IsEmpty())
     {
-        Targets.Add(NewTarget);
+        UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
+        Targets.Add(AITarget);
+
         OwnerCharacter->PointCameraTowardsActor(GetWorld(), NewTarget);
+        
         return;
     }
 
-    Targets.Add(NewTarget);
-
-    /*for (int i = 0; i < Targets.Num(); i++)
+    for (int i = 0; i < Targets.Num(); i++)
     {
-        if (TargetPriorityMap[Targets[i]->StaticClass()] > TargetPriorityMap[NewTarget->StaticClass()])
+        if (Targets[i].Priority <= AITarget.Priority)
         {
-            Targets.Insert(NewTarget, i);
-            return;
+            continue;
         }
-        if (i == Targets.Num())
+
+        UE_LOG(LogTemp, Warning, TEXT("%s: Inserting %s at position %d"), *GetName(), *NewTarget->GetName(), i);
+        Targets.Insert(AITarget, i);
+
+        if (i == 0)
         {
-            Targets.Add(NewTarget);
-            return;
+            OwnerCharacter->PointCameraTowardsActor(GetWorld(), NewTarget);
+            UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
         }
-    }*/
+
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("%s: Insering %s at the back"), *GetName(), *NewTarget->GetName());
+    Targets.Add(AITarget);
+}
+
+void ASG_AIController::UnregisterTarget(AActor* NewTarget)
+{
+    for (int i = 0; i < Targets.Num(); i++)
+    {
+        if (Targets[i].Target != NewTarget)
+        {
+            continue;
+        }
+
+        if (i == 0)
+        {
+            ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
+            if (IsValid(OwnerCharacter) == false)
+            {
+                UE_LOG(LogTemp, Error, TEXT("ASG_AIController::UnregisterTarget IsValid(OwnerCharacter) == false"));
+                return;
+            }
+            OwnerCharacter->StopTarget();
+        }
+
+        NewTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
+        Targets.RemoveAt(i);
+
+        UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
+        if (Targets.IsEmpty())
+        {
+            GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", false);
+        }
+
+        return;
+    }
 }
 
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
@@ -98,6 +146,17 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     if (IsValid(Actor) == false)
     {
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(Actor) == false"));
+        return;
+    }
+    USG_AIPerceptionStimuliSourceComp* StimuliSourceComp = Actor->GetComponentByClass<USG_AIPerceptionStimuliSourceComp>();
+    if (IsValid(StimuliSourceComp) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(StimuliSourceComp) == false"));
+        return;
+    }
+
+    if (TargetPriorityMap.Contains(StimuliSourceComp->GetStimuliSourceTag()) == false)
+    {
         return;
     }
 
@@ -116,26 +175,16 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
         case ETeamAttitude::Hostile: TargetAttitude = "Hostile";
     }
 
-    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", Stimulus.WasSuccessfullySensed());
-
-    FString TargetName;
-    
-    if (Stimulus.WasSuccessfullySensed() /*&& TargetPriorityMap.Contains(Actor->StaticClass())*/)
+    if (Stimulus.WasSuccessfullySensed())
     {
-        RegisterNewTarget(Actor);
-        
-        TargetName = Actor->GetName();
+        UE_LOG(LogTemp, Warning, TEXT("%s: New %s target found - %s"), *GetName(), *TargetAttitude, *Actor->GetName());
+        RegisterNewTarget(Actor, StimuliSourceComp);
     }
-    else if(Targets.Contains(Actor))
+    else
     {
-        Targets.Remove(Actor);
-        Actor->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
-
-        TargetName = "NULL";
-        OwnerCharacter->StopTarget(); 
+        UE_LOG(LogTemp, Warning, TEXT("%s: %s is being forgotten"), *GetName(), *Actor->GetName());
+        UnregisterTarget(Actor);
     }
-    
-    UE_LOG(LogTemp, Warning, TEXT("%s: CurrentTarget - %s - %s"), *GetName(), *TargetName, *TargetAttitude);
 }
 
 void ASG_AIController::OnTargetForgotten(AActor* Actor)
@@ -154,5 +203,5 @@ UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 
 AActor* ASG_AIController::GetCurrentTarget()
 {
-    return Targets.IsEmpty() ? nullptr : Targets[0];
+    return Targets.IsEmpty() ? nullptr : Targets[0].Target;
 }
