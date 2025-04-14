@@ -9,6 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Net/UnrealNetwork.h"
 
+#include "Components/SG_AIPerceptionStimuliSourceComp.h"
 #include "Components/DamageDealingComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "Components/LootTableComponent.h"
@@ -29,6 +30,8 @@ AItemBase::AItemBase()
 	bReplicates = true;
 
 	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	StimulusSource = CreateDefaultSubobject<USG_AIPerceptionStimuliSourceComp>(TEXT("StimulusSource"));
 }
 
 void AItemBase::BeginPlay()

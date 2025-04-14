@@ -20,6 +20,7 @@ class UHittableComponent;
 class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
+class USG_AIPerceptionStimuliSourceComp;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public ASG_HittableActor, public IInteractableInterface
@@ -41,6 +42,9 @@ protected:
 
 	UPROPERTY(Replicated)
 	bool bIsAttached = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USG_AIPerceptionStimuliSourceComp* StimulusSource;
 
 	UPROPERTY()
 	FGameplayAbilitySpecHandle AbilitySpecHandle;

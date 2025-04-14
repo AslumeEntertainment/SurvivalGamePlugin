@@ -45,7 +45,7 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetMesh()/*, FName(TEXT("head"))*/);
+	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 0.f; 
 	CameraBoom->bUsePawnControlRotation = false;
 
@@ -94,6 +94,7 @@ void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
 		Server_SetFocusedInteractable(InFocusedInteractable);
 		return;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("%s: Setting current interactable - %s"), *GetName(), IsValid(InFocusedInteractable) ? *InFocusedInteractable->GetName() : TEXT("NULL"));
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
@@ -142,7 +143,7 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 			return;
 		}
 		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
+		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
 		{
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
@@ -158,14 +159,14 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 	if (FocusedInteractableObject != nullptr)
 	{
 		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent))
+		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
 		{
 			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
 		}
 	}
 
 	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
-	if (HitMeshComponent != nullptr)
+	if (HitMeshComponent != nullptr && Cast<APlayerController>(GetController()) != nullptr)
 	{
 		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
 	}
@@ -296,6 +297,7 @@ void ASG_Character::Look(const FInputActionValue& Value)
 {
 	if (GetWorldTimerManager().IsTimerActive(CameraRotationTimer))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Nuh uh"))
 		return;
 	}
 
@@ -310,87 +312,6 @@ void ASG_Character::Look(const FInputActionValue& Value)
 
 	SetRepControlRotation(GetControlRotation());
 
-}
-
-void ASG_Character::StartTarget()
-{
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::StartTarget IsValid(World) == false"));
-		return;
-	}
-
-	FVector TraceStart = GetActorLocation();
-	FVector TraceEnd = (FirstPersonCamera->GetForwardVector() * TargetingDistance) + TraceStart;
-
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
-
-	TArray<AActor*> ActorsToIgnore;
-	ActorsToIgnore.Add(this);
-
-	TArray<FHitResult> HitResults;
-
-	if (UKismetSystemLibrary::SphereTraceMultiForObjects(World, TraceStart, TraceEnd, TargetingTraceRadius, ObjectTypes, false,
-		ActorsToIgnore, EDrawDebugTrace::None, HitResults, true) == false)
-	{
-		ResetCameraView();
-		return;
-	}
-
-	for (FHitResult HitResult : HitResults)
-	{
-		if (IsValid(HitResult.GetActor()))
-		{
-			PointCameraTowardsActor(World, HitResult.GetActor());
-			return;
-		}
-	}
-}
-
-void ASG_Character::StopTarget()
-{
-	GetWorldTimerManager().ClearTimer(CameraRotationTimer);
-}
-
-void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
-{
-	if (IsValid(GetController()) == false)
-	{
-		return;
-	}
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(World) == false"));
-		return;
-	}
-	if (IsValid(TargetActor) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(TargetActor) == false"));
-		return;
-	}
-
-	if (UKismetMathLibrary::Vector_Distance(GetActorLocation(), TargetActor->GetActorLocation()) > TargetingDistance)
-	{
-		StopTarget();
-	}
-
-	FVector NormalizedLocation = TargetActor->GetActorLocation() - FirstPersonCamera->GetComponentLocation();
-	UKismetMathLibrary::Vector_Normalize(NormalizedLocation);
-
-	float DotProduct = FVector::DotProduct(NormalizedLocation, FirstPersonCamera->GetForwardVector());
-
-	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), TargetActor->GetActorLocation());
-	FRotator InterpRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), LookAtRotation, World->DeltaTimeSeconds, CameraInterpSpeed);
-
-	GetController()->SetControlRotation(InterpRotation);
-	SetActorRotation(FRotator(GetActorRotation().Pitch, InterpRotation.Yaw, GetActorRotation().Roll));
-
-	FTimerDelegate CameraRotationTimerDelegate;
-
-	CameraRotationTimerDelegate.BindUFunction(this, FName("PointCameraTowardsActor"), World, TargetActor);
-	GetWorldTimerManager().SetTimer(CameraRotationTimer, CameraRotationTimerDelegate, 0.01f, false);
 }
 
 void ASG_Character::AbilityInputPressed(FGameplayTag InputTag)
@@ -511,6 +432,90 @@ void ASG_Character::ResetCameraView()
 	CameraViewResetTimeline.PlayFromStart();
 }
 
+void ASG_Character::StartTarget()
+{
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::StartTarget IsValid(World) == false"));
+		return;
+	}
+
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = (FirstPersonCamera->GetForwardVector() * TargetingDistance) + TraceStart;
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+
+	TArray<FHitResult> HitResults;
+
+	if (UKismetSystemLibrary::SphereTraceMultiForObjects(World, TraceStart, TraceEnd, TargetingTraceRadius, ObjectTypes, false,
+		ActorsToIgnore, EDrawDebugTrace::None, HitResults, true) == false)
+	{
+		ResetCameraView();
+		return;
+	}
+
+	for (FHitResult HitResult : HitResults)
+	{
+		if (IsValid(HitResult.GetActor()))
+		{
+			PointCameraTowardsActor(World, HitResult.GetActor());
+			return;
+		}
+	}
+}
+
+void ASG_Character::StopTarget()
+{
+	GetWorldTimerManager().ClearTimer(CameraRotationTimer);
+}
+
+void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
+{
+	if (IsValid(GetController()) == false)
+	{
+		return;
+	}
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(World) == false"));
+		return;
+	}
+	if (IsValid(TargetActor) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(TargetActor) == false"));
+		return;
+	}
+
+	if (UKismetMathLibrary::Vector_Distance(GetActorLocation(), TargetActor->GetActorLocation()) > TargetingDistance)
+	{
+		StopTarget();
+	}
+
+	FVector NormalizedLocation = TargetActor->GetActorLocation() - GetMesh()->GetComponentLocation();
+	UKismetMathLibrary::Vector_Normalize(NormalizedLocation);
+
+	float DotProduct = FVector::DotProduct(NormalizedLocation, GetMesh()->GetForwardVector());
+	if (FMath::Abs(DotProduct) > 0.1f)
+	{
+		FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), TargetActor->GetActorLocation());
+		FRotator InterpRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), LookAtRotation, World->DeltaTimeSeconds, CameraInterpSpeed);
+
+		GetController()->SetControlRotation(InterpRotation);
+		SetActorRotation(FRotator(GetActorRotation().Pitch, InterpRotation.Yaw, GetActorRotation().Roll));
+		SetRepControlRotation(GetControlRotation());
+	}
+	
+	FTimerDelegate CameraRotationTimerDelegate;
+
+	CameraRotationTimerDelegate.BindUFunction(this, FName("PointCameraTowardsActor"), World, TargetActor);
+	GetWorldTimerManager().SetTimer(CameraRotationTimer, CameraRotationTimerDelegate, 0.01f, false);
+}
+
 void ASG_Character::DisablePlayerInput(float Duration)
 {
 	if (IsLocallyControlled() == false || bIsInputEnabled == false)
@@ -533,7 +538,7 @@ void ASG_Character::DisablePlayerInput(float Duration)
 		FTimerHandle EnableInputTimer;
 		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
 	}
-
+	
 	UE_LOG(LogTemp, Log, TEXT("ASG_Character::DisablePlayerInput - %s"), *GetName());
 }
 

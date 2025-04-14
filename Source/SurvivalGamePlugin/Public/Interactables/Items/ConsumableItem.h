@@ -8,10 +8,15 @@
 
 class UConsumableItemEffectDataObject;
 
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AConsumableItem : public AItemBase
 {
 	GENERATED_BODY()
+
+public:
+
+    AConsumableItem();
 
 protected:
 

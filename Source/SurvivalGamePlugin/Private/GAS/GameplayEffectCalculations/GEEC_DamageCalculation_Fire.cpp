@@ -56,7 +56,7 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 		return;
 	}
 
-	float FireResistance = 0.f;
+	float FireResistance = 1.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, FireResistance);
 
 	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage / (FireResistance <= 0.f ? 1 : FireResistance));

@@ -143,13 +143,6 @@ protected:
 
 	void Look(const FInputActionValue& Value);
 
-	void StartTarget();
-
-	void StopTarget();
-
-	UFUNCTION()
-	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
-
 	void AbilityInputPressed(FGameplayTag InputTag);
 	void AbilityInputReleased(FGameplayTag InputTag);
 
@@ -186,6 +179,9 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
+	float GetInteractionRange() const { return CurrentInteractionRange; }
+
+	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
 
 	UFUNCTION(BlueprintCallable)
@@ -196,6 +192,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraView();
+
+	UFUNCTION(BlueprintCallable)
+	void StartTarget();
+
+	UFUNCTION(BlueprintCallable)
+	void StopTarget();
+
+	UFUNCTION(BlueprintCallable)
+	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
 
 	UFUNCTION(BlueprintCallable)
 	void DisablePlayerInput(float Duration = 0.f);

@@ -3,6 +3,10 @@
 
 #include "GAS/GameplayCues/GC_ShowDamageIndicator.h"
 
+#include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -33,6 +37,19 @@ bool UGC_ShowDamageIndicator::OnExecute_Implementation(AActor* MyTarget, const F
 		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(World) == false"));
 		return false;
 	}
+
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(World, 0);
+	if (IsValid(PlayerCharacter) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(PlayerCharacter) == false"));
+		return false;
+	}
+
+	if (UKismetMathLibrary::Vector_Distance(PlayerCharacter->GetActorLocation(), FVector(Parameters.Location)) > VisibilityDistance)
+	{
+		return false;
+	}
+
 	const UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(Parameters.GetSourceObject());
 
 	ADamageIndicator* DamageIndicator = World->SpawnActorDeferred<ADamageIndicator>(DamageIndicatorClass, MyTarget->GetActorTransform());

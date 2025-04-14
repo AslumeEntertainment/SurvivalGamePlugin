@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Characters/SG_Character.h"
 
+#include "GenericTeamAgentInterface.h"
+
 #include "Interfaces/Hittable.h"
 #include "Interfaces/DamageDealerInterface.h"
 #include "Headers/GeneralDelegates.h"
@@ -17,9 +19,10 @@ class UEquipmentComponent;
 class ULootTableComponent;
 class UHittableComponent;
 class USG_GameplayAbility;
+class USG_AIPerceptionStimuliSourceComp;
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface
+class SURVIVALGAMEPLUGIN_API AInGameCharacter : public ASG_Character, public IHittable, public IDamageDealerInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 	
@@ -76,6 +79,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Equipment")
 	bool bIsRightHanded = true;
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FGenericTeamId TeamId;
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS|CharacterDefaults")
 	TSubclassOf<USG_GameplayAbility> MainHandAbility;
 
@@ -87,6 +93,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ULootTableComponent* LootTableComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USG_AIPerceptionStimuliSourceComp* StimulusSource;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseMainHandItemAction;
@@ -170,6 +179,8 @@ public:
 	virtual bool IsHitGuarded(FVector HitLocation) const override;
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
+
+	FGenericTeamId GetGenericTeamId() const override{ return TeamId; }
 
 	FVoidDataTransferSignature OnCharacterDeath;
 

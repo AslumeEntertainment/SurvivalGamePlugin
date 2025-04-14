@@ -18,5 +18,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
 	TSubclassOf<ADamageIndicator> DamageIndicatorClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
+	float VisibilityDistance = 1500.f;
+
 	virtual bool OnExecute_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
 };

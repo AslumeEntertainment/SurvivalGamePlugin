@@ -9,33 +9,34 @@
 
 void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
+	UE_LOG(LogTemp, Log, TEXT("USGGA_Interact::ActivateAbility"));
+
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
-	ASG_Character* Player = Cast<ASG_Character>(ActorInfo->AvatarActor.Get());
-	if (!IsValid(Player))
+	ASG_Character* Avatar = Cast<ASG_Character>(ActorInfo->AvatarActor.Get());
+	if (IsValid(Avatar) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility IsValid(Player) == false"));
+		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility IsValid(Avatar) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	IInteractableInterface* FocusedInteractable = Cast<IInteractableInterface>(Player->GetFocusedInteractableObject());
+	IInteractableInterface* FocusedInteractable = Cast<IInteractableInterface>(Avatar->GetFocusedInteractableObject());
 	if (FocusedInteractable == nullptr)
 	{
-		//UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility FocusedInteractable == nullptr"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-
-	if (FocusedInteractable->bCanInteract(Player->GetController()) == false)
+	if (FocusedInteractable->bCanInteract(Avatar->GetController()) == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s cannot interact with current focuesd interactable!"), *Player->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("%s cannot interact with current focuesd interactable!"), *Avatar->GetName());
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	FocusedInteractable->InteractRequest(Player->GetController());
 	
+	FocusedInteractable->InteractRequest(Avatar->GetController());
+
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

@@ -5,19 +5,21 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemGlobals.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Net/UnrealNetwork.h"
 
-#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/SG_AIPerceptionStimuliSourceComp.h"
 #include "Components/DamageDealingComponent.h"
 #include "Components/LootTableComponent.h"
 #include "Components/EquipmentComponent.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interactables/Items/DamageDealingItem.h"
 #include "Headers/AbilityInputConfig.h"
 #include "UI/HUD/InGameHUD.h"
 
@@ -30,6 +32,8 @@ AInGameCharacter::AInGameCharacter()
 	
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
 	GetCapsuleComponent()->SetUseCCD(true);
+
+	StimulusSource = CreateDefaultSubobject<USG_AIPerceptionStimuliSourceComp>(TEXT("StimulusSource"));
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
 }
@@ -55,6 +59,8 @@ void AInGameCharacter::BeginPlay()
 		AddDamageSource(DamageSource);
 		DamageSource->ConfigDamageSource(this);
 	}
+
+	SetGenericTeamId(TeamId);
 
 	if (IsLocallyControlled())
 	{
@@ -177,8 +183,14 @@ void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent,
 	}
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	ContextHandle.AddHitResult(Hit);
+	ContextHandle.AddInstigator(OtherActor, OtherActor);
+
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.Instigator = OtherActor;
+	EventData.ContextHandle = ContextHandle;
 
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
@@ -195,7 +207,14 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	}
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Fall");
-	SendGameplayEventToSelf(EventTag, FGameplayEventData());
+
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	ContextHandle.AddHitResult(Hit);
+	
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.ContextHandle = ContextHandle;
+
+	SendGameplayEventToSelf(EventTag, EventData);
 }
 
 void AInGameCharacter::MainHandAction()

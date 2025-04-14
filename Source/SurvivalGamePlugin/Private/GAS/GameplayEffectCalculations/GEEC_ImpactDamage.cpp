@@ -32,16 +32,22 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	}
 
 	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
+	const FHitResult* HitResult = EffectContext.GetHitResult();
+	if (HitResult == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation HitResult == nullptr"));
+		return;
+	}
 
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
 	float Damage = 0;
 	FVector Velocity = TargetActor->GetVelocity();
-	FVector NormalVelocity = UKismetMathLibrary::Normal(Velocity);
+	FVector NormalizedVelocity = UKismetMathLibrary::Normal(Velocity);
 	FString DamageContextString;
 
-	if (NormalVelocity.Z <= -0.45)
+	if (NormalizedVelocity.Z <= -0.45)
 	{
 		Damage = FMath::Abs(Velocity.Z) * 0.08 - 60;
 		DamageContextString = "Fall";
@@ -62,15 +68,21 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length());
-	UE_LOG(LogTemp, Warning, TEXT("%s damage - %f"), *DamageContextString, Damage);
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("==================================="));
+		UE_LOG(LogTemp, Warning, TEXT("Impact Normal - %s"), *FVector(HitResult->ImpactNormal).ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Normal - %s"), *FVector(HitResult->Normal).ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Velocity - %s"), *Velocity.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length());
+		UE_LOG(LogTemp, Warning, TEXT("%s damage - %f"), *DamageContextString, Damage);
+	}
 	
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
-
-	CueParams.Location = TargetActor->GetActorLocation();
+	CueParams.Location = FVector(HitResult->ImpactPoint);
 	CueParams.RawMagnitude = Damage;
 
 	TriggerGameplayCues(TargetASC, CueParams);

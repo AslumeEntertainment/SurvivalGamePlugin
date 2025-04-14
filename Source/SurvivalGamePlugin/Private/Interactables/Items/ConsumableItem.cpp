@@ -3,3 +3,8 @@
 
 #include "Interactables/Items/ConsumableItem.h"
 
+
+AConsumableItem::AConsumableItem()
+{
+	PrimaryActorTick.bCanEverTick = false;
+}
