@@ -12,6 +12,7 @@
 #include "Components/SG_AIPerceptionStimuliSourceComp.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interfaces/InteractableInterface.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -27,6 +28,12 @@ void ASG_AIController::OnTargetDestroyed(AActor* Target)
     UnregisterTarget(Target);
 
     GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
+}
+
+void ASG_AIController::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    GEngine->AddOnScreenDebugMessage(1, 1, FColor::Orange, FString::Printf(TEXT("Control Rotation - %s"), *GetControlRotation().ToString()));
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -47,7 +54,7 @@ void ASG_AIController::OnPossess(APawn* InPawn)
     }
     if (IsValid(BehaviorTree) == false)
     {
-        UE_LOG(LogTemp, Log, TEXT("ASG_AIController::OnPossess IsValid(BehaviorTree) == false"));
+        UE_LOG(LogTemp, Warning, TEXT("ASG_AIController::OnPossess IsValid(BehaviorTree) == false"));
         return;
     }
 
@@ -61,16 +68,23 @@ void ASG_AIController::OnPossess(APawn* InPawn)
     UE_LOG(LogTemp, Warning, TEXT("%s: It's AI-ing time!"), *PossesedCharacter->GetName());
 }
 
+void ASG_AIController::SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPriority)
+{
+    Super::SetFocus(NewFocus, InPriority);
+
+    ASG_Character* Char = GetPawn<ASG_Character>();
+    if (IsValid(Char) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::SetFocus IsValid(ASC) == false"));
+        return;
+    }
+
+    Char->PointCameraTowardsActor(GetWorld(), NewFocus);
+}
+
 void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)
 {
     GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", true);
-
-    ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
-    if (IsValid(OwnerCharacter) == false)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::RegisterNewTarget IsValid(OwnerCharacter) == false"));
-        return;
-    }
 
     FAITarget AITarget = FAITarget(NewTarget, TargetPriorityMap[StimuliSourceComp->GetStimuliSourceTag()]);
     NewTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
@@ -80,7 +94,7 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
         UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
         Targets.Add(AITarget);
 
-        OwnerCharacter->PointCameraTowardsActor(GetWorld(), NewTarget);
+        SetFocus(NewTarget);
         
         return;
     }
@@ -97,7 +111,7 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
 
         if (i == 0)
         {
-            OwnerCharacter->PointCameraTowardsActor(GetWorld(), NewTarget);
+            SetFocus(NewTarget);
             UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
         }
 
@@ -117,25 +131,13 @@ void ASG_AIController::UnregisterTarget(AActor* NewTarget)
             continue;
         }
 
-        if (i == 0)
-        {
-            ASG_Character* OwnerCharacter = GetPawn<ASG_Character>();
-            if (IsValid(OwnerCharacter) == false)
-            {
-                UE_LOG(LogTemp, Error, TEXT("ASG_AIController::UnregisterTarget IsValid(OwnerCharacter) == false"));
-                return;
-            }
-            OwnerCharacter->StopTarget();
-        }
-
         NewTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
         Targets.RemoveAt(i);
+        
+        SetFocus(Targets.IsEmpty() ? nullptr : Targets[0].Target);
+        GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
 
         UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
-        if (Targets.IsEmpty())
-        {
-            GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", false);
-        }
 
         return;
     }
@@ -156,6 +158,11 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     }
 
     if (TargetPriorityMap.Contains(StimuliSourceComp->GetStimuliSourceTag()) == false)
+    {
+        return;
+    }
+    IInteractableInterface* InteractableTarget = Cast<IInteractableInterface>(Actor);
+    if (InteractableTarget != nullptr && InteractableTarget->bCanInteract(this) == false)
     {
         return;
     }

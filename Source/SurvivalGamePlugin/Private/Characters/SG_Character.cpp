@@ -45,7 +45,7 @@ ASG_Character::ASG_Character()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetMesh()/*, FName(TEXT("head"))*/);
+	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 0.f; 
 	CameraBoom->bUsePawnControlRotation = false;
 
@@ -94,6 +94,7 @@ void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
 		Server_SetFocusedInteractable(InFocusedInteractable);
 		return;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("%s: Setting current interactable - %s"), *GetName(), IsValid(InFocusedInteractable) ? *InFocusedInteractable->GetName() : TEXT("NULL"));
 	FocusedInteractableObject = InFocusedInteractable;
 }
 

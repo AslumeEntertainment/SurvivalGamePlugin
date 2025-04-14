@@ -75,7 +75,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAIPerceptionComponent* PerceptionComp = nullptr;
 
+	virtual void Tick(float DeltaTime) override;
+
 	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPriority = EAIFocusPriority::Gameplay) override;
 
 	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);
 
