@@ -8,6 +8,7 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "Components/SG_AIPerceptionStimuliSourceComp.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
@@ -33,7 +34,13 @@ void ASG_AIController::OnTargetDestroyed(AActor* Target)
 void ASG_AIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    
     GEngine->AddOnScreenDebugMessage(1, 1, FColor::Orange, FString::Printf(TEXT("Control Rotation - %s"), *GetControlRotation().ToString()));
+    
+    for (int i = 0; i < Targets.Num(); i++)
+    {
+        GEngine->AddOnScreenDebugMessage(i+2, 1, FColor::Orange, FString::Printf(TEXT("Target#%d - %s"), i, *Targets[i].Target->GetName()));
+    }
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -78,7 +85,13 @@ void ASG_AIController::SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPrior
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::SetFocus IsValid(ASC) == false"));
         return;
     }
-
+    if (IsValid(NewFocus) == false)
+    {
+        ClearFocus(InPriority);
+        Char->StopTarget();
+        return;
+    }
+    
     Char->PointCameraTowardsActor(GetWorld(), NewFocus);
 }
 
@@ -92,9 +105,10 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
     if (Targets.IsEmpty())
     {
         UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
+        
         Targets.Add(AITarget);
-
         SetFocus(NewTarget);
+        //SetFocalPoint(NewTarget->GetActorLocation());
         
         return;
     }
@@ -111,8 +125,10 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
 
         if (i == 0)
         {
-            SetFocus(NewTarget);
             UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
+            SetFocus(NewTarget);
+
+            //SetFocalPoint(NewTarget->GetActorLocation());
         }
 
         return;
@@ -134,6 +150,14 @@ void ASG_AIController::UnregisterTarget(AActor* NewTarget)
         NewTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
         Targets.RemoveAt(i);
         
+        /*if (Targets.IsEmpty())
+        {
+            ClearFocus(EAIFocusPriority::Default);
+        }
+        else
+        {
+            SetFocalPoint(Targets[0].Target->GetActorLocation());
+        }*/
         SetFocus(Targets.IsEmpty() ? nullptr : Targets[0].Target);
         GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
 
@@ -211,4 +235,40 @@ UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 AActor* ASG_AIController::GetCurrentTarget()
 {
     return Targets.IsEmpty() ? nullptr : Targets[0].Target;
+}
+
+void ASG_AIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
+{
+    // I wish that the intern in Epic Games that wrote the piece of
+    // code that resets the pitch of the controller when the target
+    // is not a Pawn dies a very painful death :)
+
+    APawn* const MyPawn = GetPawn();
+    if (MyPawn)
+    {
+        FRotator NewControlRotation = GetControlRotation();
+
+        // Look toward focus
+        const FVector FocalPoint = GetFocalPoint();
+        if (FAISystem::IsValidLocation(FocalPoint))
+        {
+            NewControlRotation = (FocalPoint - MyPawn->GetPawnViewLocation()).Rotation();
+        }
+        else if (bSetControlRotationFromPawnOrientation)
+        {
+            NewControlRotation = MyPawn->GetActorRotation();
+        }
+        
+        SetControlRotation(NewControlRotation);
+
+        if (bUpdatePawn)
+        {
+            const FRotator CurrentPawnRotation = MyPawn->GetActorRotation();
+
+            if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
+            {
+                MyPawn->FaceRotation(NewControlRotation, DeltaTime);
+            }
+        }
+    }
 }

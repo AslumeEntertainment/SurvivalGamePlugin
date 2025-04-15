@@ -91,7 +91,7 @@ public:
 	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
 
 	UFUNCTION(BlueprintCallable)
-	bool CanEquipItem(AItemBase* Item);
+	bool CanEquipItem(const AItemBase* Item);
 
 	UFUNCTION(BlueprintCallable)
 	void EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty = false);

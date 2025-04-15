@@ -58,7 +58,7 @@ void UEquipmentComponent::OnRep_CachedEquipment()
 	ReconstructEquipmentData(CachedEquipment);
 }
 
-bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
+bool UEquipmentComponent::CanEquipItem(const AItemBase* Item)
 {
 	if (IsValid(GetOwner()) == false)
 	{
@@ -87,8 +87,6 @@ bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
 		}
 	}
 	
-	//GEngine->AddOnScreenDebugMessage(10, 1, FColor::Emerald, FString::Printf(TEXT("Last tolerable weight - %d, Item weight - %d"), (uint8)LastTorelableWeight, (uint8)Item->ItemData.ItemWeight));
-
 	if (Item->ItemData.ItemWeight > LastTorelableWeight)
 	{
 		return false;

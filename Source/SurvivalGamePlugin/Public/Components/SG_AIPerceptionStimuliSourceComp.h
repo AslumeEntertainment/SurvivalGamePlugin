@@ -10,7 +10,7 @@
 #include "SG_AIPerceptionStimuliSourceComp.generated.h"
 
 
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class SURVIVALGAMEPLUGIN_API USG_AIPerceptionStimuliSourceComp : public UAIPerceptionStimuliSourceComponent
 {
 	GENERATED_BODY()

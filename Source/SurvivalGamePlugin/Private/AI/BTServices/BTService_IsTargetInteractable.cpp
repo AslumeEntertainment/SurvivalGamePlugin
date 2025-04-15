@@ -40,7 +40,7 @@ void UBTService_IsTargetInteractable::OnBecomeRelevant(UBehaviorTreeComponent& O
 	IInteractableInterface* InteractableTarget = Cast<IInteractableInterface>(Target);
 	if (InteractableTarget == nullptr)
 	{
-		BlackBoardComp->SetValueAsBool(GetSelectedBlackboardKey(), true);
+		BlackBoardComp->SetValueAsBool(GetSelectedBlackboardKey(), false);
 		return;
 	}
 	

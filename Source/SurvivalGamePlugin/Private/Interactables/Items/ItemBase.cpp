@@ -259,7 +259,7 @@ bool AItemBase::InteractRequest(AController* InteractingCharacter)
 	return true;
 }
 
-bool AItemBase::bCanInteract(AController* InteractingCharacter)
+bool AItemBase::bCanInteract(AController* InteractingCharacter) const
 {
 	AInGameCharacter* InteractingPawn = Cast<AInGameCharacter>(InteractingCharacter->GetPawn());
 	if (IsValid(InteractingPawn) == false)

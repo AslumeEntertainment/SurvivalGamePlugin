@@ -29,7 +29,7 @@ protected:
 	virtual void StopInteracting();
 
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
-	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual bool bCanInteract(AController* InteractingCharacter) const override;
 	virtual FText GetInteractableName() override { return FText::FromString("Station"); }
 
 public:

@@ -94,7 +94,6 @@ void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
 		Server_SetFocusedInteractable(InFocusedInteractable);
 		return;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("%s: Setting current interactable - %s"), *GetName(), IsValid(InFocusedInteractable) ? *InFocusedInteractable->GetName() : TEXT("NULL"));
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
@@ -488,6 +487,7 @@ void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
 	if (IsValid(TargetActor) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(TargetActor) == false"));
+		StopTarget();
 		return;
 	}
 

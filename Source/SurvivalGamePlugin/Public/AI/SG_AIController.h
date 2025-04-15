@@ -54,14 +54,18 @@ public:
 
 private:
 
+	FRotator SmoothTargetRotation;
+
 	UPROPERTY()
 	TArray<FAITarget> Targets;
 
 	UFUNCTION()
 	void OnTargetDestroyed(AActor* Target);
 
-
 protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SmoothFocusInterpSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
@@ -98,5 +102,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetCurrentTarget();
+
+	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 
 };

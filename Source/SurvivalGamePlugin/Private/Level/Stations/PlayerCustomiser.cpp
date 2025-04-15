@@ -107,7 +107,7 @@ bool APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	return true;
 }
 
-bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter)
+bool APlayerCustomiser::bCanInteract(AController* InteractingCharacter) const
 {
 	return bIsActive && !bIsTaken && !PlayerCustomisingWidget->IsInViewport();
 }

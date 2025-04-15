@@ -18,5 +18,4 @@ public:
 
 	void OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-
 };
