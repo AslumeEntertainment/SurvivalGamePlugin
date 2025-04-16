@@ -14,6 +14,7 @@
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Interfaces/InteractableInterface.h"
+#include "Interactables/Items/ItemBase.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -95,78 +96,6 @@ void ASG_AIController::SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPrior
     Char->PointCameraTowardsActor(GetWorld(), NewFocus);
 }
 
-void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)
-{
-    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", true);
-
-    FAITarget AITarget = FAITarget(NewTarget, TargetPriorityMap[StimuliSourceComp->GetStimuliSourceTag()]);
-    NewTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
-
-    if (Targets.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
-        
-        Targets.Add(AITarget);
-        SetFocus(NewTarget);
-        //SetFocalPoint(NewTarget->GetActorLocation());
-        
-        return;
-    }
-
-    for (int i = 0; i < Targets.Num(); i++)
-    {
-        if (Targets[i].Priority <= AITarget.Priority)
-        {
-            continue;
-        }
-
-        UE_LOG(LogTemp, Warning, TEXT("%s: Inserting %s at position %d"), *GetName(), *NewTarget->GetName(), i);
-        Targets.Insert(AITarget, i);
-
-        if (i == 0)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
-            SetFocus(NewTarget);
-
-            //SetFocalPoint(NewTarget->GetActorLocation());
-        }
-
-        return;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("%s: Insering %s at the back"), *GetName(), *NewTarget->GetName());
-    Targets.Add(AITarget);
-}
-
-void ASG_AIController::UnregisterTarget(AActor* NewTarget)
-{
-    for (int i = 0; i < Targets.Num(); i++)
-    {
-        if (Targets[i].Target != NewTarget)
-        {
-            continue;
-        }
-
-        NewTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
-        Targets.RemoveAt(i);
-        
-        /*if (Targets.IsEmpty())
-        {
-            ClearFocus(EAIFocusPriority::Default);
-        }
-        else
-        {
-            SetFocalPoint(Targets[0].Target->GetActorLocation());
-        }*/
-        SetFocus(Targets.IsEmpty() ? nullptr : Targets[0].Target);
-        GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
-
-        UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
-
-        return;
-    }
-}
-
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
 {
     if (IsValid(Actor) == false)
@@ -227,6 +156,73 @@ void ASG_AIController::OnTargetForgotten(AActor* Actor)
     }
 }
 
+void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)
+{
+    GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", true);
+
+    if (IsValid(StimuliSourceComp) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::RegisterNewTarget IsValid(StimuliSourceComp) == false"));
+        return;
+    }
+
+    FAITarget AITarget = FAITarget(NewTarget, TargetPriorityMap[StimuliSourceComp->GetStimuliSourceTag()]);
+    NewTarget->OnDestroyed.AddDynamic(this, &ASG_AIController::OnTargetDestroyed);
+
+    if (Targets.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
+
+        Targets.Add(AITarget);
+        SetFocus(NewTarget);
+
+        return;
+    }
+
+    for (int i = 0; i < Targets.Num(); i++)
+    {
+        if (Targets[i].Priority <= AITarget.Priority)
+        {
+            continue;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("%s: Inserting %s at position %d"), *GetName(), *NewTarget->GetName(), i);
+        Targets.Insert(AITarget, i);
+
+        if (i == 0)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
+            SetFocus(NewTarget);
+        }
+
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("%s: Insering %s at the back"), *GetName(), *NewTarget->GetName());
+    Targets.Add(AITarget);
+}
+
+void ASG_AIController::UnregisterTarget(AActor* NewTarget)
+{
+    for (int i = 0; i < Targets.Num(); i++)
+    {
+        if (Targets[i].Target != NewTarget)
+        {
+            continue;
+        }
+
+        NewTarget->OnDestroyed.RemoveDynamic(this, &ASG_AIController::OnTargetDestroyed);
+        Targets.RemoveAt(i);
+
+        SetFocus(Targets.IsEmpty() ? nullptr : Targets[0].Target);
+        GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
+
+        UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
+
+        return;
+    }
+}
+
 UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 {
     return BehaviorTree;
@@ -244,31 +240,35 @@ void ASG_AIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
     // is not a Pawn dies a very painful death :)
 
     APawn* const MyPawn = GetPawn();
-    if (MyPawn)
+    if (IsValid(MyPawn) == false)
     {
-        FRotator NewControlRotation = GetControlRotation();
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::UpdateControlRotation IsValid(MyPawn) == false"));
+        return;
+    }
 
-        // Look toward focus
-        const FVector FocalPoint = GetFocalPoint();
-        if (FAISystem::IsValidLocation(FocalPoint))
-        {
-            NewControlRotation = (FocalPoint - MyPawn->GetPawnViewLocation()).Rotation();
-        }
-        else if (bSetControlRotationFromPawnOrientation)
-        {
-            NewControlRotation = MyPawn->GetActorRotation();
-        }
-        
-        SetControlRotation(NewControlRotation);
+    FRotator NewControlRotation = GetControlRotation();
 
-        if (bUpdatePawn)
-        {
-            const FRotator CurrentPawnRotation = MyPawn->GetActorRotation();
+    // Look toward focus
+    const FVector FocalPoint = GetFocalPoint();
+    if (FAISystem::IsValidLocation(FocalPoint))
+    {
+        NewControlRotation = (FocalPoint - MyPawn->GetPawnViewLocation()).Rotation();
+    }
+    else if (bSetControlRotationFromPawnOrientation)
+    {
+        NewControlRotation = MyPawn->GetActorRotation();
+    }
 
-            if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
-            {
-                MyPawn->FaceRotation(NewControlRotation, DeltaTime);
-            }
-        }
+    SetControlRotation(NewControlRotation);
+
+    if (bUpdatePawn == false)
+    {
+        return;
+    }
+
+    const FRotator CurrentPawnRotation = MyPawn->GetActorRotation();
+    if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
+    {
+        MyPawn->FaceRotation(NewControlRotation, DeltaTime);
     }
 }

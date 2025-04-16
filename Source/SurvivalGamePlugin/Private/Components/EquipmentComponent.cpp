@@ -179,12 +179,12 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 
 	if (IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
 	{
-		GetEquipedItemAtSlot(EquipmentSlotTag)->OnItemUnequiped();
+		GetEquipedItemAtSlot(EquipmentSlotTag)->OnItemUnequipedDelegate.Broadcast();
 		SetEquipedItemAtSlot(EquipmentSlotTag, nullptr);
 	}
 
 	SetEquipedItemAtSlot(EquipmentSlotTag, Item);
-	Item->OnItemEquiped(InGameCharacter, GetEquipmentSocketWithTag(EquipmentSlotTag));
+	Item->OnItemEquipedDelegate.Broadcast(InGameCharacter, GetEquipmentSocketWithTag(EquipmentSlotTag));
 
 	return;
 }
@@ -217,7 +217,7 @@ void UEquipmentComponent::UnequipItem(AItemBase* Item)
 	{
 		if (EquipmentSlot.Value == Item)
 		{
-			Item->OnItemUnequiped();
+			Item->OnItemUnequipedDelegate.Broadcast();
 			SetEquipedItemAtSlot(EquipmentSlot.Key, nullptr);
 		}
 	}
@@ -240,7 +240,7 @@ void UEquipmentComponent::UnequipItemAtSlot(FGameplayTag SlotTag)
 
 	if (IsValid(GetEquipedItemAtSlot(SlotTag)))
 	{
-		GetEquipedItemAtSlot(SlotTag)->OnItemUnequiped();
+		GetEquipedItemAtSlot(SlotTag)->OnItemUnequipedDelegate.Broadcast();
 		SetEquipedItemAtSlot(SlotTag, nullptr);
 	}
 

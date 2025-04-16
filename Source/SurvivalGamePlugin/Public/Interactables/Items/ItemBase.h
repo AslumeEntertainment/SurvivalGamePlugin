@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Actors/SG_HittableActor.h"
 
+#include "Headers/GeneralDelegates.h"
 #include "Headers/ItemDataStruct.h"
 #include "Interfaces/InteractableInterface.h"
 #include "AbilitySystemInterface.h"
@@ -21,6 +22,9 @@ class ULootTableComponent;
 class USG_AbilitySystemComponent;
 class USG_AttributeSet;
 class USG_AIPerceptionStimuliSourceComp;
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipedSignature, AInGameCharacter*, PlayerOwner, FName, SocketName);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AItemBase : public ASG_HittableActor, public IInteractableInterface
@@ -55,6 +59,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "ItemData")
 	FDataTableRowHandle ItemDataRow;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnItemUnequiped();
+
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetActorPhysics(bool NewActorPhysics);
 
@@ -76,12 +86,6 @@ public:
 	UFUNCTION()
 	void SetDurability(float InDurability);
 
-	UFUNCTION(BlueprintCallable)
-	virtual void OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName);
-
-	UFUNCTION(BlueprintCallable)
-	virtual void OnItemUnequiped(); 
-
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
@@ -93,4 +97,7 @@ public:
 	FGameplayTagContainer GetItemAbilityTags() const;
 
 	FGameplayTagContainer GetItemSecondaryAbilityTags() const;
+
+	FOnItemEquipedSignature OnItemEquipedDelegate;
+	FVoidDataTransferSignature OnItemUnequipedDelegate;
 };

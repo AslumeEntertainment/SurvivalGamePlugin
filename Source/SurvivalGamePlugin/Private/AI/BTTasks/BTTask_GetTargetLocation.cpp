@@ -29,6 +29,12 @@ EBTNodeResult::Type UBTTask_GetTargetLocation::ExecuteTask(UBehaviorTreeComponen
 		UE_LOG(LogTemp, Error, TEXT("UBTTask_GetTargetLocation::ExecuteTask IsValid(Controller) == false"));
 		return EBTNodeResult::Failed;
 	}
+	APawn* MyPawn = Controller->GetPawn();
+	if (IsValid(MyPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UBTTask_GetTargetLocation::ExecuteTask IsValid(MyPawn) == false"));
+		return EBTNodeResult::Failed;
+	}
 	AActor* Target = Controller->GetCurrentTarget();
 	if (IsValid(Target) == false)
 	{
@@ -42,16 +48,65 @@ EBTNodeResult::Type UBTTask_GetTargetLocation::ExecuteTask(UBehaviorTreeComponen
 		return EBTNodeResult::Failed;
 	}
 
-	FVector Origin = Target->GetActorLocation();
-	FNavLocation NavLocation;
+	TArray<FVector> FoundPoints = AttemptFindTargetLocation(NavSystem, Target);
 
-	if (NavSystem->GetRandomPointInNavigableRadius(Origin, PossibleDeviation, NavLocation) == false)
+	if (FoundPoints.IsEmpty())
 	{
 		return EBTNodeResult::Failed;
 	}
+	
+	FVector MyLocation = MyPawn->GetActorLocation();
+	int ClosestPointId = 0;
+	
+	for (int i = 1; i < FoundPoints.Num(); i++)
+	{
+		if ((MyLocation - FoundPoints[i]).Length() < (MyLocation - FoundPoints[i - 1]).Length())
+		{
+			ClosestPointId = i;
+		}
+	}
 
-	OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), NavLocation.Location);
+	OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), FoundPoints[ClosestPointId]);
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 
 	return EBTNodeResult::Succeeded;
+}
+
+TArray<FVector> UBTTask_GetTargetLocation::AttemptFindTargetLocation(UNavigationSystemV1* NavSystem, AActor* Target)
+{
+	TArray<FVector> FoundPoints;
+	
+	FVector Origin = Target->GetActorLocation();
+	float Radius = PossibleDeviation;
+	FNavLocation NavLocation;
+
+	if (NavSystem->GetRandomPointInNavigableRadius(Origin, Radius, NavLocation))
+	{
+		FoundPoints.Add(NavLocation.Location);
+		return FoundPoints;
+	}
+
+	Radius += InitialRadiusOnFailed;
+
+	for (int i = 0; i < RetriesOnFail; i++)
+	{
+		for (int j = 0; j < PointsToGet; j++)
+		{
+			if (NavSystem->GetRandomPointInNavigableRadius(Origin, Radius, NavLocation) == false)
+			{
+				break;
+			}
+
+			FoundPoints.Add(NavLocation.Location);
+		}
+
+		if (FoundPoints.IsEmpty() == false)
+		{
+			return FoundPoints;
+		}
+
+		Radius *= OnFailedRadiusMultiplier;
+	}
+	
+	return FoundPoints;
 }

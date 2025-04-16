@@ -16,6 +16,7 @@
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
+#include "AI/SG_AIController.h"
 
 
 void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,6 +33,9 @@ AItemBase::AItemBase()
 	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	StimulusSource = CreateDefaultSubobject<USG_AIPerceptionStimuliSourceComp>(TEXT("StimulusSource"));
+
+	OnItemEquipedDelegate.AddDynamic(this, &AItemBase::OnItemEquiped);
+	OnItemUnequipedDelegate.AddDynamic(this, &AItemBase::OnItemUnequiped);
 }
 
 void AItemBase::BeginPlay()
@@ -146,6 +150,12 @@ void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
 		SecondaryAbilitySpecHandle = ASC->GiveAbility(Spec);
 	}
 	
+	ASG_AIController* AICont = Cast<ASG_AIController>(PlayerOwner->GetController());
+	if (IsValid(AICont))
+	{
+		AICont->UnregisterTarget(this);
+	}
+
 	bIsAttached = true;
 }
 

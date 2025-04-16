@@ -36,7 +36,10 @@ EBTNodeResult::Type UBTTask_TriggerAbilityWithTags::ExecuteTask(UBehaviorTreeCom
 		return EBTNodeResult::Failed;
 	}
 
-	ASC->TryActivateAbilitiesByTag(AbilityTags);
+	if (ASC->TryActivateAbilitiesByTag(AbilityTags) == false)
+	{
+		return EBTNodeResult::Failed;
+	}
 
 	return EBTNodeResult::Succeeded;
 }

@@ -10,6 +10,7 @@
 
 #include "SG_AIController.generated.h"
 
+class AItemBase;
 class UBehaviorTree;
 class UAISenseConfig_Sight;
 class USG_AIPerceptionStimuliSourceComp;
@@ -85,10 +86,6 @@ protected:
 
 	virtual void SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPriority = EAIFocusPriority::Gameplay) override;
 
-	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);
-
-	void UnregisterTarget(AActor* NewTarget);
-
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);
 
@@ -96,6 +93,12 @@ protected:
 	void OnTargetForgotten(AActor* Actor);
 
 public:
+
+	UFUNCTION(BlueprintCallable)
+	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);
+	
+	UFUNCTION(BlueprintCallable)
+	void UnregisterTarget(AActor* NewTarget);
 
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTree* GetBehaviorTree() const;

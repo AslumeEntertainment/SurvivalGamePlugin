@@ -6,6 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_GetTargetLocation.generated.h"
 
+class UNavigationSystemV1;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UBTTask_GetTargetLocation : public UBTTask_BlackboardBase
@@ -20,7 +21,21 @@ public:
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "AI")
+	UPROPERTY(EditAnywhere, Category = "Node")
 	float PossibleDeviation = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Node", meta = (ClampMin = "1"))
+	int PointsToGet = 4;
+
+	UPROPERTY(EditAnywhere, Category = "Node|OnSearchFailed", meta = (ClampMin = "1"))
+	float InitialRadiusOnFailed = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = "Node|OnSearchFailed", meta = (ClampMin = "1.0"))
+	float OnFailedRadiusMultiplier = 1.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Node|OnSearchFailed", meta = (ClampMin = "1"))
+	int RetriesOnFail = 5;
+
+	TArray<FVector> AttemptFindTargetLocation(UNavigationSystemV1* NavSystem, AActor* Target);
 
 };

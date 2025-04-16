@@ -9,9 +9,7 @@
 
 void USGGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	UE_LOG(LogTemp, Log, TEXT("USGGA_Interact::ActivateAbility"));
-
-	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_Interact::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
