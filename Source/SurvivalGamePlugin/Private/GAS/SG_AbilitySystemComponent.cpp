@@ -187,4 +187,54 @@ void USG_AbilitySystemComponent::RemoveAbilityFromSpec(FGameplayAbilitySpecHandl
 	ClearAbility(RemovedAbilitySpecHandle);
 }
 
+void USG_AbilitySystemComponent::GetActivatableGameplayAbilitySpecFromClass(TSubclassOf<UGameplayAbility> AbilityClass, FGameplayAbilitySpec*& MatchingGameplayAbility) const
+{
+	if (IsValid(AbilityClass) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::GetActivatableGameplayAbilitySpecFromClass IsValid(AbilityClass) == false"));
+		return;
+	}
+
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (IsValid(Spec.Ability) == false || Spec.Ability->GetClass() != AbilityClass)
+		{
+			continue;
+		}
+		
+		if (Spec.Ability->DoesAbilitySatisfyTagRequirements(*this) == false)
+		{
+			continue;
+		}
+
+		MatchingGameplayAbility = const_cast<FGameplayAbilitySpec*>(&Spec);
+		return;
+	}
+}
+
+void USG_AbilitySystemComponent::GetActivatableGameplayAbilitySpecsFromType(FGameplayTag AbilityTypeTag, TArray<struct FGameplayAbilitySpec*>& MatchingGameplayAbilities) const
+{
+	if (AbilityTypeTag.IsValid() == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::GetActivatableGameplayAbilitySpecsFromType AbilityTypeTag.IsValid() == false"));
+		return;
+	}
+
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		USG_GameplayAbility* Ability = Cast<USG_GameplayAbility>(Spec.Ability);
+		if (IsValid(Ability) == false || Ability->AbilityTypeTag != AbilityTypeTag)
+		{
+			continue;
+		}
+
+		if (Ability->DoesAbilitySatisfyTagRequirements(*this) == false)
+		{
+			continue;
+		}
+
+		MatchingGameplayAbilities.Add(const_cast<FGameplayAbilitySpec*>(&Spec));
+	}
+}
+
 

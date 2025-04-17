@@ -3,27 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
-
-#include "GameplayTagContainer.h"
-
-#include "BTTask_TriggerAbilityWithTags.generated.h"
+#include "AI/BTTasks/BTTask_ActivateAbilityBase.h"
+#include "BTTask_ActivateAbilityFromTags.generated.h"
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UBTTask_TriggerAbilityWithTags : public UBTTask_BlackboardBase
+class SURVIVALGAMEPLUGIN_API UBTTask_ActivateAbilityFromTags : public UBTTask_ActivateAbilityBase
 {
 	GENERATED_BODY()
 	
 public:
 
-	UBTTask_TriggerAbilityWithTags();
+	UBTTask_ActivateAbilityFromTags();
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
+
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "AI")
+	UPROPERTY(EditAnywhere, Category = "Node")
 	FGameplayTagContainer AbilityTags;
 
 };

@@ -16,6 +16,9 @@ public:
 
 	USG_GameplayAbility();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Ability", meta = (Categories = "AbilityType"))
+	FGameplayTag AbilityTypeTag;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	FGameplayTag InputTag;
 

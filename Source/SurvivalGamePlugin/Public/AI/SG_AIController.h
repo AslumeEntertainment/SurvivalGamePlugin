@@ -100,6 +100,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UnregisterTarget(AActor* NewTarget);
 
+	UFUNCTION()
+	void StartLogic();
+
+	UFUNCTION()
+	void StopLogic();
+
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTree* GetBehaviorTree() const;
 

@@ -20,6 +20,7 @@
 #include "Animation/SG_AnimInstance.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "AI/SG_AIController.h"
 #include "UI/HUD/InGameHUD.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -74,9 +75,9 @@ void ASG_Character::UpdateCamera(float Alpha)
 	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
 	if (IsValid(PlayerCont) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::UpdateCamera IsValid(PlayerCont) == false"));
 		return;
 	}
+
 	FQuat NewControlRotation = FQuat::Slerp(PlayerCont->GetControlRotation().Quaternion(), GetActorQuat(), Alpha);
 	PlayerCont->SetControlRotation(FRotator(NewControlRotation));
 	SetRepControlRotation(GetControlRotation());
@@ -523,14 +524,20 @@ void ASG_Character::DisablePlayerInput(float Duration)
 		return;
 	}
 
-	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
-	if (IsValid(PlayerCont) == false)
+	if (IsValid(Cast<APlayerController>(GetController())))
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::DisablePlayerInput IsValid(PlayerCont) == false"));
+		DisableInput(Cast<APlayerController>(GetController()));
+	}
+	else if (IsValid(Cast<ASG_AIController>(GetController())))
+	{
+		Cast<ASG_AIController>(GetController())->StopLogic();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s: could not disable input!"), *GetName());
 		return;
 	}
 
-	DisableInput(PlayerCont);
 	bIsInputEnabled = false;
 
 	if (Duration > 0.f)
@@ -538,8 +545,7 @@ void ASG_Character::DisablePlayerInput(float Duration)
 		FTimerHandle EnableInputTimer;
 		GetWorldTimerManager().SetTimer(EnableInputTimer, this, &ASG_Character::EnablePlayerInput, Duration, false);
 	}
-	
-	UE_LOG(LogTemp, Log, TEXT("ASG_Character::DisablePlayerInput - %s"), *GetName());
+	UE_LOG(LogTemp, Log, TEXT("%s: Disabling input for %.3f seconds"), *GetName(), Duration);
 }
 
 void ASG_Character::EnablePlayerInput()
@@ -549,17 +555,22 @@ void ASG_Character::EnablePlayerInput()
 		return;
 	}
 
-	APlayerController* PlayerCont = Cast<APlayerController>(GetController());
-	if (IsValid(PlayerCont) == false)
+	if (Cast<APlayerController>(GetController()))
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::EnablePlayerInput IsValid(PlayerCont) == false"));
+		EnableInput(Cast<APlayerController>(GetController()));
+	}
+	else if (IsValid(Cast<ASG_AIController>(GetController())))
+	{
+		Cast<ASG_AIController>(GetController())->StartLogic();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s: could not enable input!"), *GetName());
 		return;
 	}
 
-	EnableInput(PlayerCont);
 	bIsInputEnabled = true;
-
-	UE_LOG(LogTemp, Log, TEXT("ASG_Character::EnablePlayerInput - %s"), *GetName());
+	UE_LOG(LogTemp, Log, TEXT("%s: Enabling input"), *GetName());
 }
 
 bool ASG_Character::IsPlayerInputEnabled()

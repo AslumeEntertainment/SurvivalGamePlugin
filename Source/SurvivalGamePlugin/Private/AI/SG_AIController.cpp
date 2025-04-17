@@ -223,6 +223,16 @@ void ASG_AIController::UnregisterTarget(AActor* NewTarget)
     }
 }
 
+void ASG_AIController::StartLogic()
+{
+    BrainComponent->StartLogic();
+}
+
+void ASG_AIController::StopLogic()
+{
+    BrainComponent->StopLogic("ASG_AIController::StopLogic");
+}
+
 UBehaviorTree* ASG_AIController::GetBehaviorTree() const
 {
     return BehaviorTree;
@@ -239,36 +249,36 @@ void ASG_AIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
     // code that resets the pitch of the controller when the target
     // is not a Pawn dies a very painful death :)
 
-    APawn* const MyPawn = GetPawn();
-    if (IsValid(MyPawn) == false)
+    ASG_Character* MyCharacter = GetPawn<ASG_Character>();
+    if (IsValid(MyCharacter) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::UpdateControlRotation IsValid(MyPawn) == false"));
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::UpdateControlRotation IsValid(MyCharacter) == false"));
         return;
     }
 
     FRotator NewControlRotation = GetControlRotation();
 
-    // Look toward focus
     const FVector FocalPoint = GetFocalPoint();
     if (FAISystem::IsValidLocation(FocalPoint))
     {
-        NewControlRotation = (FocalPoint - MyPawn->GetPawnViewLocation()).Rotation();
+        NewControlRotation = (FocalPoint - MyCharacter->GetPawnViewLocation()).Rotation();
     }
     else if (bSetControlRotationFromPawnOrientation)
     {
-        NewControlRotation = MyPawn->GetActorRotation();
+        NewControlRotation = MyCharacter->GetActorRotation();
     }
 
     SetControlRotation(NewControlRotation);
+    MyCharacter->SetRepControlRotation(NewControlRotation);
 
     if (bUpdatePawn == false)
     {
         return;
     }
 
-    const FRotator CurrentPawnRotation = MyPawn->GetActorRotation();
+    const FRotator CurrentPawnRotation = MyCharacter->GetActorRotation();
     if (CurrentPawnRotation.Equals(NewControlRotation, 1e-3f) == false)
     {
-        MyPawn->FaceRotation(NewControlRotation, DeltaTime);
+        MyCharacter->FaceRotation(NewControlRotation, DeltaTime);
     }
 }

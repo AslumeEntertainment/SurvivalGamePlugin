@@ -8,6 +8,7 @@
 #include "SG_AbilitySystemComponent.generated.h"
 
 class UGameplayEffect;
+class UGameplayAbility;
 class USG_GameplayAbility;
 class ADamageIndicator;
 
@@ -71,5 +72,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	void RemoveAbilityFromSpec(FGameplayAbilitySpecHandle RemovedAbilitySpecHandle);
+
+	void GetActivatableGameplayAbilitySpecFromClass(TSubclassOf<UGameplayAbility> AbilityClass, struct FGameplayAbilitySpec*& MatchingGameplayAbility) const;
+
+	void GetActivatableGameplayAbilitySpecsFromType(FGameplayTag AbilityTypeTag, TArray <struct FGameplayAbilitySpec*>& MatchingGameplayAbilities) const;
 
 };
