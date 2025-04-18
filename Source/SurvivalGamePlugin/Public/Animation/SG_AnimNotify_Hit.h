@@ -15,7 +15,7 @@ class SURVIVALGAMEPLUGIN_API USG_AnimNotify_Hit : public UAnimNotify
 
 public:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (Categories = "DamageSource"))
 	FGameplayTag DamageSourceTag;
 
 	UPROPERTY(EditAnywhere)

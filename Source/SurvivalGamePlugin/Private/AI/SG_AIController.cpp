@@ -5,6 +5,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
@@ -98,15 +99,44 @@ void ASG_AIController::SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPrior
 
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
 {
+    UWorld* World = GetWorld();
+    if (IsValid(World) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(World) == false"));
+        return;
+    }
+
+    TSubclassOf<UAISense> Sense = UAIPerceptionSystem::GetSenseClassForStimulus(World, Stimulus);
+    if (Sense == UAISense_Sight::StaticClass())
+    {
+        HandleSightSenseUpdate(Actor, Stimulus);
+    }
+    if (Sense == UAISense_Hearing::StaticClass())
+    {
+        HandleHearingSenseUpdate(Actor, Stimulus);
+    }
+}
+
+void ASG_AIController::OnTargetForgotten(AActor* Actor)
+{
     if (IsValid(Actor) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(Actor) == false"));
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetForgotten IsValid(Actor) == false"));
+        return;
+    }
+}
+
+void ASG_AIController::HandleSightSenseUpdate(AActor* Actor, FAIStimulus const Stimulus)
+{
+    if (IsValid(Actor) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleSightSenseUpdate IsValid(Actor) == false"));
         return;
     }
     USG_AIPerceptionStimuliSourceComp* StimuliSourceComp = Actor->GetComponentByClass<USG_AIPerceptionStimuliSourceComp>();
     if (IsValid(StimuliSourceComp) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(StimuliSourceComp) == false"));
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleSightSenseUpdate IsValid(StimuliSourceComp) == false"));
         return;
     }
 
@@ -123,16 +153,26 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
     if (IsValid(OwnerCharacter) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetDetected IsValid(OwnerCharacter) == false"));
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleSightSenseUpdate IsValid(OwnerCharacter) == false"));
         return;
     }
 
     FString TargetAttitude;
     switch (OwnerCharacter->GetTeamAttitudeTowards(*Actor))
     {
-        case ETeamAttitude::Friendly: UE_LOG(LogTemp, Warning, TEXT("%s is friendly"), *Actor->GetName()); return;
-        case ETeamAttitude::Neutral: TargetAttitude = "Neutral"; break;
-        case ETeamAttitude::Hostile: TargetAttitude = "Hostile";
+    case ETeamAttitude::Friendly:
+        if (bWillAttackFriendlies)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("%s is friendly, but I don't care!"), *Actor->GetName());
+            TargetAttitude = "Friendly";
+            break;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("%s is friendly"), *Actor->GetName()); return;
+        }
+    case ETeamAttitude::Neutral: TargetAttitude = "Neutral"; break;
+    case ETeamAttitude::Hostile: TargetAttitude = "Hostile";
     }
 
     if (Stimulus.WasSuccessfullySensed())
@@ -147,13 +187,30 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     }
 }
 
-void ASG_AIController::OnTargetForgotten(AActor* Actor)
+void ASG_AIController::HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const Stimulus)
 {
-    if (IsValid(Actor) == false)
+    if (Stimulus.WasSuccessfullySensed() == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnTargetForgotten IsValid(Actor) == false"));
         return;
     }
+    if (IsValid(Actor) == false || Actor == GetPawn())
+    {
+        return;
+    }
+
+    AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
+    if (IsValid(OwnerCharacter) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleHearingSenseUpdate IsValid(OwnerCharacter) == false"));
+        return;
+    }
+    if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly && bWillReactToFriendlySound == false)
+    {
+        return;
+    }
+
+    GetBlackboardComponent()->SetValueAsBool("IsInvestigating", true);
+    GetBlackboardComponent()->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
 }
 
 void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)

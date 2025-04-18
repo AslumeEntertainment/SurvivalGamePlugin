@@ -20,6 +20,9 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Node")
+	bool bBlockOtherAbilitiesFromActivation = true;
+
+	UPROPERTY(EditAnywhere, Category = "Node")
 	bool bWaitForCompletion = true;
 
 };

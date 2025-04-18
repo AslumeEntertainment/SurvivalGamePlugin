@@ -47,16 +47,28 @@ EBTNodeResult::Type UBTTask_ActivateAbilityFromClass::ExecuteTask(UBehaviorTreeC
 
 	ASC->TryActivateAbility(AbilityToActivate->Handle);
 
-	if (bWaitForCompletion == false)
-	{
-		return EBTNodeResult::Succeeded;
-	}
-
 	UGameplayAbility* AbilityInstance = AbilityToActivate->GetPrimaryInstance();
 	if (IsValid(AbilityInstance) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UBTTask_ActivateAbilityFromClass::ExecuteTask IsValid(AbilityInstance) == false"));
 		return EBTNodeResult::Failed;
+	}
+
+	if (bBlockOtherAbilitiesFromActivation)
+	{
+		OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), true);
+
+		AbilityInstance->OnGameplayAbilityEnded.AddLambda(
+			[&](UGameplayAbility* Ability)
+			{
+				OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), false);
+			}
+		);
+	}
+
+	if (bWaitForCompletion == false)
+	{
+		return EBTNodeResult::Succeeded;
 	}
 
 	AbilityInstance->OnGameplayAbilityEnded.AddLambda(

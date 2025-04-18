@@ -75,9 +75,6 @@ protected:
 	TMap<FGameplayTag, int> TargetPriorityMap;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAISenseConfig_Sight* SightConfig = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAIPerceptionComponent* PerceptionComp = nullptr;
 
 	virtual void Tick(float DeltaTime) override;
@@ -92,7 +89,19 @@ protected:
 	UFUNCTION()
 	void OnTargetForgotten(AActor* Actor);
 
+	UFUNCTION()
+	void HandleSightSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
+	UFUNCTION()
+	void HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
 public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bWillAttackFriendlies = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bWillReactToFriendlySound = false;
 
 	UFUNCTION(BlueprintCallable)
 	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);

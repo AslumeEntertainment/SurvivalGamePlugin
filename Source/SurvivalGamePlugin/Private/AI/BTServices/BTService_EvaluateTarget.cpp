@@ -44,7 +44,10 @@ void UBTService_EvaluateTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCo
 		return;
 	}
 
-	BlackBoardComp->SetValueAsBool("IsTargetHostile", Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Hostile);
+	bool bIsTargetHostile = (Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Hostile) ||
+		(Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Friendly && Cont->bWillAttackFriendlies);
+
+	BlackBoardComp->SetValueAsBool("IsTargetHostile", bIsTargetHostile);
 
 	BlackBoardComp->SetValueAsBool("IsTargetInRange", Pawn->GetDistanceTo(Target) <= Pawn->GetInteractionRange());
 

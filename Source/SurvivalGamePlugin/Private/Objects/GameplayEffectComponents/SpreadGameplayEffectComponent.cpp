@@ -14,7 +14,9 @@
 
 USpreadGameplayEffectComponent::USpreadGameplayEffectComponent()
 {
+#if WITH_EDITORONLY_DATA
 	EditorFriendlyName = TEXT("Spread Gameplay Effect while active");
+#endif
 }
 
 void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEffectsContainer& ActiveGEContainer, FGameplayEffectSpec& GESpec, FPredictionKey& PredictionKey) const
