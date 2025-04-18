@@ -7,7 +7,7 @@
 #include "Components/TextBlock.h"
 
 
-void UWarningWidgetBase::ConfirmButtonClicked()
+void UWarningWidgetBase::ConfirmButtonClicked_Implementation()
 {
 	OnConfirmButtonClicked.Broadcast();
 }

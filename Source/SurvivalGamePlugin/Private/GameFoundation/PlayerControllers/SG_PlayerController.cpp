@@ -6,12 +6,12 @@
 #include "Kismet/GameplayStatics.h" 
 #include "Net/UnrealNetwork.h"
 
-//#include "GameFoundation/GameInstance/SessionSubsystem.h"
+
+#include "Characters/InGameCharacter.h"
+#include "Components/EquipmentComponent.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
 #include "GameFoundation/SaveGames/SG_SaveGame.h"
 #include "UI/HUD/InGameHUD.h"
-#include "Components/EquipmentComponent.h"
-#include "Characters/InGameCharacter.h"
 
 void ASG_PlayerController::BeginPlay()
 {
@@ -64,7 +64,7 @@ void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMo
 
 void ASG_PlayerController::Client_LeaveSession_Implementation(bool bWasKicked)
 {
-	//USessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<USessionSubsystem>();
+	//UAGN_SessionSubsystem* SessionSubsystemPtr = GetGameInstance()->GetSubsystem<UAGN_SessionSubsystem>();
 	//if (IsValid(SessionSubsystemPtr) == false)
 	//{
 	//	UE_LOG(LogTemp, Error, TEXT("ASG_PlayerController::Client_LeaveSession_Implementation (IsValid(SessionSubsystem) == false"));

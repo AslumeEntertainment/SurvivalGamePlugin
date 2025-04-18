@@ -32,13 +32,16 @@ protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextBlock* TXT_CancelText;
 
-	UFUNCTION()
-	void ConfirmButtonClicked();
+	
 
 	UFUNCTION()
 	void CancelButtonClicked();
 
 public:
+
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ConfirmButtonClicked();
 
 	void NativeOnInitialized() override;
 
