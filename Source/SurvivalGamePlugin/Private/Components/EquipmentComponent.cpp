@@ -58,7 +58,7 @@ void UEquipmentComponent::OnRep_CachedEquipment()
 	ReconstructEquipmentData(CachedEquipment);
 }
 
-bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
+bool UEquipmentComponent::CanEquipItem(const AItemBase* Item)
 {
 	if (IsValid(GetOwner()) == false)
 	{
@@ -87,8 +87,6 @@ bool UEquipmentComponent::CanEquipItem(AItemBase* Item)
 		}
 	}
 	
-	//GEngine->AddOnScreenDebugMessage(10, 1, FColor::Emerald, FString::Printf(TEXT("Last tolerable weight - %d, Item weight - %d"), (uint8)LastTorelableWeight, (uint8)Item->ItemData.ItemWeight));
-
 	if (Item->ItemData.ItemWeight > LastTorelableWeight)
 	{
 		return false;
@@ -181,12 +179,12 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 
 	if (IsValid(GetEquipedItemAtSlot(EquipmentSlotTag)))
 	{
-		GetEquipedItemAtSlot(EquipmentSlotTag)->OnItemUnequiped();
+		GetEquipedItemAtSlot(EquipmentSlotTag)->OnItemUnequipedDelegate.Broadcast();
 		SetEquipedItemAtSlot(EquipmentSlotTag, nullptr);
 	}
 
 	SetEquipedItemAtSlot(EquipmentSlotTag, Item);
-	Item->OnItemEquiped(InGameCharacter, GetEquipmentSocketWithTag(EquipmentSlotTag));
+	Item->OnItemEquipedDelegate.Broadcast(InGameCharacter, GetEquipmentSocketWithTag(EquipmentSlotTag));
 
 	return;
 }
@@ -219,7 +217,7 @@ void UEquipmentComponent::UnequipItem(AItemBase* Item)
 	{
 		if (EquipmentSlot.Value == Item)
 		{
-			Item->OnItemUnequiped();
+			Item->OnItemUnequipedDelegate.Broadcast();
 			SetEquipedItemAtSlot(EquipmentSlot.Key, nullptr);
 		}
 	}
@@ -242,7 +240,7 @@ void UEquipmentComponent::UnequipItemAtSlot(FGameplayTag SlotTag)
 
 	if (IsValid(GetEquipedItemAtSlot(SlotTag)))
 	{
-		GetEquipedItemAtSlot(SlotTag)->OnItemUnequiped();
+		GetEquipedItemAtSlot(SlotTag)->OnItemUnequipedDelegate.Broadcast();
 		SetEquipedItemAtSlot(SlotTag, nullptr);
 	}
 

@@ -66,6 +66,7 @@ private:
 	void SetFocusedInteractable(UObject* InFocusedInteractable);
 
 	void EmitInteractionChecker();
+
 	void CheckForInteractables(FHitResult HitResult);
 
 	UFUNCTION(Server, Reliable)
@@ -144,6 +145,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void AbilityInputPressed(FGameplayTag InputTag);
+
 	void AbilityInputReleased(FGameplayTag InputTag);
 
 
@@ -160,8 +162,6 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
 
-	void SetRepControlRotation(FRotator InControlRotation);
-
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void InitCharacterDefaults();
@@ -177,6 +177,8 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	void SetRepControlRotation(FRotator InControlRotation);
 
 	UFUNCTION(BlueprintCallable)
 	float GetInteractionRange() const { return CurrentInteractionRange; }

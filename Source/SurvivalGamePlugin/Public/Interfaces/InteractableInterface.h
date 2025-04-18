@@ -13,9 +13,7 @@ class UInteractableInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
+
 class SURVIVALGAMEPLUGIN_API IInteractableInterface
 {
 	GENERATED_BODY()
@@ -24,7 +22,7 @@ public:
 
 	virtual bool InteractRequest(AController* InteractingCharacter) = 0;
 
-	virtual bool bCanInteract(AController* InteractingCharacter) = 0;
+	virtual bool bCanInteract(AController* InteractingCharacter) const = 0;
 
 	virtual FText GetInteractableName() = 0;
 };

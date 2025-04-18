@@ -39,7 +39,7 @@ bool AStation::InteractRequest(AController* InteractingCharacter)
 	return true;
 }
 
-bool AStation::bCanInteract(AController* InteractingCharacter)
+bool AStation::bCanInteract(AController* InteractingCharacter) const
 {
 	return true;
 }

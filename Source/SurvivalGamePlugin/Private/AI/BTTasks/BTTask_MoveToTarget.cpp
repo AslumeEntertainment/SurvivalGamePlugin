@@ -22,8 +22,15 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 		UE_LOG(LogTemp, Error, TEXT("UBTTask_MoveToTarget::ExecuteTask IsValid(Controller) == false"));
 		return EBTNodeResult::Failed;
 	}
-	
-	UAIBlueprintHelperLibrary::SimpleMoveToActor(Controller, Controller->GetCurrentTarget());
+	UBlackboardComponent* BlackboardComp = Controller->GetBlackboardComponent();
+	if (IsValid(BlackboardComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UBTTask_MoveToTarget::ExecuteTask IsValid(BlackboardComp) == false"));
+		return EBTNodeResult::Failed;
+	}
+
+	FVector TargetLocation = BlackboardComp->GetValueAsVector(GetSelectedBlackboardKey());
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, TargetLocation);
 
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 

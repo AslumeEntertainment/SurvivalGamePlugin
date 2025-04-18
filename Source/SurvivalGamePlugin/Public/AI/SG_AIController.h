@@ -10,6 +10,7 @@
 
 #include "SG_AIController.generated.h"
 
+class AItemBase;
 class UBehaviorTree;
 class UAISenseConfig_Sight;
 class USG_AIPerceptionStimuliSourceComp;
@@ -54,23 +55,24 @@ public:
 
 private:
 
+	FRotator SmoothTargetRotation;
+
 	UPROPERTY()
 	TArray<FAITarget> Targets;
 
 	UFUNCTION()
 	void OnTargetDestroyed(AActor* Target);
 
-
 protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SmoothFocusInterpSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY(EditAnywhere, Category = "AI", meta = (Categories = "StimuliSource"))
 	TMap<FGameplayTag, int> TargetPriorityMap;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UAISenseConfig_Sight* SightConfig = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UAIPerceptionComponent* PerceptionComp = nullptr;
@@ -81,22 +83,44 @@ protected:
 
 	virtual void SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPriority = EAIFocusPriority::Gameplay) override;
 
-	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);
-
-	void UnregisterTarget(AActor* NewTarget);
-
 	UFUNCTION()
 	void OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus);
 
 	UFUNCTION()
 	void OnTargetForgotten(AActor* Actor);
 
+	UFUNCTION()
+	void HandleSightSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
+	UFUNCTION()
+	void HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
 public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bWillAttackFriendlies = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	bool bWillReactToFriendlySound = false;
+
+	UFUNCTION(BlueprintCallable)
+	void RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp);
+	
+	UFUNCTION(BlueprintCallable)
+	void UnregisterTarget(AActor* NewTarget);
+
+	UFUNCTION()
+	void StartLogic();
+
+	UFUNCTION()
+	void StopLogic();
 
 	UFUNCTION(BlueprintCallable)
 	UBehaviorTree* GetBehaviorTree() const;
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetCurrentTarget();
+
+	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 
 };

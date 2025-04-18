@@ -146,7 +146,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual bool InteractRequest(AController* InteractingCharacter) override;
-	virtual bool bCanInteract(AController* InteractingCharacter) override;
+	virtual bool bCanInteract(AController* InteractingCharacter) const override;
 	virtual void StopInteracting() override;
 	virtual FText GetInteractableName() override { return FText::FromString("Join Table"); }
 

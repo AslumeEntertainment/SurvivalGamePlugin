@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/Services/BTService_BlackboardBase.h"
-#include "BTService_IsTargetInteractable.generated.h"
+#include "BTService_EvaluateTarget.generated.h"
 
 
 UCLASS()
-class SURVIVALGAMEPLUGIN_API UBTService_IsTargetInteractable : public UBTService_BlackboardBase
+class SURVIVALGAMEPLUGIN_API UBTService_EvaluateTarget : public UBTService_BlackboardBase
 {
 	GENERATED_BODY()
 	
 public:
 
-	UBTService_IsTargetInteractable();
+	UBTService_EvaluateTarget();
 
 	void OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
