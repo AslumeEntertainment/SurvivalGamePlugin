@@ -517,6 +517,11 @@ void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
 	GetWorldTimerManager().SetTimer(CameraRotationTimer, CameraRotationTimerDelegate, 0.01f, false);
 }
 
+void ASG_Character::SetMovementEnabled(bool NewValue)
+{
+	GetCharacterMovement()->MovementMode = NewValue ? EMovementMode::MOVE_Walking : EMovementMode::MOVE_None;
+}
+
 void ASG_Character::DisablePlayerInput(float Duration)
 {
 	if (IsLocallyControlled() == false || bIsInputEnabled == false)

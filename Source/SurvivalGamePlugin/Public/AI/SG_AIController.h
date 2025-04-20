@@ -69,6 +69,9 @@ protected:
 	float SmoothFocusInterpSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
+	float AttackRange = 150.0f;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY(EditAnywhere, Category = "AI", meta = (Categories = "StimuliSource"))
@@ -120,6 +123,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetCurrentTarget();
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackRange();
 
 	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 

@@ -205,6 +205,9 @@ public:
 	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
 
 	UFUNCTION(BlueprintCallable)
+	void SetMovementEnabled(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
 	void DisablePlayerInput(float Duration = 0.f);
 
 	UFUNCTION(BlueprintCallable)

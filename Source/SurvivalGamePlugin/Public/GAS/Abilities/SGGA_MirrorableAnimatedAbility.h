@@ -15,6 +15,9 @@ class SURVIVALGAMEPLUGIN_API USGGA_MirrorableAnimatedAbility : public USG_Gamepl
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
+	bool bCanMoveDuringAnimation = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
 	bool bShouldMirrorAnimation = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")

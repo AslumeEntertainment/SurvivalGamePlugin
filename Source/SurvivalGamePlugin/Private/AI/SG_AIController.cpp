@@ -300,6 +300,11 @@ AActor* ASG_AIController::GetCurrentTarget()
     return Targets.IsEmpty() ? nullptr : Targets[0].Target;
 }
 
+float ASG_AIController::GetAttackRange()
+{
+    return AttackRange;
+}
+
 void ASG_AIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)
 {
     // I wish that the intern in Epic Games that wrote the piece of

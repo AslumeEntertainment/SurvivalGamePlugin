@@ -51,6 +51,8 @@ void UBTService_EvaluateTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCo
 
 	BlackBoardComp->SetValueAsBool("IsTargetInRange", Pawn->GetDistanceTo(Target) <= Pawn->GetInteractionRange());
 
+	BlackBoardComp->SetValueAsBool("IsTargetInAttackRange", Pawn->GetDistanceTo(Target) <= Cont->GetAttackRange());
+
 	const IInteractableInterface* InteractableTarget = Cast<IInteractableInterface>(Target);
 	if (InteractableTarget == nullptr)
 	{
