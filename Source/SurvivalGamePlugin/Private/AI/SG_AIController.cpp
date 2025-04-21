@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISense_Touch.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -31,6 +32,22 @@ void ASG_AIController::OnTargetDestroyed(AActor* Target)
     UnregisterTarget(Target);
 
     GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
+}
+
+void ASG_AIController::OnHealthUpdated(float CurrentHealth, float MaxHealth)
+{
+    GetBlackboardComponent()->SetValueAsFloat("HealthPercent", CurrentHealth / MaxHealth);
+}
+
+void ASG_AIController::OnPawnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+{
+    UWorld* World = GetWorld();
+    if (IsValid(World) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnPawnHit IsValid(World) == false"));
+        return;
+    }
+    UAISense_Touch::ReportTouchEvent(World, GetPawn(), OtherActor, Hit.Location);
 }
 
 void ASG_AIController::Tick(float DeltaTime)
@@ -61,13 +78,40 @@ void ASG_AIController::OnPossess(APawn* InPawn)
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnPossess IsValid(ASC) == false"));
         return;
     }
+    const USG_CharacterAttributeSet* AttributeSet = Cast<USG_CharacterAttributeSet>(ASC->GetAttributeSet(USG_CharacterAttributeSet::StaticClass()));
+    if (IsValid(AttributeSet) == false)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ASG_AIController::OnPossess IsValid(AttributeSet) == false"));
+        return;
+    }
     if (IsValid(BehaviorTree) == false)
     {
         UE_LOG(LogTemp, Warning, TEXT("ASG_AIController::OnPossess IsValid(BehaviorTree) == false"));
         return;
     }
 
+    PossesedCharacter->OnActorHit.AddDynamic(this, &ASG_AIController::OnPawnHit);
     PossesedCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute()) / 2;
+
+    ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+        [this](const FOnAttributeChangeData& Data)
+        {
+            AInGameCharacter* MyPawn = GetPawn<AInGameCharacter>();
+            if (IsValid(MyPawn) == false)
+            {
+                UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnHealthUpdated IsValid(MyPawn) == false"));
+                return;
+            }
+            UAbilitySystemComponent* ASC = MyPawn->GetAbilitySystemComponent();
+            if (IsValid(ASC) == false)
+            {
+                UE_LOG(LogTemp, Error, TEXT("ASG_AIController::OnHealthUpdated IsValid(ASC) == false"));
+                return;
+            }
+
+            OnHealthUpdated(Data.NewValue, ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute()));
+        }
+    );
 
     UBlackboardComponent* BlackBoardComp = nullptr;
     UseBlackboard(BehaviorTree->BlackboardAsset, BlackBoardComp);
@@ -114,6 +158,10 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     if (Sense == UAISense_Hearing::StaticClass())
     {
         HandleHearingSenseUpdate(Actor, Stimulus);
+    }
+    if (Sense == UAISense_Touch::StaticClass())
+    {
+        HandleTouchSenseUpdate(Actor, Stimulus);
     }
 }
 
@@ -205,6 +253,32 @@ void ASG_AIController::HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const
         return;
     }
     if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly && bWillReactToFriendlySound == false)
+    {
+        return;
+    }
+
+    GetBlackboardComponent()->SetValueAsBool("IsInvestigating", true);
+    GetBlackboardComponent()->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+}
+
+void ASG_AIController::HandleTouchSenseUpdate(AActor* Actor, FAIStimulus const Stimulus)
+{
+    if (Stimulus.WasSuccessfullySensed() == false)
+    {
+        return;
+    }
+    if (IsValid(Actor) == false)
+    {
+        return;
+    }
+
+    AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
+    if (IsValid(OwnerCharacter) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleTouchSenseUpdate IsValid(OwnerCharacter) == false"));
+        return;
+    }
+    if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly)
     {
         return;
     }

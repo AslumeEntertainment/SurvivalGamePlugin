@@ -15,6 +15,7 @@ class UBehaviorTree;
 class UAISenseConfig_Sight;
 class USG_AIPerceptionStimuliSourceComp;
 
+
 USTRUCT(BlueprintType)
 struct FAITarget
 {
@@ -63,6 +64,12 @@ private:
 	UFUNCTION()
 	void OnTargetDestroyed(AActor* Target);
 
+	UFUNCTION()
+	void OnHealthUpdated(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION()
+	void OnPawnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -97,6 +104,9 @@ protected:
 
 	UFUNCTION()
 	void HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
+	UFUNCTION()
+	void HandleTouchSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
 
 public:
 
