@@ -26,7 +26,7 @@ class UDamageDealingComponent;
 class USG_AbilitySystemComponent;
 class USG_CharacterAttributeSet;
 
-DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogSGCharacter, Log, All);
 
 UCLASS(config = Game)
 class SURVIVALGAMEPLUGIN_API ASG_Character : public ACharacter, public IAbilitySystemInterface

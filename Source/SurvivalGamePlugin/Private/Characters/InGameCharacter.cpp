@@ -162,7 +162,7 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
+		UE_LOG(LogSGCharacter, Error, TEXT("AHumanCharacter::SetupPlayerInputComponent Failed to find an Enhanced Input component!"));
 	}
 }
 

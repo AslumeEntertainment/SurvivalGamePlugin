@@ -24,7 +24,7 @@ struct FSegementDefinition
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
-	uint8 Size;
+	uint8 Size = 1;
 
 	UPROPERTY(EditAnywhere)
 	FText Messege;

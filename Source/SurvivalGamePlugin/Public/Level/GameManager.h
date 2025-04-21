@@ -56,6 +56,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "GameMaster")
 	TMap<ESupervisionState, USkeletalMesh*> MeshesPerSupervisionState;
 
+	UPROPERTY(EditAnywhere, Category = "GameMaster")
+	TSubclassOf<APlayerCustomiser> PlayerCustomiserClass;
+
 	UPROPERTY(VisibleInstanceOnly)
 	TMap<APlayerCustomiser*, bool> PlayerCustomisers;
 

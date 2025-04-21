@@ -23,7 +23,7 @@
 #include "AI/SG_AIController.h"
 #include "UI/HUD/InGameHUD.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+DEFINE_LOG_CATEGORY(LogSGCharacter);
 
 ASG_Character::ASG_Character()
 {
@@ -237,14 +237,14 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		if (IsValid(AbilityInputConfig) == false)
 		{
-			UE_LOG(LogTemplateCharacter, Error, TEXT("ASG_Character::SetupPlayerInputComponent IsValid(AbilityInputConfig) == false"))
+			UE_LOG(LogSGCharacter, Error, TEXT("ASG_Character::SetupPlayerInputComponent IsValid(AbilityInputConfig) == false"))
 			return;
 		}
 		SG_EnhancedInputComponent->BindAbilityActions(AbilityInputConfig, this, &ASG_Character::AbilityInputPressed, &ASG_Character::AbilityInputReleased);
 	}
 	else
 	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogSGCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
 

@@ -64,13 +64,18 @@ void AGameManager::BeginPlay()
 	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartSkyRotation);
 	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
 
-	TArray<AActor*> ChildActors;
-	APlayerCustomiser* PlayerCustomiser = nullptr;
-	GetAllChildActors(ChildActors);
+	
 
-	for (AActor* ChildActor : ChildActors)
+	TArray<UActorComponent*> ChildActors = GetComponentsByTag(USceneComponent::StaticClass(), FName("ChairSpawnPoint"));
+	APlayerCustomiser* PlayerCustomiser = nullptr;
+
+	for (UActorComponent* ChildActor : ChildActors)
 	{
-		PlayerCustomiser = Cast<APlayerCustomiser>(ChildActor);
+		///MAY BE BETTER TO DESTROY COMPONENT AFTER SPAWN BUT FOR NOW THAT WILL SUFICE
+		USceneComponent* SpawnPoint = Cast<USceneComponent>(ChildActor);
+		if (IsValid(SpawnPoint) == false) continue;
+
+		PlayerCustomiser = World->SpawnActor<APlayerCustomiser>(PlayerCustomiserClass, SpawnPoint->GetComponentTransform());
 		if (IsValid(PlayerCustomiser) == false)
 		{
 			continue;
