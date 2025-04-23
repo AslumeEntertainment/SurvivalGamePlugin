@@ -113,13 +113,17 @@ void AGameManager::AddPlayer(APlayerCustomiser* Player)
 
 	Player->UpdatePlayerReadiness(false);
 
+	
 	Player->OnPlayerStopInteracting.AddDynamic(this, &AGameManager::RemovePlayer);
 	Player->OnPlayerReadinessChanged.AddDynamic(this, &AGameManager::ChangePlayerReadiness);
 	Player->OnInGameCharacterDeath.AddDynamic(this, &AGameManager::CheckGameFinishingRules);
 
+	OnReadinessUI.AddDynamic(Player, &APlayerCustomiser::Client_UpdateReadinessUI);
 	OnGameClosing.AddDynamic(Player, &APlayerCustomiser::Client_StopInteracting);
 	OnGameStart.AddDynamic(Player, &APlayerCustomiser::PossessGamePawn);
 	OnGameEnd.AddDynamic(Player, &APlayerCustomiser::PossessMainPawn);
+
+	CheckAllPlayerReadiness();
 
 }
 
@@ -132,6 +136,7 @@ void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 	Player->OnPlayerReadinessChanged.RemoveAll(this);
 	Player->OnInGameCharacterDeath.RemoveAll(this);
 
+	OnReadinessUI.RemoveAll(Player);
 	OnGameClosing.RemoveAll(Player);
 	OnGameStart.RemoveAll(Player);
 	OnGameEnd.RemoveAll(Player);
@@ -162,25 +167,21 @@ void AGameManager::PrepareGame()
 
 void AGameManager::CheckAllPlayerReadiness()
 {
-	bool ArePlayersReady = true;
 
 	TArray<bool > AllPlayerCustomiserReadiness;
 	PlayerCustomisers.GenerateValueArray(AllPlayerCustomiserReadiness);
 
-	if (AllPlayerCustomiserReadiness.Num() != NumPlayers) 
+	uint8 NumReadyPlayers = 0;
+	for (uint8 i = 0; i < AllPlayerCustomiserReadiness.Num(); i++)
 	{
-		TryCancelGame();
-		return;
+		if (AllPlayerCustomiserReadiness[i] == true) NumReadyPlayers++;
 	}
 
-	for (uint8 i = 0; i < NumPlayers; i++)
-	{
-		ArePlayersReady &= AllPlayerCustomiserReadiness[i];
-	}
+	OnReadinessUI.Broadcast(NumReadyPlayers, NumPlayers);
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerReadiness: %d  for %d out of %d players"), ArePlayersReady, PlayerCustomisers.Num(), NumPlayers);
+	UE_LOG(LogTemp, Warning, TEXT("PlayerReadiness: %d  for %d out of %d players"), NumReadyPlayers == NumPlayers, PlayerCustomisers.Num(), NumPlayers);
 
-	ArePlayersReady ? TryStartGame() : TryCancelGame();
+	(NumReadyPlayers == NumPlayers) ? TryStartGame() : TryCancelGame();
 }
 
 void AGameManager::TryStartGame()
@@ -222,6 +223,8 @@ void AGameManager::FinishGame()
 		PlayerCustomisers.Emplace(Player.Key, false);
 		Player.Key->UpdatePlayerReadiness(false);
 	}
+
+	OnReadinessUI.Broadcast(0, NumPlayers);
 
 	OnGameEnd.Broadcast();
 }

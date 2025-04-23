@@ -56,9 +56,9 @@ void ASG_PlayerController::Client_SetInputMode_Implementation(EInputMode InputMo
 {
 	switch (InputMode)
 	{
-		case EInputMode::GameOnly: SetInputMode(FInputModeGameOnly()); break;
+		case EInputMode::GameOnly: SetInputMode(FInputModeGameOnly()); SetShowMouseCursor(false); break;
 		case EInputMode::GameAndUI : SetInputMode(FInputModeGameAndUI()); break;
-		case EInputMode::UIOnly: SetInputMode(FInputModeUIOnly()); break;
+		case EInputMode::UIOnly: SetInputMode(FInputModeUIOnly()); SetShowMouseCursor(true); break;
 	}
 }
 

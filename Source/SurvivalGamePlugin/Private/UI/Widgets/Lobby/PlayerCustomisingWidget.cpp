@@ -7,6 +7,7 @@
 #include "Components/WrapBox.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 
 #include "UI/Widgets/Core/TextButtonWidgetBase.h"
 #include "UI/Widgets/Deck/CardSelectorWidget.h"
@@ -133,7 +134,7 @@ void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
 		SecondaryHandCardsBox->SetIsEnabled(false);
 		if (PlayerReadiness == EPlayerReadinessUIStatus::Ready)
 		{
-			TXTBTN_ReadyStatus->SetText(FText::FromString("Canle"));
+			TXTBTN_ReadyStatus->SetText(FText::FromString("Cancel"));
 		}
 		else
 		{
@@ -141,6 +142,12 @@ void UPlayerCustomisingWidget::Config(EPlayerReadinessUIStatus PlayerReadiness)
 		}
 	}
 
+}
+
+void UPlayerCustomisingWidget::SetAllPlayerReadiness(uint8 Current, uint8 All)
+{
+	
+	TXT_AllPlayerReadiness->SetText(FText::FromString("(" + FString::FromInt(Current) + " / " + FString::FromInt(All) + ")" ));
 }
 
 void UPlayerCustomisingWidget::OpenCardSelector(UCardSelectorWidget* CardSelector)

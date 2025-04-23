@@ -21,6 +21,7 @@ enum class ESupervisionState : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerCustomiserEnableSignature, bool, State, uint8, ID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerReadinessUISignature, uint8, Current, uint8, All);
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameManager : public AActor
@@ -108,6 +109,7 @@ protected:
 	void FinishGame();
 
 	FPlayerCustomiserEnableSignature OnPlayerCustomiserEnable;
+	FPlayerReadinessUISignature OnReadinessUI;
 
 	FBooleanTransferSignature OnStateChanged;
 	FVoidDataTransferSignature OnGameClosing;

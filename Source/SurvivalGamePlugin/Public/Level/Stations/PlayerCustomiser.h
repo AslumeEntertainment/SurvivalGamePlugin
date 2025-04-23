@@ -172,6 +172,10 @@ public:
 	UFUNCTION()
 	void SetIsActive_Server(bool State, uint8 InID);
 
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateReadinessUI(uint8 Current, uint8 All);
+
+
 	UFUNCTION()
 	void UpdatePlayerReadiness(bool State);
 
