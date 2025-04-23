@@ -69,6 +69,7 @@ void AGameManager::BeginPlay()
 	TArray<UActorComponent*> ChildActors = GetComponentsByTag(USceneComponent::StaticClass(), FName("ChairSpawnPoint"));
 	APlayerCustomiser* PlayerCustomiser = nullptr;
 
+	uint8 PCID = 0;
 	for (UActorComponent* ChildActor : ChildActors)
 	{
 		///MAY BE BETTER TO DESTROY COMPONENT AFTER SPAWN BUT FOR NOW THAT WILL SUFICE
@@ -81,9 +82,10 @@ void AGameManager::BeginPlay()
 			continue;
 		}
 		
+		PlayerCustomiser->Init(PCID++);
+		OnPlayerCustomiserEnable.AddDynamic(PlayerCustomiser, &APlayerCustomiser::SetIsActive_Server);
 		PlayerCustomiser->OnPlayerStartInteracting.AddDynamic(this, &AGameManager::AddPlayer);
 
-		PlayerCustomisers.Add(PlayerCustomiser, false);
 	}
 }
 
@@ -107,6 +109,8 @@ void AGameManager::UpdateSkeletalMesh()
 
 void AGameManager::AddPlayer(APlayerCustomiser* Player)
 {
+	PlayerCustomisers.Add(Player, false);
+
 	Player->UpdatePlayerReadiness(false);
 
 	Player->OnPlayerStopInteracting.AddDynamic(this, &AGameManager::RemovePlayer);
@@ -121,7 +125,7 @@ void AGameManager::AddPlayer(APlayerCustomiser* Player)
 
 void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 {
-	PlayerCustomisers.Emplace(Player, false);
+	PlayerCustomisers.Remove(Player);
 	Player->DespawnHero();
 
 	Player->OnPlayerStopInteracting.RemoveAll(this);
@@ -162,6 +166,12 @@ void AGameManager::CheckAllPlayerReadiness()
 
 	TArray<bool > AllPlayerCustomiserReadiness;
 	PlayerCustomisers.GenerateValueArray(AllPlayerCustomiserReadiness);
+
+	if (AllPlayerCustomiserReadiness.Num() != NumPlayers) 
+	{
+		TryCancelGame();
+		return;
+	}
 
 	for (uint8 i = 0; i < NumPlayers; i++)
 	{
@@ -244,12 +254,9 @@ void AGameManager::Close()
 
 void AGameManager::UpdateActivePlayerCustomisers(bool State)
 {
-	TArray<APlayerCustomiser*> AllPlayerCustomisers;
-	PlayerCustomisers.GenerateKeyArray(AllPlayerCustomisers);
-
 	for (uint8 i = 0; i < NumPlayers; i++)
 	{
-		AllPlayerCustomisers[i]->SetIsActive_Server(State);
+		OnPlayerCustomiserEnable.Broadcast(State, i);
 	}
 }
 

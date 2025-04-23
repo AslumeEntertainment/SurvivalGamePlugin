@@ -47,6 +47,9 @@ public:
 private:
 
 	UPROPERTY()
+	uint8 ID = 0;
+
+	UPROPERTY()
 	UPlayerCustomisingWidget* PlayerCustomisingWidget = nullptr;
 
 	UPROPERTY(Replicated)
@@ -153,6 +156,9 @@ public:
 	UFUNCTION()
 	void RequestSaveWrite();
 
+	UFUNCTION()
+	void Init(uint8 InID) { ID = InID; }
+
 protected:
 
 	UFUNCTION()
@@ -164,7 +170,7 @@ protected:
 public:
 
 	UFUNCTION()
-	void SetIsActive_Server(bool State);
+	void SetIsActive_Server(bool State, uint8 InID);
 
 	UFUNCTION()
 	void UpdatePlayerReadiness(bool State);

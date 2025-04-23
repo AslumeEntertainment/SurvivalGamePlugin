@@ -564,9 +564,9 @@ void APlayerCustomiser::UpdatePlayerReadiness(bool State)
 	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
 }
 
-void APlayerCustomiser::SetIsActive_Server(bool State)
+void APlayerCustomiser::SetIsActive_Server(bool State, uint8 InID)
 {
-	bIsActive = State;
+	if(InID == ID) bIsActive = State;
 }
 
 void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)
