@@ -110,6 +110,8 @@ protected:
 
 	virtual void OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
+	virtual void Jump() override;
+
 	virtual void Landed(const FHitResult& Hit) override;
 
 	virtual void MainHandAction();

@@ -270,6 +270,11 @@ void ASG_Character::ToggleFirstPerson()
 
 void ASG_Character::Move(const FInputActionValue& Value)
 {
+	if (bCanMove == false)
+	{
+		return;
+	}
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	
 	const FRotator Rotation = Controller->GetControlRotation();
@@ -358,7 +363,6 @@ void ASG_Character::UnbindOverlayDelegates()
 	InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 	InteractIndicationTextDelegate.Clear();
 }
-
 
 void ASG_Character::PossessedBy(AController* NewController)
 {
@@ -519,7 +523,12 @@ void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
 
 void ASG_Character::SetMovementEnabled(bool NewValue)
 {
-	GetCharacterMovement()->MovementMode = NewValue ? EMovementMode::MOVE_Walking : EMovementMode::MOVE_None;
+	bCanMove = NewValue ? true : false;
+}
+
+bool ASG_Character::IsMovementEnabled() const
+{
+	return bCanMove;
 }
 
 void ASG_Character::DisablePlayerInput(float Duration)
