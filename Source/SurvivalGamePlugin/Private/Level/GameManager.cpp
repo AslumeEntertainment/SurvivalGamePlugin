@@ -6,6 +6,8 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 
+#include "Level/ActorSpawner.h"
+#include "Level/LevelCleaner.h"
 #include "Level/TimeEventManager.h"
 #include "Level/Stations/PlayerCustomiser.h"
 
@@ -161,8 +163,27 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 
 void AGameManager::PrepareGame()
 {
+	CurrentSpawnersToFire.Empty();
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
+	
+	GetWorldTimerManager().SetTimer(PreparingPeriodTimer, this, &AGameManager::SpawnCluster, SpawnerClusterPeriod, true, 0);
 	//some terrain generation and animal/Enemy spawning
-	bIsGameReady = true;
+	
+}
+
+void AGameManager::SpawnCluster()
+{
+	for (int i = 0; i < SpawnerClusterSize; i++)
+	{
+		if (CurrentSpawnersToFire.IsValidIndex(SpawnerClusterSize) == false) { bIsGameReady = true; return; }
+
+		AActorSpawner* ActorSpawner = Cast<AActorSpawner>(CurrentSpawnersToFire[SpawnerClusterSize]);
+		if (IsValid(ActorSpawner) == false) continue;
+		ActorSpawner->Spawn();
+		CurrentSpawnersToFire.RemoveAt(SpawnerClusterSize);
+		
+	}
+	
 }
 
 void AGameManager::CheckAllPlayerReadiness()
@@ -186,6 +207,7 @@ void AGameManager::CheckAllPlayerReadiness()
 
 void AGameManager::TryStartGame()
 {
+	PrepareGame();
 	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::StartGame, 1, true, LoadingPeriodLength);
 }
 
@@ -227,6 +249,8 @@ void AGameManager::FinishGame()
 	OnReadinessUI.Broadcast(0, NumPlayers);
 
 	OnGameEnd.Broadcast();
+
+	LevelCleaner->Clean();
 }
 
 void AGameManager::Open(bool InSupervisionState, uint8 InNumPlayers)
@@ -243,7 +267,7 @@ void AGameManager::Update(FString GameCode)
 	UE_LOG(LogTemp, Warning, TEXT("Receiving -   %s"), *GameCode);
 	int DelimiterIndex = 0;
 
-	PrepareGame();
+	
 }
 
 void AGameManager::Close()
