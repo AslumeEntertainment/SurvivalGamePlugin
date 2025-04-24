@@ -121,7 +121,7 @@ void ASG_Character::EmitInteractionChecker()
 	{
 		World->DebugDrawTraceTag = TraceTag;
 	}
-	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_GameTraceChannel1, CQP);
+	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_Camera, CQP);
 
 	CheckForInteractables(HitResult);
 }

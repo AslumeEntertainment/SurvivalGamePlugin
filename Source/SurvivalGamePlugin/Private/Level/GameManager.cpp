@@ -163,6 +163,8 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 
 void AGameManager::PrepareGame()
 {
+	bIsGameReady = false;
+	LevelCleaner->Clean();
 	CurrentSpawnersToFire.Empty();
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
 	
@@ -175,12 +177,19 @@ void AGameManager::SpawnCluster()
 {
 	for (int i = 0; i < SpawnerClusterSize; i++)
 	{
-		if (CurrentSpawnersToFire.IsValidIndex(SpawnerClusterSize) == false) { bIsGameReady = true; return; }
+		if (CurrentSpawnersToFire.IsValidIndex(SpawnerClusterSize) == false) 
+		{
+			bIsGameReady = true; 
+			GetWorldTimerManager().ClearTimer(PreparingPeriodTimer);
+			PreparingPeriodTimer.Invalidate();
+			return;
+		}
 
 		AActorSpawner* ActorSpawner = Cast<AActorSpawner>(CurrentSpawnersToFire[SpawnerClusterSize]);
 		if (IsValid(ActorSpawner) == false) continue;
 		ActorSpawner->Spawn();
-		CurrentSpawnersToFire.RemoveAt(SpawnerClusterSize);
+
+		CurrentSpawnersToFire.RemoveAt(i);
 		
 	}
 	
@@ -207,7 +216,6 @@ void AGameManager::CheckAllPlayerReadiness()
 
 void AGameManager::TryStartGame()
 {
-	PrepareGame();
 	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::StartGame, 1, true, LoadingPeriodLength);
 }
 
@@ -250,7 +258,7 @@ void AGameManager::FinishGame()
 
 	OnGameEnd.Broadcast();
 
-	LevelCleaner->Clean();
+	PrepareGame();
 }
 
 void AGameManager::Open(bool InSupervisionState, uint8 InNumPlayers)
@@ -267,7 +275,7 @@ void AGameManager::Update(FString GameCode)
 	UE_LOG(LogTemp, Warning, TEXT("Receiving -   %s"), *GameCode);
 	int DelimiterIndex = 0;
 
-	
+	PrepareGame();
 }
 
 void AGameManager::Close()
@@ -277,6 +285,11 @@ void AGameManager::Close()
 	OnGameClosing.Broadcast();
 
 	UpdateActivePlayerCustomisers(false);
+
+	GetWorldTimerManager().ClearTimer(PreparingPeriodTimer);
+	PreparingPeriodTimer.Invalidate();
+	LevelCleaner->Clean();
+	CurrentSpawnersToFire.Empty();
 }
 
 void AGameManager::UpdateActivePlayerCustomisers(bool State)

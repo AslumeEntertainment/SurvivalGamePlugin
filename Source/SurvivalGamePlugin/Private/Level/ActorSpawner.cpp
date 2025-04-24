@@ -33,7 +33,10 @@ void AActorSpawner::Spawn()
 	{
 		if (ActorToSpawn.Value*100 >= RNG)
 		{
-			GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation(), GetActorRotation());
+			if (IsValid(GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation(), GetActorRotation())) == false)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("AActorSpawner::Spawn - %s failed to spawn %s"), *GetName(), *ActorToSpawn.Key->StaticClass()->GetName());
+			}
 			return;
 		}
 	}
