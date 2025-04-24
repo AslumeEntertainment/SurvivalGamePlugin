@@ -55,7 +55,7 @@ void UGEEC_EnergyDrain::Execute_Implementation(const FGameplayEffectCustomExecut
 	float EnergyDrainRate = 0.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(EnergyStatics().EnergyDrainRateDef, EvaluateParameters, EnergyDrainRate);
 
-	EnergyDrainRate *= (Target->GetCharacterMovement()->IsFalling() || Target->GetVelocity().Length() == 0) ? 0.f : 1.f;
+	EnergyDrainRate *= (Target->GetVelocity().Length() == 0) ? 0.f : 1.f;
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(EnergyStatics().EnergyProperty, EGameplayModOp::Additive, -EnergyDrainRate));
 

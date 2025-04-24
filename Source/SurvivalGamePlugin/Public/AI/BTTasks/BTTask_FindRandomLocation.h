@@ -6,6 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_FindRandomLocation.generated.h"
 
+class AInGameCharacter;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UBTTask_FindRandomLocation : public UBTTask_BlackboardBase
@@ -25,5 +26,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	bool bSearchInFrontOfCharater = false;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	bool bNudgeTowardsClosestPlayer = false;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float NudgeStrength = 250.f;
+
+	FVector GetDirectionTowardsClosestPlayer(UWorld* World, FVector Origin);
 
 };

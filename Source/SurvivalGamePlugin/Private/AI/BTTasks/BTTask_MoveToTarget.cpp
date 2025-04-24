@@ -33,6 +33,7 @@ EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& Ow
 	UAIBlueprintHelperLibrary::SimpleMoveToLocation(Controller, TargetLocation);
 
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-
 	return EBTNodeResult::Succeeded;
+	
 }
+

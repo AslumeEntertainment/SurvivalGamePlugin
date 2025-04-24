@@ -20,10 +20,16 @@ void UBTService_EvaluateTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCo
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
-	ASG_AIController* Cont = Cast<ASG_AIController>(OwnerComp.GetAIOwner());
-	if (IsValid(Cont) == false)
+	ASG_AIController* Controller = Cast<ASG_AIController>(OwnerComp.GetAIOwner());
+	if (IsValid(Controller) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UBTService_EvaluateTarget::OnBecomeRelevant IsValid(Cont) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UBTService_EvaluateTarget::OnBecomeRelevant IsValid(Controller) == false"));
+		return;
+	}
+	AInGameCharacter* Pawn = Controller->GetPawn<AInGameCharacter>();
+	if (IsValid(Pawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UBTService_EvaluateTarget::OnBecomeRelevant IsValid(Pawn) == false"));
 		return;
 	}
 	UBlackboardComponent* BlackBoardComp = OwnerComp.GetBlackboardComponent();
@@ -32,26 +38,22 @@ void UBTService_EvaluateTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCo
 		UE_LOG(LogTemp, Error, TEXT("UBTService_EvaluateTarget::OnBecomeRelevant IsValid(BlackBoardComp) == false"));
 		return;
 	}
-	const AActor* Target = Cont->GetCurrentTarget();
+	const AActor* Target = Controller->GetCurrentTarget();
 	if (IsValid(Target) == false)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("No target to evaluate"));
 		return;
 	}
-	AInGameCharacter* Pawn = Cont->GetPawn<AInGameCharacter>();
-	if (IsValid(Pawn) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UBTService_EvaluateTarget::OnBecomeRelevant IsValid(Pawn) == false"));
-		return;
-	}
+	
 
 	bool bIsTargetHostile = (Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Hostile) ||
-		(Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Friendly && Cont->bWillAttackFriendlies);
+		(Pawn->GetTeamAttitudeTowards(*Target) == ETeamAttitude::Friendly && Controller->bWillAttackFriendlies);
 
 	BlackBoardComp->SetValueAsBool("IsTargetHostile", bIsTargetHostile);
 
 	BlackBoardComp->SetValueAsBool("IsTargetInRange", Pawn->GetDistanceTo(Target) <= Pawn->GetInteractionRange());
 
-	BlackBoardComp->SetValueAsBool("IsTargetInAttackRange", Pawn->GetDistanceTo(Target) <= Cont->GetAttackRange());
+	BlackBoardComp->SetValueAsBool("IsTargetInAttackRange", Pawn->GetDistanceTo(Target) <= Controller->GetAttackRange());
 
 	const IInteractableInterface* InteractableTarget = Cast<IInteractableInterface>(Target);
 	if (InteractableTarget == nullptr)
@@ -60,5 +62,5 @@ void UBTService_EvaluateTarget::OnBecomeRelevant(UBehaviorTreeComponent& OwnerCo
 		return;
 	}
 
-	BlackBoardComp->SetValueAsBool("IsTargetInteractable", InteractableTarget->bCanInteract(Cont));
+	BlackBoardComp->SetValueAsBool("IsTargetInteractable", InteractableTarget->bCanInteract(Controller));
 }

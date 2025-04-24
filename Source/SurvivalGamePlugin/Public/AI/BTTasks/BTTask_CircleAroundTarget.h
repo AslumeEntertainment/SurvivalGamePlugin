@@ -18,15 +18,14 @@ public:
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
+	virtual EBTNodeResult::Type AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Node")
 	bool bFlipDirection;
 
 	UPROPERTY(EditAnywhere, Category = "Node")
-	float Duration = 3.f;
-
-	UPROPERTY(EditAnywhere, Category = "Node")
-	float Deviation = 1.f;
+	float CircleRangeWidth = 50.f;
 
 };

@@ -79,6 +79,9 @@ protected:
 	float AttackRange = 150.0f;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
+	float CircleRange = 250.0f;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY(EditAnywhere, Category = "AI", meta = (Categories = "StimuliSource"))
@@ -110,6 +113,9 @@ protected:
 
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	bool bShouldDrawDebug = true;
+
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	bool bWillAttackFriendlies = false;
 
@@ -136,6 +142,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetAttackRange();
+
+	UFUNCTION(BlueprintCallable)
+	float GetCircleRange();
 
 	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 

@@ -54,12 +54,16 @@ void ASG_AIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     
-    GEngine->AddOnScreenDebugMessage(1, 1, FColor::Orange, FString::Printf(TEXT("Control Rotation - %s"), *GetControlRotation().ToString()));
-    
-    for (int i = 0; i < Targets.Num(); i++)
+    if (bShouldDrawDebug)
     {
-        GEngine->AddOnScreenDebugMessage(i+2, 1, FColor::Orange, FString::Printf(TEXT("Target#%d - %s"), i, *Targets[i].Target->GetName()));
+        GEngine->AddOnScreenDebugMessage(1, 1, FColor::Orange, FString::Printf(TEXT("Control Rotation - %s"), *GetControlRotation().ToString()));
+
+        for (int i = 0; i < Targets.Num(); i++)
+        {
+            GEngine->AddOnScreenDebugMessage(i + 2, 1, FColor::Orange, FString::Printf(TEXT("Target#%d - %s"), i, *Targets[i].Target->GetName()));
+        }
     }
+ 
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -377,6 +381,11 @@ AActor* ASG_AIController::GetCurrentTarget()
 float ASG_AIController::GetAttackRange()
 {
     return AttackRange;
+}
+
+float ASG_AIController::GetCircleRange()
+{
+    return CircleRange;
 }
 
 void ASG_AIController::UpdateControlRotation(float DeltaTime, bool bUpdatePawn)

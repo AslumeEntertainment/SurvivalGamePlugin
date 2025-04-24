@@ -4,6 +4,9 @@
 #include "AI/BTTasks/BTTask_FindRandomLocation.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
 
 #include "Characters/InGameCharacter.h"
@@ -46,6 +49,11 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 	{
 		Origin += Character->GetActorForwardVector() * SearchRadius;
 	}
+
+	if (bNudgeTowardsClosestPlayer)
+	{
+		Origin += GetDirectionTowardsClosestPlayer(Character->GetWorld(), Origin) * NudgeStrength;
+	}
 	
 	FNavLocation NavLocation;
 	
@@ -58,4 +66,49 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 
 	return EBTNodeResult::Succeeded;
+}
+
+FVector UBTTask_FindRandomLocation::GetDirectionTowardsClosestPlayer(UWorld* World, FVector Origin)
+{
+	FVector Direction = FVector::Zero();
+
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UBTTask_FindRandomLocation::GetDirectionTowardsClosestPlayer IsValid(NavSystem) == false"));
+		return Direction;
+	}
+	TArray<AActor*> Players;
+
+	UGameplayStatics::GetAllActorsOfClass(World, APlayerController::StaticClass(), Players);
+
+	FVector ClosestLocation = FVector::Zero();
+
+	for (int i = 0; i < Players.Num(); i++)
+	{
+		APlayerController* PlayerCont = Cast<APlayerController>(Players[i]);
+		if (IsValid(PlayerCont) == false)
+		{
+			continue;
+		}
+		APawn* PlayerPawn = PlayerCont->GetPawn();
+		if (IsValid(PlayerPawn) == false)
+		{
+			continue;
+		}
+
+		if (i == 0)
+		{
+			ClosestLocation = PlayerPawn->GetActorLocation();
+			continue;
+		}
+
+		if (UKismetMathLibrary::Vector_Distance(Origin, PlayerPawn->GetActorLocation()) < UKismetMathLibrary::Vector_Distance(Origin, ClosestLocation))
+		{
+			ClosestLocation = PlayerPawn->GetActorLocation();
+		}
+	}
+
+	Direction = UKismetMathLibrary::GetDirectionUnitVector(Origin, ClosestLocation);
+
+	return Direction;
 }
