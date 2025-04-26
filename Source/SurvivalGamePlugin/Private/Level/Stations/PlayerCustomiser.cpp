@@ -67,6 +67,7 @@ void APlayerCustomiser::BeginPlay()
 	UDeckSegmentPanel* HeroPanel = PlayerCustomisingWidget->GetHeroCardPanel();
 	UDeckSegmentPanel* MainPanel = PlayerCustomisingWidget->GetMainCardsPanel();
 	UDeckSegmentPanel* SecondaryPanel = PlayerCustomisingWidget->GetSecondaryCardsPanel();
+	PlayerCustomisingWidget->Config(EPlayerReadinessUIStatus::NotReady);
 
 	HeroPanel->Init(EDeckSegment::Hero);
 	MainPanel->Init(EDeckSegment::MainEquipment);
@@ -564,9 +565,14 @@ void APlayerCustomiser::UpdatePlayerReadiness(bool State)
 	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
 }
 
-void APlayerCustomiser::SetIsActive_Server(bool State)
+void APlayerCustomiser::SetIsActive_Server(bool State, uint8 InID)
 {
-	bIsActive = State;
+	if(InID == ID) bIsActive = State;
+}
+
+void APlayerCustomiser::Client_UpdateReadinessUI_Implementation(uint8 Current, uint8 All)
+{
+	PlayerCustomisingWidget->SetAllPlayerReadiness(Current, All);
 }
 
 void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)

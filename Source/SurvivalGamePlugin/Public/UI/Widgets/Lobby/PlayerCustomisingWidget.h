@@ -16,6 +16,7 @@ class UDeckSegmentPanel;
 class UDeckIcon;
 class UBorder;
 class UButton;
+class UTextBlock;
 
 UENUM(BlueprintType)
 enum class EPlayerReadinessUIStatus : uint8
@@ -52,6 +53,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UBorder* CardSelectorBorder;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UTextBlock* TXT_AllPlayerReadiness;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextButtonWidgetBase* TXTBTN_ReadyStatus;
@@ -113,6 +117,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void CloseWidget();
+
+	UFUNCTION()
+	void SetAllPlayerReadiness(uint8 Current, uint8 All);
 
 	FIntegerTransferSignature DeckSelected;
 	FVoidDataTransferSignature OnReadyButton;

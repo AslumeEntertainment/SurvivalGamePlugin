@@ -20,6 +20,10 @@ enum class ESupervisionState : uint8
 	Unsupervised
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerCustomiserEnableSignature, bool, State, uint8, ID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerReadinessUISignature, uint8, Current, uint8, All);
+
+
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AGameManager : public AActor
 {
@@ -43,8 +47,11 @@ private:
 	void OnRep_ActiveMesh();
 
 	FTimerHandle LoadingPeriodTimer;
+	FTimerHandle PreparingPeriodTimer;
 
 	void UpdateActivePlayerCustomisers(bool State);
+
+	TArray<AActor*> CurrentSpawnersToFire;
 
 protected:
 	// Called when the game starts or when spawned
@@ -63,6 +70,12 @@ protected:
 	TMap<APlayerCustomiser*, bool> PlayerCustomisers;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	float SpawnerClusterPeriod = 0.15;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	uint8 SpawnerClusterSize = 2;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	FVector DefaultSpawnLocation = FVector(0,0,400);
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
@@ -73,6 +86,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
 	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	class ALevelCleaner* LevelCleaner;
 
 	void SetActiveSkeletalMesh(ESupervisionState State);
 	void UpdateSkeletalMesh();
@@ -88,6 +104,9 @@ protected:
 
 	UFUNCTION()
 	void PrepareGame();
+
+	UFUNCTION()
+	void SpawnCluster();
 
 	void CheckAllPlayerReadiness();
 
@@ -105,6 +124,9 @@ protected:
 
 	void FinishGame();
 
+	FPlayerCustomiserEnableSignature OnPlayerCustomiserEnable;
+	FPlayerReadinessUISignature OnReadinessUI;
+
 	FBooleanTransferSignature OnStateChanged;
 	FVoidDataTransferSignature OnGameClosing;
 
@@ -112,6 +134,8 @@ protected:
 	FVoidDataTransferSignature OnGameEnd;
 
 public:	
+
+
 
 	void Open(bool InSupervisionState, uint8 InNumPlayers);
 	void Update(FString GameCode);

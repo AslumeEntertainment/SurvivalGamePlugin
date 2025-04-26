@@ -6,6 +6,8 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 
+#include "Level/ActorSpawner.h"
+#include "Level/LevelCleaner.h"
 #include "Level/TimeEventManager.h"
 #include "Level/Stations/PlayerCustomiser.h"
 
@@ -69,6 +71,7 @@ void AGameManager::BeginPlay()
 	TArray<UActorComponent*> ChildActors = GetComponentsByTag(USceneComponent::StaticClass(), FName("ChairSpawnPoint"));
 	APlayerCustomiser* PlayerCustomiser = nullptr;
 
+	uint8 PCID = 0;
 	for (UActorComponent* ChildActor : ChildActors)
 	{
 		///MAY BE BETTER TO DESTROY COMPONENT AFTER SPAWN BUT FOR NOW THAT WILL SUFICE
@@ -81,9 +84,10 @@ void AGameManager::BeginPlay()
 			continue;
 		}
 		
+		PlayerCustomiser->Init(PCID++);
+		OnPlayerCustomiserEnable.AddDynamic(PlayerCustomiser, &APlayerCustomiser::SetIsActive_Server);
 		PlayerCustomiser->OnPlayerStartInteracting.AddDynamic(this, &AGameManager::AddPlayer);
 
-		PlayerCustomisers.Add(PlayerCustomiser, false);
 	}
 }
 
@@ -107,27 +111,34 @@ void AGameManager::UpdateSkeletalMesh()
 
 void AGameManager::AddPlayer(APlayerCustomiser* Player)
 {
+	PlayerCustomisers.Add(Player, false);
+
 	Player->UpdatePlayerReadiness(false);
 
+	
 	Player->OnPlayerStopInteracting.AddDynamic(this, &AGameManager::RemovePlayer);
 	Player->OnPlayerReadinessChanged.AddDynamic(this, &AGameManager::ChangePlayerReadiness);
 	Player->OnInGameCharacterDeath.AddDynamic(this, &AGameManager::CheckGameFinishingRules);
 
+	OnReadinessUI.AddDynamic(Player, &APlayerCustomiser::Client_UpdateReadinessUI);
 	OnGameClosing.AddDynamic(Player, &APlayerCustomiser::Client_StopInteracting);
 	OnGameStart.AddDynamic(Player, &APlayerCustomiser::PossessGamePawn);
 	OnGameEnd.AddDynamic(Player, &APlayerCustomiser::PossessMainPawn);
+
+	CheckAllPlayerReadiness();
 
 }
 
 void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 {
-	PlayerCustomisers.Emplace(Player, false);
+	PlayerCustomisers.Remove(Player);
 	Player->DespawnHero();
 
 	Player->OnPlayerStopInteracting.RemoveAll(this);
 	Player->OnPlayerReadinessChanged.RemoveAll(this);
 	Player->OnInGameCharacterDeath.RemoveAll(this);
 
+	OnReadinessUI.RemoveAll(Player);
 	OnGameClosing.RemoveAll(Player);
 	OnGameStart.RemoveAll(Player);
 	OnGameEnd.RemoveAll(Player);
@@ -152,25 +163,55 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 
 void AGameManager::PrepareGame()
 {
+	bIsGameReady = false;
+	LevelCleaner->Clean();
+	CurrentSpawnersToFire.Empty();
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
+	
+	GetWorldTimerManager().SetTimer(PreparingPeriodTimer, this, &AGameManager::SpawnCluster, SpawnerClusterPeriod, true, 0);
 	//some terrain generation and animal/Enemy spawning
-	bIsGameReady = true;
+	
+}
+
+void AGameManager::SpawnCluster()
+{
+	for (int i = 0; i < SpawnerClusterSize; i++)
+	{
+		if (CurrentSpawnersToFire.IsValidIndex(SpawnerClusterSize) == false) 
+		{
+			bIsGameReady = true; 
+			GetWorldTimerManager().ClearTimer(PreparingPeriodTimer);
+			PreparingPeriodTimer.Invalidate();
+			return;
+		}
+
+		AActorSpawner* ActorSpawner = Cast<AActorSpawner>(CurrentSpawnersToFire[SpawnerClusterSize]);
+		if (IsValid(ActorSpawner) == false) continue;
+		ActorSpawner->Spawn();
+
+		CurrentSpawnersToFire.RemoveAt(i);
+		
+	}
+	
 }
 
 void AGameManager::CheckAllPlayerReadiness()
 {
-	bool ArePlayersReady = true;
 
 	TArray<bool > AllPlayerCustomiserReadiness;
 	PlayerCustomisers.GenerateValueArray(AllPlayerCustomiserReadiness);
 
-	for (uint8 i = 0; i < NumPlayers; i++)
+	uint8 NumReadyPlayers = 0;
+	for (uint8 i = 0; i < AllPlayerCustomiserReadiness.Num(); i++)
 	{
-		ArePlayersReady &= AllPlayerCustomiserReadiness[i];
+		if (AllPlayerCustomiserReadiness[i] == true) NumReadyPlayers++;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerReadiness: %d  for %d out of %d players"), ArePlayersReady, PlayerCustomisers.Num(), NumPlayers);
+	OnReadinessUI.Broadcast(NumReadyPlayers, NumPlayers);
 
-	ArePlayersReady ? TryStartGame() : TryCancelGame();
+	UE_LOG(LogTemp, Warning, TEXT("PlayerReadiness: %d  for %d out of %d players"), NumReadyPlayers == NumPlayers, PlayerCustomisers.Num(), NumPlayers);
+
+	(NumReadyPlayers == NumPlayers) ? TryStartGame() : TryCancelGame();
 }
 
 void AGameManager::TryStartGame()
@@ -213,7 +254,11 @@ void AGameManager::FinishGame()
 		Player.Key->UpdatePlayerReadiness(false);
 	}
 
+	OnReadinessUI.Broadcast(0, NumPlayers);
+
 	OnGameEnd.Broadcast();
+
+	PrepareGame();
 }
 
 void AGameManager::Open(bool InSupervisionState, uint8 InNumPlayers)
@@ -240,16 +285,18 @@ void AGameManager::Close()
 	OnGameClosing.Broadcast();
 
 	UpdateActivePlayerCustomisers(false);
+
+	GetWorldTimerManager().ClearTimer(PreparingPeriodTimer);
+	PreparingPeriodTimer.Invalidate();
+	LevelCleaner->Clean();
+	CurrentSpawnersToFire.Empty();
 }
 
 void AGameManager::UpdateActivePlayerCustomisers(bool State)
 {
-	TArray<APlayerCustomiser*> AllPlayerCustomisers;
-	PlayerCustomisers.GenerateKeyArray(AllPlayerCustomisers);
-
 	for (uint8 i = 0; i < NumPlayers; i++)
 	{
-		AllPlayerCustomisers[i]->SetIsActive_Server(State);
+		OnPlayerCustomiserEnable.Broadcast(State, i);
 	}
 }
 

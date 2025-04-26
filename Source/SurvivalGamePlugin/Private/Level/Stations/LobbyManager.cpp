@@ -104,6 +104,7 @@ void ALobbyManager::LeaveLobby()
 
 void ALobbyManager::SelectCampaign()
 {
+	if (HasAuthority() == false) return; //SO CLIENT WONT CHOOSE SESSIONS ------ PLEASE REWORK THIS
 	CampaignChooserWidget->AddToViewport();
 }
 
