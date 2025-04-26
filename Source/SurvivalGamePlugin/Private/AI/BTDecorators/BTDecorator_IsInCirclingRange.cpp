@@ -35,5 +35,5 @@ bool UBTDecorator_IsInCirclingRange::CalculateRawConditionValue(UBehaviorTreeCom
 		return EBTNodeResult::Failed;
 	}
 
-	return UKismetMathLibrary::Vector_Distance(MyPawn->GetActorLocation(), Target->GetActorLocation()) <= Controller->GetCircleRange();
+	return UKismetMathLibrary::Vector_Distance(MyPawn->GetActorLocation(), Target->GetActorLocation()) <= Controller->GetCircleRange() * OptionalRangeMultiplier;
 }

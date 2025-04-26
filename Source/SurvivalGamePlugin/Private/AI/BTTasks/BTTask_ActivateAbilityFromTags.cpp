@@ -14,6 +14,8 @@
 UBTTask_ActivateAbilityFromTags::UBTTask_ActivateAbilityFromTags()
 {
 	NodeName = "Activate Ability From Tags";
+
+	BlackboardKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_ActivateAbilityFromTags, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_ActivateAbilityFromTags::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

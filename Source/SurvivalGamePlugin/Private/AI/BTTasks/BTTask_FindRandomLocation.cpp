@@ -15,6 +15,8 @@
 UBTTask_FindRandomLocation::UBTTask_FindRandomLocation()
 {
 	NodeName = "Find random location inside NavMesh";
+
+	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindRandomLocation, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

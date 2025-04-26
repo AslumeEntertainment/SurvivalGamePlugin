@@ -18,4 +18,9 @@ public:
 
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComponent, uint8* NodeMemory) const override;
 
+protected:
+
+	UPROPERTY(EditAnywhere, Category = "Node")
+	float OptionalRangeMultiplier = 1.f;
+
 };

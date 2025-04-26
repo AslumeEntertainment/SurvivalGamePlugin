@@ -3,6 +3,7 @@
 
 #include "AI/BTTasks/BTTask_CircleAroundTarget.h"
 
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "Characters/InGameCharacter.h"
@@ -12,6 +13,8 @@
 UBTTask_CircleAroundTarget::UBTTask_CircleAroundTarget()
 {
 	NodeName = "Circle Around Target";
+
+	BlackboardKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_CircleAroundTarget, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_CircleAroundTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -47,8 +50,10 @@ EBTNodeResult::Type UBTTask_CircleAroundTarget::ExecuteTask(UBehaviorTreeCompone
 		ForwardMovementMultiplier = 1;
 	}
 
-	MyPawn->AddMovementInput(MyPawn->GetActorRightVector() * (bFlipDirection ? -1 : 1));
-	MyPawn->AddMovementInput(MyPawn->GetActorForwardVector() * ForwardMovementMultiplier);
+	bool bCircleRight = OwnerComp.GetBlackboardComponent()->GetValueAsBool(GetSelectedBlackboardKey());
+
+	MyPawn->AddMovementInput(MyPawn->GetActorRightVector() * (bCircleRight ? 1 : -1), MovementForce);
+	MyPawn->AddMovementInput(MyPawn->GetActorForwardVector() * ForwardMovementMultiplier, MovementForce);
 
 	return EBTNodeResult::Succeeded;
 }

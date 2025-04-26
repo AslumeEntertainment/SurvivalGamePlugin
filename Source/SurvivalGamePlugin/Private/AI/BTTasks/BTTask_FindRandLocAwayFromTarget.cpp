@@ -14,6 +14,8 @@
 UBTTask_FindRandLocAwayFromTarget::UBTTask_FindRandLocAwayFromTarget()
 {
 	NodeName = "Find Random Location Away From Target";
+
+	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindRandLocAwayFromTarget, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_FindRandLocAwayFromTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -57,7 +59,6 @@ EBTNodeResult::Type UBTTask_FindRandLocAwayFromTarget::ExecuteTask(UBehaviorTree
 		return EBTNodeResult::Failed;
 	}
 
-	
 	int FurthestPointId = 0;
 
 	for (int i = 1; i < FoundPoints.Num(); i++)

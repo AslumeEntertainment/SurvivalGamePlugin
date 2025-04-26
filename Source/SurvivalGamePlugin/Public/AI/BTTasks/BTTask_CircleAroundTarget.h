@@ -23,9 +23,9 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Node")
-	bool bFlipDirection;
+	float CircleRangeWidth = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = "Node")
-	float CircleRangeWidth = 50.f;
+	float MovementForce = 1.f;
 
 };

@@ -29,6 +29,7 @@ bool UGC_OnEnergyDrained::OnExecute_Implementation(AActor* MyTarget, const FGame
 	}
 	
 	ASC->AddPassiveAbility(OnEnergyDrainedPassiveAbility, 1, nullptr);
+	UE_LOG(LogTemp, Log, TEXT("%s had their energy drained!"), *TargetCharacter->GetName());
 
 	return true;
 }

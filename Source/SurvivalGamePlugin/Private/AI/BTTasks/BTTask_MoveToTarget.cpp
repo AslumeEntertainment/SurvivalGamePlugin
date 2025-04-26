@@ -12,6 +12,8 @@
 UBTTask_MoveToTarget::UBTTask_MoveToTarget()
 {
 	NodeName = "Move to Target";
+
+	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToTarget, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_MoveToTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

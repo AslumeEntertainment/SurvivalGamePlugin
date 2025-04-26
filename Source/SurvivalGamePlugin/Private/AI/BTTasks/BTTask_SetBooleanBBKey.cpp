@@ -9,6 +9,8 @@
 UBTTask_SetBooleanBBKey::UBTTask_SetBooleanBBKey()
 {
 	NodeName = "Set Boolean BB Key";
+
+	BlackboardKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_SetBooleanBBKey, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_SetBooleanBBKey::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

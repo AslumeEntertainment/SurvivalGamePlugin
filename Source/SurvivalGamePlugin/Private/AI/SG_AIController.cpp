@@ -243,6 +243,7 @@ void ASG_AIController::HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const
 {
     if (Stimulus.WasSuccessfullySensed() == false)
     {
+        GetBlackboardComponent()->SetValueAsBool("IsInvestigating", false);
         return;
     }
     if (IsValid(Actor) == false || Actor == GetPawn())
