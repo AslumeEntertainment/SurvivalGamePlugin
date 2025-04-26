@@ -14,6 +14,8 @@
 UBTTask_ActivateAbilityFromType::UBTTask_ActivateAbilityFromType()
 {
 	NodeName = "Activate Ability From Type";
+
+	BlackboardKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_ActivateAbilityFromType, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_ActivateAbilityFromType::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

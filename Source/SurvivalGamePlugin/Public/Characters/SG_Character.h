@@ -39,6 +39,8 @@ public:
 
 private:
 
+	bool bCanMove = true;
+
 	bool bIsFirstPerson = true;
 
 	bool bIsInputEnabled = true;
@@ -203,6 +205,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
+
+	UFUNCTION(BlueprintCallable)
+	void SetMovementEnabled(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsMovementEnabled() const;
 
 	UFUNCTION(BlueprintCallable)
 	void DisablePlayerInput(float Duration = 0.f);

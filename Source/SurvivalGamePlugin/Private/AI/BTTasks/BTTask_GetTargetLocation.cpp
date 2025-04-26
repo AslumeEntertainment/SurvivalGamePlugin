@@ -13,6 +13,8 @@
 UBTTask_GetTargetLocation::UBTTask_GetTargetLocation()
 {
 	NodeName = "Get Target Location";
+
+	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_GetTargetLocation, BlackboardKey));
 }
 
 EBTNodeResult::Type UBTTask_GetTargetLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

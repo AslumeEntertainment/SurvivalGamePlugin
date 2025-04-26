@@ -195,12 +195,21 @@ void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent,
 	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
 
+void AInGameCharacter::Jump()
+{
+	if (IsMovementEnabled() == false)
+	{
+		return;
+	}
+
+	Super::Jump();
+}
+
 void AInGameCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
 	FVector NormalVelocity = UKismetMathLibrary::Normal(GetVelocity());
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("NormalVelocity.Z - %.2f"), NormalVelocity.Z));
 	if (NormalVelocity.Z > -0.45)
 	{
 		return;

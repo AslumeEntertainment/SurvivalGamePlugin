@@ -15,6 +15,7 @@ class UBehaviorTree;
 class UAISenseConfig_Sight;
 class USG_AIPerceptionStimuliSourceComp;
 
+
 USTRUCT(BlueprintType)
 struct FAITarget
 {
@@ -63,10 +64,22 @@ private:
 	UFUNCTION()
 	void OnTargetDestroyed(AActor* Target);
 
+	UFUNCTION()
+	void OnHealthUpdated(float CurrentHealth, float MaxHealth);
+
+	UFUNCTION()
+	void OnPawnHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SmoothFocusInterpSpeed = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float AttackRange = 150.0f;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float CircleRange = 250.0f;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
@@ -95,7 +108,13 @@ protected:
 	UFUNCTION()
 	void HandleHearingSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
 
+	UFUNCTION()
+	void HandleTouchSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
 public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	bool bShouldDrawDebug = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	bool bWillAttackFriendlies = false;
@@ -120,6 +139,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetCurrentTarget();
+
+	UFUNCTION(BlueprintCallable)
+	float GetAttackRange();
+
+	UFUNCTION(BlueprintCallable)
+	float GetCircleRange();
 
 	virtual void UpdateControlRotation(float DeltaTime, bool bUpdatePawn) override;
 
