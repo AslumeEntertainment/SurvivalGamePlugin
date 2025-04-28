@@ -55,8 +55,6 @@ void AItemBase::BeginPlay()
 		return;
 	}
 
-	NetMulticast_SetActorPhysics(true);
-
 	if (IsValid(AbilitySystemComponent) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::BeginPlay IsValid(AbilitySystemComponent) == false"));
@@ -70,18 +68,6 @@ void AItemBase::BeginPlay()
 
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), ItemData.ItemMaxDurability);
-}
-
-void AItemBase::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
-{
-	NetMulticast_SetActorPhysics(NewActorPhysics);
-}
-
-void AItemBase::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
-{
-	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
-	StaticMeshComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
-	CollisionCapsuleComponent->SetCollisionEnabled(NewActorPhysics ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)

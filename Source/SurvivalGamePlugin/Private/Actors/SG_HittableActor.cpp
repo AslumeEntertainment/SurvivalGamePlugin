@@ -26,6 +26,8 @@ ASG_HittableActor::ASG_HittableActor()
 	CollisionCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
 	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
 	CollisionCapsuleComponent->SetupAttachment(StaticMeshComponent);
+	CollisionCapsuleComponent->OnComponentHit.AddDynamic(this, &ASG_HittableActor::OnComponentHitReceived);
+	CollisionCapsuleComponent->SetUseCCD(true);
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -46,11 +48,33 @@ void ASG_HittableActor::BeginPlay()
 		return;
 	}
 
+	NetMulticast_SetActorPhysics(bStartWithPhysicsEnabled);
+
 	if (IsValid(InitializingEffect))
 	{
 		AbilitySystemComponent->AddEffectFromClass(InitializingEffect, this, this, this);
 	}
 	AbilitySystemComponent->SetStartingAttributeValues();
+}
+
+void ASG_HittableActor::Server_SetActorPhysics_Implementation(bool NewActorPhysics)
+{
+	NetMulticast_SetActorPhysics(NewActorPhysics);
+}
+
+void ASG_HittableActor::NetMulticast_SetActorPhysics_Implementation(bool NewActorPhysics)
+{
+	StaticMeshComponent->SetSimulatePhysics(NewActorPhysics);
+
+	ECollisionEnabled::Type CollisionState = ECollisionEnabled::NoCollision;
+
+	if (NewActorPhysics || (NewActorPhysics == false && bHasCollisionWhenPhysicsDisabled))
+	{
+		CollisionState = ECollisionEnabled::QueryAndPhysics;
+	}
+	
+	StaticMeshComponent->SetCollisionEnabled(CollisionState);
+	CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
 }
 
 UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const

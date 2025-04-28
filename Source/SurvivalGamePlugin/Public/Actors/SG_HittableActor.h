@@ -30,6 +30,12 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditDefaultsOnly, Category = "General")
+	bool bStartWithPhysicsEnabled = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "General")
+	bool bHasCollisionWhenPhysicsDisabled = true;
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> InitializingEffect;
 
@@ -47,6 +53,13 @@ protected:
 
 	UPROPERTY(Transient)
 	USG_AttributeSet* AttributeSet;
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SetActorPhysics(bool NewActorPhysics);
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
+
 
 public:	
 

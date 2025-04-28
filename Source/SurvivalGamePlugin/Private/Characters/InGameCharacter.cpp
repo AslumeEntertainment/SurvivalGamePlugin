@@ -169,10 +169,6 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	UMeshComponent* OtherMesh = Cast<UMeshComponent>(OtherComp);
-	if (IsValid(OtherMesh) == false)
-	{
-		return;
-	}
 
 	FVector MinLocalBounds = GetMesh()->GetLocalBounds().GetBox().Min;
 	FVector ActorBottom = GetActorLocation() + GetActorUpVector() * MinLocalBounds.Z;

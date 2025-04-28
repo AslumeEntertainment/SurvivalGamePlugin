@@ -114,7 +114,7 @@ protected:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-	bool bShouldDrawDebug = true;
+	bool bShouldPrintDebug = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	bool bWillAttackFriendlies = false;
