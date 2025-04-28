@@ -18,4 +18,9 @@ public:
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
+protected:
+
+	float CalculateInternalImpactDamage(AActor* TargetActor) const;
+
+	float CalculateExternalImpactDamage(const FHitResult* HitResult) const;
 };

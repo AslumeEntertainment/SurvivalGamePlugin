@@ -54,7 +54,7 @@ void ASG_AIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     
-    if (bShouldDrawDebug)
+    if (bShouldPrintDebug)
     {
         GEngine->AddOnScreenDebugMessage(1, 1, FColor::Orange, FString::Printf(TEXT("Control Rotation - %s"), *GetControlRotation().ToString()));
 
@@ -215,13 +215,13 @@ void ASG_AIController::HandleSightSenseUpdate(AActor* Actor, FAIStimulus const S
     case ETeamAttitude::Friendly:
         if (bWillAttackFriendlies)
         {
-            UE_LOG(LogTemp, Warning, TEXT("%s is friendly, but I don't care!"), *Actor->GetName());
+            if(bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s is friendly, but I don't care!"), *Actor->GetName());
             TargetAttitude = "Friendly";
             break;
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("%s is friendly"), *Actor->GetName()); return;
+            if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s is friendly"), *Actor->GetName()); return;
         }
     case ETeamAttitude::Neutral: TargetAttitude = "Neutral"; break;
     case ETeamAttitude::Hostile: TargetAttitude = "Hostile";
@@ -229,12 +229,12 @@ void ASG_AIController::HandleSightSenseUpdate(AActor* Actor, FAIStimulus const S
 
     if (Stimulus.WasSuccessfullySensed())
     {
-        UE_LOG(LogTemp, Warning, TEXT("%s: New %s target found - %s"), *GetName(), *TargetAttitude, *Actor->GetName());
+        if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: New %s target found - %s"), *GetName(), *TargetAttitude, *Actor->GetName());
         RegisterNewTarget(Actor, StimuliSourceComp);
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("%s: %s is being forgotten"), *GetName(), *Actor->GetName());
+        if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: %s is being forgotten"), *GetName(), *Actor->GetName());
         UnregisterTarget(Actor);
     }
 }
@@ -307,7 +307,7 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
 
     if (Targets.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
+        if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: There are no targets now, putting %s in front"), *GetName(), *NewTarget->GetName());
 
         Targets.Add(AITarget);
         SetFocus(NewTarget);
@@ -322,19 +322,19 @@ void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStim
             continue;
         }
 
-        UE_LOG(LogTemp, Warning, TEXT("%s: Inserting %s at position %d"), *GetName(), *NewTarget->GetName(), i);
+        if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: Inserting %s at position %d"), *GetName(), *NewTarget->GetName(), i);
         Targets.Insert(AITarget, i);
 
         if (i == 0)
         {
-            UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
+            if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: %s the new first target, locking in"), *GetName(), *NewTarget->GetName());
             SetFocus(NewTarget);
         }
 
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("%s: Insering %s at the back"), *GetName(), *NewTarget->GetName());
+    if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: Insering %s at the back"), *GetName(), *NewTarget->GetName());
     Targets.Add(AITarget);
 }
 
@@ -353,7 +353,7 @@ void ASG_AIController::UnregisterTarget(AActor* NewTarget)
         SetFocus(Targets.IsEmpty() ? nullptr : Targets[0].Target);
         GetBlackboardComponent()->SetValueAsBool("HasVisibleTarget", !Targets.IsEmpty());
 
-        UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
+        if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("%s: Current target count - %d"), *GetName(), Targets.Num());
 
         return;
     }

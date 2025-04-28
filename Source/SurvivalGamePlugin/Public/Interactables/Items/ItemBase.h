@@ -65,12 +65,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void OnItemUnequiped();
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
-	void Server_SetActorPhysics(bool NewActorPhysics);
-
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
-	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
-
 public:	
 
 	UPROPERTY()

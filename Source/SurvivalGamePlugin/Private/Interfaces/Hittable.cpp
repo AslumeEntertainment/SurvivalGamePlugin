@@ -20,13 +20,6 @@ void IHittable::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor
 		return;
 	}
 
-	if (Cast<UMeshComponent>(OtherComp) == nullptr)
-	{
-		return;
-	}
-	//UE_LOG(LogTemp, Warning, TEXT("hit %s at %s"), *OtherActor->GetName(), *OtherComp->GetName());
-	//UE_LOG(LogTemp, Log, TEXT("UHittableComponent::OnImpactReceived - %s, Velocity - %.3f"), *OtherActor->GetName(), Self->GetVelocity().Length());
-
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.Instigator = OtherActor;

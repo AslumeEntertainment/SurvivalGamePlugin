@@ -31,6 +31,11 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		return;
 	}
 
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("=================%s: Impact triggered================"), *TargetActor->GetName());
+	}
+
 	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
 	const FHitResult* HitResult = EffectContext.GetHitResult();
 	if (HitResult == nullptr)
@@ -38,12 +43,53 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation HitResult == nullptr"));
 		return;
 	}
-
+	
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
-	float Damage = 0;
+	float InternalImpactDamage = CalculateInternalImpactDamage(TargetActor);
+	float ExternalImpactDamage = CalculateExternalImpactDamage(HitResult);
+	float TrueDamage = InternalImpactDamage > ExternalImpactDamage ? InternalImpactDamage : ExternalImpactDamage;
+
+	float TargetResistanceBludgeoning = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistanceBludgeoning);
+
+	TrueDamage = FMath::Floor(TrueDamage - TargetResistanceBludgeoning);
+
+	if (TrueDamage <= 0.f)
+	{
+		return;
+	}
+	
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -TrueDamage));
+	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
+
+	FGameplayCueParameters CueParams = FGameplayCueParameters();
+	CueParams.Location = FVector(HitResult->ImpactPoint);
+	CueParams.RawMagnitude = TrueDamage;
+
+	TriggerGameplayCues(TargetASC, CueParams);
+
+	FGameplayEventData EventData;
+	EventData.Target = TargetActor;
+	EventData.ContextHandle = EffectContext;
+
+	AcknowledgeHit(nullptr, TargetASC, EventData);
+
+	return;
+}
+
+float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor) const
+{
+	float Damage = 0.f;
+
 	FVector Velocity = TargetActor->GetVelocity();
+
+	if (Velocity.Length() <= 0.f)
+	{
+		return Damage;
+	}
+
 	FVector NormalizedVelocity = UKismetMathLibrary::Normal(Velocity);
 	FString DamageContextString;
 
@@ -58,40 +104,54 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		DamageContextString = "Impact";
 	}
 
-	float TargetResistanceBludgeoning = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistanceBludgeoning);
-
-	Damage = FMath::Floor(Damage - TargetResistanceBludgeoning);
-
-	if (Damage <= 0.f)
+	if (bShouldPrintDebug)
 	{
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("=========InternalImpactDamageCalculation=========="));
+		UE_LOG(LogTemp, Warning, TEXT("Velocity - %s"), *Velocity.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %.2f"), *DamageContextString, Velocity.Length());
+		UE_LOG(LogTemp, Warning, TEXT("Internal %s damage - %.2f"), *DamageContextString, Damage);
 	}
+
+	return Damage;
+}
+
+float UGEEC_ImpactDamage::CalculateExternalImpactDamage(const FHitResult* HitResult) const
+{
+	float Damage = 0.f;
+
+	AActor* HitActor = HitResult->GetActor();
+	if (IsValid(HitActor) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::CalculateExternalImpactDamage IsValid(HitActor) == false"));
+		return Damage;
+	}
+
+	float Velocity = HitActor->GetVelocity().Length();
+	if (Velocity <= 0.f)
+	{
+		return Damage;
+	}
+
+	UMeshComponent* HitActorMeshComp = HitActor->GetComponentByClass<UMeshComponent>();
+	if (IsValid(HitActorMeshComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::CalculateExternalImpactDamage IsValid(HitActorMeshComp) == false"));
+		return Damage;
+	}
+
+	float HitActorMass = HitActorMeshComp->IsSimulatingPhysics() ? HitActorMeshComp->GetMass() : 1.f;
+
+	Damage = Velocity * 0.057 - 71;
+	
 
 	if (bShouldPrintDebug)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("==================================="));
-		UE_LOG(LogTemp, Warning, TEXT("Impact Normal - %s"), *FVector(HitResult->ImpactNormal).ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Normal - %s"), *FVector(HitResult->Normal).ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Velocity - %s"), *Velocity.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %f"), *DamageContextString, Velocity.Length());
-		UE_LOG(LogTemp, Warning, TEXT("%s damage - %f"), *DamageContextString, Damage);
+		UE_LOG(LogTemp, Warning, TEXT("==========ExternalImpactDamageCalculation=========="));
+		UE_LOG(LogTemp, Warning, TEXT("Hit Actor - %s"), *HitActor->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Hit Actor velocity - %.2f"), HitActor->GetVelocity().Length());
+		UE_LOG(LogTemp, Warning, TEXT("Hit Actor mass - %.2f"), HitActorMass);
+		UE_LOG(LogTemp, Warning, TEXT("External impact damage - %.2f"), Damage);
 	}
-	
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -Damage));
-	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
-	FGameplayCueParameters CueParams = FGameplayCueParameters();
-	CueParams.Location = FVector(HitResult->ImpactPoint);
-	CueParams.RawMagnitude = Damage;
-
-	TriggerGameplayCues(TargetASC, CueParams);
-
-	FGameplayEventData EventData;
-	EventData.Target = TargetActor;
-	EventData.ContextHandle = EffectContext;
-
-	AcknowledgeHit(nullptr, TargetASC, EventData);
-
-	return;
+	return Damage;
 }
