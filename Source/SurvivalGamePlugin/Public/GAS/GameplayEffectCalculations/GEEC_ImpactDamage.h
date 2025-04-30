@@ -20,7 +20,10 @@ public:
 
 protected:
 
-	float CalculateInternalImpactDamage(AActor* TargetActor) const;
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	float ImpactDamageThresholdAngle = 100.f;
+
+	float CalculateInternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const;
 
 	float CalculateExternalImpactDamage(const FHitResult* HitResult) const;
 };

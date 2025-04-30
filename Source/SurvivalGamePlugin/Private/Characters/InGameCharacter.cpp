@@ -170,10 +170,22 @@ void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent,
 {
 	UMeshComponent* OtherMesh = Cast<UMeshComponent>(OtherComp);
 
-	FVector MinLocalBounds = GetMesh()->GetLocalBounds().GetBox().Min;
-	FVector ActorBottom = GetActorLocation() + GetActorUpVector() * MinLocalBounds.Z;
+	FVector OtherActorMaxLocalBounds = OtherComp->GetLocalBounds().GetBox().Max;
+	FVector OtherActorTop = OtherActor->GetActorLocation() + OtherActor->GetActorUpVector() * OtherActorMaxLocalBounds.Z;
 
-	if (Hit.Location.Z <= ActorBottom.Z + GetCharacterMovement()->MaxStepHeight)
+	FVector SelfOrigin;
+	FVector SelfBoxExtent;
+	GetActorBounds(true, SelfOrigin, SelfBoxExtent);
+
+	float MaxAcceptableHeightZ = (SelfOrigin.Z - SelfBoxExtent.Z) + GetCharacterMovement()->MaxStepHeight;
+
+	if (bShouldDrawDebug)
+	{
+		UE_LOG(LogSGCharacter, Error, TEXT("Actor Top - %.2f"), OtherActorTop.Z);
+		UE_LOG(LogSGCharacter, Error, TEXT("Max acceptable height - %.2f"), MaxAcceptableHeightZ);
+	}
+
+	if (OtherActorTop.Z <= MaxAcceptableHeightZ)
 	{
 		return;
 	}
