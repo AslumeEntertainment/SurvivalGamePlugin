@@ -76,7 +76,7 @@ private:
 	UFUNCTION()
 	void OpenCardSelector(EDeckSegment Segment);
 
-	void DisplayDeck(FDeckPersistentData Deck);
+	void DisplayDeck(FDeckPersistentData& Deck);
 
 	UFUNCTION()
 	void DisplayDeckCards(TArray<uint16> CardIndexes, EDeckSegment Segment);

@@ -65,6 +65,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaveGameTransferSignature, USaveGam
 //----------------------------------------Deck Related-------------------------------------
 
 UDELEGATE()
-DECLARE_DYNAMIC_DELEGATE_RetVal_TwoParams(bool, FOnCardDroppedSignature, UCardSlotWidget*, Card, int, CardIndex);
+DECLARE_DYNAMIC_DELEGATE_RetVal_ThreeParams(bool, FOnCardDroppedSignature, UCardContainer*, DroppedInto, UCardSlotWidget*, Card, int, CardIndex);
 
 //-----------------------------------------------------------------------------------------

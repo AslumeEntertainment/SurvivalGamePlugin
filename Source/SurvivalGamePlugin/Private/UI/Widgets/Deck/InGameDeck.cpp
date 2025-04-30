@@ -21,7 +21,7 @@ bool UInGameDeck::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 
 	if (OnCardDropped.IsBound())
 	{
-		return OnCardDropped.Execute(DragWidgetResult->WidgetSlotReference, DragWidgetResult->ChildIndexReference);
+		return OnCardDropped.Execute(nullptr, DragWidgetResult->WidgetSlotReference, DragWidgetResult->ChildIndexReference);
 	}
 	
 	return false;

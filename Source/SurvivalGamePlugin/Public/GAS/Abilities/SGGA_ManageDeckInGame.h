@@ -70,10 +70,16 @@ protected:
 	void CloseDeckManager(float TimeHeld);
 
 	UFUNCTION()
-	bool AttemptTransferCardFromDeckToWorld(UCardSlotWidget* Slot, int CardIndex);
+	bool AttemptTransferCardFromDeckToWorld(UCardContainer* DroppedInto, UCardSlotWidget* Slot, int CardIndex);
 
 	UFUNCTION()
-	bool AttemptTransferCardFromDeckToEquipment(UCardSlotWidget* Slot, int CardIndex);
+	bool AttemptTransferCardFromDeckToEquipment(UCardContainer* DroppedInto, UCardSlotWidget* Slot, int CardIndex);
+
+	UFUNCTION()
+	bool AttemptTransferCardFromEquipmentToDeck(UCardContainer* DroppedInto, UCardSlotWidget* Slot, int CardIndex);
+
+	UFUNCTION()
+	bool AttemptTransferCardFromEquipmentToWorld(UCardContainer* DroppedInto, UCardSlotWidget* Slot, int CardIndex);
 
 private:
 

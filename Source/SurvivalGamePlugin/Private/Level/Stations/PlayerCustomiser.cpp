@@ -227,13 +227,13 @@ void APlayerCustomiser::OpenCardSelector(EDeckSegment Segment)
 		switch (Segment)
 		{
 		case EDeckSegment::Hero: 
-			for (int i : Save->Decks[Save->ActiveDeckIndex].Heroes) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
+			for (uint16 i : Save->Decks[Save->ActiveDeckIndex].Heroes) if (Save->ResourceCards.IsValidIndex(i) && Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
 		case EDeckSegment::MainEquipment: //AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].MainEquipment;
-			for (int i : Save->Decks[Save->ActiveDeckIndex].MainEquipment) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
+			for (uint16 i : Save->Decks[Save->ActiveDeckIndex].MainEquipment) if (Save->ResourceCards.IsValidIndex(i) && Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
 		case EDeckSegment::SecondaryEquipment: //AlredySelectedCards = Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment;
-			for (int i : Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment) if (Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
+			for (uint16 i : Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment) if (Save->ResourceCards.IsValidIndex(i) && Save->ResourceCards[i].ID != 0) AlredySelectedCards.Add(i);
 			break;
 		}
 		CardSelector->ConfigCardSelector(Segment, DefinitionPtr->Size, AlredySelectedCards);
@@ -245,11 +245,26 @@ void APlayerCustomiser::OpenCardSelector(EDeckSegment Segment)
 	}
 }
 
-void APlayerCustomiser::DisplayDeck(FDeckPersistentData Deck)
+void APlayerCustomiser::DisplayDeck(FDeckPersistentData& Deck)
 {
 	OnDeckPlayable.Broadcast(IsDeckPlayable(Deck));
+
+	for (; Deck.Heroes.Num() < SegmentDefinitions.Find(EDeckSegment::Hero)->Size;)
+	{
+		Deck.Heroes.Add(-1);
+	}
 	DisplayDeckCards(Deck.Heroes, EDeckSegment::Hero);
+
+	for (; Deck.MainEquipment.Num() < SegmentDefinitions.Find(EDeckSegment::MainEquipment)->Size;)
+	{
+		Deck.MainEquipment.Add(-1);
+	}
 	DisplayDeckCards(Deck.MainEquipment, EDeckSegment::MainEquipment);
+
+	for (; Deck.SecondaryEquipment.Num() < SegmentDefinitions.Find(EDeckSegment::SecondaryEquipment)->Size;)
+	{
+		Deck.SecondaryEquipment.Add(-1);
+	}
 	DisplayDeckCards(Deck.SecondaryEquipment, EDeckSegment::SecondaryEquipment);
 }
 
@@ -362,7 +377,12 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		return;
 	}
 
-	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+	FDeckPersistentData& ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+
+	for (; CardIndexes.Num()<SegmentDefinitions.Find(SegmentToUpdate)->Size ;)
+	{
+		CardIndexes.Add(-1);
+	}
 
 	switch (SegmentToUpdate)
 	{
@@ -370,8 +390,8 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.Heroes = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
-			ActiveDeck.MainEquipment.Remove(Card);
-			ActiveDeck.SecondaryEquipment.Remove(Card);
+			for (int i = 0; i < ActiveDeck.MainEquipment.Remove(Card); i++) ActiveDeck.MainEquipment.Add(-1);
+			for (int i = 0; i < ActiveDeck.SecondaryEquipment.Remove(Card); i++)ActiveDeck.SecondaryEquipment.Add(-1);
 		}
 		break;
 
@@ -379,8 +399,8 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.MainEquipment = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
-			ActiveDeck.Heroes.Remove(Card);
-			ActiveDeck.SecondaryEquipment.Remove(Card);
+			for (int i = 0; i < ActiveDeck.Heroes.Remove(Card); i++) ActiveDeck.Heroes.Add(-1);
+			for (int i = 0; i < ActiveDeck.SecondaryEquipment.Remove(Card); i++)ActiveDeck.SecondaryEquipment.Add(-1);
 		}
 		break;
 
@@ -388,8 +408,8 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.SecondaryEquipment = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
-			ActiveDeck.MainEquipment.Remove(Card);
-			ActiveDeck.Heroes.Remove(Card);
+			for (int i = 0; i < ActiveDeck.MainEquipment.Remove(Card); i++)ActiveDeck.MainEquipment.Add(-1);
+			for (int i = 0; i < ActiveDeck.Heroes.Remove(Card); i++) ActiveDeck.Heroes.Add(-1);
 		}
 		break;
 	}
@@ -528,7 +548,7 @@ void APlayerCustomiser::UseDeck()
 		return;
 	}
 
-	FDeckPersistentData ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
+	FDeckPersistentData& ActiveDeck = Save->Decks[Save->ActiveDeckIndex];
 
 	DisplayDeck(ActiveDeck);
 }
