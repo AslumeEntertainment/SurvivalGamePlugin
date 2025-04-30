@@ -3,6 +3,7 @@
 
 #include "GAS/GameplayEffectCalculations/GEEC_ImpactDamage.h"
 
+#include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
@@ -31,11 +32,6 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		return;
 	}
 
-	if (bShouldPrintDebug)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("=================%s: Impact triggered================"), *TargetActor->GetName());
-	}
-
 	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
 	const FHitResult* HitResult = EffectContext.GetHitResult();
 	if (HitResult == nullptr)
@@ -43,11 +39,16 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation HitResult == nullptr"));
 		return;
 	}
-	
+
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
-	float InternalImpactDamage = CalculateInternalImpactDamage(TargetActor);
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("=================%s: Impact triggered================"), *TargetActor->GetName());
+	}
+
+	float InternalImpactDamage = CalculateInternalImpactDamage(TargetActor, HitResult);
 	float ExternalImpactDamage = CalculateExternalImpactDamage(HitResult);
 	float TrueDamage = InternalImpactDamage > ExternalImpactDamage ? InternalImpactDamage : ExternalImpactDamage;
 
@@ -58,6 +59,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 
 	if (TrueDamage <= 0.f)
 	{
+		if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("Impact wasn't strong enough to deal damage"));
 		return;
 	}
 	
@@ -79,37 +81,48 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	return;
 }
 
-float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor) const
+float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const
 {
 	float Damage = 0.f;
 
 	FVector Velocity = TargetActor->GetVelocity();
+	float VelocityLength = Velocity.Length();
 
-	if (Velocity.Length() <= 0.f)
+	if (VelocityLength <= 0.f)
 	{
 		return Damage;
 	}
 
 	FVector NormalizedVelocity = UKismetMathLibrary::Normal(Velocity);
-	FString DamageContextString;
-
-	if (NormalizedVelocity.Z <= -0.45)
-	{
-		Damage = FMath::Abs(Velocity.Z) * 0.08 - 60;
-		DamageContextString = "Fall";
-	}
-	else
-	{
-		Damage = Velocity.Length() * 0.057 - 71;
-		DamageContextString = "Impact";
-	}
-
+	float CollisionAngle = UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(HitResult->ImpactNormal, NormalizedVelocity));
+	
 	if (bShouldPrintDebug)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("=========InternalImpactDamageCalculation=========="));
-		UE_LOG(LogTemp, Warning, TEXT("Velocity - %s"), *Velocity.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Velocity on %s - %.2f"), *DamageContextString, Velocity.Length());
-		UE_LOG(LogTemp, Warning, TEXT("Internal %s damage - %.2f"), *DamageContextString, Damage);
+
+		UKismetSystemLibrary::DrawDebugArrow(TargetActor->GetWorld(), HitResult->ImpactPoint, HitResult->ImpactPoint + HitResult->ImpactNormal * 100,
+			25, FLinearColor::Red, 20.f, 1.f);
+		UKismetSystemLibrary::DrawDebugArrow(TargetActor->GetWorld(), TargetActor->GetActorLocation(), TargetActor->GetActorLocation() + NormalizedVelocity * 100,
+			25, FLinearColor::Green, 20.f, 1.f);
+
+		UE_LOG(LogTemp, Warning, TEXT("Impact Angle - %.2f deg"), FMath::Abs(CollisionAngle));
+	}
+
+	if (FMath::Abs(CollisionAngle) < ImpactDamageThresholdAngle)
+	{
+		return Damage; 
+	}
+	
+	float VerticalCoeficient = FMath::Clamp(-1 * Velocity.Z, 0.f, 1.f);
+
+	Damage = VerticalCoeficient * 15 + VelocityLength * 0.05 - 50;
+	//Damage = (NormalizedVelocity.Z <= -0.45) ? FMath::Abs(Velocity.Z) * 0.08 - 60 : VelocityLength * 0.057 - 71;
+
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Velocity - %.2f"), VelocityLength);
+		UE_LOG(LogTemp, Warning, TEXT("VerticalCoeficient - %.2f"), VerticalCoeficient);
+		UE_LOG(LogTemp, Warning, TEXT("Internal impact damage - %.2f"), Damage);
 	}
 
 	return Damage;
@@ -141,8 +154,8 @@ float UGEEC_ImpactDamage::CalculateExternalImpactDamage(const FHitResult* HitRes
 
 	float HitActorMass = HitActorMeshComp->IsSimulatingPhysics() ? HitActorMeshComp->GetMass() : 1.f;
 
-	Damage = Velocity * 0.057 - 71;
-	
+	Damage = Velocity/100 * HitActorMass;
+	//Damage = Velocity * 0.057 - 71;
 
 	if (bShouldPrintDebug)
 	{
