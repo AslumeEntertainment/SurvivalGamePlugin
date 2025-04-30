@@ -15,6 +15,11 @@ struct FProgressiveDataHelperStruct
 
     UPROPERTY()
     uint8 Level = 0;
+
+    friend bool operator==(const FProgressiveDataHelperStruct& current, const FProgressiveDataHelperStruct& other)
+    {
+        return current.ID == other.ID && current.Level == other.Level;
+    }
 };
 
 USTRUCT(BlueprintType)

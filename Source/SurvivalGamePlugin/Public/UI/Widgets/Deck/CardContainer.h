@@ -48,6 +48,8 @@ public:
 
 	void ClearSlots();
 
+	int GetFirstFreeSlot(UCardSlotWidget*& ReturnSlot);
+
 	FOnCardDroppedSignature OnCardDropped;
 
 };

@@ -20,7 +20,7 @@ bool UCardContainer::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 
 	if (OnCardDropped.IsBound())
 	{
-		return OnCardDropped.Execute(DragWidgetResult->WidgetSlotReference, DragWidgetResult->ChildIndexReference);
+		return OnCardDropped.Execute(this, DragWidgetResult->WidgetSlotReference, DragWidgetResult->ChildIndexReference);
 	}
 
 	return false;
@@ -37,6 +37,7 @@ void UCardContainer::InitContainer(int NumberOfCardsToHold)
 		CardSlot = CreateWidget<UCardSlotWidget>(this, CardSlotWidgetClass);
 		if (IsValid(CardSlot))
 		{
+			CardSlot->Empty();
 			CardWrapBox->AddChild(CardSlot);
 		}
 	}
@@ -160,4 +161,24 @@ void UCardContainer::ClearCards()
 void UCardContainer::ClearSlots()
 {
 	CardWrapBox->ClearChildren();
+}
+
+int UCardContainer::GetFirstFreeSlot(UCardSlotWidget*& ReturnSlot)
+{
+	int i = 0;
+	for (UWidget* Child : CardWrapBox->GetAllChildren())
+	{
+		UCardSlotWidget* CardSlot = Cast<UCardSlotWidget>(Child);
+		if (IsValid(CardSlot))
+		{
+			if (CardSlot->IsEmpty())
+			{
+				ReturnSlot = CardSlot;
+				return i;
+			}
+		}
+		i++;
+	}
+	ReturnSlot = nullptr;
+	return -1;
 }
