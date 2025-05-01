@@ -78,6 +78,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Equipment", meta = (Categories = "EquipmentSlot"))
 	TMap<FGameplayTag, FName> EquipmentSockets;
 
+	//tova beshe protected ama mi trqbva za da moga da karam itemi da izchezvat akto gi mestq v deck-a
 	UFUNCTION(BlueprintCallable)
 	void SetEquipedItemAtSlot(FGameplayTag SlotTag, AItemBase* Item);
 
@@ -89,6 +90,12 @@ public:
 	FGameplayTag GetMainEquipmentSlotTag()                { return MainEquipmentSlotTag; }
 	FGameplayTag GetSecondaryEquipmentSlotTag()           { return SecondaryEquipmentSlotTag; }
 	FGameplayTag GetMixedEquipmentSlotTag()               { return MixedEquipmentSlotTag; }
+
+	UFUNCTION()
+	void VanishItemAtSlot(FGameplayTag SlotTag);
+
+	UFUNCTION(Server, Reliable)
+	void Server_VanishItemAtSlot(FGameplayTag SlotTag);
 
 	UFUNCTION(BlueprintCallable)
 	bool CanEquipItem(const AItemBase* Item);

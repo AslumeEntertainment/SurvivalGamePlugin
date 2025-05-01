@@ -325,7 +325,8 @@ void APlayerCustomiser::DisplayDeckCards(TArray<uint16> CardIndexes, EDeckSegmen
 			CardPtr = SavedCards.Find(CardIndexes[i]);
 			if (CardPtr == nullptr || *CardPtr == nullptr)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("APlayerCustomiser::DisplayDeckCards Could not find card on Index %d"), CardIndexes[i]);
+
+				if(CardIndexes[i] != (uint16)(-1)) UE_LOG(LogTemp, Warning, TEXT("APlayerCustomiser::DisplayDeckCards Could not find card on Index %d"), CardIndexes[i]);
 				Card = UDeckFunctionLibrary::GenerateCardWithID(ResourceTable, 0);
 			}
 			else
@@ -390,6 +391,7 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.Heroes = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
+			if (Card == -1) continue;
 			for (int i = 0; i < ActiveDeck.MainEquipment.Remove(Card); i++) ActiveDeck.MainEquipment.Add(-1);
 			for (int i = 0; i < ActiveDeck.SecondaryEquipment.Remove(Card); i++)ActiveDeck.SecondaryEquipment.Add(-1);
 		}
@@ -399,6 +401,7 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.MainEquipment = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
+			if (Card == -1) continue;
 			for (int i = 0; i < ActiveDeck.Heroes.Remove(Card); i++) ActiveDeck.Heroes.Add(-1);
 			for (int i = 0; i < ActiveDeck.SecondaryEquipment.Remove(Card); i++)ActiveDeck.SecondaryEquipment.Add(-1);
 		}
@@ -408,6 +411,7 @@ void APlayerCustomiser::UpdateDeck(TArray<uint16> CardIndexes, EDeckSegment Segm
 		ActiveDeck.SecondaryEquipment = CardIndexes;
 		for (uint16 Card : CardIndexes)
 		{
+			if (Card == -1) continue;
 			for (int i = 0; i < ActiveDeck.MainEquipment.Remove(Card); i++)ActiveDeck.MainEquipment.Add(-1);
 			for (int i = 0; i < ActiveDeck.Heroes.Remove(Card); i++) ActiveDeck.Heroes.Add(-1);
 		}
@@ -504,7 +508,13 @@ bool APlayerCustomiser::IsDeckPlayable(FDeckPersistentData Deck)
 
 	if (HeroSegmentPtr == nullptr || MainSegmentPtr == nullptr || SecondarySegmentPtr == nullptr) return false;
 
-	return Deck.Heroes.Num() == HeroSegmentPtr->Size;
+	bool check = true;
+	for (uint16 index : Deck.Heroes)
+	{
+		if (index == (uint16)( - 1) ) { check = false; break; }
+	}
+
+	return check && (Deck.Heroes.Num() == HeroSegmentPtr->Size);
 }
 
 void APlayerCustomiser::SendDeckData()

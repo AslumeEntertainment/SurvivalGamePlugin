@@ -58,6 +58,33 @@ void UEquipmentComponent::OnRep_CachedEquipment()
 	ReconstructEquipmentData(CachedEquipment);
 }
 
+void UEquipmentComponent::VanishItemAtSlot(FGameplayTag SlotTag)
+{
+	if (IsValid(GetOwner()) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UEquipmentComponent::UnequipItemAtSlot IsValid(GetOwner()) == false"));
+		return;
+	}
+	if (GetOwner()->HasAuthority() == false)
+	{
+		Server_VanishItemAtSlot(SlotTag);
+		return;
+	}
+
+	if (IsValid(GetEquipedItemAtSlot(SlotTag)))
+	{
+		GetEquipedItemAtSlot(SlotTag)->Destroy();
+		SetEquipedItemAtSlot(SlotTag, nullptr);
+	}
+
+	return;
+}
+
+void UEquipmentComponent::Server_VanishItemAtSlot_Implementation(FGameplayTag SlotTag)
+{
+	VanishItemAtSlot(SlotTag);
+}
+
 bool UEquipmentComponent::CanEquipItem(const AItemBase* Item)
 {
 	if (IsValid(GetOwner()) == false)

@@ -40,6 +40,7 @@ void UCardSelectorWidget::ToggleCardHighlight(uint8 Index)
 void UCardSelectorWidget::ConfigCardSelector(EDeckSegment Segment, uint8 CardsNeeded, TArray<uint16> AlredySelectedCards)
 {
 	SelectedCards = AlredySelectedCards;
+	SelectedCards.Remove(-1);
 	CallingSegment = Segment;
 	NumberOfCardsToSelect = CardsNeeded;
 }
