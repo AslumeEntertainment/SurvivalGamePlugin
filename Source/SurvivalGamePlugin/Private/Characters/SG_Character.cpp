@@ -302,7 +302,6 @@ void ASG_Character::Look(const FInputActionValue& Value)
 {
 	if (GetWorldTimerManager().IsTimerActive(CameraRotationTimer))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Nuh uh"))
 		return;
 	}
 
