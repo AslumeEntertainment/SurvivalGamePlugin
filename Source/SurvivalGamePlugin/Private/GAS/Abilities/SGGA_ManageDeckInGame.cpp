@@ -489,6 +489,9 @@ bool USGGA_ManageDeckInGame::AttemptTransferCardFromEquipmentToDeck(UCardContain
 
 	(*DeckToFill)[DeckIndex] = EquipedItemsData[CardIndex];
 	EquipedItemsData[CardIndex] = FResourseCardPersistentData();
+
+	EquipmentComp->VanishItemAtSlot((CardIndex == 1) ? EquipmentComp->GetMainEquipmentSlotTag() : EquipmentComp->GetSecondaryEquipmentSlotTag());
+
 	int ResourcToChange = (CardIndex == 1) ? Save->Decks[Save->ActiveDeckIndex].MainEquipment[DeckIndex] : Save->Decks[Save->ActiveDeckIndex].SecondaryEquipment[DeckIndex];
 	
 	if (Save->ResourceCards.IsValidIndex(ResourcToChange) == false)
