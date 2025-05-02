@@ -119,7 +119,9 @@ void ASG_Character::EmitInteractionChecker()
 
 	if (bShouldDrawDebug)
 	{
+#if WITH_EDITOR
 		World->DebugDrawTraceTag = TraceTag;
+#endif
 	}
 	World->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_Camera, CQP);
 

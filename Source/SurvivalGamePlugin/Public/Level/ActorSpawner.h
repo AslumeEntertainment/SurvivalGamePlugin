@@ -26,6 +26,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Spawn();
+	UFUNCTION(BlueprintImplementableEvent)
+	void PostSpawn(AActor* SpawnedActor);
+
+	AActor* Spawn();
 
 };

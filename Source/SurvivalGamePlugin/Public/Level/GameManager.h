@@ -69,10 +69,10 @@ protected:
 	UPROPERTY(VisibleInstanceOnly)
 	TMap<APlayerCustomiser*, bool> PlayerCustomisers;
 
-	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	UPROPERTY(EditAnywhere, Category = "GameProgression | Spawners")
 	float SpawnerClusterPeriod = 0.15;
 
-	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	UPROPERTY(EditAnywhere, Category = "GameProgression | Spawners")
 	uint8 SpawnerClusterSize = 2;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
@@ -85,11 +85,29 @@ protected:
 	float LoadingPeriodLength = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
-	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
+	float LootingPeriodLength = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = "GameProgression")
+	TSubclassOf<ATimeEventManager> TimeEventManagerClassToSearch;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression | Spawners")
 	class ALevelCleaner* LevelCleaner;
 
+	UPROPERTY(EditAnywhere, Category = "GameProgression | Spawners")
+	FName EnemySpawnerTag;
+
+	UPROPERTY(EditAnywhere, Category = "GameProgression | Spawners")
+	TMap<class AActorSpawner*, int> EnemySpawnerMap;
+
+	TArray<FTimerHandle* > ActiveSpawnTimers;
+
+	int RemainingPlayers = 0;
+	int RemainingEnemies = 0;
+
+	UFUNCTION()
+	void SpawnEnemy(AActorSpawner* Spawner);
+	UFUNCTION()
+	void EnemyDied();
 	void SetActiveSkeletalMesh(ESupervisionState State);
 	void UpdateSkeletalMesh();
 

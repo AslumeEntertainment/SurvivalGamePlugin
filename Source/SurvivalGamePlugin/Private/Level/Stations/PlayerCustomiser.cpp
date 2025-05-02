@@ -355,7 +355,10 @@ void APlayerCustomiser::Server_ToggleReady_Implementation()
 
 void APlayerCustomiser::OnRepIsPlayerReady()
 {
-	PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
+	if (IsValid(PlayerCustomisingWidget))
+	{
+		PlayerCustomisingWidget->Config(bIsPlayerReady ? EPlayerReadinessUIStatus::Ready : EPlayerReadinessUIStatus::NotReady);
+	}
 }
 
 void APlayerCustomiser::HandlePlayerLeavingSession(APlayerController* LeavingPlayer)

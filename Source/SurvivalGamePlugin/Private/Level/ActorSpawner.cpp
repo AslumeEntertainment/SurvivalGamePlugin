@@ -25,7 +25,7 @@ void AActorSpawner::Tick(float DeltaTime)
 
 }
 
-void AActorSpawner::Spawn()
+AActor* AActorSpawner::Spawn()
 {
 	int RNG = FMath::RandRange(1, 10000);
 
@@ -33,13 +33,16 @@ void AActorSpawner::Spawn()
 	{
 		if (ActorToSpawn.Value*100 >= RNG)
 		{
-			if (IsValid(GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation(), GetActorRotation())) == false)
+			AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation(), GetActorRotation());
+			if (IsValid(Actor) == false)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("AActorSpawner::Spawn - %s failed to spawn %s"), *GetName(), *ActorToSpawn.Key->StaticClass()->GetName());
+				return nullptr;
 			}
-			return;
+			PostSpawn(Actor);
+			return Actor;
 		}
 	}
-
+	return nullptr;
 }
 
