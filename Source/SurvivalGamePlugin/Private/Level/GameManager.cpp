@@ -6,6 +6,7 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 
+#include "Characters/InGameCharacter.h"
 #include "Level/ActorSpawner.h"
 #include "Level/LevelCleaner.h"
 #include "Level/TimeEventManager.h"
@@ -164,6 +165,7 @@ void AGameManager::ChangePlayerReadiness(APlayerCustomiser* Player)
 void AGameManager::PrepareGame()
 {
 	bIsGameReady = false;
+	RemainingPlayers = NumPlayers;
 	LevelCleaner->Clean();
 	CurrentSpawnersToFire.Empty();
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
@@ -177,7 +179,7 @@ void AGameManager::SpawnCluster()
 {
 	for (int i = 0; i < SpawnerClusterSize; i++)
 	{
-		if (CurrentSpawnersToFire.IsValidIndex(SpawnerClusterSize) == false) 
+		if (CurrentSpawnersToFire.IsValidIndex(i) == false) 
 		{
 			bIsGameReady = true; 
 			GetWorldTimerManager().ClearTimer(PreparingPeriodTimer);
@@ -185,9 +187,12 @@ void AGameManager::SpawnCluster()
 			return;
 		}
 
-		AActorSpawner* ActorSpawner = Cast<AActorSpawner>(CurrentSpawnersToFire[SpawnerClusterSize]);
-		if (IsValid(ActorSpawner) == false) continue;
-		ActorSpawner->Spawn();
+		if (CurrentSpawnersToFire[i]->ActorHasTag(EnemySpawnerTag) == false)
+		{
+			AActorSpawner* ActorSpawner = Cast<AActorSpawner>(CurrentSpawnersToFire[i]);
+			if (IsValid(ActorSpawner) == false) continue;
+			ActorSpawner->Spawn();
+		}
 
 		CurrentSpawnersToFire.RemoveAt(i);
 		
@@ -235,13 +240,56 @@ void AGameManager::StartGame()
 	GetWorldTimerManager().ClearTimer(LoadingPeriodTimer);
 	LoadingPeriodTimer.Invalidate();
 
+	TArray<AActorSpawner*> EnemySpawners;
+	EnemySpawnerMap.GenerateKeyArray(EnemySpawners);
+
+
+	for (AActorSpawner* Spawner : EnemySpawners)
+	{
+		FTimerDelegate TimerDel;
+		TimerDel.BindUFunction(this, FName("SpawnEnemy"), Spawner);
+		FTimerHandle* TempSpawnerHandle = new FTimerHandle;
+		ActiveSpawnTimers.Add(TempSpawnerHandle);
+		GetWorldTimerManager().SetTimer(*TempSpawnerHandle, TimerDel, *EnemySpawnerMap.Find(Spawner), false);
+	}
+
+	RemainingEnemies = EnemySpawners.Num();
+
 	OnGameStart.Broadcast();
+}
+
+void AGameManager::SpawnEnemy(AActorSpawner* Spawner)
+{
+	AActor* Actor = Spawner->Spawn();
+	AInGameCharacter* Enemy = Cast<AInGameCharacter>(Actor);
+	if (IsValid(Enemy) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AGameManager::SpawnEnemy Enemy failed to spawn from spawner %s"), *Spawner->GetName());
+		RemainingEnemies -= 1;
+		return;
+	}
+	Enemy->OnCharacterDeath.AddDynamic(this, &AGameManager::EnemyDied);
+}
+
+void AGameManager::EnemyDied()
+{
+	RemainingEnemies -= 1;
+	CheckGameFinishingRules(nullptr);
 }
 
 void AGameManager::CheckGameFinishingRules(APlayerCustomiser* Player)
 {
 	//some logic here
-	GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, 10);
+	
+	if (IsValid(Player))
+	{
+		RemainingPlayers -= 1;
+	}
+
+	bool ShouldEnd = ( (RemainingEnemies == 0) || (RemainingPlayers == 0) );
+	bool Win = (RemainingPlayers != 0);
+
+	if(ShouldEnd) GetWorldTimerManager().SetTimer(LoadingPeriodTimer, this, &AGameManager::FinishGame, Win ? LootingPeriodLength : 1);
 }
 
 void AGameManager::FinishGame()
@@ -254,6 +302,16 @@ void AGameManager::FinishGame()
 		Player.Key->UpdatePlayerReadiness(false);
 	}
 
+	for (FTimerHandle* Timer : ActiveSpawnTimers)
+	{
+		GetWorldTimerManager().PauseTimer(*Timer);
+		GetWorldTimerManager().ClearTimer(*Timer);
+		(*Timer).Invalidate();
+		delete Timer;
+	}
+
+	ActiveSpawnTimers.Empty();
+
 	OnReadinessUI.Broadcast(0, NumPlayers);
 
 	OnGameEnd.Broadcast();
@@ -264,6 +322,8 @@ void AGameManager::FinishGame()
 void AGameManager::Open(bool InSupervisionState, uint8 InNumPlayers)
 {
 	NumPlayers = InNumPlayers;
+	
+
 	SetActiveSkeletalMesh(InSupervisionState ? ESupervisionState::Supervised : ESupervisionState::Unsupervised);
 
 	UpdateActivePlayerCustomisers(true);
