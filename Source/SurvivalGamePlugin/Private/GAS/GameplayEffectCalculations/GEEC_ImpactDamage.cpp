@@ -102,9 +102,9 @@ float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor, con
 		UE_LOG(LogTemp, Warning, TEXT("=========InternalImpactDamageCalculation=========="));
 
 		UKismetSystemLibrary::DrawDebugArrow(TargetActor->GetWorld(), HitResult->ImpactPoint, HitResult->ImpactPoint + HitResult->ImpactNormal * 100,
-			25, FLinearColor::Red, 20.f, 1.f);
+			25, FLinearColor::Red, 10.f, 1.f);
 		UKismetSystemLibrary::DrawDebugArrow(TargetActor->GetWorld(), TargetActor->GetActorLocation(), TargetActor->GetActorLocation() + NormalizedVelocity * 100,
-			25, FLinearColor::Green, 20.f, 1.f);
+			25, FLinearColor::Green, 10.f, 1.f);
 
 		UE_LOG(LogTemp, Warning, TEXT("Impact Angle - %.2f deg"), FMath::Abs(CollisionAngle));
 	}

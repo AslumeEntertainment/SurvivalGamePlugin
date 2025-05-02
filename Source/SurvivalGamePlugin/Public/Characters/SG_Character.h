@@ -56,6 +56,9 @@ private:
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
 
+	UPROPERTY()
+	AActor* CurrentTarget = nullptr;
+
 	UPROPERTY(Replicated)
 	bool bIsMirrored = false;
 
@@ -146,6 +149,14 @@ protected:
 
 	void Look(const FInputActionValue& Value);
 
+	UFUNCTION(BlueprintCallable)
+	void FindTarget();
+
+	UFUNCTION(BlueprintCallable)
+	void StopTargeting();
+
+	void LockIntoTarget(float DeltaTime);
+
 	void AbilityInputPressed(FGameplayTag InputTag);
 
 	void AbilityInputReleased(FGameplayTag InputTag);
@@ -197,14 +208,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraView();
 
-	UFUNCTION(BlueprintCallable)
-	void StartTarget();
+	/*UFUNCTION(BlueprintCallable)
+	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);*/
 
 	UFUNCTION(BlueprintCallable)
-	void StopTarget();
-
-	UFUNCTION(BlueprintCallable)
-	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);
+	void SetCurrentTarget(AActor* Target);
 
 	UFUNCTION(BlueprintCallable)
 	void SetMovementEnabled(bool NewValue);

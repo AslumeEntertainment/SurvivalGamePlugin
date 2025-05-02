@@ -111,6 +111,9 @@ protected:
 	UFUNCTION()
 	void HandleTouchSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
 
+	UFUNCTION()
+	void HandleDamageSenseUpdate(AActor* Actor, FAIStimulus const Stimulus);
+
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")

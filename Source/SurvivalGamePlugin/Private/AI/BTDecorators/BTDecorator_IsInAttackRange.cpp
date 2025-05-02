@@ -3,6 +3,7 @@
 
 #include "AI/BTDecorators/BTDecorator_IsInAttackRange.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "Characters/InGameCharacter.h"
@@ -22,10 +23,10 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInAttackRange::CalculateRawConditionValue IsValid(Controller) == false"));
 		return EBTNodeResult::Failed;
 	}
-	APawn* MyPawn = Controller->GetPawn();
-	if (IsValid(MyPawn) == false)
+	AInGameCharacter* MyCharacter = Controller->GetPawn<AInGameCharacter>();
+	if (IsValid(MyCharacter) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInAttackRange::CalculateRawConditionValue IsValid(MyPawn) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInAttackRange::CalculateRawConditionValue IsValid(MyCharacter) == false"));
 		return EBTNodeResult::Failed;
 	}
 	AActor* Target = Controller->GetCurrentTarget();
@@ -35,5 +36,7 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 		return EBTNodeResult::Failed;
 	}
 
-	return UKismetMathLibrary::Vector_Distance(MyPawn->GetActorLocation(), Target->GetActorLocation()) <= Controller->GetAttackRange() * OptionalRangeMultiplier;
+	float TrueAttackRange = MyCharacter->GetCapsuleComponent()->GetScaledCapsuleRadius() + Controller->GetAttackRange() * OptionalRangeMultiplier;
+
+	return UKismetMathLibrary::Vector_Distance(MyCharacter->GetActorLocation(), Target->GetActorLocation()) <= TrueAttackRange;
 }

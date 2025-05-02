@@ -209,7 +209,10 @@ void ASG_Character::Tick(float DeltaTime)
 	{
 		return;
 	}
+
 	EmitInteractionChecker();
+
+	LockIntoTarget(DeltaTime);
 }
 
 void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -232,8 +235,8 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
 
-		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Started, this, &ASG_Character::StartTarget);
-		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Completed, this, &ASG_Character::StopTarget);
+		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Started, this, &ASG_Character::FindTarget);
+		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Completed, this, &ASG_Character::StopTargeting);
 
 		if (IsValid(AbilityInputConfig) == false)
 		{
@@ -300,7 +303,7 @@ void ASG_Character::Move(const FInputActionValue& Value)
 
 void ASG_Character::Look(const FInputActionValue& Value)
 {
-	if (GetWorldTimerManager().IsTimerActive(CameraRotationTimer))
+	if (IsValid(CurrentTarget))
 	{
 		return;
 	}
@@ -435,7 +438,7 @@ void ASG_Character::ResetCameraView()
 	CameraViewResetTimeline.PlayFromStart();
 }
 
-void ASG_Character::StartTarget()
+void ASG_Character::FindTarget()
 {
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
@@ -462,62 +465,53 @@ void ASG_Character::StartTarget()
 		return;
 	}
 
-	for (FHitResult HitResult : HitResults)
+	for (const FHitResult HitResult : HitResults)
 	{
 		if (IsValid(HitResult.GetActor()))
 		{
-			PointCameraTowardsActor(World, HitResult.GetActor());
+			SetCurrentTarget(HitResult.GetActor());
 			return;
 		}
 	}
 }
 
-void ASG_Character::StopTarget()
+void ASG_Character::StopTargeting()
 {
-	GetWorldTimerManager().ClearTimer(CameraRotationTimer);
+	CurrentTarget = nullptr;
 }
 
-void ASG_Character::PointCameraTowardsActor(UWorld* World, AActor* TargetActor)
+void ASG_Character::LockIntoTarget(float DeltaTime)
 {
+	if (IsValid(CurrentTarget) == false)
+	{
+		return;
+	}
 	if (IsValid(GetController()) == false)
 	{
 		return;
 	}
-	if (IsValid(World) == false)
+	if (UKismetMathLibrary::Vector_Distance(GetActorLocation(), CurrentTarget->GetActorLocation()) > TargetingDistance)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(World) == false"));
-		return;
-	}
-	if (IsValid(TargetActor) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ASG_Character::PointCameraTowardsActor IsValid(TargetActor) == false"));
-		StopTarget();
+		StopTargeting();
 		return;
 	}
 
-	if (UKismetMathLibrary::Vector_Distance(GetActorLocation(), TargetActor->GetActorLocation()) > TargetingDistance)
-	{
-		StopTarget();
-	}
-
-	FVector NormalizedLocation = TargetActor->GetActorLocation() - GetMesh()->GetComponentLocation();
+	FVector NormalizedLocation = CurrentTarget->GetActorLocation() - GetMesh()->GetComponentLocation();
 	UKismetMathLibrary::Vector_Normalize(NormalizedLocation);
 
 	float DotProduct = FVector::DotProduct(NormalizedLocation, GetMesh()->GetForwardVector());
-	if (FMath::Abs(DotProduct) > 0.1f)
-	{
-		FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), TargetActor->GetActorLocation());
-		FRotator InterpRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), LookAtRotation, World->DeltaTimeSeconds, CameraInterpSpeed);
 
-		GetController()->SetControlRotation(InterpRotation);
-		SetActorRotation(FRotator(GetActorRotation().Pitch, InterpRotation.Yaw, GetActorRotation().Roll));
-		SetRepControlRotation(GetControlRotation());
-	}
-	
-	FTimerDelegate CameraRotationTimerDelegate;
+	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), CurrentTarget->GetActorLocation());
+	FRotator InterpRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), LookAtRotation, DeltaTime, CameraInterpSpeed);
 
-	CameraRotationTimerDelegate.BindUFunction(this, FName("PointCameraTowardsActor"), World, TargetActor);
-	GetWorldTimerManager().SetTimer(CameraRotationTimer, CameraRotationTimerDelegate, 0.01f, false);
+	GetController()->SetControlRotation(InterpRotation);
+	SetActorRotation(FRotator(GetActorRotation().Pitch, InterpRotation.Yaw, GetActorRotation().Roll));
+	SetRepControlRotation(GetControlRotation());
+}
+
+void ASG_Character::SetCurrentTarget(AActor* Target)
+{
+	CurrentTarget = Target;
 }
 
 void ASG_Character::SetMovementEnabled(bool NewValue)
