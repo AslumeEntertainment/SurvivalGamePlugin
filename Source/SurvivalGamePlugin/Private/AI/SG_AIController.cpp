@@ -8,6 +8,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISense_Touch.h"
+#include "Perception/AISense_Damage.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -63,7 +64,6 @@ void ASG_AIController::Tick(float DeltaTime)
             GEngine->AddOnScreenDebugMessage(i + 2, 1, FColor::Orange, FString::Printf(TEXT("Target#%d - %s"), i, *Targets[i].Target->GetName()));
         }
     }
- 
 }
 
 void ASG_AIController::OnPossess(APawn* InPawn)
@@ -129,20 +129,20 @@ void ASG_AIController::SetFocus(AActor* NewFocus, EAIFocusPriority::Type InPrior
 {
     Super::SetFocus(NewFocus, InPriority);
 
-    ASG_Character* Char = GetPawn<ASG_Character>();
-    if (IsValid(Char) == false)
+    ASG_Character* MyCharacter = GetPawn<ASG_Character>();
+    if (IsValid(MyCharacter) == false)
     {
-        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::SetFocus IsValid(ASC) == false"));
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::SetFocus IsValid(MyCharacter) == false"));
         return;
     }
     if (IsValid(NewFocus) == false)
     {
         ClearFocus(InPriority);
-        Char->StopTarget();
+        MyCharacter->SetCurrentTarget(NewFocus);
         return;
     }
     
-    Char->PointCameraTowardsActor(GetWorld(), NewFocus);
+    MyCharacter->SetCurrentTarget(NewFocus);
 }
 
 void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
@@ -155,17 +155,22 @@ void ASG_AIController::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulu
     }
 
     TSubclassOf<UAISense> Sense = UAIPerceptionSystem::GetSenseClassForStimulus(World, Stimulus);
+    
     if (Sense == UAISense_Sight::StaticClass())
     {
         HandleSightSenseUpdate(Actor, Stimulus);
     }
-    if (Sense == UAISense_Hearing::StaticClass())
+    else if (Sense == UAISense_Hearing::StaticClass())
     {
         HandleHearingSenseUpdate(Actor, Stimulus);
     }
-    if (Sense == UAISense_Touch::StaticClass())
+    else if (Sense == UAISense_Touch::StaticClass())
     {
         HandleTouchSenseUpdate(Actor, Stimulus);
+    }
+    else if (Sense == UAISense_Damage::StaticClass())
+    {
+        HandleDamageSenseUpdate(Actor, Stimulus);
     }
 }
 
@@ -283,13 +288,40 @@ void ASG_AIController::HandleTouchSenseUpdate(AActor* Actor, FAIStimulus const S
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleTouchSenseUpdate IsValid(OwnerCharacter) == false"));
         return;
     }
-    if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly)
+    if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly && bWillAttackFriendlies == false)
     {
         return;
     }
 
     GetBlackboardComponent()->SetValueAsBool("IsInvestigating", true);
     GetBlackboardComponent()->SetValueAsVector("TargetLocation", Stimulus.StimulusLocation);
+}
+
+void ASG_AIController::HandleDamageSenseUpdate(AActor* Actor, FAIStimulus const Stimulus)
+{
+    if (Stimulus.WasSuccessfullySensed() == false)
+    {
+        return;
+    }
+    if (IsValid(Actor) == false)
+    {
+        return;
+    }
+
+    AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
+    if (IsValid(OwnerCharacter) == false)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleDamageSenseUpdate IsValid(OwnerCharacter) == false"));
+        return;
+    }
+    if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly && bWillAttackFriendlies == false)
+    {
+        return;
+    }
+
+    FAITarget AITarget = FAITarget(Actor, 0);
+    Targets.Insert(AITarget, 0);
+    SetFocus(Actor);
 }
 
 void ASG_AIController::RegisterNewTarget(AActor* NewTarget, USG_AIPerceptionStimuliSourceComp* StimuliSourceComp)

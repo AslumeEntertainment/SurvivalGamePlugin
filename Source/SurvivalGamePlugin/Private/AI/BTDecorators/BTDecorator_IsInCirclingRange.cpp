@@ -3,6 +3,7 @@
 
 #include "AI/BTDecorators/BTDecorator_IsInCirclingRange.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "Characters/InGameCharacter.h"
@@ -22,10 +23,10 @@ bool UBTDecorator_IsInCirclingRange::CalculateRawConditionValue(UBehaviorTreeCom
 		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInCirclingRange::CalculateRawConditionValue IsValid(Controller) == false"));
 		return EBTNodeResult::Failed;
 	}
-	APawn* MyPawn = Controller->GetPawn();
-	if (IsValid(MyPawn) == false)
+	AInGameCharacter* MyCharacter = Controller->GetPawn<AInGameCharacter>();
+	if (IsValid(MyCharacter) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInCirclingRange::CalculateRawConditionValue IsValid(MyPawn) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_IsInCirclingRange::CalculateRawConditionValue IsValid(MyCharacter) == false"));
 		return EBTNodeResult::Failed;
 	}
 	AActor* Target = Controller->GetCurrentTarget();
@@ -35,5 +36,7 @@ bool UBTDecorator_IsInCirclingRange::CalculateRawConditionValue(UBehaviorTreeCom
 		return EBTNodeResult::Failed;
 	}
 
-	return UKismetMathLibrary::Vector_Distance(MyPawn->GetActorLocation(), Target->GetActorLocation()) <= Controller->GetCircleRange() * OptionalRangeMultiplier;
+	float TrueCircleRange =  MyCharacter->GetCapsuleComponent()->GetScaledCapsuleRadius() + Controller->GetCircleRange() * OptionalRangeMultiplier;
+
+	return UKismetMathLibrary::Vector_Distance(MyCharacter->GetActorLocation(), Target->GetActorLocation()) <= TrueCircleRange;
 }

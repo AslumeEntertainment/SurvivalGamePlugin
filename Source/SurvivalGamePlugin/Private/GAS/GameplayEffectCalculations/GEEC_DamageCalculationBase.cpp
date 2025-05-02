@@ -3,6 +3,8 @@
 
 #include "GAS/GameplayEffectCalculations/GEEC_DamageCalculationBase.h"
 
+#include "Perception/AISense_Damage.h"
+
 #include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -79,4 +81,21 @@ void UGEEC_DamageCalculationBase::AcknowledgeHit(USG_AbilitySystemComponent* Ins
 	{
 		TargetASC->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("CommonEvents.Hit.Received"), &EventData);
 	}
+
+	AActor* Instigator = IsValid(InstigatorASC) ? InstigatorASC->GetOwner() : nullptr;
+	AActor* Target = IsValid(TargetASC) ? TargetASC->GetOwner() : nullptr;
+
+	if (IsValid(Target) == false)
+	{
+		return;
+	}
+
+	UWorld* World = Target->GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculationBase::AcknowledgeHit IsValid(World) == false"))
+		return;
+	}
+
+	UAISense_Damage::ReportDamageEvent(World, Target, Instigator, 0.f, FVector::Zero(), FVector::Zero());
 }
