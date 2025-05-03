@@ -20,15 +20,6 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->SetInputMode(FInputModeGameOnly());
 		PlayerOwner->bShowMouseCursor = false;
 	}
-
-	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
-	if (IsValid(Player) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
-		return;
-	}
-
-	Player->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
 }
 
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
@@ -52,7 +43,8 @@ void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharact
 		return;
 	}
 	InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
-	
+	InteractingCharacter->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
+
 	ShowInteractionOverlayWidget();
 }
 

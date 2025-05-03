@@ -180,7 +180,7 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 {
 	float PenetrationMultiplier = 1.f;
 
-	float TargetResistance = 1.f;
+	float TargetResistance = 0.f;
 
 	switch (DamageSourceData->DamageType)
 	{
@@ -194,8 +194,6 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, TargetResistance);
 	}
 
-	if (TargetResistance <= 0) TargetResistance = 1;
-
 	if (bIsHitGuarded)
 	{
 		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
@@ -205,7 +203,10 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 		TargetResistance *= GuardProficiency;
 	}
 
-	PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;
+	float FinalPenetration = DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100;
+	float FinalDefence = TargetResistance - FinalPenetration;
+
+	PenetrationMultiplier = FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * FinalDefence + 0.082f))) / 100;
 
 	return PenetrationMultiplier;
 }

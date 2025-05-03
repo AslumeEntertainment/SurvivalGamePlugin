@@ -136,6 +136,7 @@ void APlayerCustomiser::StopInteracting()
 	InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 	InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
 	InteractingPlayerPawn->SetMovementEnabled(true);
+	InteractingPlayerPawn->DisablePlayerInput(0.1f);
 	
 	Super::StopInteracting();
 	

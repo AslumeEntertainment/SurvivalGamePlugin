@@ -349,6 +349,7 @@ void ASG_Character::UnbindOverlayDelegates()
 {
 	InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 	InteractIndicationTextDelegate.Clear();
+	SettingsOpenedDelegate.Clear();
 }
 
 void ASG_Character::PossessedBy(AController* NewController)
