@@ -7,6 +7,7 @@
 
 #include "UI/Widgets/Core/InteractionOverlayWidget.h"
 #include "UI/Widgets/Game/InGameOverlayWidget.h"
+#include "UI/Widgets/Game/SettingsMenu.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -20,6 +21,14 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->bShowMouseCursor = false;
 	}
 
+	ASG_Character* Player = Cast<ASG_Character>(PlayerOwner->GetPawn());
+	if (IsValid(Player) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(Player) == false"));
+		return;
+	}
+
+	Player->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
 }
 
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
@@ -27,7 +36,7 @@ void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharact
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(World) == false"));
 		return;
 	}
 
@@ -68,7 +77,7 @@ void AInGameHUD::ShowGameplayOverlayWidget()
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(World) == false"));
 		return;
 	}
 	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
@@ -106,10 +115,41 @@ void AInGameHUD::RemoveGameplayOverlayWidget()
 	}
 }
 
+void AInGameHUD::ShowSettingsMenu()
+{
+	if (IsValid(SettingsMenu) == false)
+	{
+		SettingsMenu = CreateWidget<USettingsMenu>(PlayerOwner, SettingsMenuClass);
+		SettingsMenu->CloseClicked.AddDynamic(this, &AInGameHUD::RemoveSettingsMenu);
+	}
+
+	if (bCanOpenMoreMenus == true && PlayerOwner && SettingsMenu && SettingsMenu->IsInViewport() == false)
+	{
+		bCanOpenMoreMenus = false;
+		PlayerOwner->bShowMouseCursor = true;
+		PlayerOwner->SetInputMode(FInputModeUIOnly());
+		SettingsMenu->AddToViewport();
+	}
+}
+
+void AInGameHUD::RemoveSettingsMenu()
+{
+	if (PlayerOwner && SettingsMenu && SettingsMenu->IsInViewport() == true)
+	{
+		bCanOpenMoreMenus = true;
+		PlayerOwner->bShowMouseCursor = false;
+		PlayerOwner->SetInputMode(FInputModeGameOnly());
+		SettingsMenu->RemoveFromParent();
+	}
+}
+
 void AInGameHUD::ClearScreen()
 {
 	RemoveGameplayOverlayWidget();
 	RemoveInteractionOverlayWidget();
+	RemoveSettingsMenu();
+
+	bCanOpenMoreMenus = true;
 }
 
 

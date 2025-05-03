@@ -101,7 +101,7 @@ void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
 void ASG_Character::EmitInteractionChecker()
 {
 	FVector StartTrace = GetFirstPersonCamera()->GetComponentLocation();
-	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * CurrentInteractionRange + StartTrace;
+	FVector EndTrace = GetFirstPersonCamera()->GetForwardVector() * InteractionRange + StartTrace;
 
 	const FName TraceTag("InteractableTraceTag");
 
@@ -180,8 +180,6 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CurrentInteractionRange = InteractionRange;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = !bUsesEightDirectionalMovement;
 
@@ -235,7 +233,7 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASG_Character::Look);
 
-		SG_EnhancedInputComponent->BindAction(CameraModeToggleAction, ETriggerEvent::Triggered, this, &ASG_Character::ToggleFirstPerson);
+		SG_EnhancedInputComponent->BindAction(SettingsAction, ETriggerEvent::Triggered, this, &ASG_Character::OpenSettings);
 
 		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Started, this, &ASG_Character::FindTarget);
 		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Completed, this, &ASG_Character::StopTargeting);
@@ -250,26 +248,6 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	else
 	{
 		UE_LOG(LogSGCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
-}
-
-void ASG_Character::ToggleFirstPerson()
-{
-	bIsFirstPerson = !bIsFirstPerson;
-
-	if (bIsFirstPerson)
-	{
-		CameraBoom->TargetArmLength = 0.f;
-		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("head"));
-		FirstPersonCamera->SetRelativeLocation(FVector::Zero());
-		CurrentInteractionRange = InteractionRange;
-	}
-	else
-	{
-		CameraBoom->TargetArmLength = CameraDistanceFromPlayer;
-		CameraBoom->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("ThirdPersonCameraSocket"));
-		FirstPersonCamera->SetRelativeLocation(FVector(0, 30, 0));
-		CurrentInteractionRange = InteractionRange + CameraDistanceFromPlayer;
 	}
 }
 
@@ -341,6 +319,11 @@ void ASG_Character::AbilityInputReleased(FGameplayTag InputTag)
 		return;
 	}
 	AbilitySystemComponent->AbilityInputReleased(InputTag);
+}
+
+void ASG_Character::OpenSettings()
+{
+	SettingsOpenedDelegate.Broadcast();
 }
 
 void ASG_Character::Server_SetRepControlRotation_Implementation(FRotator InControlRotation)

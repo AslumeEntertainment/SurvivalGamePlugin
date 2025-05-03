@@ -6,6 +6,7 @@
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "SGGA_MirrorableAnimatedAbility.generated.h"
 
+class USkeletalMeshComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_MirrorableAnimatedAbility : public USG_GameplayAbility
@@ -13,6 +14,9 @@ class SURVIVALGAMEPLUGIN_API USGGA_MirrorableAnimatedAbility : public USG_Gamepl
 	GENERATED_BODY()
 	
 protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
+	bool bWaitForAnimationToComplete = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
 	bool bCanMoveDuringAnimation = true;
@@ -34,4 +38,6 @@ protected:
 
 	UFUNCTION()
 	virtual void OnAnimMontageCanceled();
+
+	bool DoesAnimationMatchSkeleton(USkeletalMeshComponent* SkeletalMesh);
 };

@@ -47,11 +47,7 @@ private:
 
 	bool bAlreadySetUp = false;
 
-	float CurrentInteractionRange;
-
 	FTimeline CameraViewResetTimeline;
-
-	FTimerHandle CameraRotationTimer;
 
 	UPROPERTY(Replicated)
 	UObject* FocusedInteractableObject = nullptr;
@@ -119,9 +115,6 @@ protected:
 	USG_CharacterAttributeSet* AttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraDistanceFromPlayer = 200;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCurveFloat* CameraViewResetCurve = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -140,7 +133,7 @@ protected:
 	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* CameraModeToggleAction;
+	UInputAction* SettingsAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* TargetAction;
@@ -161,6 +154,8 @@ protected:
 
 	void AbilityInputReleased(FGameplayTag InputTag);
 
+	void OpenSettings();
+
 
 protected:
 
@@ -169,8 +164,6 @@ protected:
 	virtual void Tick(float DeltaTime);
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	void ToggleFirstPerson();
 
 	UFUNCTION(Server, Reliable)
 	void Server_SetRepControlRotation(FRotator InControlRotation);
@@ -194,7 +187,7 @@ public:
 	void SetRepControlRotation(FRotator InControlRotation);
 
 	UFUNCTION(BlueprintCallable)
-	float GetInteractionRange() const { return CurrentInteractionRange; }
+	float GetInteractionRange() const { return InteractionRange; }
 
 	UFUNCTION(BlueprintCallable)
 	UObject* GetFocusedInteractableObject();
@@ -207,9 +200,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraView();
-
-	/*UFUNCTION(BlueprintCallable)
-	void PointCameraTowardsActor(UWorld* World, AActor* TargetActor);*/
 
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentTarget(AActor* Target);
@@ -251,5 +241,7 @@ public:
 
 	UFUNCTION()
 	void UnbindOverlayDelegates();
+
+	FVoidDataTransferSignature SettingsOpenedDelegate;
 
 };

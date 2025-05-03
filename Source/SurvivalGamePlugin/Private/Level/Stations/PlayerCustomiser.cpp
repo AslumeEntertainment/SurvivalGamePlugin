@@ -99,6 +99,7 @@ bool APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	{
 		OnPlayerStartInteracting.Broadcast(this);
 		MainPawn = Cast<ASG_Character>(InteractingPlayer->GetPawn());
+		MainPawn->SetMovementEnabled(false);
 
 		InteractingPlayer->OnConnectionCleanUp.AddDynamic(this, &APlayerCustomiser::HandlePlayerLeavingSession);
 
@@ -123,10 +124,19 @@ void APlayerCustomiser::Client_StopInteracting_Implementation()
 
 void APlayerCustomiser::StopInteracting()
 {
+	ASG_Character* InteractingPlayerPawn = InteractingPlayer->GetPawn<ASG_Character>();
+	if (IsValid(InteractingPlayerPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::StopInteracting IsValid(InteractingPlayerPawn) == false"));
+		return;
+	}
+
 	HideUI(true);
 
 	InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 	InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	InteractingPlayerPawn->SetMovementEnabled(true);
+	
 	Super::StopInteracting();
 	
 	Server_StopInteracting();
