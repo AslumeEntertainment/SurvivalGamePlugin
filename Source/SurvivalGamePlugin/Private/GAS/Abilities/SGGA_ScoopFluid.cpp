@@ -50,15 +50,24 @@ void USGGA_ScoopFluid::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 	Player->SetIsMirrored(bShouldMirrorAnimation);
 
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage);
-	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageCompleted);
-	PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageCanceled);
-	PlayMontageTask->ReadyForActivation();
+	if (DoesAnimationMatchSkeleton(Player->GetMesh()))
+	{
+		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage);
+		PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageCompleted);
+		PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageInterrupted);
+		PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_ScoopFluid::OnAnimMontageCanceled);
+		PlayMontageTask->ReadyForActivation();
 
-	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, OnNotifyRecievedGameplayEventTag, nullptr, true, true);
-	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_ScoopFluid::OnEventRecieved);
-	WaitGameplayEventTask->ReadyForActivation();
+		UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, OnNotifyRecievedGameplayEventTag, nullptr, true, true);
+		WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_ScoopFluid::OnEventRecieved);
+		WaitGameplayEventTask->ReadyForActivation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s: Ability animation does not match avatar's skeleton"), *GetName());
+		OnEventRecieved(FGameplayEventData());
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}	
 }
 
 void USGGA_ScoopFluid::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

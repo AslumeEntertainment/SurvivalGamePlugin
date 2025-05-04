@@ -99,6 +99,7 @@ bool APlayerCustomiser::InteractRequest(AController* InteractingCharacter)
 	{
 		OnPlayerStartInteracting.Broadcast(this);
 		MainPawn = Cast<ASG_Character>(InteractingPlayer->GetPawn());
+		MainPawn->SetMovementEnabled(false);
 
 		InteractingPlayer->OnConnectionCleanUp.AddDynamic(this, &APlayerCustomiser::HandlePlayerLeavingSession);
 
@@ -123,10 +124,20 @@ void APlayerCustomiser::Client_StopInteracting_Implementation()
 
 void APlayerCustomiser::StopInteracting()
 {
+	ASG_Character* InteractingPlayerPawn = InteractingPlayer->GetPawn<ASG_Character>();
+	if (IsValid(InteractingPlayerPawn) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("APlayerCustomiser::StopInteracting IsValid(InteractingPlayerPawn) == false"));
+		return;
+	}
+
 	HideUI(true);
 
 	InteractingPlayer->OnConnectionCleanUp.RemoveAll(this);
 	InteractingPlayer->SetViewTargetWithBlend(InteractingPlayer->GetPawn(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	InteractingPlayerPawn->SetMovementEnabled(true);
+	InteractingPlayerPawn->DisablePlayerInput(0.1f);
+	
 	Super::StopInteracting();
 	
 	Server_StopInteracting();
@@ -136,6 +147,12 @@ void APlayerCustomiser::RequestSaveWrite()
 {
 	HasAuthority() ? WriteSave() : Clinet_WriteSave();
 
+}
+
+void APlayerCustomiser::Init(uint8 InID, AActor* InParentActor)
+{
+	ID = InID;
+	ParentActor = InParentActor;
 }
 
 void APlayerCustomiser::WriteSave()
@@ -704,9 +721,10 @@ void APlayerCustomiser::HideUI(bool bUsesAnimation)
 
 void APlayerCustomiser::ShowUI()
 {
-	if (IsValid(GetParentActor()))
-	{
-		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	if (IsValid(ParentActor))
+	{ 
+		InteractingPlayer->SetViewTargetWithBlend(ParentActor, 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+		
 		AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
 		if (IsValid(HUD))
 		{

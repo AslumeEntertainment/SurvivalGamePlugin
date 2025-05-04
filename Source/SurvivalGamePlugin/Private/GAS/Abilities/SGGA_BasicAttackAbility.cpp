@@ -45,12 +45,21 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 	float AttackSpeed = Player->GetAttackSpeed();
 
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage, AttackSpeed);
-	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);
-	PlayMontageTask->ReadyForActivation();
+	if (DoesAnimationMatchSkeleton(Player->GetMesh()))
+	{
+		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, 
+			AnimationMontage, AttackSpeed, NAME_None, true, 1.f, 0.f, true);
+		PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
+		PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
+		PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageInterrupted);
+		PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCanceled);
+		PlayMontageTask->ReadyForActivation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s: Ability animation does not match avatar's skeleton"), *GetName());
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}
 }
 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

@@ -7,6 +7,7 @@
 
 #include "UI/Widgets/Core/InteractionOverlayWidget.h"
 #include "UI/Widgets/Game/InGameOverlayWidget.h"
+#include "UI/Widgets/Game/SettingsMenu.h"
 #include "Characters/InGameCharacter.h"
 
 
@@ -19,7 +20,11 @@ void AInGameHUD::BeginPlay()
 		PlayerOwner->SetInputMode(FInputModeGameOnly());
 		PlayerOwner->bShowMouseCursor = false;
 	}
+}
 
+void AInGameHUD::SetCanOpenMoreMenus(bool NewValue)
+{
+	bCanOpenMoreMenus = NewValue;
 }
 
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
@@ -27,7 +32,7 @@ void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharact
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(World) == false"));
 		return;
 	}
 
@@ -43,7 +48,8 @@ void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharact
 		return;
 	}
 	InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
-	
+	InteractingCharacter->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
+
 	ShowInteractionOverlayWidget();
 }
 
@@ -68,7 +74,7 @@ void AInGameHUD::ShowGameplayOverlayWidget()
 	UWorld* World = GetWorld();
 	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::BeginPlay IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(World) == false"));
 		return;
 	}
 	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
@@ -106,10 +112,53 @@ void AInGameHUD::RemoveGameplayOverlayWidget()
 	}
 }
 
+void AInGameHUD::ShowSettingsMenu()
+{
+	if (bCanOpenMoreMenus == false)
+	{
+		return;
+	}
+
+	if (IsValid(SettingsMenu) == false)
+	{
+		SettingsMenu = CreateWidget<USettingsMenu>(PlayerOwner, SettingsMenuClass);
+		SettingsMenu->CloseClicked.AddDynamic(this, &AInGameHUD::RemoveSettingsMenu);
+	}
+
+	if (IsValid(PlayerOwner) == false || IsValid(SettingsMenu) == false)
+	{
+		return;
+	}
+
+	if (SettingsMenu->IsInViewport())
+	{
+		RemoveSettingsMenu();
+	}
+	
+	bCanOpenMoreMenus = false;
+	PlayerOwner->bShowMouseCursor = true;
+	PlayerOwner->SetInputMode(FInputModeGameAndUI());
+	SettingsMenu->AddToViewport();
+}
+
+void AInGameHUD::RemoveSettingsMenu()
+{
+	if (PlayerOwner && SettingsMenu && SettingsMenu->IsInViewport() == true)
+	{
+		bCanOpenMoreMenus = true;
+		PlayerOwner->bShowMouseCursor = false;
+		PlayerOwner->SetInputMode(FInputModeGameOnly());
+		SettingsMenu->RemoveFromParent();
+	}
+}
+
 void AInGameHUD::ClearScreen()
 {
 	RemoveGameplayOverlayWidget();
 	RemoveInteractionOverlayWidget();
+	RemoveSettingsMenu();
+
+	bCanOpenMoreMenus = true;
 }
 
 

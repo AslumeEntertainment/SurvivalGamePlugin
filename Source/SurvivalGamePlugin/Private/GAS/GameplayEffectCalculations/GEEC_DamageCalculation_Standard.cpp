@@ -91,7 +91,8 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	{
 		float StrengthMultiplier = GetStrengthMultiplier(ExecutionParams, EvaluateParameters, EffectCauser);
 		float InstigatorVelocity = IsValid(InstigatorActor) ? InstigatorActor->GetVelocity().Length() / 100 : 0;
-		float PenetrationMultiplier = GetPenetrationMultiplier(ExecutionParams, EvaluateParameters, DamageSourceData, InstigatorVelocity, HittableTarget->IsHitGuarded(HitLocation));
+		float PenetrationMultiplier = GetPenetrationMultiplier(ExecutionParams, EvaluateParameters, DamageSourceData, 
+			EffectCauser, InstigatorVelocity, HittableTarget->IsHitGuarded(HitLocation));
 
 		FinalDamage = FMath::Floor(DamageSourceData->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
 
@@ -166,21 +167,32 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 	}
 
 	EWeight EffectCauserWeight = EWeight::Normal;
-	if (IsValid(Cast<ADamageDealingItem>(EffectCauser)))
+
+	const ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectCauser);
+	if (IsValid(Weapon))
 	{
-		EffectCauserWeight = Cast<ADamageDealingItem>(EffectCauser)->ItemData.ItemWeight;
+		EffectCauserWeight = Weapon->ItemData.ItemWeight;
 	}
 
-	StrengthMultiplier = Strength / (uint8)EffectCauserWeight;
+	for (EWeight Weight : TEnumRange<EWeight>())
+	{
+		if (UEnum::GetValueAsString(Weight).Compare("None") == 0) continue;
+
+		if ((uint8)Weight <= (uint8)EffectCauserWeight) continue;
+
+		if ((uint8)Weight > Strength) break;
+
+		StrengthMultiplier += 0.25f;
+	}
 
 	return StrengthMultiplier;
 }
 
-float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const UDamageSourceData* DamageSourceData, float InstigatorVelocity, bool bIsHitGuarded) const
+float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const UDamageSourceData* DamageSourceData, AActor* EffectCauser, float InstigatorVelocity, bool bIsHitGuarded) const
 {
 	float PenetrationMultiplier = 1.f;
 
-	float TargetResistance = 1.f;
+	float TargetResistance = 0.f;
 
 	switch (DamageSourceData->DamageType)
 	{
@@ -194,8 +206,6 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, TargetResistance);
 	}
 
-	if (TargetResistance <= 0) TargetResistance = 1;
-
 	if (bIsHitGuarded)
 	{
 		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
@@ -205,7 +215,17 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 		TargetResistance *= GuardProficiency;
 	}
 
-	PenetrationMultiplier = (DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100) / TargetResistance;
+	float FinalPenetration = DamageSourceData->Penetration + DamageSourceData->Penetration * InstigatorVelocity / 100;
+	float FinalDefence = TargetResistance - FinalPenetration;
+
+	PenetrationMultiplier = FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * FinalDefence + 0.082f))) / 100;
+
+	ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectCauser);
+	if (IsValid(Weapon))
+	{
+		float DurabilityLossMultiplier = FMath::Floor(-209 / (1 + FMath::Pow(2, 0.012f * FinalDefence + 0.1244f)) + 200) / 100;
+		Weapon->OnLandedAHit.Broadcast(DurabilityLossMultiplier);
+	}
 
 	return PenetrationMultiplier;
 }

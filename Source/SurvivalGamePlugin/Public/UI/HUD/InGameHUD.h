@@ -11,12 +11,17 @@ class ASG_Character;
 
 class UInGameOverlayWidget;
 class UInteractionOverlayWidget;
+class USettingsMenu;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API AInGameHUD : public AHUD
 {
 	GENERATED_BODY()
 	
+private:
+
+	bool bCanOpenMoreMenus = true;
+
 protected:
 
 	virtual void BeginPlay()override;
@@ -27,13 +32,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "WidgetClasses")
 	TSubclassOf<UInteractionOverlayWidget> InteractionOverlayWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "WidgetClasses")
+	TSubclassOf<USettingsMenu> SettingsMenuClass;
+
 	UPROPERTY()
 	UInGameOverlayWidget* GameplayOverlayWidget;
 
 	UPROPERTY()
 	UInteractionOverlayWidget* InteractionOverlayWidget;
 
+	UPROPERTY();
+	USettingsMenu* SettingsMenu;
+
 public:
+
+	UFUNCTION(BlueprintCallable)
+	void SetCanOpenMoreMenus(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
+	bool CanOpenMoreMenus() const { return bCanOpenMoreMenus; }
 
 	UFUNCTION(BlueprintCallable)
 	void SetInteractionOverlayBindings(ASG_Character* InteractingCharacter);
@@ -49,6 +66,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveGameplayOverlayWidget();
+
+	UFUNCTION(BlueprintCallable)
+	void ShowSettingsMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveSettingsMenu();
 
 	UFUNCTION(BlueprintCallable)
 	void ClearScreen();

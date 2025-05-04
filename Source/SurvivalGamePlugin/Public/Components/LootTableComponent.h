@@ -43,10 +43,10 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "DropData")
+	UPROPERTY(EditDefaultsOnly, Category = "DropData", meta = (RequiredAssetDataTags = "RowStructure=LootTableData"))
 	FDataTableRowHandle StandartDestructLootTable;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DropData")
+	UPROPERTY(EditDefaultsOnly, Category = "DropData", meta = (RequiredAssetDataTags = "RowStructure=LootTableData"))
 	FDataTableRowHandle SafeDestructLootTable;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Distribution", meta = (ToolTip = "Should dropped actors be arranged vertically or spread out normally"))

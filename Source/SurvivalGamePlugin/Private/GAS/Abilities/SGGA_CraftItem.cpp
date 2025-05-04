@@ -15,6 +15,7 @@
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "UI/Widgets/Game/CraftingWindowWidget.h"
 #include "UI/Widgets/Core/UnitIconWidget.h"
+#include "UI/HUD/InGameHUD.h"
 #include "Headers/GameManagingPersistentStructs.h"
 #include "Components/EquipmentComponent.h"
 #include "Interactables/Items/ItemBase.h"
@@ -75,23 +76,31 @@ void USGGA_CraftItem::OpenCraftingWindow()
 		return;
 	}
 
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OpenCraftingWindow IsValid(World) == false"));
-		return;
-	}
-
-	CraftingWindow = CreateWidget<UCraftingWindowWidget>(UGameplayStatics::GetGameInstance(World), CraftingWindowWidgetClass);
-
 	PlayerCont = Cast<APlayerController>(Player->GetController());
 	if (IsValid(PlayerCont) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OpenCraftingWindow IsValid(PlayerCont) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+	AInGameHUD* HUD = PlayerCont->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::OpenCraftingWindow IsValid(HUD) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+	if (HUD->CanOpenMoreMenus() == false)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
 
+	CraftingWindow = CreateWidget<UCraftingWindowWidget>(PlayerCont, CraftingWindowWidgetClass);
 	CraftingWindow->AddToViewport();
+
+	HUD->SetCanOpenMoreMenus(false);
+
 	PlayerCont->SetInputMode(FInputModeGameAndUI());
 	PlayerCont->bShowMouseCursor = true;
 
@@ -121,7 +130,7 @@ void USGGA_CraftItem::OpenCraftingWindow()
 
 		PossibleProductItemNames.Add(CraftingRecipe.ProductItemResourceCardData.RowName);
 
-		UUnitIconWidget* ItemIcon = CreateWidget<UUnitIconWidget>(UGameplayStatics::GetGameInstance(GetWorld()), ItemIconWidgetClass);
+		UUnitIconWidget* ItemIcon = CreateWidget<UUnitIconWidget>(PlayerCont, ItemIconWidgetClass);
 		ItemIcon->SetItemImage(ResourceCardData->UnitImage);
 		ItemIcon->SetItemName(ResourceCardData->UnitName);
 		ItemIcon->SetItemColor(ResourceCardData->UnitColor);
@@ -138,12 +147,20 @@ void USGGA_CraftItem::CloseCraftingWindow()
 	{
 		return;
 	}
-
+	AInGameHUD* HUD = PlayerCont->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_CraftItem::CloseCraftingWindow IsValid(HUD) == false"));
+		return;
+	}
+	
 	CraftingWindow->RemoveFromParent();
 	CraftingWindow->ClearRecipes();
 
 	PlayerCont->SetInputMode(FInputModeGameOnly());
 	PlayerCont->bShowMouseCursor = false;
+
+	HUD->SetCanOpenMoreMenus(true);
 }
 
 void USGGA_CraftItem::CancelCrafting(float TimeHeld)

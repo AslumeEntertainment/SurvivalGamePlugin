@@ -40,7 +40,7 @@ bool UBTDecorator_ShouldFlee::CalculateRawConditionValue(UBehaviorTreeComponent&
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UBTDecorator_ShouldFlee::CalculateRawConditionValue IsValid(ASC) == false"));
-		return EBTNodeResult::Failed;
+		return false;
 	}
 
 	return BlackBoardComp->GetValueAsBool("IsTargetHostile") && BlackBoardComp->GetValueAsFloat("HealthPercent") <= MaxHealthRequired 

@@ -86,7 +86,6 @@ void UPlayerCustomisingWidget::CycleDecks_Right()
 void UPlayerCustomisingWidget::SelectDeck()
 {
 	DeckSelected.Broadcast(ActiveDeckIndex);
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Orange, FString::Printf(TEXT("Selected Deck #%d"), ActiveDeckIndex));
 }
 
 UDeckSegmentPanel* UPlayerCustomisingWidget::GetHeroCardPanel()

@@ -70,10 +70,10 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 	}
 	else
 	{
-		UPrimitiveComponent* TargetRoot = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
-		if (IsValid(TargetRoot))
+		UMeshComponent* TargetMesh = Cast<UMeshComponent>(TargetActor->GetRootComponent());
+		if (IsValid(TargetMesh) && TargetMesh->IsPhysicsCollisionEnabled())
 		{
-			TargetRoot->AddImpulse(KnockbackForce);
+			TargetMesh->AddImpulse(KnockbackForce);
 		}
 	}
 }

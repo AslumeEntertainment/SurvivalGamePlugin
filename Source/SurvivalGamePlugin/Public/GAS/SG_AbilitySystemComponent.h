@@ -17,10 +17,6 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemC
 {
 	GENERATED_BODY()
 
-public:
-
-	USG_AbilitySystemComponent();
-
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
