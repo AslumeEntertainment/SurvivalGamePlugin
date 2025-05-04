@@ -13,19 +13,44 @@ void USGGA_MirrorableAnimatedAbility::OnAnimMontageCompleted()
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageBlendOut()
 {
-	if (bWaitForAnimationToComplete == false)
+	if (bWaitForAnimationToComplete)
 	{
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+		UWorld* World = GetWorld();
+		if (IsValid(World) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("USGGA_MirrorableAnimatedAbility::OnAnimMontageBlendOut IsValid(World) == false"));
+			return;
+		}
+		
+		World->GetTimerManager().SetTimer(EmergencyAbilityEndTimer, this, 
+			&USGGA_MirrorableAnimatedAbility::OnAnimMontageCompleted, 1.f, false);
+
+		return;
 	}
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageInterrupted()
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s: Interupting attack"), *GetName());
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageCanceled()
 {
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_MirrorableAnimatedAbility::OnAnimMontageCanceled IsValid(World) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+
+	if (World->GetTimerManager().IsTimerActive(EmergencyAbilityEndTimer))
+	{
+		World->GetTimerManager().ClearTimer(EmergencyAbilityEndTimer);
+	}
+
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

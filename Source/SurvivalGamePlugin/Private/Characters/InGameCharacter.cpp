@@ -281,13 +281,12 @@ void AInGameCharacter::MainHandAction()
 		}
 	}
 	
-
 	AbilitySystemComponent->TryActivateAbilitiesByTag(MainAbilityTagContainer);
 }
 
 void AInGameCharacter::CancelMainHandAction()
 {
-	UE_LOG(LogTemp, Error, TEXT("Cancel main"));
+	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelMainHandAction"));
 }
 
 void AInGameCharacter::SecondaryHandAction()
@@ -342,7 +341,7 @@ void AInGameCharacter::SecondaryHandAction()
 
 void AInGameCharacter::CancelSecondaryHandAction()
 {
-	UE_LOG(LogTemp, Error, TEXT("Cancel secondary"));
+	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelSecondaryHandAction"));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()

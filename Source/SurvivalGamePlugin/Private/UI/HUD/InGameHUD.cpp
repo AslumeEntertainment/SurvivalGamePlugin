@@ -22,6 +22,11 @@ void AInGameHUD::BeginPlay()
 	}
 }
 
+void AInGameHUD::SetCanOpenMoreMenus(bool NewValue)
+{
+	bCanOpenMoreMenus = NewValue;
+}
+
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
 {
 	UWorld* World = GetWorld();
@@ -109,19 +114,31 @@ void AInGameHUD::RemoveGameplayOverlayWidget()
 
 void AInGameHUD::ShowSettingsMenu()
 {
+	if (bCanOpenMoreMenus == false)
+	{
+		return;
+	}
+
 	if (IsValid(SettingsMenu) == false)
 	{
 		SettingsMenu = CreateWidget<USettingsMenu>(PlayerOwner, SettingsMenuClass);
 		SettingsMenu->CloseClicked.AddDynamic(this, &AInGameHUD::RemoveSettingsMenu);
 	}
 
-	if (bCanOpenMoreMenus == true && PlayerOwner && SettingsMenu && SettingsMenu->IsInViewport() == false)
+	if (IsValid(PlayerOwner) == false || IsValid(SettingsMenu) == false)
 	{
-		bCanOpenMoreMenus = false;
-		PlayerOwner->bShowMouseCursor = true;
-		PlayerOwner->SetInputMode(FInputModeUIOnly());
-		SettingsMenu->AddToViewport();
+		return;
 	}
+
+	if (SettingsMenu->IsInViewport())
+	{
+		RemoveSettingsMenu();
+	}
+	
+	bCanOpenMoreMenus = false;
+	PlayerOwner->bShowMouseCursor = true;
+	PlayerOwner->SetInputMode(FInputModeGameAndUI());
+	SettingsMenu->AddToViewport();
 }
 
 void AInGameHUD::RemoveSettingsMenu()

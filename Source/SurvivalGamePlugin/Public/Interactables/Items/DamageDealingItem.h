@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/Items/ItemBase.h"
+
+#include "Headers/GeneralDelegates.h"
+
 #include "DamageDealingItem.generated.h"
 
 class UDamageDealingComponent;
@@ -26,7 +29,7 @@ protected:
 	void OnItemDestroyed(AActor* DestroyedActor);
 
 	UFUNCTION()
-	void CalculateDurabilityLost(UObject* HitObject);
+	void CalculateDurabilityLost(float DurabilityLossMultiplier);
 
 public:
 
@@ -36,4 +39,5 @@ public:
 
 	UDamageDealingComponent* GetDamageDealingComponent();
 
+	FFloatTransferSignature OnLandedAHit;
 };

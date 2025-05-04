@@ -47,6 +47,9 @@ protected:
 public:
 
 	UFUNCTION(BlueprintCallable)
+	void SetCanOpenMoreMenus(bool NewValue);
+
+	UFUNCTION(BlueprintCallable)
 	bool CanOpenMoreMenus() const { return bCanOpenMoreMenus; }
 
 	UFUNCTION(BlueprintCallable)

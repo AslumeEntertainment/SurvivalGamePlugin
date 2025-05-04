@@ -19,6 +19,8 @@
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s: Starting attack"), *GetName());
+
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CommitAbility == false"));
@@ -47,7 +49,8 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 	if (DoesAnimationMatchSkeleton(Player->GetMesh()))
 	{
-		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage, AttackSpeed);
+		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, 
+			AnimationMontage, AttackSpeed, NAME_None, true, 1.f, 0.f, true);
 		PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageCompleted);
 		PlayMontageTask->OnBlendOut.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageBlendOut);
 		PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_BasicAttackAbility::OnAnimMontageInterrupted);
@@ -63,6 +66,8 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%s: Ending attack"), *GetName());
+
 	Player->SetIsMirrored(false);
 	Player->SetMovementEnabled(true);
 	Player->SetActivenessForAllDamageSources(false);

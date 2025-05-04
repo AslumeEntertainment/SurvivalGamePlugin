@@ -13,8 +13,8 @@ ADamageDealingItem::ADamageDealingItem()
 {
     DamageDealingComponent = CreateDefaultSubobject<UDamageDealingComponent>(TEXT("DamageDealingComponent"));
     DamageDealingComponent->SetupAttachment(GetRootComponent());
-    DamageDealingComponent->OnHitLandedSuccessfully.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
-
+    
+    OnLandedAHit.AddDynamic(this, &ADamageDealingItem::CalculateDurabilityLost);
     OnDestroyed.AddDynamic(this, &ADamageDealingItem::OnItemDestroyed);
 }
 
@@ -28,9 +28,11 @@ void ADamageDealingItem::OnItemDestroyed(AActor* DestroyedActor)
     ItemOwner->RemoveDamageSourceByTag(DamageDealingComponent->GetDamageSourceTag());
 }
 
-void ADamageDealingItem::CalculateDurabilityLost(UObject* HitObject)
+void ADamageDealingItem::CalculateDurabilityLost(float DurabilityLossMultiplier)
 {
-    float DurabilityLost = 10;
+    float DurabilityLost = (DurabilityLossMultiplier <= 0.f) ? 0.f : FMath::Floor(10 * DurabilityLossMultiplier);
+    
+    UE_LOG(LogTemp, Log, TEXT("%s: a hit has landed, losing %.f durability"), *GetName(), DurabilityLost);
 
     LoseDurability(DurabilityLost);
 }

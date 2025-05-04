@@ -13,6 +13,10 @@ class SURVIVALGAMEPLUGIN_API USGGA_MirrorableAnimatedAbility : public USG_Gamepl
 {
 	GENERATED_BODY()
 	
+private:
+
+	FTimerHandle EmergencyAbilityEndTimer;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")

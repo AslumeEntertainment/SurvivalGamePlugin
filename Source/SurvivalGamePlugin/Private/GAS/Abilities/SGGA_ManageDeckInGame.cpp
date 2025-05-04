@@ -19,6 +19,7 @@
 #include "UI/Widgets/Deck/InGameDeck.h"
 #include "UI/Widgets/Core/CardSlotWidget.h"
 #include "UI/Widgets/Core/UnitIconWidget.h"
+#include "UI/HUD/InGameHUD.h"
 
 
 void USGGA_ManageDeckInGame::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -78,26 +79,34 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 		return;
 	}
 
+	AInGameHUD* HUD = PlayerCont->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::OpenDeckManager IsValid(HUD) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+	if (HUD->CanOpenMoreMenus() == false)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+
 	if (IsValid(MainHandResourceTable) == false || IsValid(SecondaryHandResourceTable) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::OpenDeckManager One or more invalid resource data tables!"));
 		return;
 	}
 
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::OpenDeckManager IsValid(World) == false"));
-		return;
-	}
-
-	InGameDeckWidget = CreateWidget<UInGameDeck>(UGameplayStatics::GetGameInstance(World), InGameDeckWidgetClass);
+	InGameDeckWidget = CreateWidget<UInGameDeck>(PlayerCont, InGameDeckWidgetClass);
 
 	PlayerCont->SetInputMode(FInputModeGameAndUI());
 	PlayerCont->bShowMouseCursor = true;
 
 	InGameDeckWidget->AddToViewport();
 	InGameDeckWidget->OnCardDropped.BindDynamic(this, &USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToWorld);
+
+	HUD->SetCanOpenMoreMenus(false);
 
 	InGameDeckWidget->GetEquipedCardsContainer()->OnCardDropped.BindDynamic(this, &USGGA_ManageDeckInGame::AttemptTransferCardFromDeckToEquipment);
 	InGameDeckWidget->GetEquipedCardsContainer()->InitContainer(EquipmentComp->GetEquipmentSlots().Num());
@@ -154,6 +163,7 @@ void USGGA_ManageDeckInGame::OpenDeckManager()
 	InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->InitContainer(3);
 	InGameDeckWidget->GetSecondaryCardsContainer(Player->IsRightHanded())->OnCardDropped.BindDynamic(this, &USGGA_ManageDeckInGame::AttemptTransferCardFromEquipmentToDeck);
 	RefreshSecondaryCards();
+
 }
 
 void USGGA_ManageDeckInGame::RefreshEquipedCards()
@@ -247,6 +257,21 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 		return;
 	}
+
+	AInGameHUD* HUD = PlayerCont->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::CloseDeckManager IsValid(HUD) == false"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+	if (HUD->CanOpenMoreMenus() == false)
+	{
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
+	}
+
+	HUD->SetCanOpenMoreMenus(true);
 
 	UWidgetBlueprintLibrary::CancelDragDrop();
 	InGameDeckWidget->RemoveFromParent();
