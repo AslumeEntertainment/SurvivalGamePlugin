@@ -75,7 +75,7 @@ void AGameManager::BeginPlay()
 	uint8 PCID = 0;
 	for (UActorComponent* ChildActor : ChildActors)
 	{
-		///MAY BE BETTER TO DESTROY COMPONENT AFTER SPAWN BUT FOR NOW THAT WILL SUFICE
+		///MAY BE BETTER TO DESTROY COMPONENT AFTER SPAWN BUT FOR NOW THAT WILL SUFFICE
 		USceneComponent* SpawnPoint = Cast<USceneComponent>(ChildActor);
 		if (IsValid(SpawnPoint) == false) continue;
 
@@ -85,7 +85,7 @@ void AGameManager::BeginPlay()
 			continue;
 		}
 		
-		PlayerCustomiser->Init(PCID++);
+		PlayerCustomiser->Init(PCID++, this);
 		OnPlayerCustomiserEnable.AddDynamic(PlayerCustomiser, &APlayerCustomiser::SetIsActive_Server);
 		PlayerCustomiser->OnPlayerStartInteracting.AddDynamic(this, &AGameManager::AddPlayer);
 

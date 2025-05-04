@@ -50,6 +50,9 @@ private:
 	uint8 ID = 0;
 
 	UPROPERTY()
+	AActor* ParentActor = nullptr;
+
+	UPROPERTY()
 	UPlayerCustomisingWidget* PlayerCustomisingWidget = nullptr;
 
 	UPROPERTY(Replicated)
@@ -157,7 +160,7 @@ public:
 	void RequestSaveWrite();
 
 	UFUNCTION()
-	void Init(uint8 InID) { ID = InID; }
+	void Init(uint8 InID, AActor* InParentActor);
 
 protected:
 

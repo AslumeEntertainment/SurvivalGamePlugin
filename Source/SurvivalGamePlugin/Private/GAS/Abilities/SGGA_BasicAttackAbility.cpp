@@ -19,8 +19,6 @@
 
 void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s: Starting attack"), *GetName());
-
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_BasicAttackAbility::ActivateAbility CommitAbility == false"));
@@ -66,8 +64,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s: Ending attack"), *GetName());
-
 	Player->SetIsMirrored(false);
 	Player->SetMovementEnabled(true);
 	Player->SetActivenessForAllDamageSources(false);

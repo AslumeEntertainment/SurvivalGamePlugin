@@ -149,6 +149,12 @@ void APlayerCustomiser::RequestSaveWrite()
 
 }
 
+void APlayerCustomiser::Init(uint8 InID, AActor* InParentActor)
+{
+	ID = InID;
+	ParentActor = InParentActor;
+}
+
 void APlayerCustomiser::WriteSave()
 {
 	if(InteractingPlayer != nullptr) InteractingPlayer->WriteSave();
@@ -715,9 +721,10 @@ void APlayerCustomiser::HideUI(bool bUsesAnimation)
 
 void APlayerCustomiser::ShowUI()
 {
-	if (IsValid(GetParentActor()))
-	{
-		InteractingPlayer->SetViewTargetWithBlend(GetParentActor(), 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+	if (IsValid(ParentActor))
+	{ 
+		InteractingPlayer->SetViewTargetWithBlend(ParentActor, 0.25f, EViewTargetBlendFunction::VTBlend_Linear);
+		
 		AInGameHUD* HUD = Cast<AInGameHUD>(InteractingPlayer->GetHUD());
 		if (IsValid(HUD))
 		{

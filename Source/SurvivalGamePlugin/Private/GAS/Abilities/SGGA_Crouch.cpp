@@ -27,7 +27,6 @@ void USGGA_Crouch::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 
 	Player->Crouch();
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Started"));
 
 	FGameplayEffectSpecHandle JumpVelocityEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->MakeOutgoingSpec(JumpVelocityDecreaseEffect, 1, MakeEffectContext(CurrentSpecHandle, CurrentActorInfo));
 	FGameplayEffectSpec* JumpVelocityEffectSpec = JumpVelocityEffectSpecHandle.Data.Get();
@@ -51,12 +50,10 @@ void USGGA_Crouch::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 		Player->UnCrouch();
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
 void USGGA_Crouch::OnCrouchReleased(float TimeHeld)
 {
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_Crouch Released"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

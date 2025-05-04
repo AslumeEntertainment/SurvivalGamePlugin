@@ -32,7 +32,6 @@ void USGGA_MirrorableAnimatedAbility::OnAnimMontageBlendOut()
 
 void USGGA_MirrorableAnimatedAbility::OnAnimMontageInterrupted()
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s: Interupting attack"), *GetName());
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
