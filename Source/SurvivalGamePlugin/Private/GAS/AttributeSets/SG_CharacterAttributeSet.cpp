@@ -151,7 +151,7 @@ void USG_CharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectM
 
 	if (Data.EvaluatedData.Attribute == GetHungerAttribute())
 	{
-		if (GetHunger() >= GetMaxHunger() * 0.99)
+		if (GetHunger() >= GetMaxHunger() * 0.75)
 		{
 			ASC->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));
 			ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Hunger")));

@@ -265,11 +265,6 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
-	if (HUD->CanOpenMoreMenus() == false)
-	{
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		return;
-	}
 
 	HUD->SetCanOpenMoreMenus(true);
 
