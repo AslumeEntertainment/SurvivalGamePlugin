@@ -92,9 +92,6 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
 		Cheat_ClearAccount();
-		//Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
-		//Save->Init();
-		//WriteSave();
 	}
 
 	OnSaveUpdated.Broadcast();
@@ -165,6 +162,7 @@ void ASG_PlayerController::Server_SpawnItemInFrontOfPlayer_Implementation(bool b
 
 USG_SaveGame* ASG_PlayerController::GetSave()
 {
+	if(IsValid(Save) == false) ReadSave();
 	return Save;
 }
 

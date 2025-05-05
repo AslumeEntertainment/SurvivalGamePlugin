@@ -27,19 +27,6 @@ private:
 
 	friend USG_GameInstance;
 
-	UFUNCTION()
-	void OnPlayerStatusUpdated();
-
-	FVector GetValidInGameSpawnLocation();
-
-	void PrepareGame();
-
-	UFUNCTION()
-	void StartGame();
-
-	UFUNCTION()
-	void EndGame();
-
 	//UFUNCTION()
 	//void OnPlayerReturningToLobby(APlayerCustomiser* TriggeringPlayerCustomiser);
 
@@ -54,7 +41,9 @@ private:
 
 	TMap<FString, ASG_PlayerController*> AllPlayers;
 
+	UPROPERTY(BlueprintAssignable)
 	FPlayerControllerTransferSignature OnRegisterNeeded;
+	UPROPERTY(BlueprintAssignable)
 	FPlayerControllerTransferSignature OnUnregisterNeeded;
 
 protected:

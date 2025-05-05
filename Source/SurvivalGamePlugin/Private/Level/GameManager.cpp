@@ -132,13 +132,22 @@ void AGameManager::AddPlayer(APlayerCustomiser* Player)
 
 void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 {
-	PlayerCustomisers.Remove(Player);
+
 	Player->DespawnHero();
 
 	Player->OnPlayerStopInteracting.RemoveAll(this);
+
+	bool* State = PlayerCustomisers.Find(Player);
+	if (State != nullptr)
+	{
+		PlayerCustomisers.Emplace(Player, false);
+	}
 	Player->OnPlayerReadinessChanged.RemoveAll(this);
+
+	CheckGameFinishingRules(Player);
 	Player->OnInGameCharacterDeath.RemoveAll(this);
 
+	PlayerCustomisers.Remove(Player);
 	OnReadinessUI.RemoveAll(Player);
 	OnGameClosing.RemoveAll(Player);
 	OnGameStart.RemoveAll(Player);

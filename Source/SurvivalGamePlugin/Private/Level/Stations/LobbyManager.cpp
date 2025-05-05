@@ -324,6 +324,7 @@ void ALobbyManager::SetupSelectorWidget()
 			CampaignCodes.Add(CampaignRow->Code);
 			CampaignPlayerNums.Add(CampaignRow->DevPlayerNum);
 			CampaignProgressions.Add(SavedCampaign.Level);
+			break;
 		}
 
 	}
