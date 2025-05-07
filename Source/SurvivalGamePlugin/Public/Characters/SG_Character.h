@@ -85,7 +85,10 @@ protected:
 	float InteractionRange = 200;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
-	UMaterialInterface* InteractableOverlayMaterial;
+	uint8 OnInteractionStencilValue = 5;
+
+	/*UPROPERTY(EditDefaultsOnly, Category = "Interaction")
+	UMaterialInterface* InteractableOverlayMaterial;*/
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float TargetingDistance = 650.f;

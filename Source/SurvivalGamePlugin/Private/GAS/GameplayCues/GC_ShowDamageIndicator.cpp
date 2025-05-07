@@ -3,6 +3,7 @@
 
 #include "GAS/GameplayCues/GC_ShowDamageIndicator.h"
 
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,14 +39,14 @@ bool UGC_ShowDamageIndicator::OnExecute_Implementation(AActor* MyTarget, const F
 		return false;
 	}
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(World, 0);
-	if (IsValid(PlayerCharacter) == false)
+	APlayerController* Player = World->GetFirstPlayerController();
+	if (IsValid(Player) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(PlayerCharacter) == false"));
+		UE_LOG(LogTemp, Error, TEXT("UGC_ShowDamageIndicator::OnExecute_Implementation IsValid(Player) == false"));
 		return false;
 	}
 
-	if (UKismetMathLibrary::Vector_Distance(PlayerCharacter->GetActorLocation(), FVector(Parameters.Location)) > VisibilityDistance)
+	if (UKismetMathLibrary::Vector_Distance(Player->GetFocalLocation(), FVector(Parameters.Location)) > VisibilityDistance)
 	{
 		return false;
 	}

@@ -478,6 +478,11 @@ void AInGameCharacter::SetActivenessForAllDamageSources(bool ActivenessState)
 	}
 }
 
+void AInGameCharacter::Client_BroadcastOnCharacterDeath_Implementation()
+{
+	OnCharacterDeath.Broadcast();
+}
+
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 {
 	BroadcastInitialValues();
@@ -680,7 +685,7 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 		return;
 	}
 
-	OnCharacterDeath.Broadcast();
+	Client_BroadcastOnCharacterDeath();
 
 	EquipmentComponent->UnequipAllItems();
 	LootTableComponent->DropLoot();

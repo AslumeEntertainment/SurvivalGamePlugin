@@ -9,6 +9,7 @@
 
 #include "DamageDealingComponent.generated.h"
 
+class UNiagaraSystem;
 class UGameplayEffectData;
 class USG_TraceEmitterBase;
 
@@ -30,6 +31,11 @@ private:
 
 	void ProcessHit(TArray<FHitResult> HitResults);
 
+	void ShowOnHitEffect(FVector Location);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_ShowOnHitEffect(FVector Location);
+
 protected:
 
 	UPROPERTY()
@@ -44,8 +50,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "DamageDealer"))
 	FGameplayTag DamageSourceTag;
 
-	UPROPERTY(EditDefaultsOnly, Category = "DamageSourceDefaults", meta = (Categories = "GameplayCue"))
-	FGameplayTagContainer OnHitGameplayCueTags;
+	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
+	UNiagaraSystem* OnHitLandedEffect;
 
 	UPROPERTY(EditAnywhere, Category = "DamageSourceDefaults")
 	TArray<UGameplayEffectData*> GameplayEffectsData;

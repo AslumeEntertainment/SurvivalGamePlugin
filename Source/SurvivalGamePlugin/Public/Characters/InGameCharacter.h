@@ -146,6 +146,9 @@ public:
 	void SetActivenessForAllDamageSources(bool ActivenessState) override;
 
 	UFUNCTION(Client, Reliable)
+	virtual void Client_BroadcastOnCharacterDeath();
+
+	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues();
 
 	UFUNCTION(BlueprintCallable)

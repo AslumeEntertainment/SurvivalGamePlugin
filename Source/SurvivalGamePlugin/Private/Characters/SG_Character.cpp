@@ -134,6 +134,8 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
 
+	UMeshComponent* HitMeshComponent = IsValid(HitActor) ? HitActor->GetComponentByClass<UMeshComponent>() : nullptr;
+
 	if (FocusedInteractableObject == HitActor)
 	{
 		return;
@@ -144,10 +146,11 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		{
 			return;
 		}
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (IsValid(HitMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
 		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+			HitMeshComponent->bRenderCustomDepth = false;
+			HitMeshComponent->CustomDepthStencilValue = 0;
+			HitMeshComponent->MarkRenderStateDirty();
 		}
 
 		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
@@ -160,17 +163,19 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 	}
 	if (FocusedInteractableObject != nullptr)
 	{
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (IsValid(HitMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
 		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+			HitMeshComponent->bRenderCustomDepth = false;
+			HitMeshComponent->CustomDepthStencilValue = 0;
+			HitMeshComponent->MarkRenderStateDirty();
 		}
 	}
 
-	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
 	if (HitMeshComponent != nullptr && Cast<APlayerController>(GetController()) != nullptr)
 	{
-		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
+		HitMeshComponent->bRenderCustomDepth = true;
+		HitMeshComponent->CustomDepthStencilValue = OnInteractionStencilValue;
+		HitMeshComponent->MarkRenderStateDirty();
 	}
 
 	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + InteractableActor->GetInteractableName().ToString()));
@@ -369,6 +374,7 @@ void ASG_Character::PossessedBy(AController* NewController)
 	if (bAlreadySetUp) return;
 
 	InitCharacterDefaults();
+	SetRepControlRotation(NewController->GetControlRotation());
 }
 
 void ASG_Character::InitCharacterDefaults()
