@@ -85,16 +85,6 @@ void ASG_Character::UpdateCamera(float Alpha)
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
 {
-	SetFocusedInteractable(InFocusedInteractable);
-}
-
-void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
-{
-	if (HasAuthority() == false)
-	{
-		Server_SetFocusedInteractable(InFocusedInteractable);
-		return;
-	}
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
@@ -131,7 +121,6 @@ void ASG_Character::EmitInteractionChecker()
 void ASG_Character::CheckForInteractables(FHitResult HitResult)
 {
 	AActor* HitActor = HitResult.GetActor();
-	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
 
 	UMeshComponent* HitMeshComponent = IsValid(HitActor) ? HitActor->GetComponentByClass<UMeshComponent>() : nullptr;
@@ -146,36 +135,30 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		{
 			return;
 		}
-		if (IsValid(HitMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (Cast<APlayerController>(GetController()) != nullptr)
 		{
-			HitMeshComponent->bRenderCustomDepth = false;
-			HitMeshComponent->CustomDepthStencilValue = 0;
-			HitMeshComponent->MarkRenderStateDirty();
+			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 		}
 
 		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 		Server_SetFocusedInteractable(nullptr);
 		return;
 	}
-	if (!InteractableActor->bCanInteract(GetController()))
+	if (InteractableActor->bCanInteract(GetController()) == false)
 	{
 		return;
 	}
 	if (FocusedInteractableObject != nullptr)
 	{
-		if (IsValid(HitMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (Cast<APlayerController>(GetController()) != nullptr)
 		{
-			HitMeshComponent->bRenderCustomDepth = false;
-			HitMeshComponent->CustomDepthStencilValue = 0;
-			HitMeshComponent->MarkRenderStateDirty();
+			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 		}
 	}
 
-	if (HitMeshComponent != nullptr && Cast<APlayerController>(GetController()) != nullptr)
+	if (Cast<APlayerController>(GetController()) != nullptr)
 	{
-		HitMeshComponent->bRenderCustomDepth = true;
-		HitMeshComponent->CustomDepthStencilValue = OnInteractionStencilValue;
-		HitMeshComponent->MarkRenderStateDirty();
+		InteractableActor->SetInteractableHighlight(OnInteractionStencilValue);
 	}
 
 	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + InteractableActor->GetInteractableName().ToString()));
@@ -591,16 +574,10 @@ void ASG_Character::SetIsMirrored(bool NewValue)
 {
 	if (HasAuthority() == false)
 	{
-		Server_SetIsMirrored(NewValue);
 		return;
 	}
 
 	bIsMirrored = NewValue;
-}
-
-void ASG_Character::Server_SetIsMirrored_Implementation(bool NewValue)
-{
-	SetIsMirrored(NewValue);
 }
 
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)

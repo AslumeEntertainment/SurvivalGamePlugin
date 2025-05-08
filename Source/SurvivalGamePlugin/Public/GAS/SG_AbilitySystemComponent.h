@@ -26,10 +26,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	UNiagaraSystem* OnDestroyedEffect;
 
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Server, Unreliable)
 	void Server_ShowOnDestroyedEffect();
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Unreliable)
 	void NetMulticast_ShowOnDestroyedEffect();
 
 

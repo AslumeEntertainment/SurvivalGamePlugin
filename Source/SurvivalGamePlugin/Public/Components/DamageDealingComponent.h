@@ -33,7 +33,7 @@ private:
 
 	void ShowOnHitEffect(FVector Location);
 
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Unreliable)
 	void NetMulticast_ShowOnHitEffect(FVector Location);
 
 protected:

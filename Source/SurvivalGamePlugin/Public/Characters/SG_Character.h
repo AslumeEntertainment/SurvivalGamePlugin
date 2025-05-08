@@ -39,9 +39,8 @@ public:
 
 private:
 
+	UPROPERTY(Replicated)
 	bool bCanMove = true;
-
-	bool bIsFirstPerson = true;
 
 	bool bIsInputEnabled = true;
 
@@ -64,8 +63,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
 
-	void SetFocusedInteractable(UObject* InFocusedInteractable);
-
 	void EmitInteractionChecker();
 
 	void CheckForInteractables(FHitResult HitResult);
@@ -86,9 +83,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	uint8 OnInteractionStencilValue = 5;
-
-	/*UPROPERTY(EditDefaultsOnly, Category = "Interaction")
-	UMaterialInterface* InteractableOverlayMaterial;*/
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	float TargetingDistance = 650.f;
@@ -230,9 +224,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetIsMirrored(bool NewValue);
-
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void Server_SetIsMirrored(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
