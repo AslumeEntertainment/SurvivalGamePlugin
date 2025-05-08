@@ -254,8 +254,6 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 {
 	if (IsLocallyControlled() == false)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_ManageDeckInGame::CloseDeckManager ne sum locally copntrolled"));
-
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 		return;
 	}
@@ -264,14 +262,7 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 	if (IsValid(HUD) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::CloseDeckManager IsValid(HUD) == false"));
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_ManageDeckInGame::CloseDeckManager huda mi e shit"));
 
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		return;
-	}
-	if (HUD->CanOpenMoreMenus() == false)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("USGGA_ManageDeckInGame::CloseDeckManager ne moga da otvarqm poveche menuta"));
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
@@ -281,7 +272,6 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 	UWidgetBlueprintLibrary::CancelDragDrop();
 	InGameDeckWidget->RemoveFromParent();
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_ManageDeckInGame::CloseDeckManager opravqm si input moda"));
 	PlayerCont->SetInputMode(FInputModeGameOnly());
 	PlayerCont->bShowMouseCursor = false;
 
