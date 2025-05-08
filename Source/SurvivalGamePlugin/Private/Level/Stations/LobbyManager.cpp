@@ -240,6 +240,8 @@ void ALobbyManager::SendCampaign()
 
 bool ALobbyManager::InteractRequest(AController* InteractingCharacter)
 {
+	if (InteractingCharacter->IsLocalPlayerController() == false) return false;
+
 	if (Super::InteractRequest(InteractingCharacter) == false) return false;
 
 	if (HasAuthority() == true)

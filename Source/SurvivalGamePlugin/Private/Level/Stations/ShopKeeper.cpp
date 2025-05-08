@@ -53,6 +53,8 @@ void AShopKeeper::BeginPlay()
 
 bool AShopKeeper::InteractRequest(AController* InteractingCharacter)
 {
+	if (InteractingCharacter->IsLocalPlayerController() == false) return false;
+	
 	if (Super::InteractRequest(InteractingCharacter) == false) return false;
 
 	InteractingPlayer->OnSaveUpdated.AddDynamic(this, &AShopKeeper::UpdateWidgets);
