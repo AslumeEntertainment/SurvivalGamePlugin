@@ -181,8 +181,8 @@ void AShopKeeper::BuyBoosterPack()
 		}
 	}
 
-	for (int i = 0; i < Pack->NumberOfCampaigns; i++)
-	{
+	//for (int i = 0; i < Pack->NumberOfCampaigns; i++)
+	//{
 		RNG = FMath::RandRange(1, MaxRNGRange);
 		for (uint16 j = 0; j < Pack->PossibleCampaigns.Num(); j++)
 		{
@@ -194,10 +194,10 @@ void AShopKeeper::BuyBoosterPack()
 				Data.ID = Entry.RepresentedUnit.GetRow<FCampaignPersistentData>("Campaign Hero")->ID;
 				Data.Level = 0;
 				Save->Campaigns.Add(Data);
-				break;
+				//break;
 			}
 		}
-	}
+	//}
 
 	for (int i = 0; i < Pack->NumberOfBiomes; i++)
 	{
