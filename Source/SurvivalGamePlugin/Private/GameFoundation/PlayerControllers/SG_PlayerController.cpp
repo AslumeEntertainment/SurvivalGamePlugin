@@ -6,7 +6,7 @@
 #include "Kismet/GameplayStatics.h" 
 #include "Net/UnrealNetwork.h"
 
-
+#include "FunctionLibraries/DeckFunctionLibrary.h"
 #include "Characters/InGameCharacter.h"
 #include "Components/EquipmentComponent.h"
 #include "GameFoundation/GameInstance/GlobalWidgetSubsystem.h"
@@ -92,9 +92,6 @@ void ASG_PlayerController::ReceiveReadSave(USaveGame* SaveGame)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No save game found - creating new file..."));
 		Cheat_ClearAccount();
-		//Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
-		//Save->Init();
-		//WriteSave();
 	}
 
 	OnSaveUpdated.Broadcast();
@@ -165,6 +162,7 @@ void ASG_PlayerController::Server_SpawnItemInFrontOfPlayer_Implementation(bool b
 
 USG_SaveGame* ASG_PlayerController::GetSave()
 {
+	if(IsValid(Save) == false) ReadSave();
 	return Save;
 }
 
@@ -190,5 +188,23 @@ void ASG_PlayerController::Cheat_ClearAccount()
 	Save = Cast<USG_SaveGame>(UGameplayStatics::CreateSaveGameObject(USG_SaveGame::StaticClass()));
 	Save->Init();
 	WriteSave();
+}
+
+void ASG_PlayerController::Cheat_GrantItem(uint16 ID)
+{
+	FResourseCardPersistentData Data =  UDeckFunctionLibrary::GenerateCardWithID(ResourceTable, ID);
+	FProgressiveDataHelperStruct* FoundEmptyResource = Save->ResourceCards.FindByPredicate([](FProgressiveDataHelperStruct& EmptyResource) { return EmptyResource.ID == 0; });
+	if (FoundEmptyResource != nullptr)
+	{
+		FoundEmptyResource->ID = Data.ID;
+	}
+	WriteSave();
+}
+
+void ASG_PlayerController::Cheat_SpawnItem(uint16 ID)
+{
+	FResourseCardPersistentData Data = UDeckFunctionLibrary::GenerateCardWithID(ResourceTable, ID);
+	FItemDataStruct* ResourceItemData = Data.RepresentedItem.GetRow<FItemDataStruct>("Cheat_SpawnItem");
+	if(ResourceItemData != nullptr) SpawnItemInFrontOfPlayer(false,Data.RepresentedItemClass, *ResourceItemData);
 }
 

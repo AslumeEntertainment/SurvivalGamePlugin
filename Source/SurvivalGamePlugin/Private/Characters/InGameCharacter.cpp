@@ -272,7 +272,7 @@ void AInGameCharacter::MainHandAction()
 	{
 		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag());
 
-		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
 
 		if ((uint8)ItemWeight > CurrentStrength)
@@ -327,7 +327,7 @@ void AInGameCharacter::SecondaryHandAction()
 	{
 		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag());
 
-		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
 
 		if ((uint8)ItemWeight > CurrentStrength)
@@ -357,7 +357,7 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		return;
 	}
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
@@ -427,7 +427,7 @@ void AInGameCharacter::BroadcastInitialValues()
 		return;
 	}
 
-	Client_OnUpdatePlayerHealth(AttributeSet->GetHealth(), AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerHealth(AttributeSet->GetCurrentHealth(), AttributeSet->GetMaxHealth());
 	Client_OnUpdatePlayerMaxHealth(AttributeSet->GetMaxHealth());
 	Client_OnUpdatePlayerHunger(AttributeSet->GetHunger(), AttributeSet->GetMaxHunger());
 	Client_OnUpdatePlayerMaxHunger(AttributeSet->GetMaxHunger());
@@ -500,11 +500,11 @@ float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GetAttackSpeed IsValid(AbilitySystemComponent) == false"));
 		return 1;
 	}
-	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
-	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
-	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetAttackSpeedPercentIncreaseAttribute()) / 100;
+	
+	//float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
+	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentAttackSpeedPercentAttribute()) / 100;
 
-	float FinalAttackSpeed = (1 + AttributeMultiplier + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+	float FinalAttackSpeed = (AttributeMultiplier /* + DexterityMultiplier*/) * (IsExhausted() ? 0.75f : 1);
 
 	return FinalAttackSpeed;
 }

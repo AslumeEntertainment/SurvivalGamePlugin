@@ -67,7 +67,7 @@ void AItemBase::BeginPlay()
 	}
 
 	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute(), ItemData.ItemMaxDurability);
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), ItemData.ItemMaxDurability);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute(), ItemData.ItemMaxDurability);
 }
 
 void AItemBase::Server_LoseDurability_Implementation(float LostDurability, bool bSafeDurabilityLoss)
@@ -83,8 +83,8 @@ void AItemBase::LoseDurability(float LostDurability, bool bSafeDurabilityLoss)
 		return;
 	}
 
-	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) - LostDurability;
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), CurrentDurability);
+	float CurrentDurability = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute()) - LostDurability;
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute(), CurrentDurability);
 
 	if (CurrentDurability <= 0)
 	{
@@ -100,12 +100,12 @@ UAbilitySystemComponent* AItemBase::GetAbilitySystemComponent() const
 
 float AItemBase::GetDurability() const
 {
-	return AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute());
+	return AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute());
 }
 
 void AItemBase::SetDurability(float InDurability)
 {
-	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute(), InDurability);
+	AbilitySystemComponent->SetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute(), InDurability);
 }
 
 void AItemBase::OnItemEquiped(AInGameCharacter* PlayerOwner, FName SocketName)
@@ -217,7 +217,7 @@ void AItemBase::DestroyHittable(bool bSafeDestruct)
 			continue;
 		}
 
-		float DurabilityPercent = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetHealthAttribute()) / 
+		float DurabilityPercent = AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetCurrentHealthAttribute()) / 
 			AbilitySystemComponent->GetNumericAttributeBase(USG_AttributeSet::GetMaxHealthAttribute());
 		
 		UE_LOG(LogTemp, Warning, TEXT("DurabilityPercent - %.2f"), DurabilityPercent);

@@ -13,8 +13,8 @@
 
 UGEEC_ImpactDamage::UGEEC_ImpactDamage()
 {
-	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
-	RelevantAttributesToCapture.Add(DamageStatics().ResistanceBludgeoningDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentHealthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentBludgeoningDefenceDef);
 }
 
 void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -53,7 +53,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	float FinalDamage = InternalImpactDamage > ExternalImpactDamage ? InternalImpactDamage : ExternalImpactDamage;
 
 	float TargetResistanceBludgeoning = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistanceBludgeoning);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentBludgeoningDefenceDef, EvaluateParameters, TargetResistanceBludgeoning);
 
 	FinalDamage = FMath::Floor(FinalDamage - TargetResistanceBludgeoning);
 
@@ -64,7 +64,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Final impact damage - %.2f"), FinalDamage);
 	
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FinalDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();

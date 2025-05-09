@@ -16,9 +16,10 @@
 
 UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
 {
-	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentDexterityDef);
 
-	RelevantAttributesToCapture.Add(DamageStatics().ResistanceFireDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentFireDefenceDef);
+
 }
 
 void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -57,15 +58,18 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	}
 
 	float FireResistance = 1.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, FireResistance);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentFireDefenceDef, EvaluateParameters, FireResistance);
 
-	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage / (FireResistance <= 0.f ? 1 : FireResistance));
+	float FinalDefence = FireResistance - DamageSourceData->Penetration;
+	float PenMultiplier = FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * FinalDefence + 0.082f))) / 100;
 
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FireDamage));
+	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage * PenMultiplier);
+
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	float Dexterity = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DexterityDef, EvaluateParameters, Dexterity);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentDexterityDef, EvaluateParameters, Dexterity);
 
 	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 

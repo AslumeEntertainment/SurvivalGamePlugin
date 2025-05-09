@@ -21,6 +21,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
@@ -32,19 +34,43 @@ public:
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, HealthRegenerationRate);
 
 	/*---------------------------------------------Combat-----------------------------------------------*/
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentStrength)
+	FGameplayAttributeData CurrentStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentStrength);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Strength)
-	FGameplayAttributeData Strength;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Strength);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxStrength)
+	FGameplayAttributeData MaxStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxStrength);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Dexterity)
-	FGameplayAttributeData Dexterity;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Dexterity);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseStrength)
+	FGameplayAttributeData BaseStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseStrength);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_AttackSpeedPercentIncrease)
-	FGameplayAttributeData AttackSpeedPercentIncrease;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, AttackSpeedPercentIncrease);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentDexterity)
+	FGameplayAttributeData CurrentDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentDexterity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxDexterity)
+	FGameplayAttributeData MaxDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxDexterity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseDexterity)
+	FGameplayAttributeData BaseDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseDexterity);
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseAttackSpeedPercent)
+	FGameplayAttributeData BaseAttackSpeedPercent;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseAttackSpeedPercent);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentAttackSpeedPercent)
+	FGameplayAttributeData CurrentAttackSpeedPercent;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentAttackSpeedPercent);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxAttackSpeedPercent)
+	FGameplayAttributeData MaxAttackSpeedPercent;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxAttackSpeedPercent);
 	/*---------------------------------------------Hunger-----------------------------------------------*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Hunger)
@@ -79,13 +105,29 @@ public:
 
 	/*---------------------------------------------Movement-----------------------------------------------*/
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Speed)
-	FGameplayAttributeData Speed;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Speed);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseSpeed)
+	FGameplayAttributeData BaseSpeed;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseSpeed);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_JumpVelocity)
-	FGameplayAttributeData JumpVelocity;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, JumpVelocity);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentSpeed)
+	FGameplayAttributeData CurrentSpeed;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentSpeed);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxSpeed)
+	FGameplayAttributeData MaxSpeed;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxSpeed);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseJumpVelocity)
+	FGameplayAttributeData BaseJumpVelocity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseJumpVelocity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentJumpVelocity)
+	FGameplayAttributeData CurrentJumpVelocity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentJumpVelocity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxJumpVelocity)
+	FGameplayAttributeData MaxJumpVelocity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxJumpVelocity);
 
 	bool HasMaxHunger() const;
 	bool HasMaxEnergy() const;
@@ -96,13 +138,31 @@ protected:
 	virtual void OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Strength(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentStrength(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Dexterity(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_MaxStrength(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_AttackSpeedPercentIncrease(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_BaseStrength(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_CurrentDexterity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MaxDexterity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_BaseDexterity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_BaseAttackSpeedPercent(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_CurrentAttackSpeedPercent(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MaxAttackSpeedPercent(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_Hunger(const FGameplayAttributeData& OldValue);
@@ -126,9 +186,21 @@ protected:
 	virtual void OnRep_EnergyDrainRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Speed(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_BaseSpeed(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_JumpVelocity(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentSpeed(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MaxSpeed(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_BaseJumpVelocity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_CurrentJumpVelocity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MaxJumpVelocity(const FGameplayAttributeData& OldValue);
 
 };

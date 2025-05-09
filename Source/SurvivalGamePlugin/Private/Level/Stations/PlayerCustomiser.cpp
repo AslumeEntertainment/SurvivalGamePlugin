@@ -168,6 +168,8 @@ void APlayerCustomiser::Clinet_WriteSave_Implementation()
 
 void APlayerCustomiser::Server_StopInteracting_Implementation()
 {
+	OnInGameCharacterDeath.Broadcast(this);
+
 	OnPlayerStopInteracting.Broadcast(this);
 	MainPawn = nullptr;
 	GamePawn = nullptr;

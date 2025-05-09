@@ -95,9 +95,9 @@ void ASG_AIController::OnPossess(APawn* InPawn)
     }
 
     PossesedCharacter->OnActorHit.AddDynamic(this, &ASG_AIController::OnPawnHit);
-    PossesedCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetSpeedAttribute()) / 2;
+    PossesedCharacter->GetCharacterMovement()->MaxWalkSpeed = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentSpeedAttribute()) / 2;
 
-    ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+    ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddLambda(
         [this](const FOnAttributeChangeData& Data)
         {
             AInGameCharacter* MyPawn = GetPawn<AInGameCharacter>();
