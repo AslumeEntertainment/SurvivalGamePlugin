@@ -262,7 +262,6 @@ void USGGA_ManageDeckInGame::CloseDeckManager(float TimeHeld)
 	if (IsValid(HUD) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ManageDeckInGame::CloseDeckManager IsValid(HUD) == false"));
-
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
