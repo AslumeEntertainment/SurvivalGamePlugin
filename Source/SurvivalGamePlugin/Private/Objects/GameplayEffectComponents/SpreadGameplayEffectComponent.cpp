@@ -28,7 +28,7 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 		return;
 	}
 
-	if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute()) <= 0.f)
+	if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetCurrentHealthAttribute()) <= 0.f)
 	{
 		return;
 	}

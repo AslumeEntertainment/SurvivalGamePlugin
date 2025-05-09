@@ -36,13 +36,17 @@ public:
 
 	/*---------------------------------------------Health-----------------------------------------------*/
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Health)
-	FGameplayAttributeData Health;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, Health);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentHealth)
+	FGameplayAttributeData CurrentHealth;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentHealth);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxHealth);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseHealth)
+	FGameplayAttributeData BaseHealth;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BaseHealth);
 
 	/*---------------------------------------------Resistances-----------------------------------------------*/
 
@@ -124,10 +128,12 @@ public:
 protected:
 
 	UFUNCTION()
-	virtual void OnRep_Health(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentHealth(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_BaseHealth(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_CurrentGuardProficiency(const FGameplayAttributeData& OldValue);

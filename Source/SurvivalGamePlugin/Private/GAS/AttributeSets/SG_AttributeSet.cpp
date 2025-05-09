@@ -18,8 +18,9 @@ void USG_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, CurrentHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, MaxHealth, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, BaseHealth, COND_None, REPNOTIFY_OnChanged);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, CurrentGuardProficiency, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_AttributeSet, CurrentMaxGuardProficiency, COND_None, REPNOTIFY_OnChanged);
@@ -47,9 +48,19 @@ void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
-	if (Attribute == GetBaseGuardProficiencyAttribute())
+	if (Attribute == GetBaseHealthAttribute())
 	{
-		float CurrentDifference = GetBaseGuardProficiency() == 0 ? 1 : GetMaxGuardProficiency() / GetBaseGuardProficiency();
+		float CurrentDifference = GetBaseHealth() == 0 ? 1 : (GetMaxHealth() / GetBaseHealth());
+		float CurrentPercent = GetMaxHealth() == 0 ? 1 : (GetCurrentHealth() / GetMaxHealth());
+
+		SetMaxHealth(NewValue * CurrentDifference);
+		SetCurrentHealth(NewValue * CurrentPercent);
+	}
+	
+
+	else if (Attribute == GetBaseGuardProficiencyAttribute())
+	{
+		float CurrentDifference = GetBaseGuardProficiency() == 0 ? 1 : (GetMaxGuardProficiency() / GetBaseGuardProficiency());
 		SetMaxGuardProficiency(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxGuardProficiencyAttribute())
@@ -64,7 +75,7 @@ void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 
 	else if (Attribute == GetBaseSlashingDefenceAttribute())
 	{
-		float CurrentDifference = GetBaseSlashingDefence() == 0 ? 1 : GetMaxSlashingDefence() / GetBaseSlashingDefence();
+		float CurrentDifference = GetBaseSlashingDefence() == 0 ? 1 : (GetMaxSlashingDefence() / GetBaseSlashingDefence());
 		SetMaxSlashingDefence(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxSlashingDefenceAttribute())
@@ -75,7 +86,7 @@ void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 
 	else if (Attribute == GetBasePiercingDefenceAttribute())
 	{
-		float CurrentDifference = GetBasePiercingDefence() == 0 ? 1 : GetMaxPiercingDefence() / GetBasePiercingDefence();
+		float CurrentDifference = GetBasePiercingDefence() == 0 ? 1 : (GetMaxPiercingDefence() / GetBasePiercingDefence());
 		SetMaxPiercingDefence(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxPiercingDefenceAttribute())
@@ -86,7 +97,7 @@ void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 
 	else if (Attribute == GetBaseBludgeoningDefenceAttribute())
 	{
-		float CurrentDifference = GetBaseBludgeoningDefence() == 0 ? 1 : GetMaxBludgeoningDefence() / GetBaseBludgeoningDefence();
+		float CurrentDifference = GetBaseBludgeoningDefence() == 0 ? 1 : (GetMaxBludgeoningDefence() / GetBaseBludgeoningDefence());
 		SetMaxBludgeoningDefence(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxBludgeoningDefenceAttribute())
@@ -97,7 +108,7 @@ void USG_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 
 	else if (Attribute == GetBaseFireDefenceAttribute())
 	{
-		float CurrentDifference = GetBaseFireDefence() == 0 ? 1 : GetMaxFireDefence() / GetBaseFireDefence();
+		float CurrentDifference = GetBaseFireDefence() == 0 ? 1 : (GetMaxFireDefence() / GetBaseFireDefence());
 		SetMaxFireDefence(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxFireDefenceAttribute())
@@ -110,7 +121,7 @@ void USG_AttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribut
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 
-	if (Attribute == GetHealthAttribute())
+	if (Attribute == GetCurrentHealthAttribute())
 	{
 		NewValue = FMath::Clamp<float>(NewValue, 0, GetMaxHealth());
 	}
@@ -120,24 +131,21 @@ void USG_AttributeSet::PostAttributeBaseChange(const FGameplayAttribute& Attribu
 {
 	Super::PostAttributeBaseChange(Attribute, OldValue, NewValue);
 
-	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
+	/*USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(GetOwningAbilitySystemComponent());
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USG_AttributeSet::PostAttributeBaseChange IsValid(ASC) == false"));
 		return;
-	}
+	}*/
 
-	if (Attribute == GetHealthAttribute())
-	{
-		
-	}
+	
 }
 
 void USG_AttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
 {
 	if (Attribute == GetMaxHealthAttribute())
 	{
-		ClampAttributeOnMaxValueChanged(Health, MaxHealth, NewValue, GetHealthAttribute());
+		ClampAttributeOnMaxValueChanged(CurrentHealth, MaxHealth, NewValue, GetCurrentHealthAttribute());
 	}
 }
 
@@ -152,9 +160,9 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 		return;
 	}
 
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
-		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetHealth(), GetMaxHealth());
+		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetCurrentHealth(), GetMaxHealth());
 
 		if (HasMaxHealth())
 		{
@@ -167,7 +175,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Bool.HasFull.Health")));
 		}
 
-		if (GetHealth() == 0.f)
+		if (GetCurrentHealth() == 0.f)
 		{
 			IHittable* HittableOwner = Cast<IHittable>(ASC->GetOwner());
 			if (HittableOwner == nullptr)
@@ -207,17 +215,22 @@ void USG_AttributeSet::ClampAttributeOnMaxValueChanged(const FGameplayAttributeD
 
 bool USG_AttributeSet::HasMaxHealth() const
 {
-	return GetHealth() == GetMaxHealth();
+	return GetCurrentHealth() == GetMaxHealth();
 }
 
-void USG_AttributeSet::OnRep_Health(const FGameplayAttributeData& OldValue)
+void USG_AttributeSet::OnRep_CurrentHealth(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, Health, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, CurrentHealth, OldValue);
 }
 
 void USG_AttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, MaxHealth, OldValue);
+}
+
+void USG_AttributeSet::OnRep_BaseHealth(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_AttributeSet, BaseHealth, OldValue);
 }
 
 void USG_AttributeSet::OnRep_CurrentGuardProficiency(const FGameplayAttributeData& OldValue)

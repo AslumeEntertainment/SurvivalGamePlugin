@@ -120,7 +120,7 @@ bool UGC_SpreadEffect::OnExecute_Implementation(AActor* MyTarget, const FGamepla
 
 		HitActorASC->ApplyGameplayEffectSpecToSelf(*Spec);
 		UE_LOG(LogTemp, Warning, TEXT("UGC_SpreadEffect::OnExecute_Implementation Spreading effect from %s to %s"), *MyTarget->GetName(), *HitActor->GetName());
-		if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetHealthAttribute()) <= 0.f)
+		if (TargetASC->GetNumericAttribute(USG_AttributeSet::GetCurrentHealthAttribute()) <= 0.f)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%s has 0 health, this cue should not exist!!!"), *MyTarget->GetName());
 		}

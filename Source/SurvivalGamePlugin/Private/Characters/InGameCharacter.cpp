@@ -357,7 +357,7 @@ void AInGameCharacter::BindCallbacksToDependencies()
 		return;
 	}
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute()).AddLambda(
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
 			Client_OnUpdatePlayerHealth(Data.NewValue, AttributeSet->GetMaxHealth());
@@ -427,7 +427,7 @@ void AInGameCharacter::BroadcastInitialValues()
 		return;
 	}
 
-	Client_OnUpdatePlayerHealth(AttributeSet->GetHealth(), AttributeSet->GetMaxHealth());
+	Client_OnUpdatePlayerHealth(AttributeSet->GetCurrentHealth(), AttributeSet->GetMaxHealth());
 	Client_OnUpdatePlayerMaxHealth(AttributeSet->GetMaxHealth());
 	Client_OnUpdatePlayerHunger(AttributeSet->GetHunger(), AttributeSet->GetMaxHunger());
 	Client_OnUpdatePlayerMaxHunger(AttributeSet->GetMaxHunger());

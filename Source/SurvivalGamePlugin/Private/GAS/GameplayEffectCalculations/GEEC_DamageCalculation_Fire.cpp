@@ -65,7 +65,7 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 
 	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage * PenMultiplier);
 
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FireDamage));
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	float Dexterity = 0.f;

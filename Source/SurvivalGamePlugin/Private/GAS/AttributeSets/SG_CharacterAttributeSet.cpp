@@ -55,7 +55,7 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	if (Attribute == GetBaseStrengthAttribute())
 	{
-		float CurrentDifference = GetBaseStrength()==0 ? 1 : GetMaxStrength() / GetBaseStrength();
+		float CurrentDifference = GetBaseStrength()==0 ? 1 : (GetMaxStrength() / GetBaseStrength());
 		SetMaxStrength(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxStrengthAttribute())
@@ -65,7 +65,7 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if (Attribute == GetBaseDexterityAttribute())
 	{
-		float CurrentDifference = GetBaseDexterity() == 0 ? 1 : GetMaxDexterity() / GetBaseDexterity();
+		float CurrentDifference = GetBaseDexterity() == 0 ? 1 : (GetMaxDexterity() / GetBaseDexterity());
 		SetMaxDexterity(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxDexterityAttribute())
@@ -75,7 +75,7 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if (Attribute == GetBaseAttackSpeedPercentAttribute())
 	{
-		float CurrentDifference = GetBaseAttackSpeedPercent() == 0 ? 1 : GetMaxAttackSpeedPercent() / GetBaseAttackSpeedPercent();
+		float CurrentDifference = GetBaseAttackSpeedPercent() == 0 ? 1 : (GetMaxAttackSpeedPercent() / GetBaseAttackSpeedPercent());
 
 		NewValue = FMath::Clamp<float>(NewValue * CurrentDifference, 0, 450);
 		SetMaxAttackSpeedPercent(NewValue);
@@ -89,7 +89,7 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if (Attribute == GetBaseSpeedAttribute())
 	{
-		float CurrentDifference = GetBaseSpeed() == 0 ? 1 : GetMaxSpeed() / GetBaseSpeed();
+		float CurrentDifference = GetBaseSpeed() == 0 ? 1 : (GetMaxSpeed() / GetBaseSpeed());
 		SetMaxSpeed(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxSpeedAttribute())
@@ -99,7 +99,7 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if(Attribute == GetBaseJumpVelocityAttribute())
 	{
-		float CurrentDifference = GetBaseJumpVelocity() == 0 ? 1 : GetMaxJumpVelocity() / GetBaseJumpVelocity();
+		float CurrentDifference = GetBaseJumpVelocity() == 0 ? 1 : (GetMaxJumpVelocity() / GetBaseJumpVelocity());
 		SetMaxJumpVelocity(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxJumpVelocityAttribute())

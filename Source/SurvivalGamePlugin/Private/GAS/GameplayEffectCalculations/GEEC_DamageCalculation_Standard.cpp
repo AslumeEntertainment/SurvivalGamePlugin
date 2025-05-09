@@ -22,7 +22,7 @@ UGEEC_DamageCalculation_Standard::UGEEC_DamageCalculation_Standard()
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentStrengthDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentDexterityDef);
 
-	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentHealthDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentGuardProficiencyDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentSlashingDefenceDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentPiercingDefenceDef);
@@ -118,7 +118,7 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	
 	//---------------------------------------------------------//
 
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FinalDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	float Dexterity = 0.f;

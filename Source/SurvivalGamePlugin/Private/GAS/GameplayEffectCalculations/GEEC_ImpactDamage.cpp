@@ -13,7 +13,7 @@
 
 UGEEC_ImpactDamage::UGEEC_ImpactDamage()
 {
-	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentHealthDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentBludgeoningDefenceDef);
 }
 
@@ -64,7 +64,7 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Final impact damage - %.2f"), FinalDamage);
 	
-	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FinalDamage));
+	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FinalDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
