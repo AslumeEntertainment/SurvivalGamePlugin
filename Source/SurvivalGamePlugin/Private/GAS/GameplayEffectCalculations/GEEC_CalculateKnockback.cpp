@@ -60,7 +60,7 @@ void UGEEC_CalculateKnockback::Execute_Implementation(const FGameplayEffectCusto
 
 	if (HittableTarget->IsGuarding() && KnockbackEffectData->bIgnoreGuard == false)
 	{
-		KnockbackForce /= TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetGuardProficiencyAttribute());
+		KnockbackForce /= TargetAbilitySystemComponent->GetNumericAttribute(USG_AttributeSet::GetCurrentGuardProficiencyAttribute());
 	}
 
 	ASG_Character* TargetCharacter = Cast<ASG_Character>(TargetActor);

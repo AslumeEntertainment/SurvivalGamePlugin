@@ -33,6 +33,10 @@ void USG_AbilitySystemComponent::SetStartingAttributeValues()
 {
 	for (TPair<FGameplayAttribute, float> StartingAttributeData : StartingAttributeSetData)
 	{
+		if (StartingAttributeData.Key.IsValid() == false)
+		{ 
+			UE_LOG(LogTemp, Warning, TEXT("Invalid Attribute in: %s"), *GetOwner()->GetName()); continue;
+		}
 		SetNumericAttributeBase(StartingAttributeData.Key, StartingAttributeData.Value);
 	}
 }

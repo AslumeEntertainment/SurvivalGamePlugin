@@ -12,11 +12,11 @@ struct FSG_DamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentDexterity);
 
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(GuardProficiency);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceSlashing);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistancePiercing);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceBludgeoning);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(ResistanceFire);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentGuardProficiency);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentSlashingDefence);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentPiercingDefence);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentBludgeoningDefence);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentFireDefence);
 
 	FSG_DamageStatics()
 	{
@@ -24,11 +24,11 @@ struct FSG_DamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, CurrentDexterity, Source, true);
 
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, Health, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, GuardProficiency, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceSlashing, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistancePiercing, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceBludgeoning, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, ResistanceFire, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, CurrentGuardProficiency, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, CurrentSlashingDefence, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, CurrentPiercingDefence, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, CurrentBludgeoningDefence, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, CurrentFireDefence, Target, false);
 	}
 };
 

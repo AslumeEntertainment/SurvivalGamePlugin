@@ -22,6 +22,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	virtual void PostAttributeBaseChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) const override;
@@ -44,35 +46,78 @@ public:
 
 	/*---------------------------------------------Resistances-----------------------------------------------*/
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_GuardProficiency)
-	FGameplayAttributeData GuardProficiency;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, GuardProficiency);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentGuardProficiency)
+	FGameplayAttributeData CurrentGuardProficiency;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentGuardProficiency);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceSlashing)
-	FGameplayAttributeData ResistanceSlashing;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceSlashing);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentMaxGuardProficiency)
+	FGameplayAttributeData CurrentMaxGuardProficiency;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentMaxGuardProficiency);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistancePiercing)
-	FGameplayAttributeData ResistancePiercing;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistancePiercing);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxGuardProficiency)
+	FGameplayAttributeData MaxGuardProficiency;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxGuardProficiency);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceBludgeoning)
-	FGameplayAttributeData ResistanceBludgeoning;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceBludgeoning);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseGuardProficiency)
+	FGameplayAttributeData BaseGuardProficiency;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BaseGuardProficiency);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ResistanceFire)
-	FGameplayAttributeData ResistanceFire;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ResistanceFire);
 
-	/*---------------------------------------------Fire Related-----------------------------------------------*/
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_IgnitionThreshold)
-	FGameplayAttributeData IgnitionThreshold;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, IgnitionThreshold);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentSlashingDefence)
+	FGameplayAttributeData CurrentSlashingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentSlashingDefence);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_ExtinguishTime)
-	FGameplayAttributeData ExtinguishTime;
-	ATTRIBUTE_ACCESSORS(USG_AttributeSet, ExtinguishTime);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxSlashingDefence)
+	FGameplayAttributeData MaxSlashingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxSlashingDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseSlashingDefence)
+	FGameplayAttributeData BaseSlashingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BaseSlashingDefence);
+
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentPiercingDefence)
+	FGameplayAttributeData CurrentPiercingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentPiercingDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxPiercingDefence)
+	FGameplayAttributeData MaxPiercingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxPiercingDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BasePiercingDefence)
+	FGameplayAttributeData BasePiercingDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BasePiercingDefence);
+
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentBludgeoningDefence)
+	FGameplayAttributeData CurrentBludgeoningDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentBludgeoningDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxBludgeoningDefence)
+	FGameplayAttributeData MaxBludgeoningDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxBludgeoningDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseBludgeoningDefence)
+	FGameplayAttributeData BaseBludgeoningDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BaseBludgeoningDefence);
+
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrenFireDefence)
+	FGameplayAttributeData CurrentFireDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, CurrentFireDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxFireDefence)
+	FGameplayAttributeData MaxFireDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, MaxFireDefence);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseFireDefence)
+	FGameplayAttributeData BaseFireDefence;
+	ATTRIBUTE_ACCESSORS(USG_AttributeSet, BaseFireDefence);
+
 
 	bool HasMaxHealth() const;
 
@@ -85,24 +130,44 @@ protected:
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_GuardProficiency(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentGuardProficiency(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_CurrentMaxGuardProficiency(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_MaxGuardProficiency(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_BaseGuardProficiency(const FGameplayAttributeData& OldValue);
+
 
 	UFUNCTION()
-	virtual void OnRep_ResistanceSlashing(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentSlashingDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_MaxSlashingDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_BaseSlashingDefence(const FGameplayAttributeData& OldValue);
+
 
 	UFUNCTION()
-	virtual void OnRep_ResistancePiercing(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentPiercingDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_MaxPiercingDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_BasePiercingDefence(const FGameplayAttributeData& OldValue);
+
 
 	UFUNCTION()
-	virtual void OnRep_ResistanceBludgeoning(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentBludgeoningDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_MaxBludgeoningDefence(const FGameplayAttributeData& OldValue);
+	UFUNCTION()
+	virtual void OnRep_BaseBludgeoningDefence(const FGameplayAttributeData& OldValue);
+
 
 	UFUNCTION()
-	virtual void OnRep_ResistanceFire(const FGameplayAttributeData& OldValue);
-
+	virtual void OnRep_CurrenFireDefence(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	virtual void OnRep_IgnitionThreshold(const FGameplayAttributeData& OldValue);
-
+	virtual void OnRep_MaxFireDefence(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	virtual void OnRep_ExtinguishTime(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_BaseFireDefence(const FGameplayAttributeData& OldValue);
 
 };

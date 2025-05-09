@@ -20,37 +20,39 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentStrength, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxStrength, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseStrength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxStrength, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseStrength, COND_None, REPNOTIFY_OnChanged);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentDexterity, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxDexterity, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseDexterity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxDexterity, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseDexterity, COND_None, REPNOTIFY_OnChanged);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseAttackSpeedPercent, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseAttackSpeedPercent, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentAttackSpeedPercent, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxAttackSpeedPercent, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxAttackSpeedPercent, COND_None, REPNOTIFY_OnChanged);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Hunger, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxHunger, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxHunger, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, HungerDrainRate, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Energy, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxEnergy, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxEnergy, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, EnergyRechargeRate, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, EnergyDrainRate, COND_None, REPNOTIFY_Always);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseSpeed, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxSpeed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxSpeed, COND_None, REPNOTIFY_OnChanged);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseJumpVelocity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseJumpVelocity, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentJumpVelocity, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxJumpVelocity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxJumpVelocity, COND_None, REPNOTIFY_OnChanged);
 }
 
 void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
+	Super::PreAttributeChange(Attribute, NewValue);
+
 	if (Attribute == GetBaseStrengthAttribute())
 	{
 		float CurrentDifference = GetBaseStrength()==0 ? 1 : GetMaxStrength() / GetBaseStrength();

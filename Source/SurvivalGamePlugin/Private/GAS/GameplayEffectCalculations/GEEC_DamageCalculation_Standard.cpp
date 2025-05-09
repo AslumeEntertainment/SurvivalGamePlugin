@@ -23,10 +23,10 @@ UGEEC_DamageCalculation_Standard::UGEEC_DamageCalculation_Standard()
 	RelevantAttributesToCapture.Add(DamageStatics().CurrentDexterityDef);
 
 	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
-	RelevantAttributesToCapture.Add(DamageStatics().GuardProficiencyDef);
-	RelevantAttributesToCapture.Add(DamageStatics().ResistanceSlashingDef);
-	RelevantAttributesToCapture.Add(DamageStatics().ResistancePiercingDef);
-	RelevantAttributesToCapture.Add(DamageStatics().ResistanceBludgeoningDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentGuardProficiencyDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentSlashingDefenceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentPiercingDefenceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentBludgeoningDefenceDef);
 }
 
 void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -197,13 +197,13 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 	switch (DamageSourceData->DamageType)
 	{
 	case ESG_DamageType::Slashing: 
-		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceSlashingDef, EvaluateParameters, TargetResistance); break;
-	case ESG_DamageType::Piercing: 
-		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistancePiercingDef, EvaluateParameters, TargetResistance); break;
-	case ESG_DamageType::Bludgeoning: 
-		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceBludgeoningDef, EvaluateParameters, TargetResistance); break;
-	case ESG_DamageType::Fire: 
-		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, TargetResistance);
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentSlashingDefenceDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Piercing:
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentPiercingDefenceDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Bludgeoning:
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentBludgeoningDefenceDef, EvaluateParameters, TargetResistance); break;
+	case ESG_DamageType::Fire:
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentFireDefenceDef, EvaluateParameters, TargetResistance);
 	}
 
 	if (bIsHitGuarded)
@@ -211,7 +211,7 @@ float UGEEC_DamageCalculation_Standard::GetPenetrationMultiplier(const FGameplay
 		UE_LOG(DamageLog, Warning, TEXT("The hit is being guarded by the target"));
 		
 		float GuardProficiency = 1.f;
-		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().GuardProficiencyDef, EvaluateParameters, GuardProficiency);
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentGuardProficiencyDef, EvaluateParameters, GuardProficiency);
 		TargetResistance *= GuardProficiency;
 	}
 
