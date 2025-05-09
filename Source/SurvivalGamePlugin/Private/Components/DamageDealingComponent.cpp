@@ -4,6 +4,7 @@
 #include "Components/DamageDealingComponent.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+#include "NiagaraFunctionLibrary.h"
 #include "AbilitySystemGlobals.h"
 
 #include "Objects/GameplayEffectDataObjects/DamageSourceData.h"
@@ -79,12 +80,7 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 
 		ContextHandle.AddHitResult(HitResult, true);
 		
-		FGameplayCueParameters CueParams = FGameplayCueParameters();
-		CueParams.Location = HitResult.ImpactPoint;
-		for (FGameplayTag GameplayCueTag : OnHitGameplayCueTags)
-		{
-			TargetASC->ExecuteGameplayCue(GameplayCueTag, CueParams);
-		}
+		NetMulticast_ShowOnHitEffect(HitResult.ImpactPoint);
 
 		for (UGameplayEffectData* GameplayEffectData : GameplayEffectsData)
 		{
@@ -114,6 +110,29 @@ void UDamageDealingComponent::ProcessHit(TArray<FHitResult> HitResults)
 
 		if (bShouldOnlyHitOnce) ActorsToIgnoreWhenActive.Add(HitResult.GetActor());
 	}
+}
+
+void UDamageDealingComponent::ShowOnHitEffect(FVector Location)
+{
+	if (IsValid(OnHitLandedEffect) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s: IsValid(OnHitLandedEffect) == false"), *GetName());
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UDamageDealingComponent::ShowOnHitEffect IsValid(World) == false"));
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, OnHitLandedEffect, Location, GetOwner()->GetActorRotation(), GetOwner()->GetActorScale3D());
+}
+
+void UDamageDealingComponent::NetMulticast_ShowOnHitEffect_Implementation(FVector Location)
+{
+	ShowOnHitEffect(Location);
 }
 
 void UDamageDealingComponent::ConfigDamageSource(AActor* InDamageInstigator)

@@ -12,15 +12,5 @@ class SURVIVALGAMEPLUGIN_API USG_AbilitySystemBlueprintLibrary : public UAbility
 {
 	GENERATED_BODY()
 
-//private:
-//
-//	UFUNCTION(Server, Reliable)
-//	static void Server_SG_SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
-//
-//public:
-//
-//	UFUNCTION(BlueprintCallable)
-//	static void SG_SendGameplayEventToActor(AActor* Actor, FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);
-
 
 };

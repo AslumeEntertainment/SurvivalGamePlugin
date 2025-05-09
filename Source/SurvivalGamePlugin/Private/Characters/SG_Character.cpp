@@ -85,16 +85,6 @@ void ASG_Character::UpdateCamera(float Alpha)
 
 void ASG_Character::Server_SetFocusedInteractable_Implementation(UObject* InFocusedInteractable)
 {
-	SetFocusedInteractable(InFocusedInteractable);
-}
-
-void ASG_Character::SetFocusedInteractable(UObject* InFocusedInteractable)
-{
-	if (HasAuthority() == false)
-	{
-		Server_SetFocusedInteractable(InFocusedInteractable);
-		return;
-	}
 	FocusedInteractableObject = InFocusedInteractable;
 }
 
@@ -131,8 +121,9 @@ void ASG_Character::EmitInteractionChecker()
 void ASG_Character::CheckForInteractables(FHitResult HitResult)
 {
 	AActor* HitActor = HitResult.GetActor();
-	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 	IInteractableInterface* InteractableActor = Cast<IInteractableInterface>(HitActor);
+
+	UMeshComponent* HitMeshComponent = IsValid(HitActor) ? HitActor->GetComponentByClass<UMeshComponent>() : nullptr;
 
 	if (FocusedInteractableObject == HitActor)
 	{
@@ -144,33 +135,30 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		{
 			return;
 		}
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (Cast<APlayerController>(GetController()) != nullptr)
 		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 		}
 
 		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 		Server_SetFocusedInteractable(nullptr);
 		return;
 	}
-	if (!InteractableActor->bCanInteract(GetController()))
+	if (InteractableActor->bCanInteract(GetController()) == false)
 	{
 		return;
 	}
 	if (FocusedInteractableObject != nullptr)
 	{
-		UActorComponent* InteractableMeshComponent = Cast<AActor>(FocusedInteractableObject)->GetComponentByClass(UMeshComponent::StaticClass());
-		if (Cast<UMeshComponent>(InteractableMeshComponent) && Cast<APlayerController>(GetController()) != nullptr)
+		if (Cast<APlayerController>(GetController()) != nullptr)
 		{
-			Cast<UMeshComponent>(InteractableMeshComponent)->SetOverlayMaterial(nullptr);
+			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 		}
 	}
 
-	UMeshComponent* HitMeshComponent = Cast<UMeshComponent>(HitActor->GetComponentByClass(UMeshComponent::StaticClass()));
-	if (HitMeshComponent != nullptr && Cast<APlayerController>(GetController()) != nullptr)
+	if (Cast<APlayerController>(GetController()) != nullptr)
 	{
-		HitMeshComponent->SetOverlayMaterial(InteractableOverlayMaterial);
+		InteractableActor->SetInteractableHighlight(OnInteractionStencilValue);
 	}
 
 	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + InteractableActor->GetInteractableName().ToString()));
@@ -369,6 +357,7 @@ void ASG_Character::PossessedBy(AController* NewController)
 	if (bAlreadySetUp) return;
 
 	InitCharacterDefaults();
+	SetRepControlRotation(NewController->GetControlRotation());
 }
 
 void ASG_Character::InitCharacterDefaults()
@@ -585,16 +574,10 @@ void ASG_Character::SetIsMirrored(bool NewValue)
 {
 	if (HasAuthority() == false)
 	{
-		Server_SetIsMirrored(NewValue);
 		return;
 	}
 
 	bIsMirrored = NewValue;
-}
-
-void ASG_Character::Server_SetIsMirrored_Implementation(bool NewValue)
-{
-	SetIsMirrored(NewValue);
 }
 
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)

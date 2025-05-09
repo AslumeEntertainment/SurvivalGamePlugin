@@ -37,7 +37,7 @@ public:
 
 private:
 
-	UFUNCTION(BlueprintCallable, Server, Reliable)
+	UFUNCTION(BlueprintCallable, Server, Reliable) //NOTE
 	void Server_LoseDurability(float LostDurability, bool bSafeDurabilityLoss);
 
 protected:

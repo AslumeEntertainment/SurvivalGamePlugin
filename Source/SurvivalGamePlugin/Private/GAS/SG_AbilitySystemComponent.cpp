@@ -3,12 +3,37 @@
 
 #include "GAS/SG_AbilitySystemComponent.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "GameplayEffect.h"
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
 #include "Misc/DamageIndicator.h"
 
+
+void USG_AbilitySystemComponent::Server_ShowOnDestroyedEffect_Implementation()
+{
+	NetMulticast_ShowOnDestroyedEffect();
+}
+
+void USG_AbilitySystemComponent::NetMulticast_ShowOnDestroyedEffect_Implementation()
+{
+	if (IsValid(OnDestroyedEffect) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s: IsValid(OnDestroyedEffect) == false"), *GetName());
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USG_AbilitySystemComponent::NetMulticast_ShowOnDestroyedEffect_Implementation IsValid(World) == false"));
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, OnDestroyedEffect, 
+		GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation(), GetOwner()->GetActorScale3D());
+}
 
 void USG_AbilitySystemComponent::OnOwnerDestroyed()
 {
@@ -19,7 +44,8 @@ void USG_AbilitySystemComponent::OnOwnerDestroyed()
 	}
 	
 	CancelAllAbilities();
-	ExecuteGameplayCue(OnDestroyedGameplayCueTag);
+	
+	GetOwner()->HasAuthority() ? NetMulticast_ShowOnDestroyedEffect() : Server_ShowOnDestroyedEffect();
 	
 	TArray<FActiveGameplayEffectHandle> ActiveEffectSpecs = ActiveGameplayEffects.GetAllActiveEffectHandles();
 	

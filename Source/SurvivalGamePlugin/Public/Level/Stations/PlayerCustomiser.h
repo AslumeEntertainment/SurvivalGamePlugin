@@ -49,7 +49,7 @@ private:
 	UPROPERTY()
 	uint8 ID = 0;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AActor* ParentActor = nullptr;
 
 	UPROPERTY()

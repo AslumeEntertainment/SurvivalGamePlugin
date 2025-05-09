@@ -25,4 +25,6 @@ public:
 	virtual bool bCanInteract(AController* InteractingCharacter) const = 0;
 
 	virtual FText GetInteractableName() = 0;
+
+	virtual void SetInteractableHighlight(int StencilValue);
 };

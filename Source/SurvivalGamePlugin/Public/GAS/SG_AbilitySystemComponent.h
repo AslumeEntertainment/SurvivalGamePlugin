@@ -11,6 +11,7 @@ class UGameplayEffect;
 class UGameplayAbility;
 class USG_GameplayAbility;
 class ADamageIndicator;
+class UNiagaraSystem;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USG_AbilitySystemComponent : public UAbilitySystemComponent
@@ -22,11 +23,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	TMap<FGameplayAttribute, float> StartingAttributeSetData;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults", meta = (Categories = "GameplayCue"))
-	FGameplayTag OnDestroyedGameplayCueTag;
-
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
-	TSubclassOf<ADamageIndicator> DamageIndicatorClass = nullptr;
+	UNiagaraSystem* OnDestroyedEffect;
+
+	UFUNCTION(Server, Unreliable)
+	void Server_ShowOnDestroyedEffect();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMulticast_ShowOnDestroyedEffect();
 
 
 public:
