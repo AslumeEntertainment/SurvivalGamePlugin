@@ -272,7 +272,7 @@ void AInGameCharacter::MainHandAction()
 	{
 		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetSecondaryEquipmentSlotTag());
 
-		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
 
 		if ((uint8)ItemWeight > CurrentStrength)
@@ -327,7 +327,7 @@ void AInGameCharacter::SecondaryHandAction()
 	{
 		AItemBase* ItemRef = EquipmentComponent->GetEquipedItemAtSlot(EquipmentComponent->GetMainEquipmentSlotTag());
 
-		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+		float CurrentStrength = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 		EWeight ItemWeight = ItemRef->ItemData.ItemWeight;
 
 		if ((uint8)ItemWeight > CurrentStrength)

@@ -19,8 +19,8 @@ DEFINE_LOG_CATEGORY(DamageLog);
 
 UGEEC_DamageCalculation_Standard::UGEEC_DamageCalculation_Standard()
 {
-	RelevantAttributesToCapture.Add(DamageStatics().StrengthDef);
-	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentStrengthDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentDexterityDef);
 
 	RelevantAttributesToCapture.Add(DamageStatics().HealthDef);
 	RelevantAttributesToCapture.Add(DamageStatics().GuardProficiencyDef);
@@ -122,7 +122,7 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	float Dexterity = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DexterityDef, EvaluateParameters, Dexterity);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentDexterityDef, EvaluateParameters, Dexterity);
 
 	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 
@@ -155,7 +155,7 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 	float StrengthMultiplier = 1.f;
 
 	float Strength = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().StrengthDef, EvaluateParameters, Strength);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentStrengthDef, EvaluateParameters, Strength);
 	if (Strength <= 0.f)
 	{
 		return StrengthMultiplier;

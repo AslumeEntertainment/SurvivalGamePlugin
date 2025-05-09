@@ -16,7 +16,7 @@
 
 UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
 {
-	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
+	RelevantAttributesToCapture.Add(DamageStatics().CurrentDexterityDef);
 
 	RelevantAttributesToCapture.Add(DamageStatics().ResistanceFireDef);
 
@@ -69,7 +69,7 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
 	float Dexterity = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DexterityDef, EvaluateParameters, Dexterity);
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentDexterityDef, EvaluateParameters, Dexterity);
 
 	ApplyAdditionalEffects(TargetASC, DamageSourceData->AdditionalEffects, EffectContext, Dexterity);
 

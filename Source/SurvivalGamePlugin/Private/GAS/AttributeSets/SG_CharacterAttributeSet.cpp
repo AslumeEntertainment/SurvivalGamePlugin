@@ -19,8 +19,13 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, COND_None, REPNOTIFY_Always);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Strength, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, Dexterity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentStrength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxStrength, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseStrength, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentDexterity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, MaxDexterity, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseDexterity, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, BaseAttackSpeedPercent, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(USG_CharacterAttributeSet, CurrentAttackSpeedPercent, COND_None, REPNOTIFY_Always);
@@ -46,10 +51,31 @@ void USG_CharacterAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 
 void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-	if (Attribute == GetBaseAttackSpeedPercentAttribute())
+	if (Attribute == GetBaseStrengthAttribute())
 	{
-		NewValue = FMath::Clamp<float>(NewValue, 0, 450);
+		float CurrentDifference = GetBaseStrength()==0 ? 1 : GetMaxStrength() / GetBaseStrength();
+		SetMaxStrength(NewValue * CurrentDifference);
+	}
+	else if (Attribute == GetMaxStrengthAttribute())
+	{
+		SetCurrentStrength(NewValue);
+	}
 
+	else if (Attribute == GetBaseDexterityAttribute())
+	{
+		float CurrentDifference = GetBaseDexterity() == 0 ? 1 : GetMaxDexterity() / GetBaseDexterity();
+		SetMaxDexterity(NewValue * CurrentDifference);
+	}
+	else if (Attribute == GetMaxDexterityAttribute())
+	{
+		SetCurrentDexterity(NewValue);
+	}
+
+	else if (Attribute == GetBaseAttackSpeedPercentAttribute())
+	{
+		float CurrentDifference = GetBaseAttackSpeedPercent() == 0 ? 1 : GetMaxAttackSpeedPercent() / GetBaseAttackSpeedPercent();
+
+		NewValue = FMath::Clamp<float>(NewValue * CurrentDifference, 0, 450);
 		SetMaxAttackSpeedPercent(NewValue);
 	}
 	else if (Attribute == GetMaxAttackSpeedPercentAttribute())
@@ -61,7 +87,8 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if (Attribute == GetBaseSpeedAttribute())
 	{
-		SetMaxSpeed(NewValue);
+		float CurrentDifference = GetBaseSpeed() == 0 ? 1 : GetMaxSpeed() / GetBaseSpeed();
+		SetMaxSpeed(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxSpeedAttribute())
 	{
@@ -70,7 +97,8 @@ void USG_CharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Att
 
 	else if(Attribute == GetBaseJumpVelocityAttribute())
 	{
-		SetMaxJumpVelocity(NewValue);
+		float CurrentDifference = GetBaseJumpVelocity() == 0 ? 1 : GetMaxJumpVelocity() / GetBaseJumpVelocity();
+		SetMaxJumpVelocity(NewValue * CurrentDifference);
 	}
 	else if (Attribute == GetMaxJumpVelocityAttribute())
 	{
@@ -234,14 +262,34 @@ void USG_CharacterAttributeSet::OnRep_HealthRegenerationRate(const FGameplayAttr
 	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, HealthRegenerationRate, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Strength(const FGameplayAttributeData& OldValue)
+void USG_CharacterAttributeSet::OnRep_CurrentStrength(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Strength, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, CurrentStrength, OldValue);
 }
 
-void USG_CharacterAttributeSet::OnRep_Dexterity(const FGameplayAttributeData& OldValue)
+void USG_CharacterAttributeSet::OnRep_MaxStrength(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, Dexterity, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxStrength, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_BaseStrength(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, BaseStrength, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_CurrentDexterity(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, CurrentDexterity, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_MaxDexterity(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, MaxDexterity, OldValue);
+}
+
+void USG_CharacterAttributeSet::OnRep_BaseDexterity(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(USG_CharacterAttributeSet, BaseDexterity, OldValue);
 }
 
 void USG_CharacterAttributeSet::OnRep_BaseAttackSpeedPercent(const FGameplayAttributeData& OldValue)

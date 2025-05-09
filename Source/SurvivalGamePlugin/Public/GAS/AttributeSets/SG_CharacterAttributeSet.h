@@ -34,14 +34,31 @@ public:
 	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, HealthRegenerationRate);
 
 	/*---------------------------------------------Combat-----------------------------------------------*/
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentStrength)
+	FGameplayAttributeData CurrentStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentStrength);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Strength)
-	FGameplayAttributeData Strength;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Strength);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxStrength)
+	FGameplayAttributeData MaxStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxStrength);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_Dexterity)
-	FGameplayAttributeData Dexterity;
-	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, Dexterity);
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseStrength)
+	FGameplayAttributeData BaseStrength;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseStrength);
+
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_CurrentDexterity)
+	FGameplayAttributeData CurrentDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, CurrentDexterity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_MaxDexterity)
+	FGameplayAttributeData MaxDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, MaxDexterity);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseDexterity)
+	FGameplayAttributeData BaseDexterity;
+	ATTRIBUTE_ACCESSORS(USG_CharacterAttributeSet, BaseDexterity);
+
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes", ReplicatedUsing = OnRep_BaseAttackSpeedPercent)
 	FGameplayAttributeData BaseAttackSpeedPercent;
@@ -121,10 +138,22 @@ protected:
 	virtual void OnRep_HealthRegenerationRate(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Strength(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_CurrentStrength(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
-	virtual void OnRep_Dexterity(const FGameplayAttributeData& OldValue);
+	virtual void OnRep_MaxStrength(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_BaseStrength(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_CurrentDexterity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MaxDexterity(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_BaseDexterity(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_BaseAttackSpeedPercent(const FGameplayAttributeData& OldValue);

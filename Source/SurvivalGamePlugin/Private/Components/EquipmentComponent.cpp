@@ -99,7 +99,7 @@ bool UEquipmentComponent::CanEquipItem(const AItemBase* Item)
 		return false;
 	}
 
-	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 	if (EquipmentSlots.Num() == 1) OwnerStrength /= 2;
 	EWeight LastTorelableWeight = EWeight::None;
 
@@ -173,7 +173,7 @@ void UEquipmentComponent::EquipItem(AItemBase* Item, bool bShouldSlotBeEmpty)
 		return;
 	}
 
-	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetStrengthAttribute());
+	float OwnerStrength = ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute());
 	FGameplayTag EquipmentSlotTag = Item->ItemData.EquipmentSlotTag;
 	EWeight ItemWeight = Item->ItemData.ItemWeight;
 	TArray<EWeight> EquipedItemsWeights;

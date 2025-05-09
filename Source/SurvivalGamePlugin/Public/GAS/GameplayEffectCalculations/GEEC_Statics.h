@@ -8,8 +8,8 @@
 
 struct FSG_DamageStatics
 {
-	DECLARE_ATTRIBUTE_CAPTUREDEF(Strength);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(Dexterity);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentStrength);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CurrentDexterity);
 
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Health);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(GuardProficiency);
@@ -20,8 +20,8 @@ struct FSG_DamageStatics
 
 	FSG_DamageStatics()
 	{
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, Strength, Source, true);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, Dexterity, Source, true);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, CurrentStrength, Source, true);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_CharacterAttributeSet, CurrentDexterity, Source, true);
 
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, Health, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(USG_AttributeSet, GuardProficiency, Target, false);
