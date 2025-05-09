@@ -495,11 +495,11 @@ float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::GetAttackSpeed IsValid(AbilitySystemComponent) == false"));
 		return 1;
 	}
-	float VelocityMultiplier = 1 * (GetVelocity().Length() / 10000);
-	float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
-	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetAttackSpeedPercentIncreaseAttribute()) / 100;
+	
+	//float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
+	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentAttackSpeedPercentAttribute()) / 100;
 
-	float FinalAttackSpeed = (1 + AttributeMultiplier + VelocityMultiplier + DexterityMultiplier) * (IsExhausted() ? 0.75f : 1);
+	float FinalAttackSpeed = (AttributeMultiplier /* + DexterityMultiplier*/) * (IsExhausted() ? 0.75f : 1);
 
 	return FinalAttackSpeed;
 }

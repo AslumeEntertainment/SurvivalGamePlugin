@@ -19,6 +19,7 @@ UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
 	RelevantAttributesToCapture.Add(DamageStatics().DexterityDef);
 
 	RelevantAttributesToCapture.Add(DamageStatics().ResistanceFireDef);
+
 }
 
 void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -59,7 +60,10 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	float FireResistance = 1.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ResistanceFireDef, EvaluateParameters, FireResistance);
 
-	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage / (FireResistance <= 0.f ? 1 : FireResistance));
+	float FinalDefence = FireResistance - DamageSourceData->Penetration;
+	float PenMultiplier = FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * FinalDefence + 0.082f))) / 100;
+
+	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage * PenMultiplier);
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().HealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();

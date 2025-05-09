@@ -34,6 +34,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Developer")
 	bool bIsCameraMovementConstrained = true;
 	
+	UPROPERTY(EditAnywhere, Category = "Data")
+	UDataTable* ResourceTable = nullptr;
+
 	UFUNCTION()
 	void ReceiveReadSave(USaveGame* SaveGame);
 
@@ -81,4 +84,10 @@ public:
 
 	UFUNCTION(Exec)
 	void Cheat_ClearAccount();
+
+	UFUNCTION(Exec)
+	void Cheat_GrantItem(uint16 ID);
+
+	UFUNCTION(Exec)
+	void Cheat_SpawnItem(uint16 ID);
 };

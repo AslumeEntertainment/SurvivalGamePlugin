@@ -26,7 +26,7 @@ void USGGA_OnEnergyDrained::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		return;
 	}
 
-	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) * SpeedMultiplier);
+	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetCurrentSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetCurrentSpeedAttribute()) * SpeedMultiplier);
 
 	UAbilityTask_WaitGameplayEvent* WaitMixedGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Bool.HasFull.Energy"), nullptr, true, true);
 	WaitMixedGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_OnEnergyDrained::OnEnergyRecharged);
@@ -35,7 +35,7 @@ void USGGA_OnEnergyDrained::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 void USGGA_OnEnergyDrained::OnEnergyRecharged(FGameplayEventData Payload)
 {
-	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetSpeedAttribute()) / SpeedMultiplier);
+	ASC->SetNumericAttributeBase(USG_CharacterAttributeSet::GetCurrentSpeedAttribute(), ASC->GetNumericAttributeBase(USG_CharacterAttributeSet::GetCurrentSpeedAttribute()) / SpeedMultiplier);
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
