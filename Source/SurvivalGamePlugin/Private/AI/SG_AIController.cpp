@@ -308,6 +308,14 @@ void ASG_AIController::HandleDamageSenseUpdate(AActor* Actor, FAIStimulus const 
         return;
     }
 
+    for (FAITarget Target : Targets)
+    {
+        if (Target.Target == Actor)
+        {
+            return;
+        }
+    }
+
     AInGameCharacter* OwnerCharacter = GetPawn<AInGameCharacter>();
     if (IsValid(OwnerCharacter) == false)
     {

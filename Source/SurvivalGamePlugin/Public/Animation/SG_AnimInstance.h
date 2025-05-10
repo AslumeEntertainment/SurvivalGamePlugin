@@ -12,9 +12,26 @@ class SURVIVALGAMEPLUGIN_API USG_AnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 
-public:
+protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsMirrored = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UAnimMontage* ConsumeAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UAnimMontage* RoarAnimMontage = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UAnimMontage* DamageAnimMontage = nullptr;
+
+public:
+
+	UAnimMontage* GetConsumeAnimMontage() const;
+
+	UAnimMontage* GetRoarAnimMontage() const;
+
+	UAnimMontage* GetDamageAnimMontage() const;
 
 };
