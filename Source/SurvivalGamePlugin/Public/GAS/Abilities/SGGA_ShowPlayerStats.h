@@ -7,6 +7,7 @@
 #include "SGGA_ShowPlayerStats.generated.h"
 
 class UInGameStatsWindow;
+class USG_AbilitySystemComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ShowPlayerStats : public USG_GameplayAbility
@@ -21,6 +22,9 @@ public:
 
 
 protected:
+
+	UPROPERTY()
+	USG_AbilitySystemComponent* ASC;
 
 	UPROPERTY()
 	UInGameStatsWindow* InGameStatsWindow;

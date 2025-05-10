@@ -182,5 +182,5 @@ public:
 	void SetBurningImmunity(bool Value);
 
 	UFUNCTION()
-	void SetGuardProficiency(float Current, float Base);
+	void SetGuardProficiency(float Current, float Max, float Base);
 };
