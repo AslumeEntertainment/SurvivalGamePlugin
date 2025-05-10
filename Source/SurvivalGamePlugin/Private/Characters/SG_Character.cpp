@@ -197,9 +197,11 @@ void ASG_Character::Tick(float DeltaTime)
 	{
 		return;
 	}
-
-	EmitInteractionChecker();
-
+	if (Cast<APlayerController>(GetController()) != nullptr)
+	{
+		EmitInteractionChecker();
+	}
+	
 	LockIntoTarget(DeltaTime);
 }
 

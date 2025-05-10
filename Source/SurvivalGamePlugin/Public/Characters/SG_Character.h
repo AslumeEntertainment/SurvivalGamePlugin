@@ -60,9 +60,6 @@ private:
 	UFUNCTION()
 	void UpdateCamera(float Alpha);
 
-	UFUNCTION(Server, Reliable)
-	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
-
 	void EmitInteractionChecker();
 
 	void CheckForInteractables(FHitResult HitResult);
@@ -180,6 +177,9 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetFocusedInteractable(UObject* InFocusedInteractable);
 
 	void SetRepControlRotation(FRotator InControlRotation);
 
