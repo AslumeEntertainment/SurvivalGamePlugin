@@ -23,7 +23,7 @@ public:
 	
 protected:
 
-	float GetStrengthMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const AActor* EffectCauser) const;
+	float GetStrengthMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const AActor* EffectCauser, const AActor* EffectInstigator) const;
 
 	float GetPenetrationMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const UDamageSourceData* DamageSourceData, AActor* EffectCauser, float InstigatorVelocity, bool bIsHitGuarded) const;
 

@@ -82,16 +82,16 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
 
 	//-------------DAMAGE-FORMULA-(IN-DEVELOPMENT)-------------//
-	
+
 	FVector HitLocation = (HitResult != nullptr) ? FVector(HitResult->ImpactPoint) : TargetActor->GetActorLocation();
 
 	float FinalDamage = 0.f;
-	
+
 	if (IsTargetImmuneToDamageType(TargetASC, DamageSourceData->DamageType) == false)
 	{
-		float StrengthMultiplier = GetStrengthMultiplier(ExecutionParams, EvaluateParameters, EffectCauser);
+		float StrengthMultiplier = GetStrengthMultiplier(ExecutionParams, EvaluateParameters, EffectCauser, InstigatorActor);
 		float InstigatorVelocity = IsValid(InstigatorActor) ? InstigatorActor->GetVelocity().Length() / 100 : 0;
-		float PenetrationMultiplier = GetPenetrationMultiplier(ExecutionParams, EvaluateParameters, DamageSourceData, 
+		float PenetrationMultiplier = GetPenetrationMultiplier(ExecutionParams, EvaluateParameters, DamageSourceData,
 			EffectCauser, InstigatorVelocity, HittableTarget->IsHitGuarded(HitLocation));
 
 		FinalDamage = FMath::Floor(DamageSourceData->BaseDamage * StrengthMultiplier * PenetrationMultiplier);
@@ -115,7 +115,7 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 			UE_LOG(DamageLog, Log, TEXT("Target is immune to damage type, 0 damage dealt"));
 		}
 	}
-	
+
 	//---------------------------------------------------------//
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FinalDamage));
@@ -150,7 +150,7 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 
 }
 
-float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const AActor* EffectCauser) const
+float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FAggregatorEvaluateParameters EvaluateParameters, const AActor* EffectCauser, const AActor* EffectInstigator) const
 {
 	float StrengthMultiplier = 1.f;
 
@@ -166,15 +166,25 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 		return StrengthMultiplier;
 	}
 
-	EWeight EffectCauserWeight = EWeight::Normal;
+	EWeight EffectCauserWeight = EWeight::VeryLight;
+	float StrenghtIncrease = 0.1f;
 
-	const ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectCauser);
-	if (IsValid(Weapon))
+	if (EffectCauser != EffectInstigator)
 	{
-		EffectCauserWeight = Weapon->ItemData.ItemWeight;
+		const ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectCauser);
+		if (IsValid(Weapon))
+		{
+			EffectCauserWeight = Weapon->ItemData.ItemWeight;
+		}
+		StrenghtIncrease = 0.02;
 	}
 
-	for (EWeight Weight : TEnumRange<EWeight>())
+	for (uint8 i = Strength; i > (uint8)EffectCauserWeight; i--)
+	{
+		StrengthMultiplier += StrenghtIncrease;
+	}
+
+	/*for (EWeight Weight : TEnumRange<EWeight>())
 	{
 		if (UEnum::GetValueAsString(Weight).Compare("None") == 0) continue;
 
@@ -183,7 +193,7 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 		if ((uint8)Weight > Strength) break;
 
 		StrengthMultiplier += 0.25f;
-	}
+	}*/
 
 	return StrengthMultiplier;
 }
