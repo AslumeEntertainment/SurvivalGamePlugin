@@ -15,9 +15,7 @@
 
 void UInGameOverlayWidget::UpdateCurrentSpeed(float NewValue)
 {
-	NewValue = FMath::RoundToFloat(NewValue);
-	NewValue *= 0.01f;
-	TXT_CurrentSpeed->SetText(FText::FromString(FString::SanitizeFloat(NewValue) + " m/s"));
+	TXT_CurrentSpeed->SetText(FText::FromString(FString::Printf(TEXT("%.f m/s"), NewValue / 100)));
 }
 
 void UInGameOverlayWidget::UpdateHealthPercent(float CurrentHealthPercent)
