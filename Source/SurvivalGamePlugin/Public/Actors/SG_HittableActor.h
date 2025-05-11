@@ -60,6 +60,9 @@ protected:
 	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
 	void NetMulticast_SetActorPhysics(bool NewActorPhysics);
 
+	virtual UShapeComponent* GetImpactChecker() override;
+
+	virtual void OnComponentBeginTouch(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 public:	
 

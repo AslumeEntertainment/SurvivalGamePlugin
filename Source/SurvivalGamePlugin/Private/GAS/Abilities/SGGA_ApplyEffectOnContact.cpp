@@ -32,7 +32,16 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	UShapeComponent* AvatarCollisionComp = AvatarActor->GetComponentByClass<UShapeComponent>();
+
+	IHittable* HitActor = Cast<IHittable>(AvatarActor);
+	if (HitActor == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::ActivateAbility HitActor == nullptr"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	UShapeComponent* AvatarCollisionComp = HitActor->GetImpactChecker();
 	if (IsValid(AvatarCollisionComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ApplyEffectOnContact::ActivateAbility IsValid(AvatarCollisionComp) == false"));
@@ -45,7 +54,7 @@ void USGGA_ApplyEffectOnContact::ActivateAbility(const FGameplayAbilitySpecHandl
 		SpawnOverlayMesh();
 	}
 
-	AvatarCollisionComp->OnComponentHit.AddDynamic(this, &USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap);
+	AvatarCollisionComp->OnComponentBeginOverlap.AddDynamic(this, &USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap);
 
 	if (bShouldApplyOnActivation == false)
 	{
@@ -144,7 +153,7 @@ void USGGA_ApplyEffectOnContact::AttemptHit(const AActor* TargetActor)
 	}
 }
 
-void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void USGGA_ApplyEffectOnContact::OnAvatarActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AttemptHit(OtherActor);
 }
