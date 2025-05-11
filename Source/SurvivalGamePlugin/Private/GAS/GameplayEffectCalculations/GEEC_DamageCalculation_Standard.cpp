@@ -166,8 +166,8 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 		return StrengthMultiplier;
 	}
 
-	EWeight EffectCauserWeight = EWeight::VeryLight;
-	float StrenghtIncrease = 0.1f;
+	EWeight EffectCauserWeight = EWeight::None;
+	float StrenghtIncrease = 0.0f;
 
 	if (EffectCauser != EffectInstigator)
 	{
@@ -176,7 +176,24 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 		{
 			EffectCauserWeight = Weapon->ItemData.ItemWeight;
 		}
-		StrenghtIncrease = 0.02;
+	}
+
+	switch (EffectCauserWeight)
+	{
+	case EWeight::None:      StrenghtIncrease = 0.08f;
+		break;
+	case EWeight::VeryLight: StrenghtIncrease = 0.01f;
+		break;
+	case EWeight::Light:     StrenghtIncrease = 0.02f;
+		break;
+	case EWeight::Normal:    StrenghtIncrease = 0.03f;
+		break;
+	case EWeight::Heavy:     StrenghtIncrease = 0.04f;
+		break;
+	case EWeight::VeryHeavy: StrenghtIncrease = 0.08f;
+		break;
+	default:
+		break;
 	}
 
 	for (uint8 i = Strength; i > (uint8)EffectCauserWeight; i--)
