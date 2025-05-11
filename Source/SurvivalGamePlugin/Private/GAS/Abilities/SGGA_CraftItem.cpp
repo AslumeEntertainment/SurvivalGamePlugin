@@ -218,33 +218,11 @@ void USGGA_CraftItem::StartCrafting(FGameplayEventData Payload)
 	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ProductItemData->MovementSpeedMultiplier);
 	SpeedReductionEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpec);
 
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ProductItemData->Animation);
-	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCompleted);
-	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_CraftItem::OnAnimMontageCanceled);
-	PlayMontageTask->ReadyForActivation();
-
-	UAbilityTask_WaitGameplayEvent* WaitFinishCraftingTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishCrafting"), nullptr, true, true);
-	WaitFinishCraftingTask->EventReceived.AddDynamic(this, &USGGA_CraftItem::OnCraftingFinished);
-	WaitFinishCraftingTask->ReadyForActivation();
+	Player->PlayAnimMontage(ProductItemData->Animation);
+	GetWorld()->GetTimerManager().SetTimer(CraftTimer, this, &USGGA_CraftItem::OnCraftingFinished, ProductItemData->ProcessLength, false);
 }
 
-void USGGA_CraftItem::OnAnimMontageCompleted()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been completed"));
-	
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-	return;
-}
-
-void USGGA_CraftItem::OnAnimMontageCanceled()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Crafting: Montage has been canceled"));
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-	return;
-}
-
-void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
+void USGGA_CraftItem::OnCraftingFinished()
 {
 	if (ProductItemData->ItemsToDestroy.Contains(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag())->GetItemDataRowName()))
 	{
@@ -291,7 +269,7 @@ void USGGA_CraftItem::OnCraftingFinished(FGameplayEventData Payload)
 		
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_CraftItem::OnCraftingFinished - Crafting process finished!"));
-	return;
+	Player->StopAnimMontage(ProductItemData->Animation);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 

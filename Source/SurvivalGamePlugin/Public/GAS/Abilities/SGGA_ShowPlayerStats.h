@@ -4,10 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GAS/Abilities/SG_GameplayAbility.h"
+
+#include "AbilitySystemComponent.h"
+#include "GameplayEffectTypes.h"
+
 #include "SGGA_ShowPlayerStats.generated.h"
 
 class UInGameStatsWindow;
 class USG_AbilitySystemComponent;
+
+struct FOnAttributeChangeData;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API USGGA_ShowPlayerStats : public USG_GameplayAbility

@@ -105,32 +105,42 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 	InGameStatsWindow->SetBurningImmunity(ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Bool.HasImmunity.Burning")));
 
+	/*
 	//-------------------------------------------------------------------------------------------------
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetHealth(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHealthAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseHealthAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetHealth(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHealthAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseHealthAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentHealthAttribute()),
-				Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseHealthAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentHealthAttribute()),
+					Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseHealthAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseHealthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentHealthAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHealthAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentHealthAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHealthAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -139,18 +149,24 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetHunger(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetHunger(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
-				Data.NewValue,
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
+					Data.NewValue,
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -159,18 +175,24 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetEnergy(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxEnergyAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxEnergyAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetEnergy(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxEnergyAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxEnergyAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxEnergyAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetEnergy(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyAttribute()),
-				Data.NewValue,
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetEnergy(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetEnergyAttribute()),
+					Data.NewValue,
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -179,16 +201,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentStrengthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetStrength(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseStrengthAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetStrength(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseStrengthAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseStrengthAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetStrength(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetStrength(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentStrengthAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -197,16 +225,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentDexterityAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetDexterity(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseDexterityAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetDexterity(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseDexterityAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseDexterityAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetDexterity(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentDexterityAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetDexterity(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentDexterityAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -215,16 +249,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentSpeedAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetSpeed(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseSpeedAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetSpeed(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseSpeedAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseSpeedAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetSpeed(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentSpeedAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetSpeed(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentSpeedAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -233,16 +273,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAttackSpeedPercentAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetAttackSpeed(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseAttackSpeedPercentAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetAttackSpeed(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseAttackSpeedPercentAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseAttackSpeedPercentAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetAttackSpeed(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentAttackSpeedPercentAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetAttackSpeed(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentAttackSpeedPercentAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -251,16 +297,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentJumpVelocityAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetJumpVelocity(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseJumpVelocityAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetJumpVelocity(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseJumpVelocityAttribute()));
+			}	
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseJumpVelocityAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetJumpVelocity(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentJumpVelocityAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetJumpVelocity(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentJumpVelocityAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -269,16 +321,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentSlashingDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetSlashingDefence(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseSlashingDefenceAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetSlashingDefence(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseSlashingDefenceAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseSlashingDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetSlashingDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentSlashingDefenceAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetSlashingDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentSlashingDefenceAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -287,16 +345,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentPiercingDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetPiercingDefence(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBasePiercingDefenceAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetPiercingDefence(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBasePiercingDefenceAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBasePiercingDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetPiercingDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentPiercingDefenceAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetPiercingDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentPiercingDefenceAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -305,16 +369,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentBludgeoningDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetBludgeoningDefence(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseBludgeoningDefenceAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetBludgeoningDefence(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseBludgeoningDefenceAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseBludgeoningDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetBludgeoningDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentBludgeoningDefenceAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetBludgeoningDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentBludgeoningDefenceAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -323,16 +393,22 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentFireDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetFireDefence(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseFireDefenceAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetFireDefence(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseFireDefenceAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseFireDefenceAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetFireDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentFireDefenceAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetFireDefence(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentFireDefenceAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
 
@@ -341,29 +417,39 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentGuardProficiencyAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetGuardProficiency(Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxGuardProficiencyAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseGuardProficiencyAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetGuardProficiency(Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxGuardProficiencyAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseGuardProficiencyAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxGuardProficiencyAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetGuardProficiency(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentGuardProficiencyAttribute()),
-				Data.NewValue,
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseGuardProficiencyAttribute()));
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetGuardProficiency(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentGuardProficiencyAttribute()),
+					Data.NewValue,
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetBaseGuardProficiencyAttribute()));
+			}
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetBaseGuardProficiencyAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			InGameStatsWindow->SetGuardProficiency(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentGuardProficiencyAttribute()),
-				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxGuardProficiencyAttribute()),
-				Data.NewValue);
+			if (IsValid(InGameStatsWindow))
+			{
+				InGameStatsWindow->SetGuardProficiency(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentGuardProficiencyAttribute()),
+					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxGuardProficiencyAttribute()),
+					Data.NewValue);
+			}
 		}
 	);
+	*/
 
 	InGameStatsWindow->AddToViewport();
 
@@ -374,6 +460,8 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 
 void USGGA_ShowPlayerStats::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	const USG_CharacterAttributeSet* AttributeSet = Cast<USG_CharacterAttributeSet>(ASC->GetAttributeSet(USG_CharacterAttributeSet::StaticClass()));
+	
 	InGameStatsWindow->RemoveFromParent();
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -383,3 +471,4 @@ void USGGA_ShowPlayerStats::CloseWindow(float TimeHeld)
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
+
