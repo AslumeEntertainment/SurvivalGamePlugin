@@ -62,6 +62,10 @@ TArray<AActor*> ULootTableComponent::DropLoot(bool bWasDestroyedSafely)
 
 			for (int i = 0; i < Amount; i++)
 			{
+				if (IsValid(Drop.Key) == false)
+				{
+					continue;
+				}
 				AActor* DroppedActor = World->SpawnActor<AActor>(Drop.Key, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation() + UKismetMathLibrary::RandomRotator() * RotationLimit);
 				FVector NewActorLocation = GetOwner()->GetActorLocation();
 

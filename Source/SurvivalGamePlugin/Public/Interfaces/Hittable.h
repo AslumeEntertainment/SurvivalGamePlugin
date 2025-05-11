@@ -21,11 +21,18 @@ class SURVIVALGAMEPLUGIN_API IHittable
 
 protected:
 
+
+
+	UFUNCTION()
+	virtual void OnComponentBeginTouch(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) = 0;
+
 	UFUNCTION()
 	virtual void OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-
 public:
+
+	UFUNCTION()
+	virtual UShapeComponent* GetImpactChecker() = 0;
 
 	UFUNCTION(BlueprintCallable)
 	virtual USG_AbilitySystemComponent* GetSG_AbilitySystemComponent() const;

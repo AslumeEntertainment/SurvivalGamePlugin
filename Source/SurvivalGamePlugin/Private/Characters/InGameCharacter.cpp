@@ -23,6 +23,7 @@
 #include "Headers/AbilityInputConfig.h"
 #include "UI/HUD/InGameHUD.h"
 
+#include "Landscape.h"
 
 AInGameCharacter::AInGameCharacter()
 {
@@ -30,8 +31,14 @@ AInGameCharacter::AInGameCharacter()
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 	
+	ImpactChecker = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ImpactCheker"));
+
+	ImpactChecker->SetupAttachment(GetCapsuleComponent());
+
+	ImpactChecker->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnComponentBeginTouch);
+
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
-	GetCapsuleComponent()->SetUseCCD(true);
+	GetCapsuleComponent()->SetUseCCD(false);
 
 	StimulusSource = CreateDefaultSubobject<USG_AIPerceptionStimuliSourceComp>(TEXT("StimulusSource"));
 
@@ -166,8 +173,42 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
+UShapeComponent* AInGameCharacter::GetImpactChecker()
+{
+	return ImpactChecker;
+}
+
+void AInGameCharacter::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (IsAlive() == false) return;
+
+	bool isFalling = (GetVelocity().GetSafeNormal().Z < -0.5);
+	if (IsValid(Cast<ALandscape>(OtherActor)) == true && !isFalling)
+	{
+		return;
+	}
+	IHittable* Hit = Cast<IHittable>(OtherActor);
+	bool TouchingHittable = Hit == nullptr;
+	UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnComponentBeginTouch - %s   --- ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
+
+
+	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
+
+	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
+	//FHitResult Hit = FHitResult();
+	//ContextHandle.AddHitResult(Hit);
+	ContextHandle.AddInstigator(OtherActor, OtherActor);
+
+	FGameplayEventData EventData = FGameplayEventData();
+	EventData.Instigator = OtherActor;
+	EventData.ContextHandle = ContextHandle;
+
+	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
+}
+
 void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	/*
 	UMeshComponent* OtherMesh = Cast<UMeshComponent>(OtherComp);
 
 	FVector OtherActorMaxLocalBounds = OtherComp->GetLocalBounds().GetBox().Max;
@@ -189,18 +230,8 @@ void AInGameCharacter::OnComponentHitReceived(UPrimitiveComponent* HitComponent,
 	{
 		return;
 	}
+	*/
 
-	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
-
-	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	ContextHandle.AddHitResult(Hit);
-	ContextHandle.AddInstigator(OtherActor, OtherActor);
-
-	FGameplayEventData EventData = FGameplayEventData();
-	EventData.Instigator = OtherActor;
-	EventData.ContextHandle = ContextHandle;
-
-	USG_AbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, EventData);
 }
 
 void AInGameCharacter::Jump()
@@ -215,7 +246,7 @@ void AInGameCharacter::Jump()
 
 void AInGameCharacter::Landed(const FHitResult& Hit)
 {
-	Super::Landed(Hit);
+	/*Super::Landed(Hit);
 
 	FVector NormalVelocity = UKismetMathLibrary::Normal(GetVelocity());
 	if (NormalVelocity.Z > -0.45)
@@ -231,7 +262,7 @@ void AInGameCharacter::Landed(const FHitResult& Hit)
 	FGameplayEventData EventData = FGameplayEventData();
 	EventData.ContextHandle = ContextHandle;
 
-	SendGameplayEventToSelf(EventTag, EventData);
+	SendGameplayEventToSelf(EventTag, EventData);*/
 }
 
 void AInGameCharacter::MainHandAction()
@@ -684,6 +715,8 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 	{
 		return;
 	}
+
+	SetIsAlive(false);
 
 	Client_BroadcastOnCharacterDeath();
 

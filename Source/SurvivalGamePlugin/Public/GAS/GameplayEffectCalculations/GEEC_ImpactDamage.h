@@ -26,6 +26,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
 	float ExternalImpactDamageThresholdAngle = 75.f;
 
+	float CalculateSharedImpactDamage(AActor* ActorBeeingHit, AActor* HittingActor) const;
+
 	float CalculateInternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const;
 
 	float CalculateExternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const;

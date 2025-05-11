@@ -77,6 +77,19 @@ void ASG_HittableActor::NetMulticast_SetActorPhysics_Implementation(bool NewActo
 	CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
 }
 
+UShapeComponent* ASG_HittableActor::GetImpactChecker()
+{
+	return CollisionCapsuleComponent;
+}
+
+void ASG_HittableActor::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	IHittable* Hit = Cast<IHittable>(OtherActor);
+	bool TouchingHittable = Hit == nullptr;
+	UE_LOG(LogTemp, Warning, TEXT("ASG_HittableActor::OnComponentBeginTouch - %s   --- ovelapping with %s"), *GetName(), *OtherActor->GetName());
+
+}
+
 UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;

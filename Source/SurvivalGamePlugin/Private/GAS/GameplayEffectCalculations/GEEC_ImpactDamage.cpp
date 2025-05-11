@@ -9,6 +9,9 @@
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "GameFramework/Character.h"
+#include "Characters/InGameCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 UGEEC_ImpactDamage::UGEEC_ImpactDamage()
@@ -33,12 +36,12 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	}
 
 	FGameplayEffectContextHandle EffectContext = ExecutionParams.GetOwningSpec().GetEffectContext();
-	const FHitResult* HitResult = EffectContext.GetHitResult();
+	/*const FHitResult* HitResult = EffectContext.GetHitResult();
 	if (HitResult == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::Execute_Implementation HitResult == nullptr"));
 		return;
-	}
+	}*/
 
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
@@ -48,14 +51,15 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 		UE_LOG(LogTemp, Warning, TEXT("=================%s: Impact triggered================"), *TargetActor->GetName());
 	}
 
-	float InternalImpactDamage = CalculateInternalImpactDamage(TargetActor, HitResult);
-	float ExternalImpactDamage = CalculateExternalImpactDamage(TargetActor, HitResult);
-	float FinalDamage = InternalImpactDamage > ExternalImpactDamage ? InternalImpactDamage : ExternalImpactDamage;
+	//float InternalImpactDamage = CalculateInternalImpactDamage(TargetActor, HitResult);
+	//float ExternalImpactDamage = CalculateExternalImpactDamage(TargetActor, HitResult);
+
+	float FinalDamage = CalculateSharedImpactDamage(TargetActor, EffectContext.GetInstigator());// InternalImpactDamage > ExternalImpactDamage ? InternalImpactDamage : ExternalImpactDamage;
 
 	float TargetResistanceBludgeoning = 0.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentBludgeoningDefenceDef, EvaluateParameters, TargetResistanceBludgeoning);
 
-	FinalDamage = FMath::Floor(FinalDamage - TargetResistanceBludgeoning);
+	FinalDamage = FMath::Floor(FinalDamage * FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * TargetResistanceBludgeoning + 0.082f))) / 100);
 
 	if (FinalDamage <= 0.f)
 	{
@@ -67,8 +71,9 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FinalDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 
+
 	FGameplayCueParameters CueParams = FGameplayCueParameters();
-	CueParams.Location = FVector(HitResult->ImpactPoint);
+	CueParams.Location = FVector(TargetActor->GetActorLocation());
 	CueParams.RawMagnitude = FinalDamage;
 
 	TriggerGameplayCues(TargetASC, CueParams);
@@ -80,6 +85,35 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	AcknowledgeHit(nullptr, TargetASC, EventData);
 
 	return;
+}
+
+float UGEEC_ImpactDamage::CalculateSharedImpactDamage(AActor* ActorBeeingHit, AActor* HittingActor) const
+{
+	float Speed = (ActorBeeingHit->GetVelocity() - HittingActor->GetVelocity()).Size();
+	float HitActorMass = 1;
+	AInGameCharacter* Character = Cast<AInGameCharacter>(ActorBeeingHit);
+
+	if (IsValid(Character))
+	{
+		HitActorMass = Character->GetCharacterMovement()->Mass;
+	}
+	else
+	{
+		UMeshComponent* ActorBeeingHitMeshComp = ActorBeeingHit->GetComponentByClass<UMeshComponent>();
+		if (IsValid(ActorBeeingHitMeshComp) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("UGEEC_ImpactDamage::CalculateExternalImpactDamage IsValid(HitActorMeshComp) == false"));
+			return 0;
+		}
+		HitActorMass = ActorBeeingHitMeshComp->GetMass();
+	}
+
+
+	bool isFalling = (ActorBeeingHit->GetVelocity().GetSafeNormal().Z < -0.5);
+
+	float Damage = ((HitActorMass * (Speed / 100) * (Speed / 100)) / 1000) * (isFalling ? 4 : 1);
+
+	return (Damage < 5) ? 0 : Damage;
 }
 
 float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const

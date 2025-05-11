@@ -35,7 +35,8 @@ public class SurvivalGamePlugin : ModuleRules
                 "Niagara",
 				"AIModule",
 				"GameplayTasks",
-				"NavigationSystem"
+				"NavigationSystem",
+                "Landscape"
                 /*"OnlineSubsystemEOS", 
 				"VoiceChat",*/
             }
