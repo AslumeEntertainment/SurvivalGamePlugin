@@ -36,6 +36,10 @@ void ALevelCleaner::Clean()
 	{
 		if (Actor->ActorHasTag(TagToPersist)) continue;
 		Actor->Destroy();
+		/*if (Actor->ActorHasTag(TagToClean))
+		{
+			Actor->Destroy();
+		}*/
 	}
 }
 
