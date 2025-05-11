@@ -28,10 +28,13 @@ protected:
 
 public:
 
+	UFUNCTION(BlueprintCallable)
 	UAnimMontage* GetConsumeAnimMontage() const;
 
+	UFUNCTION(BlueprintCallable)
 	UAnimMontage* GetRoarAnimMontage() const;
 
+	UFUNCTION(BlueprintCallable)
 	UAnimMontage* GetDamageAnimMontage() const;
 
 };

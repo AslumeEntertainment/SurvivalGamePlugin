@@ -12,6 +12,7 @@
 #include "Components/EquipmentComponent.h"
 #include "GAS/SG_AbilitySystemComponent.h"
 #include "Characters/InGameCharacter.h"
+#include "Animation/SG_AnimInstance.h"
 
 
 void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -20,18 +21,35 @@ void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ConsumeItem::ActivateAbility CommitAbility == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	Player = Cast<AInGameCharacter>(ActorInfo->AvatarActor.Get());
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ConsumeItem::ActivateAbility IsValid(Player) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
 	if (IsValid(EquipmentComp) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_ConsumeItem::ActivateAbility IsValid(EquipmentComp) == false"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	USkeletalMeshComponent* Mesh = Player->GetMesh();
+	if (IsValid(Mesh) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ConsumeItem::ActivateAbility IsValid(Mesh) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	USG_AnimInstance* AnimInst = Cast<USG_AnimInstance>(Mesh->GetAnimInstance());
+	if (IsValid(AnimInst) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ConsumeItem::ActivateAbility IsValid(AnimInst) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
 
 	if (EquipmentComp->HasEquipmentSlotWithTag(EquipmentComp->GetMixedEquipmentSlotTag()))
@@ -51,9 +69,9 @@ void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	Player->SetIsMirrored(bShouldMirrorAnimation);
 
-	if (DoesAnimationMatchSkeleton(Player->GetMesh()))
+	if (IsValid(AnimInst->GetConsumeAnimMontage()))
 	{
-		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage);
+		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimInst->GetConsumeAnimMontage());
 		PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_ConsumeItem::OnAnimMontageCompleted);
 		PlayMontageTask->OnInterrupted.AddDynamic(this, &USGGA_ConsumeItem::OnAnimMontageInterrupted);
 		PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_ConsumeItem::OnAnimMontageCanceled);
