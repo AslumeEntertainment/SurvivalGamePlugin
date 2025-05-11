@@ -64,7 +64,8 @@ ASG_Character::ASG_Character()
 void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	
+	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bCanMove, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bIsMirrored, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
@@ -135,10 +136,8 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 		{
 			return;
 		}
-		if (Cast<APlayerController>(GetController()) != nullptr)
-		{
-			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
-		}
+
+		Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 
 		InteractIndicationTextDelegate.Broadcast(FText::FromString(""));
 		Server_SetFocusedInteractable(nullptr);
@@ -150,16 +149,10 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 	}
 	if (FocusedInteractableObject != nullptr)
 	{
-		if (Cast<APlayerController>(GetController()) != nullptr)
-		{
-			Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
-		}
+		Cast<IInteractableInterface>(FocusedInteractableObject)->SetInteractableHighlight(0);
 	}
 
-	if (Cast<APlayerController>(GetController()) != nullptr)
-	{
-		InteractableActor->SetInteractableHighlight(OnInteractionStencilValue);
-	}
+	InteractableActor->SetInteractableHighlight(OnInteractionStencilValue);
 
 	InteractIndicationTextDelegate.Broadcast(FText::FromString("E " + InteractableActor->GetInteractableName().ToString()));
 	Server_SetFocusedInteractable(HitActor);
@@ -197,9 +190,11 @@ void ASG_Character::Tick(float DeltaTime)
 	{
 		return;
 	}
-
-	EmitInteractionChecker();
-
+	if (Cast<APlayerController>(GetController()) != nullptr)
+	{
+		EmitInteractionChecker();
+	}
+	
 	LockIntoTarget(DeltaTime);
 }
 

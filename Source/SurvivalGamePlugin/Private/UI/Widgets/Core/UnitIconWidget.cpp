@@ -140,10 +140,12 @@ void UUnitIconWidget::NativeOnInitialized()
 void UUnitIconWidget::SetIsDraggable(bool NewValue)
 {
 	bCanBeDragged = NewValue;
+	BTN_Icon->SetIsEnabled(!NewValue);
 }
 
 void UUnitIconWidget::SetItemName(FText ItemName)
 {
+	TXT_ItemName->Font.Size = FMath::Floor(ItemName.ToString().Len() * -0.32f + 16.6f);
 	TXT_ItemName->SetText(ItemName);
 }
 
