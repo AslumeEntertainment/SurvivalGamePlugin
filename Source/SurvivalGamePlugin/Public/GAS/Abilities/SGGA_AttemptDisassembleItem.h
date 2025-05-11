@@ -31,6 +31,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> SpeedReductionEffect;
 
+	UPROPERTY()
+	FTimerHandle DisassemblyTimer;
+
 	AInGameCharacter* Player;
 	UEquipmentComponent* EquipmentComp;
 
@@ -44,11 +47,5 @@ protected:
 	AItemBase* IngredientItemActor;
 
 	UFUNCTION()
-	void OnAnimMontageCompleted();
-
-	UFUNCTION()
-	void OnAnimMontageCanceled();
-
-	UFUNCTION()
-	void OnDisassemblyFinished(FGameplayEventData Payload);
+	void OnDisassemblyFinished();
 };

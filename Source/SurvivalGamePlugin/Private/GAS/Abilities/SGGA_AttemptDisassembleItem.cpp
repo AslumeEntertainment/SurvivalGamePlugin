@@ -84,14 +84,8 @@ void USGGA_AttemptDisassembleItem::ActivateAbility(const FGameplayAbilitySpecHan
 	EffectSpec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("GameplayEffectCaller.Speed"), ItemForDisassemblyData->MovementSpeedMultiplier);
 	SpeedReductionEffectSpecHandle = CurrentActorInfo->AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectSpec);
 
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, ItemForDisassemblyData->Animation);
-	PlayMontageTask->OnCompleted.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCompleted);
-	PlayMontageTask->OnCancelled.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnAnimMontageCanceled);
-	PlayMontageTask->ReadyForActivation();
-
-	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, FGameplayTag::RequestGameplayTag("Notify.FinishDisassembly"), nullptr, true, true);
-	WaitGameplayEventTask->EventReceived.AddDynamic(this, &USGGA_AttemptDisassembleItem::OnDisassemblyFinished);
-	WaitGameplayEventTask->ReadyForActivation();
+	Player->PlayAnimMontage(ItemForDisassemblyData->Animation);
+	GetWorld()->GetTimerManager().SetTimer(DisassemblyTimer, this, &USGGA_AttemptDisassembleItem::OnDisassemblyFinished, ItemForDisassemblyData->ProcessLength, false);
 }
 
 void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -102,23 +96,10 @@ void USGGA_AttemptDisassembleItem::EndAbility(const FGameplayAbilitySpecHandle H
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void USGGA_AttemptDisassembleItem::OnAnimMontageCompleted()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been completed, resetting speed"));
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-void USGGA_AttemptDisassembleItem::OnAnimMontageCanceled()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Disassembly: Ability has been canceled, resetting speed"));
-
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-}
-
-void USGGA_AttemptDisassembleItem::OnDisassemblyFinished(FGameplayEventData Payload)
+void USGGA_AttemptDisassembleItem::OnDisassemblyFinished()
 {
 	EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag())->DestroyHittable(true);
 	
-	UE_LOG(LogTemp, Warning, TEXT("USGGA_AttemptDisassembleItem::OnDisassemblyFinished - Disassembly process finished!"));
+	Player->StopAnimMontage(ItemForDisassemblyData->Animation);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

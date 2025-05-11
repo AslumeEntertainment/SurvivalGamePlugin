@@ -31,6 +31,9 @@ protected:
 	APlayerController* PlayerCont;
 	UEquipmentComponent* EquipmentComp;
 
+	UPROPERTY()
+	FTimerHandle CraftTimer;
+
 	TArray<FName> PossibleProductItemNames;
 
 	FCraftingProcessDataStruct* ProductItemData = nullptr;
@@ -80,12 +83,6 @@ protected:
 	void StartCrafting(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void OnAnimMontageCompleted();
-
-	UFUNCTION()
-	void OnAnimMontageCanceled();
-
-	UFUNCTION()
-	void OnCraftingFinished(FGameplayEventData Payload);
+	void OnCraftingFinished();
 
 };
