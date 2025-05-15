@@ -54,9 +54,6 @@ private:
 	UPROPERTY()
 	AActor* CurrentTarget = nullptr;
 
-	UPROPERTY(Replicated)
-	bool bIsMirrored = false;
-
 	UFUNCTION()
 	void UpdateCamera(float Alpha);
 
@@ -218,12 +215,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsMoving();
-
-	UFUNCTION(BlueprintCallable)
-	bool IsMirrored();
-
-	UFUNCTION(BlueprintCallable)
-	void SetIsMirrored(bool NewValue);
 
 	UFUNCTION(BlueprintCallable)
 	void SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly = false);

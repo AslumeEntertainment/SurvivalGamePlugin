@@ -48,8 +48,6 @@ void USGGA_ScoopFluid::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	Player->SetIsMirrored(bShouldMirrorAnimation);
-
 	if (DoesAnimationMatchSkeleton(Player->GetMesh()))
 	{
 		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimationMontage);
@@ -72,7 +70,6 @@ void USGGA_ScoopFluid::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void USGGA_ScoopFluid::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	Player->SetIsMirrored(false);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 

@@ -67,8 +67,6 @@ void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 	}
 
-	Player->SetIsMirrored(bShouldMirrorAnimation);
-
 	if (IsValid(AnimInst->GetConsumeAnimMontage()))
 	{
 		UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, NAME_None, AnimInst->GetConsumeAnimMontage());
@@ -83,7 +81,7 @@ void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: Ability animation does not match avatar's skeleton"), *GetName());
+		UE_LOG(LogTemp, Warning, TEXT("%s: Avatar actor's anim instance doesn't have a set consume anim montage"), *GetName());
 		OnEventRecieved(FGameplayEventData());
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
@@ -91,7 +89,6 @@ void USGGA_ConsumeItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void USGGA_ConsumeItem::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	Player->SetIsMirrored(false);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
