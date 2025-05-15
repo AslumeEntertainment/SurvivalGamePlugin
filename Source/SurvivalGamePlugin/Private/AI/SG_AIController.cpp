@@ -322,6 +322,10 @@ void ASG_AIController::HandleDamageSenseUpdate(AActor* Actor, FAIStimulus const 
         UE_LOG(LogTemp, Error, TEXT("ASG_AIController::HandleDamageSenseUpdate IsValid(OwnerCharacter) == false"));
         return;
     }
+    if (Actor == OwnerCharacter)
+    {
+        return;
+    }
     if (OwnerCharacter->GetTeamAttitudeTowards(*Actor) == ETeamAttitude::Friendly && bWillAttackFriendlies == false)
     {
         return;

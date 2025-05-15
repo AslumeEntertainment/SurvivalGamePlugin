@@ -14,9 +14,6 @@ class SURVIVALGAMEPLUGIN_API USG_AnimInstance : public UAnimInstance
 
 protected:
 
-	UPROPERTY(BlueprintReadWrite)
-	bool bIsMirrored = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UAnimMontage* ConsumeAnimMontage = nullptr;
 

@@ -26,9 +26,6 @@ protected:
 	bool bCanMoveDuringAnimation = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
-	bool bShouldMirrorAnimation = true;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Animation Details")
 	UAnimMontage* AnimationMontage;
 
 	UFUNCTION()

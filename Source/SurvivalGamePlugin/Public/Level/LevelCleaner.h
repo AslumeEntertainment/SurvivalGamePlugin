@@ -25,6 +25,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FName TagToPersist;
 
+	UPROPERTY(EditAnywhere)
+	FName TagToClean;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

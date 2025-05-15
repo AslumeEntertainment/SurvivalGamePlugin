@@ -40,7 +40,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 		return;
 	}
 
-	Player->SetIsMirrored(bShouldMirrorAnimation);
 	Player->SetMovementEnabled(bCanMoveDuringAnimation);
 
 	float AttackSpeed = Player->GetAttackSpeed();
@@ -64,7 +63,6 @@ void USGGA_BasicAttackAbility::ActivateAbility(const FGameplayAbilitySpecHandle 
 
 void USGGA_BasicAttackAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	Player->SetIsMirrored(false);
 	Player->SetMovementEnabled(true);
 	Player->SetActivenessForAllDamageSources(false);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);

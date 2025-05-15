@@ -67,7 +67,6 @@ void ASG_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bCanMove, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, FocusedInteractableObject, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, bIsMirrored, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ASG_Character, ControlRotation, COND_None, REPNOTIFY_Always);
 }
 
@@ -558,21 +557,6 @@ bool ASG_Character::IsPlayerInputEnabled()
 bool ASG_Character::IsMoving()
 {
 	return (GetVelocity().Length() != 0);
-}
-
-bool ASG_Character::IsMirrored()
-{
-	return bIsMirrored;
-}
-
-void ASG_Character::SetIsMirrored(bool NewValue)
-{
-	if (HasAuthority() == false)
-	{
-		return;
-	}
-
-	bIsMirrored = NewValue;
 }
 
 void ASG_Character::SendGameplayEventToSelf(FGameplayTag EventTag, FGameplayEventData EventData, bool bServerOnly)

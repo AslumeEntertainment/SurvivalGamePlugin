@@ -7,6 +7,11 @@
 #include "Characters/InGameCharacter.h"
 
 
+USG_AnimNotify_Hit::USG_AnimNotify_Hit()
+{
+	bShouldFireInEditor = false;
+}
+
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	AInGameCharacter* Player = Cast<AInGameCharacter>(MeshComp->GetOwner());
@@ -16,21 +21,5 @@ void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		return;
 	}
 
-	FGameplayTag FinalDamageSourceTag = !Player->IsMirrored() ? DamageSourceTag : GetMirroredNotifyDamageComponentTag();
-
-	Player->SetDamageSourceActivenessByTag(FinalDamageSourceTag, bShouldActivate);
-}
-
-FGameplayTag USG_AnimNotify_Hit::GetMirroredNotifyDamageComponentTag()
-{
-	FString TagName = DamageSourceTag.RequestDirectParent().ToString();
-	if (DamageSourceTag.ToString().Contains(".Left"))
-	{
-		TagName = TagName + TEXT(".Right");
-	}
-	else if (DamageSourceTag.ToString().Contains(".Right"))
-	{
-		TagName = TagName + TEXT(".Left");
-	}
-	return FGameplayTag::RequestGameplayTag(FName(TagName), true);
+	Player->SetDamageSourceActivenessByTag(DamageSourceTag, bShouldActivate);
 }

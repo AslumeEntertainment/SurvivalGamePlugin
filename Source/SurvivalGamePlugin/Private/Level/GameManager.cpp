@@ -57,17 +57,15 @@ void AGameManager::BeginPlay()
 
 	UGameplayStatics::GetAllActorsOfClass(World, TimeEventManagerClassToSearch, FoundActors);
 
-	if (FoundActors.IsEmpty() == true)
+	if (FoundActors.IsEmpty() != true)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AGameManager::BeginPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATimeEventManager placed in the world"));
-		return;
+		ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
+		OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartSkyRotation);
+		OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
+
+		/*UE_LOG(LogTemp, Error, TEXT("AGameManager::BeginPlay FoundActors.IsEmpty() == true - Please ensure there is an actor derived of class ATimeEventManager placed in the world"));
+		return;*/
 	}
-
-	ATimeEventManager* TimeEventManager = Cast<ATimeEventManager>(FoundActors[0]);
-	OnGameStart.AddDynamic(TimeEventManager, &ATimeEventManager::StartSkyRotation);
-	OnGameEnd.AddDynamic(TimeEventManager, &ATimeEventManager::StopSkyRotation);
-
-	
 
 	TArray<UActorComponent*> ChildActors = GetComponentsByTag(USceneComponent::StaticClass(), FName("ChairSpawnPoint"));
 	APlayerCustomiser* PlayerCustomiser = nullptr;

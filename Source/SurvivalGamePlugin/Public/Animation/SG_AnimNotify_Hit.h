@@ -15,6 +15,8 @@ class SURVIVALGAMEPLUGIN_API USG_AnimNotify_Hit : public UAnimNotify
 
 public:
 
+	USG_AnimNotify_Hit();
+
 	UPROPERTY(EditAnywhere, meta = (Categories = "DamageDealer"))
 	FGameplayTag DamageSourceTag;
 
@@ -22,7 +24,5 @@ public:
 	bool bShouldActivate = false;
 
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
-
-	FGameplayTag GetMirroredNotifyDamageComponentTag();
 
 };

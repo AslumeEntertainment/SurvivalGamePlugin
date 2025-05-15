@@ -55,6 +55,11 @@ void USGGA_MirrorableAnimatedAbility::OnAnimMontageCanceled()
 
 bool USGGA_MirrorableAnimatedAbility::DoesAnimationMatchSkeleton(USkeletalMeshComponent* SkeletalMesh)
 {
+	if (IsValid(AnimationMontage) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_MirrorableAnimatedAbility::DoesAnimationMatchSkeleton IsValid(AnimationMontage) == false"));
+		return false;
+	}
 	if (IsValid(SkeletalMesh) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("USGGA_MirrorableAnimatedAbility::DoesAnimationMatchSkeleton IsValid(SkeletalMesh) == false"));
