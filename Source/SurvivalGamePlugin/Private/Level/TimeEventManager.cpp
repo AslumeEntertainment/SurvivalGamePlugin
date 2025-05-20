@@ -34,9 +34,6 @@ ATimeEventManager::ATimeEventManager()
 	ExponentialHeightFog = CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("ExponentialHeightFog"));
 	ExponentialHeightFog->SetupAttachment(GetRootComponent());
 
-	SkyLight = CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
-	SkyLight->SetupAttachment(GetRootComponent());
-
 	VolumetricCloud = CreateDefaultSubobject<UVolumetricCloudComponent>(TEXT("VolumetricCloud"));
 	VolumetricCloud->SetupAttachment(GetRootComponent());
 
