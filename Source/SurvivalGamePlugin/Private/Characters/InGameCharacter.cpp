@@ -23,6 +23,7 @@
 #include "Headers/AbilityInputConfig.h"
 #include "UI/HUD/InGameHUD.h"
 
+#include "Level/WaterVolume.h"
 #include "Landscape.h"
 
 AInGameCharacter::AInGameCharacter()
@@ -182,11 +183,17 @@ void AInGameCharacter::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComp
 {
 	if (IsAlive() == false) return;
 
+	if (IsValid(Cast<AWaterVolume>(OtherActor)) == true)
+	{
+		return;
+	}
+
 	bool isFalling = (GetVelocity().GetSafeNormal().Z < -0.5);
 	if (IsValid(Cast<ALandscape>(OtherActor)) == true && !isFalling)
 	{
 		return;
 	}
+
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
 	UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnComponentBeginTouch - %s   --- ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
