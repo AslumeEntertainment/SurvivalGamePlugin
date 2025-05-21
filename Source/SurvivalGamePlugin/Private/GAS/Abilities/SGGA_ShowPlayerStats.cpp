@@ -143,33 +143,28 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			}
 		}
 	);
-
+	*/
 	//-------------------------------------------------------------------------------------------------
-
+	/*
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			if (IsValid(InGameStatsWindow))
-			{
-				InGameStatsWindow->SetHunger(Data.NewValue,
-					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
-					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
-			}
+			SetHunger(Data.NewValue,
+				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
+				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			if (IsValid(InGameStatsWindow))
-			{
-				InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
-					Data.NewValue,
-					Data.NewValue);
-			}
+			SetHunger(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
+				Data.NewValue,
+				Data.NewValue);
 		}
 	);
-
+	*/
+	/*
 	//-------------------------------------------------------------------------------------------------
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
@@ -470,5 +465,14 @@ void USGGA_ShowPlayerStats::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 void USGGA_ShowPlayerStats::CloseWindow(float TimeHeld)
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void USGGA_ShowPlayerStats::SetHunger(float Current, float Max, float Base)
+{
+	if (IsValid(InGameStatsWindow) == false)
+	{
+		return;
+	}
+	InGameStatsWindow->SetHunger(Current, Max, Base);
 }
 

@@ -41,6 +41,10 @@ void USG_AnimNotify_ReportSoundEvent::Notify(USkeletalMeshComponent* MeshComp, U
 		UE_LOG(LogTemp, Error, TEXT("USG_AnimNotify_ReportSoundEvent::Notify IsValid(Character) == false"));
 		return;
 	}
+	if (Character->bCanMakeNoise == false)
+	{
+		return;
+	}
 
 	float MaxRange = DefaultMaxRange;
 	if (IsValid(Sound->AttenuationSettings) && bOverrideAttenuationRangeIfSet)

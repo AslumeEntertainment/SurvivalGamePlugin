@@ -58,6 +58,8 @@ public:
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
 
+	void RemoveActiveEffectsFromClass(TSubclassOf<UGameplayEffect> EffectClass, int8 StackToRemove = -1);
+
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates = true);
 

@@ -24,10 +24,11 @@ ASG_HittableActor::ASG_HittableActor()
 	SetRootComponent(StaticMeshComponent);
 
 	CollisionCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
-	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
+	CollisionCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	CollisionCapsuleComponent->SetupAttachment(StaticMeshComponent);
+	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
 	CollisionCapsuleComponent->OnComponentHit.AddDynamic(this, &ASG_HittableActor::OnComponentHitReceived);
-	CollisionCapsuleComponent->SetUseCCD(true);
+	
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -74,7 +75,7 @@ void ASG_HittableActor::NetMulticast_SetActorPhysics_Implementation(bool NewActo
 	}
 	
 	StaticMeshComponent->SetCollisionEnabled(CollisionState);
-	CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
+	//CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
 }
 
 UShapeComponent* ASG_HittableActor::GetImpactChecker()
@@ -121,6 +122,17 @@ void ASG_HittableActor::DestroyHittable(bool bSafeDestruct)
 
 	LootTableComponent->DropLoot(bSafeDestruct);
 	Destroy();
+}
+
+void ASG_HittableActor::Server_SetActorStatic_Implementation()
+{
+	NetMulticast_SetActorStatic();
+}
+
+void ASG_HittableActor::NetMulticast_SetActorStatic_Implementation()
+{
+	StaticMeshComponent->SetSimulatePhysics(false);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 

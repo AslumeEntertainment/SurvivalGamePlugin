@@ -47,9 +47,7 @@ void USG_AbilitySystemComponent::OnOwnerDestroyed()
 	
 	GetOwner()->HasAuthority() ? NetMulticast_ShowOnDestroyedEffect() : Server_ShowOnDestroyedEffect();
 	
-	TArray<FActiveGameplayEffectHandle> ActiveEffectSpecs = ActiveGameplayEffects.GetAllActiveEffectHandles();
-	
-	for (FActiveGameplayEffectHandle ActiveEffectSpec : ActiveEffectSpecs)
+	for (FActiveGameplayEffectHandle ActiveEffectSpec : ActiveGameplayEffects.GetAllActiveEffectHandles())
 	{
 		RemoveEffectFromSpec(ActiveEffectSpec);
 	}
@@ -143,6 +141,20 @@ FActiveGameplayEffectHandle USG_AbilitySystemComponent::AddEffectFromClass(TSubc
 void USG_AbilitySystemComponent::RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StacksToRemove)
 {
 	RemoveActiveGameplayEffect(GameplayEffectSpecHandle, StacksToRemove);
+}
+
+void USG_AbilitySystemComponent::RemoveActiveEffectsFromClass(TSubclassOf<UGameplayEffect> EffectClass, int8 StackToRemove)
+{
+	const FActiveGameplayEffect* ActiveEffect = nullptr;
+
+	for (FActiveGameplayEffectHandle ActiveEffectHandle : ActiveGameplayEffects.GetAllActiveEffectHandles())
+	{
+		ActiveEffect = GetActiveGameplayEffect(ActiveEffectHandle);
+		if (ActiveEffect->Spec.Def.GetClass() == EffectClass)
+		{
+			RemoveActiveGameplayEffect(ActiveEffectHandle, StackToRemove);
+		}
+	}
 }
 
 FGameplayAbilitySpecHandle USG_AbilitySystemComponent::AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates)

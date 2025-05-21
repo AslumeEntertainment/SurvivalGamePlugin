@@ -103,9 +103,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseSecondaryHandItemAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (AllowPrivateAccess = "true"))
 	UCapsuleComponent* ImpactChecker = nullptr;
 

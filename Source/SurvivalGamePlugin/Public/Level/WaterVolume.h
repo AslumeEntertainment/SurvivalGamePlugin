@@ -4,10 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PhysicsVolume.h"
+
 #include "GameplayTagContainer.h"
+#include "ActiveGameplayEffectHandle.h"
+
 #include "WaterVolume.generated.h"
 
 class UBoxComponent;
+class UNiagaraSystem;
 class UGameplayEffect;
 class UFluidDataComponent;
 class UStaticMeshComponent;
@@ -25,10 +29,10 @@ public:
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "OnEntered")
-	FGameplayTagContainer TagsToApplyWhenEntered;
+	TSubclassOf<UGameplayEffect> EffectToApplyWhileInWater = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "OnEntered")
-	TArray<TSubclassOf<UGameplayEffect>> EffectsToApplyWhenEntered;
+	UNiagaraSystem* OnWaterEnteredEffect = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* WaterBox;
@@ -45,8 +49,14 @@ protected:
 public:
 
 	UFUNCTION()
+	float GetSurfaceZ();
+
+	UFUNCTION()
 	void OnActorEnteringVolume(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
 	void OnActorLeavingVolume(AActor* OverlappedActor, AActor* OtherActor);
+
+	UFUNCTION()
+	void MakeSplash(FTransform SplashTransform);
 };

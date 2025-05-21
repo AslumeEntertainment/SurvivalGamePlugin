@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/FluidDataComponent.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/SG_AbilitySystemComponent.h"
@@ -32,29 +33,37 @@ AWaterVolume::AWaterVolume()
 	OnActorEndOverlap.AddDynamic(this, &AWaterVolume::OnActorLeavingVolume);
 }
 
+float AWaterVolume::GetSurfaceZ()
+{
+	FVector Origin;
+	FVector BoxExtent;
+	GetActorBounds(true, Origin, BoxExtent);
+
+	return Origin.Z + BoxExtent.Z;
+}
+
 void AWaterVolume::OnActorEnteringVolume(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if (IsValid(OtherActor) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AWaterVolume::ActorEnteredVolume IsValid(Other) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AWaterVolume::ActorEnteredVolume IsValid(OtherActor) == false"));
 		return;
 	}
+
+	MakeSplash(OtherActor->GetTransform());
+
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor));
 	if (IsValid(ASC) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AWaterVolume::ActorEnteredVolume IsValid(ASC) == false"));
 		return;
 	}
-
-	ASC->AddLooseGameplayTags(TagsToApplyWhenEntered);
-
-	for (TSubclassOf<UGameplayEffect> Effect : EffectsToApplyWhenEntered)
+	if (IsValid(EffectToApplyWhileInWater))
 	{
-		if (Effect != nullptr)
-		{
-			ASC->AddEffectFromClass(Effect, this, nullptr, nullptr);
-		}
+		ASC->AddEffectFromClass(EffectToApplyWhileInWater, this, nullptr, nullptr);
 	}
+
+	GetSurfaceZ();
 }
 
 void AWaterVolume::OnActorLeavingVolume(AActor* OverlappedActor, AActor* OtherActor)
@@ -64,6 +73,9 @@ void AWaterVolume::OnActorLeavingVolume(AActor* OverlappedActor, AActor* OtherAc
 		UE_LOG(LogTemp, Error, TEXT("AWaterVolume::ActorEnteredVolume IsValid(Other) == false"));
 		return;
 	}
+
+	MakeSplash(OtherActor->GetTransform());
+
 	USG_AbilitySystemComponent* ASC = Cast<USG_AbilitySystemComponent>(USG_AbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor));
 	if (IsValid(ASC) == false)
 	{
@@ -71,7 +83,30 @@ void AWaterVolume::OnActorLeavingVolume(AActor* OverlappedActor, AActor* OtherAc
 		return;
 	}
 
-	ASC->RemoveLooseGameplayTags(TagsToApplyWhenEntered);
+	ASC->RemoveActiveEffectsFromClass(EffectToApplyWhileInWater);
+}
+
+void AWaterVolume::MakeSplash(FTransform SplashTransform)
+{
+	if (IsValid(OnWaterEnteredEffect) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWaterVolume::MakeSplash IsValid(OnWaterEnteredEffect) == false"));
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (IsValid(World) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AWaterVolume::MakeSplash IsValid(World) == false"));
+		return;
+	}
+
+	FVector EffectLocation = SplashTransform.GetLocation();
+	EffectLocation.Z = GetSurfaceZ();
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(World, OnWaterEnteredEffect, EffectLocation,
+		SplashTransform.Rotator(), SplashTransform.GetScale3D());
+
 }
 
 

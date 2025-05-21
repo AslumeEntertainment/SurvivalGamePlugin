@@ -163,9 +163,6 @@ void AInGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(UseMainHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelSecondaryHandAction);
 			EnhancedInputComponent->BindAction(UseSecondaryHandItemAction, ETriggerEvent::Completed, this, &AInGameCharacter::CancelMainHandAction);
 		}
-
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 	}
 
 	else
@@ -539,10 +536,9 @@ float AInGameCharacter::GetAttackSpeed(AItemBase* HeldItem) const
 		return 1;
 	}
 	
-	//float DexterityMultiplier = 1 * AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetDexterityAttribute()) / 100;
 	float AttributeMultiplier = AbilitySystemComponent->GetNumericAttribute(USG_CharacterAttributeSet::GetCurrentAttackSpeedPercentAttribute()) / 100;
 
-	float FinalAttackSpeed = (AttributeMultiplier /* + DexterityMultiplier*/) * (IsExhausted() ? 0.75f : 1);
+	float FinalAttackSpeed = (AttributeMultiplier) * (IsExhausted() ? 0.75f : 1);
 
 	return FinalAttackSpeed;
 }
