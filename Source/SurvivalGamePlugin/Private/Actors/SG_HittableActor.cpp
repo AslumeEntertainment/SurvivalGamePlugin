@@ -88,7 +88,6 @@ void ASG_HittableActor::OnComponentBeginTouch(UPrimitiveComponent* OverlappedCom
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
 	UE_LOG(LogTemp, Warning, TEXT("ASG_HittableActor::OnComponentBeginTouch - %s   --- ovelapping with %s"), *GetName(), *OtherActor->GetName());
-
 }
 
 UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const

@@ -20,6 +20,18 @@ public:
 
 protected:
 
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues", meta = (ClampMin = "-1.0", ClampMax = "0.0", UIMin = "-1.0", UIMax = "0.0"))
+	float ZVelocityFallAngle = -0.5f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	float FallDamageMultiplier = 4.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	float HorizontalDamageMultiplier = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	float MininumDamage = 5.f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
 	float InternalImpactDamageThresholdAngle = 95.f;
 

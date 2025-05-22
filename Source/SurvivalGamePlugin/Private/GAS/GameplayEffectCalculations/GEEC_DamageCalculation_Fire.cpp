@@ -65,6 +65,22 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 
 	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage * PenMultiplier);
 
+	if (IsValid(DamageAmplificationEffect))
+	{
+		int StackCount = 0;
+
+		FGameplayEffectQuery EffectQuerry;
+		EffectQuerry.EffectDefinition = DamageAmplificationEffect;
+		TArray<FActiveGameplayEffectHandle> ActiveEffects = TargetASC->GetActiveEffects(EffectQuerry);
+		
+		for (FActiveGameplayEffectHandle ActiveEffect : ActiveEffects)
+		{
+			StackCount += TargetASC->GetCurrentStackCount(ActiveEffect);
+		}
+		
+		FireDamage *= StackCount == 0 ? 1 : StackCount;
+	}
+
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
 

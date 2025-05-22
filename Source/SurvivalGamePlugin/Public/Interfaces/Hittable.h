@@ -46,7 +46,4 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual bool IsHitGuarded(FVector HitLocation) const;
 
-	UFUNCTION(BlueprintCallable)
-	virtual TArray<FHitResult> CastBoxTraceAroundBounds(TArray<AActor*> ActorsToIgnore, float AdditionalExtendFromBounds, bool bShouldDrawDebug = false) const;
-
 };

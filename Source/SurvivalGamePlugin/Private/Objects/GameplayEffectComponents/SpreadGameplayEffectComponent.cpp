@@ -9,7 +9,6 @@
 #include "GAS/SG_AbilitySystemBlueprintLibrary.h"
 #include "GAS/AttributeSets/SG_AttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
-#include "Interfaces/Hittable.h"
 
 
 USpreadGameplayEffectComponent::USpreadGameplayEffectComponent()
@@ -39,17 +38,40 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 		UE_LOG(LogTemp, Error, TEXT("USpreadGameplayEffectComponent::OnGameplayEffectExecuted IsValid(Target) == false"));
 		return;
 	}
-	IHittable* HittableTarget = Cast<IHittable>(Target);
-	if(HittableTarget == nullptr)
+
+	UWorld* World = Target->GetWorld();
+	if (IsValid(World) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("USpreadGameplayEffectComponent::OnGameplayEffectExecuted HittableTarget == nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("USpreadGameplayEffectComponent::OnGameplayEffectExecuted IsValid(World) == false"));
+		return;
+	}
+
+	USceneComponent* Root = Target->GetRootComponent();
+	if (IsValid(Root) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USpreadGameplayEffectComponent::OnGameplayEffectExecuted IsValid(Root) == false"));
 		return;
 	}
 
 	TArray<AActor*> ActorsToIgnore;
 	if (bShouldIgnoreSelf) ActorsToIgnore.Add(Target);
 
-	TArray<FHitResult> HitResults = HittableTarget->CastBoxTraceAroundBounds(ActorsToIgnore, ExtentFromTargetBounds, bShouldDrawDebug);
+	TArray<FHitResult> HitResults;
+
+	FVector MinLocalBounds = Root->GetLocalBounds().GetBox().Min;
+	FVector MaxLocalBounds = Root->GetLocalBounds().GetBox().Max;
+
+	FVector ActorBottom = Target->GetActorLocation() + Target->GetActorUpVector() * MinLocalBounds.Z;
+	FVector ActorTop = Target->GetActorLocation() + Target->GetActorUpVector() * MaxLocalBounds.Z;
+
+	FVector TraceCenter = (ActorTop + ActorBottom) / 2;
+	FVector TraceExtent = Root->GetLocalBounds().GetBox().GetExtent() + ExtentFromTargetBounds;
+
+	if(bShouldDrawDebug) UE_LOG(LogTemp, Log, TEXT("USpreadGameplayEffectComponent: TraceCenter - %s, TraceExtend - %s"), *TraceCenter.ToString(), *TraceExtent.ToString());
+
+	UKismetSystemLibrary::BoxTraceMulti(World, TraceCenter, TraceCenter, TraceExtent, Target->GetActorRotation(), ETraceTypeQuery::TraceTypeQuery2,
+		true, ActorsToIgnore, bShouldDrawDebug ? EDrawDebugTrace::ForDuration : EDrawDebugTrace::None, HitResults, true);
+
 	if (HitResults.IsEmpty())
 	{
 		return;
@@ -113,7 +135,7 @@ void USpreadGameplayEffectComponent::OnGameplayEffectExecuted(FActiveGameplayEff
 			continue;
 		}
 
-		//UE_LOG(LogTemp, Warning, TEXT("UGC_SpreadEffect::OnExecute_Implementation Spreading effect from %s to %s"), *Target->GetName(), *HitActor->GetName());
+		if (bShouldDrawDebug) UE_LOG(LogTemp, Warning, TEXT("USpreadGameplayEffectComponent: Spreading effect from %s to %s"), *Target->GetName(), *HitActor->GetName());
 
 		HitActorASC->ApplyGameplayEffectSpecToSelf(*Spec);
 		ActorsToIgnore.Add(HitActor);

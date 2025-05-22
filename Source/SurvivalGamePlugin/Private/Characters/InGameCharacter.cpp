@@ -193,8 +193,8 @@ void AInGameCharacter::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComp
 
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
-	UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnComponentBeginTouch - %s   --- ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
-
+	
+	//UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnComponentBeginTouch - %s   --- ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 

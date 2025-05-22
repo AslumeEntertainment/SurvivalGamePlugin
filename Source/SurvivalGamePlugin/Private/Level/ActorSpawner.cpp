@@ -3,6 +3,8 @@
 
 #include "Level/ActorSpawner.h"
 
+#include "Actors/SG_HittableActor.h"
+
 // Sets default values
 AActorSpawner::AActorSpawner()
 {
@@ -11,18 +13,10 @@ AActorSpawner::AActorSpawner()
 
 }
 
-// Called when the game starts or when spawned
 void AActorSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-// Called every frame
-void AActorSpawner::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 AActor* AActorSpawner::Spawn()
@@ -39,7 +33,14 @@ AActor* AActorSpawner::Spawn()
 				UE_LOG(LogTemp, Warning, TEXT("AActorSpawner::Spawn - %s failed to spawn %s"), *GetName(), *ActorToSpawn.Key->StaticClass()->GetName());
 				return nullptr;
 			}
+
 			PostSpawn(Actor);
+
+			if (bSpawnStatic && Cast<ASG_HittableActor>(Actor))
+			{
+				Cast<ASG_HittableActor>(Actor)->Server_SetActorStatic();
+			}
+
 			return Actor;
 		}
 	}

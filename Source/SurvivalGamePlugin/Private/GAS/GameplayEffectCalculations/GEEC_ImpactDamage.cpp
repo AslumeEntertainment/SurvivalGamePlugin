@@ -59,7 +59,11 @@ void UGEEC_ImpactDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	float TargetResistanceBludgeoning = 0.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CurrentBludgeoningDefenceDef, EvaluateParameters, TargetResistanceBludgeoning);
 
+	if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("Impact Damage before defence is applied - %.f"), FinalDamage);
+
 	FinalDamage = FMath::Floor(FinalDamage * FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * TargetResistanceBludgeoning + 0.082f))) / 100);
+
+	if (bShouldPrintDebug) UE_LOG(LogTemp, Warning, TEXT("Impact Damage after defence is applied - %.f"), FinalDamage);
 
 	if (FinalDamage <= 0.f)
 	{
@@ -93,6 +97,12 @@ float UGEEC_ImpactDamage::CalculateSharedImpactDamage(AActor* ActorBeeingHit, AA
 	float HitActorMass = 1;
 	AInGameCharacter* Character = Cast<AInGameCharacter>(ActorBeeingHit);
 
+	if (bShouldPrintDebug)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Actor being hit velocity - %.2f"), ActorBeeingHit->GetVelocity().Length());
+		UE_LOG(LogTemp, Warning, TEXT("Hitting Actor velocity - %.2f"), HittingActor->GetVelocity().Length());
+	}
+
 	if (IsValid(Character))
 	{
 		HitActorMass = Character->GetCharacterMovement()->Mass;
@@ -109,11 +119,11 @@ float UGEEC_ImpactDamage::CalculateSharedImpactDamage(AActor* ActorBeeingHit, AA
 	}
 
 
-	bool isFalling = (ActorBeeingHit->GetVelocity().GetSafeNormal().Z < -0.5);
+	bool isFalling = (ActorBeeingHit->GetVelocity().GetSafeNormal().Z < ZVelocityFallAngle);
 
-	float Damage = ((HitActorMass * (Speed / 100) * (Speed / 100)) / 1000) * (isFalling ? 4 : 1);
+	float Damage = ((HitActorMass * (Speed / 100) * (Speed / 100)) / 1000) * (isFalling ? FallDamageMultiplier : HorizontalDamageMultiplier);
 
-	return (Damage < 5) ? 0 : Damage;
+	return (Damage < MininumDamage) ? 0 : Damage;
 }
 
 float UGEEC_ImpactDamage::CalculateInternalImpactDamage(AActor* TargetActor, const FHitResult* HitResult) const
