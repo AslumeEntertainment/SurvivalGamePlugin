@@ -22,9 +22,9 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
+	bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters);
 
-	virtual bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
+	bool OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters);
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	USceneComponent* SceneComponent = nullptr;

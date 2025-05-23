@@ -291,7 +291,7 @@ FText AItemBase::GetInteractableName()
 
 FName AItemBase::GetItemDataRowName() const
 {
-	return ItemDataRow.RowName;
+ 	return ItemDataRow.RowName;
 }
 
 FGameplayTagContainer AItemBase::GetItemAbilityTags() const

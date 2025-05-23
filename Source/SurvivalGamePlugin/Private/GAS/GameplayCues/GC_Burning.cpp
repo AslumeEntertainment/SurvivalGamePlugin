@@ -23,45 +23,16 @@ AGC_Burning::AGC_Burning()
 void AGC_Burning::BeginPlay()
 {
 	Super::BeginPlay();
-
-	/*AActor* MyParent = GetParentActor();
-	if (IsValid(MyParent) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AGC_Burning::OnActive_Implementation IsValid(MyParent) == false"));
-		return;
-	}
-
-	FVector Origin;
-	FVector BoxExtent;
-	MyParent->GetActorBounds(true, Origin, BoxExtent);
-
-	FireNiagaraComponent->SetWorldScale3D(BoxExtent * 20);*/
 }
 
-bool AGC_Burning::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
+bool AGC_Burning::OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
-	
-
-	/*FVector MinLocalBounds = ParentRoot->GetLocalBounds().GetBox().Min;
-	FVector MaxLocalBounds = ParentRoot->GetLocalBounds().GetBox().Max;
-
-	FVector ActorBottom = MyParent->GetActorLocation() + MyParent->GetActorUpVector() * MinLocalBounds.Z;
-	FVector ActorTop = MyParent->GetActorLocation() + MyParent->GetActorUpVector() * MaxLocalBounds.Z;
-
-	FVector TraceCenter = (ActorTop + ActorBottom) / 2;
-	FVector TraceExtent = ParentRoot->GetLocalBounds().GetBox().GetExtent();
-	FVector Volume = TraceExtent * 2;
-
-	FireNiagaraComponent->SetRelativeScale3D(Volume / 100);
-
-	UE_LOG(LogTemp, Warning, TEXT("Volume - %s"), *Volume.ToString());*/
-
 	FireNiagaraComponent->Activate();
 
 	return true;
 }
 
-bool AGC_Burning::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const
+bool AGC_Burning::OnRemove_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters)
 {
 	FireNiagaraComponent->Deactivate();
 

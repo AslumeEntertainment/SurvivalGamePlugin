@@ -9,7 +9,9 @@
 
 USG_AnimNotify_Hit::USG_AnimNotify_Hit()
 {
+#if WITH_EDITORONLY_DATA
 	bShouldFireInEditor = false;
+#endif
 }
 
 void USG_AnimNotify_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)

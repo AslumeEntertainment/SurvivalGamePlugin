@@ -168,7 +168,7 @@ void UInGameStatsWindow::ConfigSecondaryItemData(AItemBase* SecondaryItem)
 {
 	if (IsValid(SecondaryItem) == false)
 	{
-		WS_SecondaryItemSlot->ActiveWidgetIndex = 0;
+		WS_SecondaryItemSlot->SetActiveWidgetIndex(0);
 		return;
 	}
 
@@ -193,7 +193,7 @@ void UInGameStatsWindow::ConfigSecondaryItemData(AItemBase* SecondaryItem)
 	SecondaryItemInfo->SetItemDurability(CurrentDurability, MaxDurability);
 	SecondaryItemInfo->SetItemWeight(SecondaryItem->ItemData.ItemWeight);
 
-	WS_SecondaryItemSlot->ActiveWidgetIndex = 1;
+	WS_SecondaryItemSlot->SetActiveWidgetIndex(1);
 
 	ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(SecondaryItem);
 	if(IsValid(Weapon) == false)
@@ -217,7 +217,7 @@ void UInGameStatsWindow::ConfigMainItemData(AItemBase* MainItem)
 {
 	if (IsValid(MainItem) == false)
 	{
-		WS_MainItemSlot->ActiveWidgetIndex = 0;
+		WS_MainItemSlot->SetActiveWidgetIndex(0);
 		return;
 	}
 
@@ -242,7 +242,7 @@ void UInGameStatsWindow::ConfigMainItemData(AItemBase* MainItem)
 	MainItemInfo->SetItemDurability(CurrentDurability, MaxDurability);
 	MainItemInfo->SetItemWeight(MainItem->ItemData.ItemWeight);
 
-	WS_MainItemSlot->ActiveWidgetIndex = 1;
+	WS_MainItemSlot->SetActiveWidgetIndex(1);
 
 	ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(MainItem);
 	if (IsValid(Weapon) == false)
