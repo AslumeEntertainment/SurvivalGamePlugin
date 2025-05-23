@@ -38,9 +38,6 @@ protected:
 	class UExponentialHeightFogComponent* ExponentialHeightFog;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
-	class USkyLightComponent* SkyLight;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
 	class UVolumetricCloudComponent* VolumetricCloud;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = "Sky")
