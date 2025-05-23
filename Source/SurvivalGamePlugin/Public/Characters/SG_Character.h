@@ -178,6 +178,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool bShouldDrawDebug = true;
 
+	UFUNCTION(BlueprintCallable)
+	void SetPlayerColor(FString Name);
+
 	FORCEINLINE class UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

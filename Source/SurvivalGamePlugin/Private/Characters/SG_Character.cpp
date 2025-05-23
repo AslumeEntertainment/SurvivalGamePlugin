@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputSubsystems.h"
@@ -160,14 +161,6 @@ void ASG_Character::CheckForInteractables(FHitResult HitResult)
 void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	UMaterialInstanceDynamic* DynamicMaterial = GetMesh()->CreateDynamicMaterialInstance(1);
-	if (DynamicMaterial)
-	{
-		FVector RandColor = FMath::VRand();
-		RandColor.Normalize();
-		DynamicMaterial->SetVectorParameterValue("Color", RandColor);
-	}
 
 	GetCharacterMovement()->bOrientRotationToMovement = !bUsesEightDirectionalMovement;
 
@@ -387,6 +380,45 @@ void ASG_Character::InitCharacterDefaults()
 	AbilitySystemComponent->SetStartingAttributeValues();
 
 	bAlreadySetUp = true;
+}
+
+void ASG_Character::SetPlayerColor(FString Name)
+{
+	int NameValue = 0;
+	for (char Char : Name)
+	{
+		NameValue += Char;
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("NameValue - %d"), NameValue);
+
+	FString NameValueString = FString::FromInt(NameValue);
+	int Len = NameValueString.Len() / 3;
+
+	FVector NameValueVector;
+
+	NameValueVector.X = UKismetStringLibrary::Conv_StringToInt(NameValueString.Left(Len));
+	NameValueVector.Y = UKismetStringLibrary::Conv_StringToInt(NameValueString.LeftChop(Len).RightChop(Len));
+	NameValueVector.Z = UKismetStringLibrary::Conv_StringToInt(NameValueString.Right(Len));
+
+	//UE_LOG(LogTemp, Warning, TEXT("NameValueVector - %s"), *NameValueVector.ToString());
+
+	NameValueVector.X = (int(NameValueVector.X) % 64) * 4;
+	NameValueVector.Y = (int(NameValueVector.Y) % 64) * 4;
+	NameValueVector.Z = (int(NameValueVector.Z) % 64) * 4;
+
+	//UE_LOG(LogTemp, Warning, TEXT("NameValueVector (after 255) - %s"), *NameValueVector.ToString());
+
+	NameValueVector.Normalize();
+
+	//UE_LOG(LogTemp, Warning, TEXT("NameValueVector (normal) - %s"), *NameValueVector.ToString());
+
+	UMaterialInstanceDynamic* DynamicMaterial = GetMesh()->CreateDynamicMaterialInstance(1);
+	if (DynamicMaterial)
+	{
+		DynamicMaterial->SetVectorParameterValue("Color", NameValueVector);
+	}
+
 }
 
 UAbilitySystemComponent* ASG_Character::GetAbilitySystemComponent() const
