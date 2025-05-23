@@ -10,6 +10,7 @@
 #include "DamageDealingComponent.generated.h"
 
 class UNiagaraSystem;
+class UDamageSourceData;
 class UGameplayEffectData;
 class USG_TraceEmitterBase;
 
@@ -33,7 +34,7 @@ private:
 
 	void ShowOnHitEffect(FVector Location);
 
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticast_ShowOnHitEffect(FVector Location);
 
 protected:
@@ -85,6 +86,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveActorFromIgnored(AActor* ActorToUnignore);
+
+	UFUNCTION(BlueprintCallable)
+	UDamageSourceData* GetDamageSourceData();
 
 	FHitSucceedSignature OnHitLandedSuccessfully;
 };

@@ -12,6 +12,7 @@
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interactables/Items/DamageDealingItem.h"
 
 
 UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
@@ -52,6 +53,13 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 		return;
 	}
 
+	if (IsValid(EffectContext.GetEffectCauser()))
+	{
+		ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectContext.GetEffectCauser());
+		
+		if(IsValid(Weapon)) Weapon->LoseDurability(10.f);
+	}
+
 	if (IsTargetImmuneToDamageType(TargetASC, DamageSourceData->DamageType))
 	{
 		return;
@@ -64,6 +72,22 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	float PenMultiplier = FMath::Floor(209 / (1 + FMath::Pow(2.71f, 0.014f * FinalDefence + 0.082f))) / 100;
 
 	float FireDamage = FMath::Floor(DamageSourceData->BaseDamage * PenMultiplier);
+
+	if (IsValid(DamageAmplificationEffect))
+	{
+		int StackCount = 0;
+
+		FGameplayEffectQuery EffectQuerry;
+		EffectQuerry.EffectDefinition = DamageAmplificationEffect;
+		TArray<FActiveGameplayEffectHandle> ActiveEffects = TargetASC->GetActiveEffects(EffectQuerry);
+		
+		for (FActiveGameplayEffectHandle ActiveEffect : ActiveEffects)
+		{
+			StackCount += TargetASC->GetCurrentStackCount(ActiveEffect);
+		}
+		
+		FireDamage *= StackCount == 0 ? 1 : StackCount;
+	}
 
 	OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().CurrentHealthProperty, EGameplayModOp::Additive, -FireDamage));
 	OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();

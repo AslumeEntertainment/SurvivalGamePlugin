@@ -26,10 +26,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AbilitySystemComponentDefaults")
 	UNiagaraSystem* OnDestroyedEffect;
 
-	UFUNCTION(Server, Unreliable)
+	UFUNCTION(Server, Reliable)
 	void Server_ShowOnDestroyedEffect();
 
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticast_ShowOnDestroyedEffect();
 
 
@@ -57,6 +57,8 @@ public:
 	FActiveGameplayEffectHandle AddEffectFromClass(TSubclassOf<UGameplayEffect> GameplayEffectClass, const UObject* SourceObject, AActor* Instigator, AActor* EffectCauser, uint8 Level = 1);
 
 	void RemoveEffectFromSpec(FActiveGameplayEffectHandle GameplayEffectSpecHandle, int8 StackToRemove = -1);
+
+	void RemoveActiveEffectsFromClass(TSubclassOf<UGameplayEffect> EffectClass, int8 StackToRemove = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomFunctions")
 	FGameplayAbilitySpecHandle AddAbility(TSubclassOf<USG_GameplayAbility> AbilityClass, int Level, UObject* SourceObject, bool bAllowDuplicates = true);

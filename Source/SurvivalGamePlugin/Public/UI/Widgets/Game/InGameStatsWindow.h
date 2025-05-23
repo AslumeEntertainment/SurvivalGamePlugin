@@ -7,13 +7,16 @@
 #include "InGameStatsWindow.generated.h"
 
 class UTextBlock;
+class UWidgetSwitcher;
+class UEquipedItemInfo;
+class AItemBase;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UInGameStatsWindow : public UUserWidget
 {
 	GENERATED_BODY()
 	
-public:
+protected:
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UTextBlock* TXT_Health;
@@ -131,6 +134,22 @@ public:
 
 	//----------------------------------------------
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWidgetSwitcher* WS_SecondaryItemSlot;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UEquipedItemInfo* SecondaryItemInfo;
+
+	//----------------------------------------------
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UWidgetSwitcher* WS_MainItemSlot;
+
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UEquipedItemInfo* MainItemInfo;
+
+
+
 public:
 
 	UFUNCTION()
@@ -183,4 +202,11 @@ public:
 
 	UFUNCTION()
 	void SetGuardProficiency(float Current, float Max, float Base);
+
+	UFUNCTION()
+	void ConfigSecondaryItemData(AItemBase* SecondaryItem);
+
+	UFUNCTION()
+	void ConfigMainItemData(AItemBase* MainItem);
+
 };

@@ -7,6 +7,8 @@
 #include "GC_OnFire.generated.h"
 
 class USG_AbilitySystemComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 UCLASS()
 class SURVIVALGAMEPLUGIN_API UGC_OnFire : public UGameplayCueNotify_Static
@@ -17,6 +19,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
 	UMaterialInterface* FireOverlay;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CustomValues")
+	UNiagaraSystem* FireEffect;
 
 	virtual bool OnActive_Implementation(AActor* MyTarget, const FGameplayCueParameters& Parameters) const;
 

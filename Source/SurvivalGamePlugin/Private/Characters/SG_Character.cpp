@@ -161,6 +161,14 @@ void ASG_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UMaterialInstanceDynamic* DynamicMaterial = GetMesh()->CreateDynamicMaterialInstance(1);
+	if (DynamicMaterial)
+	{
+		FVector RandColor = FMath::VRand();
+		RandColor.Normalize();
+		DynamicMaterial->SetVectorParameterValue("Color", RandColor);
+	}
+
 	GetCharacterMovement()->bOrientRotationToMovement = !bUsesEightDirectionalMovement;
 
 	if (IsValid(GetAbilitySystemComponent()) == false)
@@ -219,6 +227,9 @@ void ASG_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Started, this, &ASG_Character::FindTarget);
 		SG_EnhancedInputComponent->BindAction(TargetAction, ETriggerEvent::Completed, this, &ASG_Character::StopTargeting);
+
+		SG_EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		SG_EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		if (IsValid(AbilityInputConfig) == false)
 		{

@@ -74,4 +74,12 @@ public:
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
+	virtual USceneComponent* GetBoundsComponent() override;
+
+	UFUNCTION(BlueprintCallable, Server, Reliable)
+	void Server_SetActorStatic();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void NetMulticast_SetActorStatic();
+
 };

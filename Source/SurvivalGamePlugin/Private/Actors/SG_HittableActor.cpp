@@ -24,10 +24,11 @@ ASG_HittableActor::ASG_HittableActor()
 	SetRootComponent(StaticMeshComponent);
 
 	CollisionCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
-	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
+	CollisionCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	CollisionCapsuleComponent->SetupAttachment(StaticMeshComponent);
+	CollisionCapsuleComponent->SetGenerateOverlapEvents(true);
 	CollisionCapsuleComponent->OnComponentHit.AddDynamic(this, &ASG_HittableActor::OnComponentHitReceived);
-	CollisionCapsuleComponent->SetUseCCD(true);
+	
 
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 
@@ -74,7 +75,7 @@ void ASG_HittableActor::NetMulticast_SetActorPhysics_Implementation(bool NewActo
 	}
 	
 	StaticMeshComponent->SetCollisionEnabled(CollisionState);
-	CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
+	//CollisionCapsuleComponent->SetCollisionEnabled(CollisionState);
 }
 
 UShapeComponent* ASG_HittableActor::GetImpactChecker()
@@ -87,7 +88,6 @@ void ASG_HittableActor::OnComponentBeginTouch(UPrimitiveComponent* OverlappedCom
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
 	UE_LOG(LogTemp, Warning, TEXT("ASG_HittableActor::OnComponentBeginTouch - %s   --- ovelapping with %s"), *GetName(), *OtherActor->GetName());
-
 }
 
 UAbilitySystemComponent* ASG_HittableActor::GetAbilitySystemComponent() const
@@ -121,6 +121,22 @@ void ASG_HittableActor::DestroyHittable(bool bSafeDestruct)
 
 	LootTableComponent->DropLoot(bSafeDestruct);
 	Destroy();
+}
+
+USceneComponent* ASG_HittableActor::GetBoundsComponent()
+{
+	return CollisionCapsuleComponent;
+}
+
+void ASG_HittableActor::Server_SetActorStatic_Implementation()
+{
+	NetMulticast_SetActorStatic();
+}
+
+void ASG_HittableActor::NetMulticast_SetActorStatic_Implementation()
+{
+	StaticMeshComponent->SetSimulatePhysics(false);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 

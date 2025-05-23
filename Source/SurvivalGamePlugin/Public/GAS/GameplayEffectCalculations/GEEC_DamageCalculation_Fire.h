@@ -18,4 +18,9 @@ public:
 
 	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
+protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "CustomValues")
+	TSubclassOf<UGameplayEffect> DamageAmplificationEffect = nullptr;
+
 };

@@ -103,9 +103,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* UseSecondaryHandItemAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Impact", meta = (AllowPrivateAccess = "true"))
 	UCapsuleComponent* ImpactChecker = nullptr;
 
@@ -191,6 +188,8 @@ public:
 	virtual bool IsHitGuarded(FVector HitLocation) const override;
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
+
+	virtual USceneComponent* GetBoundsComponent() override;
 
 	FGenericTeamId GetGenericTeamId() const override{ return TeamId; }
 

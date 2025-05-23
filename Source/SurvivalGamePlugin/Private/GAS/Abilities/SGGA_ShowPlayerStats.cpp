@@ -8,8 +8,10 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "UI/Widgets/Game/InGameStatsWindow.h"
 #include "Characters/InGameCharacter.h"
+#include "Interactables/Items/ItemBase.h"
 
 
 void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -143,33 +145,28 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			}
 		}
 	);
-
+	*/
 	//-------------------------------------------------------------------------------------------------
-
+	/*
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			if (IsValid(InGameStatsWindow))
-			{
-				InGameStatsWindow->SetHunger(Data.NewValue,
-					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
-					ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
-			}
+			SetHunger(Data.NewValue,
+				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()),
+				ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetMaxHungerAttribute()));
 		}
 	);
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHungerAttribute()).AddLambda(
 		[this](const FOnAttributeChangeData& Data)
 		{
-			if (IsValid(InGameStatsWindow))
-			{
-				InGameStatsWindow->SetHealth(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
-					Data.NewValue,
-					Data.NewValue);
-			}
+			SetHunger(ASC->GetNumericAttribute(USG_CharacterAttributeSet::GetHungerAttribute()),
+				Data.NewValue,
+				Data.NewValue);
 		}
 	);
-
+	*/
+	/*
 	//-------------------------------------------------------------------------------------------------
 
 	ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetEnergyAttribute()).AddLambda(
@@ -451,6 +448,17 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	);
 	*/
 
+	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ShowPlayerStats::ActivateAbility IsValid(EquipmentComp) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	InGameStatsWindow->ConfigMainItemData(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag()));
+	InGameStatsWindow->ConfigSecondaryItemData(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
+
 	InGameStatsWindow->AddToViewport();
 
 	UAbilityTask_WaitInputRelease* WaitInputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this);
@@ -470,5 +478,14 @@ void USGGA_ShowPlayerStats::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 void USGGA_ShowPlayerStats::CloseWindow(float TimeHeld)
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+}
+
+void USGGA_ShowPlayerStats::SetHunger(float Current, float Max, float Base)
+{
+	if (IsValid(InGameStatsWindow) == false)
+	{
+		return;
+	}
+	InGameStatsWindow->SetHunger(Current, Max, Base);
 }
 

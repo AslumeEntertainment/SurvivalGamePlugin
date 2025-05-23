@@ -7,6 +7,7 @@
 #include "Hittable.generated.h"
 
 class USG_AbilitySystemComponent;
+class USceneComponent;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Meta = (CannotImplementInterfaceInBlueprint))
@@ -20,8 +21,6 @@ class SURVIVALGAMEPLUGIN_API IHittable
 	GENERATED_BODY()
 
 protected:
-
-
 
 	UFUNCTION()
 	virtual void OnComponentBeginTouch(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) = 0;
@@ -47,6 +46,6 @@ public:
 	virtual bool IsHitGuarded(FVector HitLocation) const;
 
 	UFUNCTION(BlueprintCallable)
-	virtual TArray<FHitResult> CastBoxTraceAroundBounds(TArray<AActor*> ActorsToIgnore, float AdditionalExtendFromBounds, bool bShouldDrawDebug = false) const;
+	virtual USceneComponent* GetBoundsComponent() = 0;
 
 };

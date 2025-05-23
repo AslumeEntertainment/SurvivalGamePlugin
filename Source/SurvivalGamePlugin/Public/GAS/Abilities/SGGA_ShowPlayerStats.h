@@ -41,4 +41,8 @@ protected:
 	UFUNCTION()
 	void CloseWindow(float TimeHeld);
 
+private:
+
+	void SetHunger(float Current, float Max, float Base);
+
 };

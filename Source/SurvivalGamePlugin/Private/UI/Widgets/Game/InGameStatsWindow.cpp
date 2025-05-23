@@ -3,7 +3,15 @@
 
 #include "UI/Widgets/Game/InGameStatsWindow.h"
 
+#include "Components/WidgetSwitcher.h"
 #include "Components/TextBlock.h"
+
+#include "Headers/GameManagingPersistentStructs.h"
+#include "Interactables/Items/DamageDealingItem.h"
+#include "Components/DamageDealingComponent.h"
+#include "UI/Widgets/Game/EquipedItemInfo.h"
+#include "GAS/AttributeSets/SG_AttributeSet.h"
+#include "GAS/SG_AbilitySystemComponent.h"
 
 
 void UInGameStatsWindow::SetHealth(float Current, float Max, float Base)
@@ -154,4 +162,102 @@ void UInGameStatsWindow::SetGuardProficiency(float Current, float Max, float Bas
 	}
 	TXT_GuardProficiency->SetText(FText::FromString(FString::Printf(TEXT("%.f/%.f"), Current, Max)));
 	TXT_BaseGuardProficiency->SetText(FText::FromString(FString::Printf(TEXT("(%.f)"), Base)));
+}
+
+void UInGameStatsWindow::ConfigSecondaryItemData(AItemBase* SecondaryItem)
+{
+	if (IsValid(SecondaryItem) == false)
+	{
+		WS_SecondaryItemSlot->ActiveWidgetIndex = 0;
+		return;
+	}
+
+	FResourseCardPersistentData* ItemCardData = SecondaryItem->ItemData.ResourceCardData.GetRow<FResourseCardPersistentData>("UInGameStatsWindow::ConfigSecondaryItemData");
+	if (ItemCardData == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigSecondaryItemData ItemCardData == nullptr"));
+		return;
+	}
+
+	USG_AbilitySystemComponent* ASC = SecondaryItem->GetSG_AbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigSecondaryItemData IsValid(ASC) == false"));
+		return;
+	}
+
+	float CurrentDurability = ASC->GetNumericAttribute(USG_AttributeSet::GetCurrentHealthAttribute());
+	float MaxDurability = ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute());
+
+	SecondaryItemInfo->ConfigItemCard(*ItemCardData);
+	SecondaryItemInfo->SetItemDurability(CurrentDurability, MaxDurability);
+	SecondaryItemInfo->SetItemWeight(SecondaryItem->ItemData.ItemWeight);
+
+	WS_SecondaryItemSlot->ActiveWidgetIndex = 1;
+
+	ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(SecondaryItem);
+	if(IsValid(Weapon) == false)
+	{
+		SecondaryItemInfo->SetItemDamageValues(nullptr);
+		return;
+	}
+
+	UDamageDealingComponent* DamageSource = Weapon->GetDamageDealingComponent();
+	if (IsValid(DamageSource) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigSecondaryItemData IsValid(DamageSource) == false"));
+		return;
+	}
+
+	SecondaryItemInfo->SetItemDamageValues(DamageSource->GetDamageSourceData());
+
+}
+
+void UInGameStatsWindow::ConfigMainItemData(AItemBase* MainItem)
+{
+	if (IsValid(MainItem) == false)
+	{
+		WS_MainItemSlot->ActiveWidgetIndex = 0;
+		return;
+	}
+
+	FResourseCardPersistentData* ItemCardData = MainItem->ItemData.ResourceCardData.GetRow<FResourseCardPersistentData>("UInGameStatsWindow::ConfigMainItemData");
+	if (ItemCardData == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigMainItemData ItemCardData == nullptr"));
+		return;
+	}
+
+	USG_AbilitySystemComponent* ASC = MainItem->GetSG_AbilitySystemComponent();
+	if (IsValid(ASC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigMainItemData IsValid(ASC) == false"));
+		return;
+	}
+
+	float CurrentDurability = ASC->GetNumericAttribute(USG_AttributeSet::GetCurrentHealthAttribute());
+	float MaxDurability = ASC->GetNumericAttribute(USG_AttributeSet::GetMaxHealthAttribute());
+
+	MainItemInfo->ConfigItemCard(*ItemCardData);
+	MainItemInfo->SetItemDurability(CurrentDurability, MaxDurability);
+	MainItemInfo->SetItemWeight(MainItem->ItemData.ItemWeight);
+
+	WS_MainItemSlot->ActiveWidgetIndex = 1;
+
+	ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(MainItem);
+	if (IsValid(Weapon) == false)
+	{
+		MainItemInfo->SetItemDamageValues(nullptr);
+		return;
+	}
+
+	UDamageDealingComponent* DamageSource = Weapon->GetDamageDealingComponent();
+	if (IsValid(DamageSource) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInGameStatsWindow::ConfigMainItemData IsValid(DamageSource) == false"));
+		return;
+	}
+
+	MainItemInfo->SetItemDamageValues(DamageSource->GetDamageSourceData());
+
 }
