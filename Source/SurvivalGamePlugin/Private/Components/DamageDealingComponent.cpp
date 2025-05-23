@@ -170,3 +170,14 @@ void UDamageDealingComponent::RemoveActorFromIgnored(AActor* ActorToUnignore)
 	ActorsToIgnore.Remove(ActorToUnignore);
 }
 
+UDamageSourceData* UDamageDealingComponent::GetDamageSourceData()
+{
+	if (GameplayEffectsData.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	UDamageSourceData* DamageSourceData = Cast<UDamageSourceData>(GameplayEffectsData[0]);
+	return DamageSourceData;
+}
+

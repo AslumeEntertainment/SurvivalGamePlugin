@@ -728,4 +728,9 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 	Destroy();
 }
 
+USceneComponent* AInGameCharacter::GetBoundsComponent()
+{
+	return ImpactChecker;
+}
+
 

@@ -72,11 +72,6 @@ void UGEEC_DamageCalculation_Standard::Execute_Implementation(const FGameplayEff
 	}
 
 	const FHitResult* HitResult = EffectContext.GetHitResult();
-	/*if (HitResult == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Standard::Execute_Implementation HitResult == nullptr"));
-		return;
-	}*/
 
 	FAggregatorEvaluateParameters EvaluateParameters;
 	EvaluateParameters.TargetTags = ExecutionParams.GetOwningSpec().CapturedTargetTags.GetAggregatedTags();
@@ -200,17 +195,6 @@ float UGEEC_DamageCalculation_Standard::GetStrengthMultiplier(const FGameplayEff
 	{
 		StrengthMultiplier += StrenghtIncrease;
 	}
-
-	/*for (EWeight Weight : TEnumRange<EWeight>())
-	{
-		if (UEnum::GetValueAsString(Weight).Compare("None") == 0) continue;
-
-		if ((uint8)Weight <= (uint8)EffectCauserWeight) continue;
-
-		if ((uint8)Weight > Strength) break;
-
-		StrengthMultiplier += 0.25f;
-	}*/
 
 	return StrengthMultiplier;
 }

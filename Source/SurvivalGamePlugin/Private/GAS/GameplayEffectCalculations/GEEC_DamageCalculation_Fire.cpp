@@ -12,6 +12,7 @@
 #include "GAS/GameplayEffectCalculations/GEEC_Statics.h"
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Interactables/Items/DamageDealingItem.h"
 
 
 UGEEC_DamageCalculation_Fire::UGEEC_DamageCalculation_Fire()
@@ -50,6 +51,13 @@ void UGEEC_DamageCalculation_Fire::Execute_Implementation(const FGameplayEffectC
 	{
 		UE_LOG(LogTemp, Error, TEXT("UGEEC_DamageCalculation_Fire::Execute_Implementation IsValid(DamageSourceData) == false"));
 		return;
+	}
+
+	if (IsValid(EffectContext.GetEffectCauser()))
+	{
+		ADamageDealingItem* Weapon = Cast<ADamageDealingItem>(EffectContext.GetEffectCauser());
+		
+		if(IsValid(Weapon)) Weapon->LoseDurability(10.f);
 	}
 
 	if (IsTargetImmuneToDamageType(TargetASC, DamageSourceData->DamageType))

@@ -123,6 +123,11 @@ void ASG_HittableActor::DestroyHittable(bool bSafeDestruct)
 	Destroy();
 }
 
+USceneComponent* ASG_HittableActor::GetBoundsComponent()
+{
+	return CollisionCapsuleComponent;
+}
+
 void ASG_HittableActor::Server_SetActorStatic_Implementation()
 {
 	NetMulticast_SetActorStatic();

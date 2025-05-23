@@ -189,6 +189,8 @@ public:
 
 	virtual void DestroyHittable(bool bSafeDestruct = false) override;
 
+	virtual USceneComponent* GetBoundsComponent() override;
+
 	FGenericTeamId GetGenericTeamId() const override{ return TeamId; }
 
 	FVoidDataTransferSignature OnCharacterDeath;

@@ -8,8 +8,10 @@
 
 #include "GAS/AttributeSets/SG_CharacterAttributeSet.h"
 #include "GAS/SG_AbilitySystemComponent.h"
+#include "Components/EquipmentComponent.h"
 #include "UI/Widgets/Game/InGameStatsWindow.h"
 #include "Characters/InGameCharacter.h"
+#include "Interactables/Items/ItemBase.h"
 
 
 void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -445,6 +447,17 @@ void USGGA_ShowPlayerStats::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		}
 	);
 	*/
+
+	UEquipmentComponent* EquipmentComp = Player->GetEquipmentComponent();
+	if (IsValid(EquipmentComp) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("USGGA_ShowPlayerStats::ActivateAbility IsValid(EquipmentComp) == false"));
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	InGameStatsWindow->ConfigMainItemData(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetMainEquipmentSlotTag()));
+	InGameStatsWindow->ConfigSecondaryItemData(EquipmentComp->GetEquipedItemAtSlot(EquipmentComp->GetSecondaryEquipmentSlotTag()));
 
 	InGameStatsWindow->AddToViewport();
 

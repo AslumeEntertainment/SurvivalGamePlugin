@@ -10,6 +10,7 @@
 #include "DamageDealingComponent.generated.h"
 
 class UNiagaraSystem;
+class UDamageSourceData;
 class UGameplayEffectData;
 class USG_TraceEmitterBase;
 
@@ -85,6 +86,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveActorFromIgnored(AActor* ActorToUnignore);
+
+	UFUNCTION(BlueprintCallable)
+	UDamageSourceData* GetDamageSourceData();
 
 	FHitSucceedSignature OnHitLandedSuccessfully;
 };
