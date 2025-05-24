@@ -102,7 +102,11 @@ void AInGameCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	BindCallbacksToDependencies();
-	Client_SetInGameOverlayVisibility(true);
+
+	if (IsValid(Cast<APlayerController>(GetController())))
+	{
+		Client_SetInGameOverlayVisibility(true);
+	}
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -321,7 +325,7 @@ void AInGameCharacter::MainHandAction()
 
 void AInGameCharacter::CancelMainHandAction()
 {
-	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelMainHandAction"));
+	if (bShouldDrawDebug) UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelMainHandAction"));
 }
 
 void AInGameCharacter::SecondaryHandAction()
@@ -376,7 +380,7 @@ void AInGameCharacter::SecondaryHandAction()
 
 void AInGameCharacter::CancelSecondaryHandAction()
 {
-	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelSecondaryHandAction"));
+	if(bShouldDrawDebug) UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelSecondaryHandAction"));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()

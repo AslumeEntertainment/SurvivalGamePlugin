@@ -162,7 +162,7 @@ void USG_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
-		UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetCurrentHealth(), GetMaxHealth());
+		//UE_LOG(LogTemp, Log, TEXT("USG_AttributeSet: %s now has %.2f out of %.2f health"), *GetOwningActor()->GetName(), GetCurrentHealth(), GetMaxHealth());
 
 		if (HasMaxHealth())
 		{
