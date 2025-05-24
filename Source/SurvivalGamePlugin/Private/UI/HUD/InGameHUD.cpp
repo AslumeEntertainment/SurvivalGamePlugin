@@ -47,9 +47,17 @@ void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharact
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(InteractingCharacter) == false"));
 		return;
 	}
-	InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
-	InteractingCharacter->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
 
+	if (InteractingCharacter->InteractIndicationTextDelegate.IsBound() == false)
+	{
+		InteractingCharacter->InteractIndicationTextDelegate.AddDynamic(InteractionOverlayWidget, &UInteractionOverlayWidget::SetInteractIndicationText);
+	}
+	
+	if (InteractingCharacter->SettingsOpenedDelegate.IsBound() == false)
+	{
+		InteractingCharacter->SettingsOpenedDelegate.AddDynamic(this, &AInGameHUD::ShowSettingsMenu);
+	}
+	
 	ShowInteractionOverlayWidget();
 }
 

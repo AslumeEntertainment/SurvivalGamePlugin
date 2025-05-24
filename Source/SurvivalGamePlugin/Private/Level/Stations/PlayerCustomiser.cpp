@@ -651,6 +651,7 @@ void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)
 
 void APlayerCustomiser::InGameCharacterDead()
 {
+	UE_LOG(LogTemp, Error, TEXT("IngAme character has allegedly died"));
 	OnInGameCharacterDeath.Broadcast(this);
 }
 

@@ -142,7 +142,9 @@ void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 	}
 	Player->OnPlayerReadinessChanged.RemoveAll(this);
 
+	UE_LOG(LogTemp, Error, TEXT("A player has allegedly got off from the table"));
 	CheckGameFinishingRules(Player);
+
 	Player->OnInGameCharacterDeath.RemoveAll(this);
 
 	PlayerCustomisers.Remove(Player);
@@ -291,6 +293,7 @@ void AGameManager::CheckGameFinishingRules(APlayerCustomiser* Player)
 	if (IsValid(Player))
 	{
 		RemainingPlayers -= 1;
+		UE_LOG(LogTemp, Error, TEXT("A Player has died!"));
 	}
 
 	bool ShouldEnd = ( (RemainingEnemies == 0) || (RemainingPlayers == 0) );

@@ -19,8 +19,15 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CustomValues")
 	TMap<TSubclassOf<AActor>, float> SpawnableActors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CustomValues")
+	FVector LocationOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CustomValues")
+	FRotator RotationOffset;
+
 
 public:	
 

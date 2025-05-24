@@ -128,6 +128,12 @@ USceneComponent* ASG_HittableActor::GetBoundsComponent()
 	return CollisionCapsuleComponent;
 }
 
+void ASG_HittableActor::SetActorStatic()
+{
+	StaticMeshComponent->SetSimulatePhysics(false);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
 void ASG_HittableActor::Server_SetActorStatic_Implementation()
 {
 	NetMulticast_SetActorStatic();
