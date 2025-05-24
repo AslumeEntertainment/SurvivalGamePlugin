@@ -29,16 +29,9 @@ void AInGameHUD::SetCanOpenMoreMenus(bool NewValue)
 
 void AInGameHUD::SetInteractionOverlayBindings(ASG_Character* InteractingCharacter)
 {
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::SetInteractionOverlayBindings IsValid(World) == false"));
-		return;
-	}
-
 	if (IsValid(InteractionOverlayWidget) == false)
 	{
-		InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(UGameplayStatics::GetGameInstance(World), InteractionOverlayWidgetClass);
+		InteractionOverlayWidget = CreateWidget<UInteractionOverlayWidget>(PlayerOwner, InteractionOverlayWidgetClass);
 	}
 	
 	InteractionOverlayWidget->SetInteractIndicationText(FText::FromString(""));
@@ -77,37 +70,37 @@ void AInGameHUD::RemoveInteractionOverlayWidget()
 	}
 }
 
-void AInGameHUD::ShowGameplayOverlayWidget()
+void AInGameHUD::ShowGameplayOverlayWidget(AInGameCharacter* PlayerPawn)
 {
-	UWorld* World = GetWorld();
-	if (IsValid(World) == false)
+	if (IsValid(PlayerPawn) == false)
 	{
-		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(World) == false"));
+		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(PlayerPawn) == false"));
 		return;
 	}
-	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(UGameplayStatics::GetGameInstance(World), GameplayOverlayWidgetClass);
+
+	GameplayOverlayWidget = CreateWidget<UInGameOverlayWidget>(PlayerOwner, GameplayOverlayWidgetClass);
  
-	AInGameCharacter* Player = Cast<AInGameCharacter>(PlayerOwner->GetPawn());
+	/*AInGameCharacter* Player = PlayerOwner->GetPawn<AInGameCharacter>();
 	if (IsValid(Player) == false)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AInGameHUD::ShowGameplayOverlayWidget IsValid(Player) == false"));
 		return;
-	}
+	}*/
 
 	if (PlayerOwner && GameplayOverlayWidget)
 	{
-		Player->OnHealthPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
-		Player->OnHungerPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
-		Player->OnEnergyPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
+		PlayerPawn->OnHealthPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHealthPercent);
+		PlayerPawn->OnHungerPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateHungerPercent);
+		PlayerPawn->OnEnergyPercentUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateEnergyPercent);
 
-		Player->OnMaxHealthUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHealthBarLength);
-		Player->OnMaxHungerUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHungerBarLength);
-		Player->OnMaxEnergyUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
+		PlayerPawn->OnMaxHealthUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHealthBarLength);
+		PlayerPawn->OnMaxHungerUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetHungerBarLength);
+		PlayerPawn->OnMaxEnergyUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::SetEnergyBarLength);
 
-		Player->OnCurrentSpeedUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
+		PlayerPawn->OnCurrentSpeedUpdated.AddDynamic(GameplayOverlayWidget, &UInGameOverlayWidget::UpdateCurrentSpeed);
 
 		GameplayOverlayWidget->AddToViewport();
-		Player->BroadcastInitialValues();
+		PlayerPawn->BroadcastInitialValues();
 	}
 }
 

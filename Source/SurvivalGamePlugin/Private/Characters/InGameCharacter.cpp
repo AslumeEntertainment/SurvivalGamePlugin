@@ -102,6 +102,7 @@ void AInGameCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	BindCallbacksToDependencies();
+	Client_SetInGameOverlayVisibility(true);
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -188,20 +189,18 @@ void AInGameCharacter::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComp
 	bool isFalling = (GetVelocity().GetSafeNormal().Z < -0.5);
 	if (IsValid(Cast<ALandscape>(OtherActor)) == true && !isFalling)
 	{
-		UE_LOG(LogTemp, Error, TEXT("%s: Hitting the landscape, but I'm not falling so gg ig..."), *GetName());
 		return;
 	}
 
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
 	
-	UE_LOG(LogTemp, Error, TEXT("%s: Ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
+	//UE_LOG(LogTemp, Error, TEXT("%s: Ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 
 	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	//FHitResult Hit = FHitResult();
-	//ContextHandle.AddHitResult(Hit);
+
 	ContextHandle.AddInstigator(OtherActor, OtherActor);
 
 	FGameplayEventData EventData = FGameplayEventData();
@@ -524,6 +523,24 @@ void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 	BroadcastInitialValues();
 }
 
+void AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation(bool bShouldAddToViewport)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (IsValid(PC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	AInGameHUD* HUD = PC->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation IsValid(HUD) == false"));
+		return;
+	}
+
+	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget(this) : HUD->RemoveGameplayOverlayWidget();
+}
+
 void AInGameCharacter::SetAttackSpeed(float NewValue)
 {
 	AttackSpeed = NewValue;
@@ -726,6 +743,8 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 	{
 		Client_BroadcastOnCharacterDeath();
 	}
+
+	Client_SetInGameOverlayVisibility(false);
 
 	EquipmentComponent->UnequipAllItems();
 	LootTableComponent->DropLoot();

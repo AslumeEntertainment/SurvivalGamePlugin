@@ -8,6 +8,7 @@
 #include "InGameHUD.generated.h"
 
 class ASG_Character;
+class AInGameCharacter;
 
 class UInGameOverlayWidget;
 class UInteractionOverlayWidget;
@@ -62,7 +63,7 @@ public:
 	void RemoveInteractionOverlayWidget();
 
 	UFUNCTION(BlueprintCallable)
-	void ShowGameplayOverlayWidget();
+	void ShowGameplayOverlayWidget(AInGameCharacter* PlayerPawn);
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveGameplayOverlayWidget();

@@ -155,6 +155,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	virtual void Client_BroadcastInitialValues();
 
+	UFUNCTION(Client, Reliable)
+	void Client_SetInGameOverlayVisibility(bool bShouldAddToViewport);
+
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UEquipmentComponent* GetEquipmentComponent() const { return EquipmentComponent; }
 
