@@ -27,7 +27,7 @@ AActor* AActorSpawner::Spawn()
 	{
 		if (ActorToSpawn.Value*100 >= RNG)
 		{
-			AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation(), GetActorRotation());
+			AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn.Key, GetActorLocation() + LocationOffset, GetActorRotation() + RotationOffset);
 			if (IsValid(Actor) == false)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("AActorSpawner::Spawn - %s failed to spawn %s"), *GetName(), *ActorToSpawn.Key->StaticClass()->GetName());
@@ -38,6 +38,7 @@ AActor* AActorSpawner::Spawn()
 
 			if (bSpawnStatic && Cast<ASG_HittableActor>(Actor))
 			{
+				Cast<ASG_HittableActor>(Actor)->SetActorStatic();
 				Cast<ASG_HittableActor>(Actor)->Server_SetActorStatic();
 			}
 

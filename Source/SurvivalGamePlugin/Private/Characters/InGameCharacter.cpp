@@ -102,6 +102,11 @@ void AInGameCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	BindCallbacksToDependencies();
+
+	if (IsValid(Cast<APlayerController>(GetController())))
+	{
+		Client_SetInGameOverlayVisibility(true);
+	}
 }
 
 void AInGameCharacter::Client_OnUpdatePlayerHealth_Implementation(float CurrentHealth, float MaxHealth)
@@ -194,13 +199,12 @@ void AInGameCharacter::OnComponentBeginTouch(UPrimitiveComponent* OverlappedComp
 	IHittable* Hit = Cast<IHittable>(OtherActor);
 	bool TouchingHittable = Hit == nullptr;
 	
-	//UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::OnComponentBeginTouch - %s   --- ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
+	//UE_LOG(LogTemp, Error, TEXT("%s: Ovelapping with %s (comp: %s) i toi e hittable(%d)"), *GetName(), *OtherActor->GetName(), *OtherComp->GetName(), TouchingHittable);
 
 	FGameplayTag EventTag = FGameplayTag::RequestGameplayTag("CommonEvents.ReceiveDamage.Impact");
 
 	FGameplayEffectContextHandle ContextHandle = FGameplayEffectContextHandle(UAbilitySystemGlobals::Get().AllocGameplayEffectContext());
-	//FHitResult Hit = FHitResult();
-	//ContextHandle.AddHitResult(Hit);
+
 	ContextHandle.AddInstigator(OtherActor, OtherActor);
 
 	FGameplayEventData EventData = FGameplayEventData();
@@ -321,7 +325,7 @@ void AInGameCharacter::MainHandAction()
 
 void AInGameCharacter::CancelMainHandAction()
 {
-	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelMainHandAction"));
+	if (bShouldDrawDebug) UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelMainHandAction"));
 }
 
 void AInGameCharacter::SecondaryHandAction()
@@ -376,7 +380,7 @@ void AInGameCharacter::SecondaryHandAction()
 
 void AInGameCharacter::CancelSecondaryHandAction()
 {
-	UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelSecondaryHandAction"));
+	if(bShouldDrawDebug) UE_LOG(LogTemp, Log, TEXT("AInGameCharacter::CancelSecondaryHandAction"));
 }
 
 void AInGameCharacter::BindCallbacksToDependencies()
@@ -521,6 +525,24 @@ void AInGameCharacter::Client_BroadcastOnCharacterDeath_Implementation()
 void AInGameCharacter::Client_BroadcastInitialValues_Implementation()
 {
 	BroadcastInitialValues();
+}
+
+void AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation(bool bShouldAddToViewport)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (IsValid(PC) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation IsValid(InteractingPlayer) == false"));
+		return;
+	}
+	AInGameHUD* HUD = PC->GetHUD<AInGameHUD>();
+	if (IsValid(HUD) == false)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AInGameCharacter::Client_SetInGameOverlayVisibility_Implementation IsValid(HUD) == false"));
+		return;
+	}
+
+	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget(this) : HUD->RemoveGameplayOverlayWidget();
 }
 
 void AInGameCharacter::SetAttackSpeed(float NewValue)
@@ -721,7 +743,12 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 
 	SetIsAlive(false);
 
-	Client_BroadcastOnCharacterDeath();
+	if (HasAuthority() == false)
+	{
+		Client_BroadcastOnCharacterDeath();
+	}
+
+	Client_SetInGameOverlayVisibility(false);
 
 	EquipmentComponent->UnequipAllItems();
 	LootTableComponent->DropLoot();

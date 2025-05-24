@@ -76,6 +76,9 @@ public:
 
 	virtual USceneComponent* GetBoundsComponent() override;
 
+	UFUNCTION(BlueprintCallable)
+	void SetActorStatic();
+
 	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void Server_SetActorStatic();
 

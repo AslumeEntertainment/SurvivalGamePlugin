@@ -651,6 +651,7 @@ void APlayerCustomiser::SpawnHero(FVector Location, FRotator Rotation)
 
 void APlayerCustomiser::InGameCharacterDead()
 {
+	UE_LOG(LogTemp, Error, TEXT("IngAme character has allegedly died"));
 	OnInGameCharacterDeath.Broadcast(this);
 }
 
@@ -673,7 +674,7 @@ void APlayerCustomiser::PossessMainPawn()
 	InteractingPlayer->Possess(MainPawn);
 	InteractingPlayer->Client_SetInputMode(EInputMode::UIOnly);
 	Client_ShowUI();
-	Client_SetInGameOverlayVisibility(false);
+	//Client_SetInGameOverlayVisibility(false);
 	RequestSaveWrite();
 	UseDeck();
 	DespawnHero();
@@ -685,7 +686,7 @@ void APlayerCustomiser::PossessGamePawn()
 	InteractingPlayer->Possess(GamePawn);
 	InteractingPlayer->Client_SetInputMode(EInputMode::GameOnly);
 	Client_HideUI();
-	Client_SetInGameOverlayVisibility(true);
+	//Client_SetInGameOverlayVisibility(true);
 }
 
 void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bShouldAddToViewport)
@@ -702,7 +703,7 @@ void APlayerCustomiser::Client_SetInGameOverlayVisibility_Implementation(bool bS
 		return;
 	}
 
-	bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget() : HUD->RemoveGameplayOverlayWidget();
+	//bShouldAddToViewport ? HUD->ShowGameplayOverlayWidget() : HUD->RemoveGameplayOverlayWidget();
 }
 
 void APlayerCustomiser::Client_HideUI_Implementation(bool bUsesAnimation)
