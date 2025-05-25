@@ -132,6 +132,7 @@ void ASG_HittableActor::SetActorStatic()
 {
 	StaticMeshComponent->SetSimulatePhysics(false);
 	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	StaticMeshComponent->SetGenerateOverlapEvents(true);
 }
 
 void ASG_HittableActor::Server_SetActorStatic_Implementation()
@@ -143,6 +144,7 @@ void ASG_HittableActor::NetMulticast_SetActorStatic_Implementation()
 {
 	StaticMeshComponent->SetSimulatePhysics(false);
 	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	StaticMeshComponent->SetGenerateOverlapEvents(true);
 }
 
 
