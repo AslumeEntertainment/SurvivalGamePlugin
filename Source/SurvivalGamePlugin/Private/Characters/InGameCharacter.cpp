@@ -33,9 +33,7 @@ AInGameCharacter::AInGameCharacter()
 	LootTableComponent = CreateDefaultSubobject<ULootTableComponent>(TEXT("LootTable"));
 	
 	ImpactChecker = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ImpactCheker"));
-
 	ImpactChecker->SetupAttachment(GetCapsuleComponent());
-
 	ImpactChecker->OnComponentBeginOverlap.AddDynamic(this, &AInGameCharacter::OnComponentBeginTouch);
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AInGameCharacter::OnComponentHitReceived);
@@ -44,6 +42,13 @@ AInGameCharacter::AInGameCharacter()
 	StimulusSource = CreateDefaultSubobject<USG_AIPerceptionStimuliSourceComp>(TEXT("StimulusSource"));
 
 	OnCharacterDeath.AddDynamic(this, &AInGameCharacter::UnbindOverlayDelegates);
+	OnDestroyed.AddDynamic(this, &AInGameCharacter::RemoveIngameOverlay);
+
+}
+
+void AInGameCharacter::RemoveIngameOverlay(AActor* Self)
+{
+	Client_SetInGameOverlayVisibility(false);
 }
 
 void AInGameCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -747,8 +752,6 @@ void AInGameCharacter::DestroyHittable(bool bSafeDestruct)
 	{
 		Client_BroadcastOnCharacterDeath();
 	}
-
-	Client_SetInGameOverlayVisibility(false);
 
 	EquipmentComponent->UnequipAllItems();
 	LootTableComponent->DropLoot();

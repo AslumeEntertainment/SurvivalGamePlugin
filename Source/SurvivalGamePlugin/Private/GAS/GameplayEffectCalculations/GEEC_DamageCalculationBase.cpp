@@ -43,13 +43,13 @@ void UGEEC_DamageCalculationBase::TriggerGameplayCues(USG_AbilitySystemComponent
 
 void UGEEC_DamageCalculationBase::ApplyAdditionalEffects(USG_AbilitySystemComponent* TargetASC, TArray<FAdditionalEffectDataStruct> AdditionalEffectsData, FGameplayEffectContextHandle EffectContext, float InstigatorDexterity) const
 {
-	int RandInt = FMath::RandRange(1, 100) + InstigatorDexterity;
+	int RandInt = FMath::RandRange(1, 100);
 
 	FGameplayEffectContextHandle NewEffectContext = EffectContext;
 
 	for (FAdditionalEffectDataStruct AdditionalEffect : AdditionalEffectsData)
 	{
-		if (RandInt > AdditionalEffect.ChanceToApply)
+		if (RandInt > AdditionalEffect.ChanceToApply + InstigatorDexterity)
 		{
 			continue;
 		}
