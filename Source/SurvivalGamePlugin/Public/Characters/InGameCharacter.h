@@ -62,6 +62,8 @@ private:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void Client_OnUpdatePlayerCurrentSpeed(float Velocity);
 
+	UFUNCTION()
+	void RemoveIngameOverlay(AActor* Self);
 
 protected:
 

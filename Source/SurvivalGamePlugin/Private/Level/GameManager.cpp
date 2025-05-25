@@ -4,6 +4,7 @@
 #include "Level/GameManager.h"
 
 #include "Kismet/KismetStringLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h" 
 
 #include "Characters/InGameCharacter.h"
@@ -142,7 +143,6 @@ void AGameManager::RemovePlayer(APlayerCustomiser* Player)
 	}
 	Player->OnPlayerReadinessChanged.RemoveAll(this);
 
-	UE_LOG(LogTemp, Error, TEXT("A player has allegedly got off from the table"));
 	CheckGameFinishingRules(Player);
 
 	Player->OnInGameCharacterDeath.RemoveAll(this);
@@ -177,10 +177,22 @@ void AGameManager::PrepareGame()
 	RemainingPlayers = NumPlayers;
 	LevelCleaner->Clean();
 	CurrentSpawnersToFire.Empty();
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
+
+	FVector CleanerLocation;
+	FVector CleanerBounds;
+	LevelCleaner->GetActorBounds(false, CleanerLocation, CleanerBounds);
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+	TArray<AActor*> ActorsToIgnore;
+
+	UKismetSystemLibrary::BoxOverlapActors(GetWorld(), CleanerLocation, CleanerBounds, ObjectTypes, 
+		AActorSpawner::StaticClass(), ActorsToIgnore, CurrentSpawnersToFire);
+
+	UE_LOG(LogTemp, Error, TEXT("Spawners - %d"), CurrentSpawnersToFire.Num());
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActorSpawner::StaticClass(), CurrentSpawnersToFire);
 	
 	GetWorldTimerManager().SetTimer(PreparingPeriodTimer, this, &AGameManager::SpawnCluster, SpawnerClusterPeriod, true, 0);
-	//some terrain generation and animal/Enemy spawning
 	
 }
 
